@@ -2792,7 +2792,19 @@ function buildAllProductsView(){
     _productRef: p, _family: p.family
   }));
   // Family-to-family edges (preserve the original adjacency map).
-  const links = LINKS.map(l => Object.assign({}, l));
+  // IMPORTANT: D3's link force mutates LINKS in place, replacing string IDs
+  // with direct node-object references. When we switch view modes the family
+  // clones we render here are NEW objects, so those stale refs would point
+  // at unmounted nodes and D3 would draw lines into empty space ("phantom
+  // edges"). Re-normalize to string IDs so forceLink resolves against the
+  // current viewNodes set.
+  const norm = v => (typeof v === "object" && v !== null ? v.id : v);
+  const links = LINKS.map(l => ({
+    source: norm(l.source),
+    target: norm(l.target),
+    type:   l.type,
+    label:  l.label
+  }));
   // Family-to-product "contains" edges.
   PRODUCTS.forEach(p => {
     links.push({ source: p.family, target: p.id, type: "composition", label: "contains" });
