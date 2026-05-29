@@ -2610,19 +2610,6 @@ function buildNodeGroup(sel){
     .attr("y", d => d._r + 14).text(d => d.name)
     .style("font-size","10px").style("fill","#6e7681")
     .style("text-anchor","middle").style("pointer-events","none");
-  // Optional count badge (used by Overview + Families "+N products" overlay).
-  // We always render the group but make it transparent when _badge is absent.
-  const bg = sel.append("g").attr("class","badge")
-    .style("pointer-events","none")
-    .style("display", d => (d._badge ? null : "none"));
-  bg.append("circle")
-    .attr("cx", d => d._r * 0.78).attr("cy", d => -d._r * 0.78)
-    .attr("r", 9).attr("fill","#0d1117").attr("stroke","#fff").attr("stroke-width", 1.2);
-  bg.append("text")
-    .attr("x", d => d._r * 0.78).attr("y", d => -d._r * 0.78 + 3)
-    .attr("text-anchor","middle").style("font-size","9px")
-    .style("font-weight","700").style("fill","#fff")
-    .text(d => d._badge || "");
 }
 
 // ── Rebind selections to current viewNodes / viewLinks and restart simulation.
@@ -2714,8 +2701,6 @@ function rebindGraph(opts){
   // changes between modes (e.g. family in Families vs Composition).
   ndEl.select("use.icn").attr("href", d => "#icon-" + iconKey(d));
   ndEl.select("text.nl").text(d => d.name);
-  ndEl.select(".badge").style("display", d => (d._badge ? null : "none"));
-  ndEl.select(".badge text").text(d => d._badge || "");
 
   sim.nodes(viewNodes);
   sim.force("link").links(viewLinks);
