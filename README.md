@@ -6,14 +6,14 @@ An interactive, single-file HTML tool for exploring the Cisco product portfolio 
 
 ## What it does
 
-- **Four-level drill-down visualization** (new in v2.1):
+- **Four-level drill-down visualization**:
   - **Overview** — 5 category bubbles (Networking / Security / Collaboration / Computing / Observability) for first-look conversations
-  - **Families** — 52 product families *(default)*, the classic D3 force-directed map of how things connect
+  - **Families** — 54 product families *(default)*, the classic D3 force-directed map of how things connect
   - **Composition** — one family pinned in the middle with every specific SKU around it; dashed purple *"replaced by"* arrows show succession chains
-  - **All** — every family + every product (~350 nodes) in one dense graph for power users
+  - **All** — every family + every product (~370 nodes) in one dense graph for power users
 - **Drill down anywhere**: switch with the topbar segmented control, **double-click** a family bubble, click the bright **"Explore N products →"** button on any family panel, or just **search for a product** — the graph auto-promotes into that product's family. A breadcrumb chip under the topbar always shows where you are.
 - **Visualize the portfolio** as an interactive D3 force-directed graph (zoom, drag, click for details, right-click for quick actions)
-- **Search any product** — both families (ISE, Meraki, Webex Devices) and **297+ specific models** (Cisco Desk Pro, Catalyst 9300, ASA 5525-X, Catalyst 9178I Wi-Fi 7, UCS C245 M8, …)
+- **Search any product** — both families (ISE, Meraki, Webex Devices, AI Defense, Cisco 8000 Secure Routers) and **325+ specific models** spanning every major Cisco wave from Cisco Live 2025 through early-2026: Catalyst 9350/9610 Smart Switches (Silicon One G300), Secure Routers 8100–8500, Wireless 9179F (Wi-Fi 7 + URWB), Desk Pro G2, Wireless Phone 9821, AI Defense (Cloud Visibility / Validation / Runtime / BOM), Nexus 9800 AI spine, UCS C845A M8, plus the full legacy lineage with EOL bulletins.
 - **Filter** by category, use case, industry, EOL/EOS status, or licensing tier
 - **Build account plans** — add a customer's existing Cisco stack and get scored recommendations for:
   - **Augment** — complementary products to expand footprint
@@ -91,7 +91,7 @@ The assistant works fully client-side via your own API key. It supports any Open
 
 Single, self-contained HTML file. No build step, no dependencies to install — D3.js is loaded from a CDN. ~460 KB total.
 
-Internally, the four view modes are layered on top of a single D3 force simulation: the global `NODES` (52 families) and `LINKS` (family-to-family adjacencies) are the source of truth, and each mode synthesizes its own `viewNodes` / `viewLinks` arrays (category bubbles for Overview, family + products + successor edges for Composition, the full union for All). A stable link-key function keeps D3 `.join()` happy across rebinds, and per-mode force tuning (charge, collide, link distance) keeps layouts feeling right whether there are 5 nodes or 350.
+Internally, the four view modes are layered on top of a single D3 force simulation: the global `NODES` (54 families) and `LINKS` (family-to-family adjacencies) are the source of truth, and each mode synthesizes its own `viewNodes` / `viewLinks` arrays (category bubbles for Overview, family + products + successor edges for Composition, the full union for All). A stable link-key function keeps D3 `.join()` happy across rebinds, and per-mode force tuning (charge, collide, link distance) keeps layouts feeling right whether there are 5 nodes or 370.
 
 ## License
 

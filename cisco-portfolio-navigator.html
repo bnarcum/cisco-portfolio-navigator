@@ -4449,7 +4449,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.1.1";
+const APP_VERSION   = "2.2.0";
 const DATA_UPDATED  = "2026-05-29";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -4737,6 +4737,17 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.2.0", date:"2026-05-29", items:[
+    "Catalog refresh — Cisco Live 2025 + early 2026 product wave (~28 new products, 2 new families)",
+    "New family: secure-routers — the 8000-series Secure Routers (8100/8200/8300/8400/8500) unified SD-WAN + SASE + NGFW + post-quantum routing line",
+    "New family: ai-defense — Cisco AI Defense, the purpose-built security pillar for AI models, applications, and agentic (MCP-aware) workflows",
+    "Networking: Catalyst 9350 + 9610 Smart Switches (Silicon One G300, 51.2 Tbps), Catalyst 9300-M / 9400-M AI-native switches, Wireless 9179F (Wi-Fi 7 + URWB), Campus Gateway, Nexus 9800 AI spine, N9000 AI Networking",
+    "Security: Secure Firewall 210 / 220 / 6100 (Cisco Live 2025), full AI Defense product family (Cloud Visibility, Validation, Runtime, BOM + MCP Catalog, Explorer Edition)",
+    "Devices: Desk Pro G2 (dual-lens 4K, Agentic Director, Spatial Meetings), Wireless Phone 9821 (Wi-Fi 6E, PhoneOS, man-down detection), Desk Phone 9811 (named 7811 successor)",
+    "Webex AI lineup split out: AI Codec, AI Routing, Translator Agent, Agent Assistant — discoverable individually in search and compare",
+    "Data center / AI infra: Silicon One G300 ASIC, UCS C845A M8 (Secure AI Factory with NVIDIA)",
+    "EoX sweep: ip-7821 (EOL15900, Oct 2026 / Oct 2031), ip-7811 (EOL15899), conf-7832 moved to EOS; successor links corrected to point at real catalog ids"
+  ]},
   {ver:"2.1.1", date:"2026-05-29", items:[
     "Compare now mirrors the pinned list — pin (★) anything and it appears in the compare panel automatically. Closing the compare panel no longer wipes your pins; clicking × on a column unpins that item. Increased visible columns from 3 to 4."
   ]},
