@@ -689,6 +689,54 @@ const NODES = [
    industries:["Manufacturing","Energy / Utilities","Transportation","Government"],
    url:"https://www.cisco.com/site/us/en/products/security/industrial-security/index.html",
    docsUrl:"https://www.cisco.com/c/en/us/products/security/industrial-security/index.html"},
+  {id:"secure-client",     name:"Cisco Secure Client",          category:"security",
+   desc:"Unified endpoint agent (formerly AnyConnect) bundling VPN, ZTNA, ISE Posture, Umbrella roaming, Duo, AMP enabler, and Network Visibility Module.",
+   useCases:["Zero Trust Security","Hybrid Work","Threat Detection & Response","SD-WAN / SASE"],
+   industries:["Healthcare","Financial Services","Government","Education","Manufacturing"],
+   url:"https://www.cisco.com/site/us/en/products/security/secure-client/index.html",
+   docsUrl:"https://www.cisco.com/c/en/us/support/security/secure-client-5/series.html"},
+  {id:"secure-workload",   name:"Cisco Secure Workload",        category:"security",
+   desc:"Workload microsegmentation, application dependency mapping, and zero-trust policy enforcement for on-prem and cloud workloads (formerly Tetration).",
+   useCases:["Zero Trust Security","Data Center Modernization","Cloud Migration","Threat Detection & Response"],
+   industries:["Financial Services","Healthcare","Government","Manufacturing"],
+   url:"https://www.cisco.com/site/us/en/products/security/secure-workload/index.html",
+   docsUrl:"https://www.cisco.com/c/en/us/products/security/tetration/index.html"},
+  {id:"stealthwatch",      name:"Cisco Secure Network Analytics", category:"security",
+   desc:"Network detection and response using NetFlow/IPFIX telemetry and Encrypted Traffic Analytics — formerly Stealthwatch; pairs with XDR for cross-domain detection.",
+   useCases:["Threat Detection & Response","Zero Trust Security","Network Automation"],
+   industries:["Financial Services","Healthcare","Government","Manufacturing","Education"],
+   url:"https://www.cisco.com/site/us/en/products/security/security-analytics/index.html",
+   docsUrl:"https://www.cisco.com/c/en/us/products/security/stealthwatch/index.html"},
+  {id:"secure-web",        name:"Cisco Secure Web Appliance",   category:"security",
+   desc:"On-premises and virtual secure web gateway (formerly WSA): URL filtering, malware scanning, decryption, and CASB controls for outbound web traffic.",
+   useCases:["Zero Trust Security","Threat Detection & Response","SD-WAN / SASE"],
+   industries:["Financial Services","Healthcare","Government","Education"],
+   url:"https://www.cisco.com/site/us/en/products/security/secure-web-appliance/index.html",
+   docsUrl:"https://www.cisco.com/c/en/us/products/security/web-security-appliance/index.html"},
+  {id:"multicloud-defense", name:"Cisco Multicloud Defense",     category:"security",
+   desc:"Cloud-native multi-cloud firewall and IPS for AWS, Azure, GCP, and OCI (Valtix acquisition) — single policy across clouds with egress filtering and DLP.",
+   useCases:["Zero Trust Security","Cloud Migration","Threat Detection & Response"],
+   industries:["Financial Services","Healthcare","Government","Retail"],
+   url:"https://www.cisco.com/site/us/en/products/security/multicloud-defense/index.html",
+   docsUrl:"https://www.cisco.com/c/en/us/products/security/multicloud-defense/index.html"},
+  {id:"vuln-mgmt",         name:"Cisco Vulnerability Management", category:"security",
+   desc:"Risk-based vulnerability prioritization (formerly Kenna Security) — correlates scanner data with real-world exploitability and threat intelligence.",
+   useCases:["Threat Detection & Response","Zero Trust Security"],
+   industries:["Financial Services","Healthcare","Government","Manufacturing","Education"],
+   url:"https://www.cisco.com/site/us/en/products/security/vulnerability-management/index.html",
+   docsUrl:"https://docs.kennasecurity.com/"},
+  {id:"secure-equipment",  name:"Cisco Secure Equipment Access", category:"security",
+   desc:"Zero-trust remote access for OT/ICS — embedded in industrial routers and switches; replaces VPN jump-hosts for plant-floor equipment.",
+   useCases:["IoT / Industrial","Zero Trust Security","Threat Detection & Response"],
+   industries:["Manufacturing","Energy / Utilities","Transportation","Government"],
+   url:"https://www.cisco.com/site/us/en/products/security/industrial-security/secure-equipment-access/index.html",
+   docsUrl:"https://www.cisco.com/c/en/us/products/security/industrial-security/secure-equipment-access.html"},
+  {id:"identity-intel",    name:"Cisco Identity Intelligence",  category:"security",
+   desc:"Identity threat detection and response (ITDR): correlates identity signals across Duo, ISE, Azure AD, Okta, and Active Directory to surface risky behavior and dormant accounts.",
+   useCases:["Zero Trust Security","Threat Detection & Response"],
+   industries:["Financial Services","Healthcare","Government","Education"],
+   url:"https://www.cisco.com/site/us/en/products/security/identity-intelligence/index.html",
+   docsUrl:"https://www.cisco.com/c/en/us/products/security/identity-intelligence/index.html"},
 
   // COLLABORATION
   {id:"webex-app",         name:"Webex App",                   category:"collaboration",
@@ -851,6 +899,38 @@ const LINKS = [
   {source:"cyber-vision",     target:"sf-branch",         type:"adjacent", label:"OT policy"},
   {source:"splunk",           target:"sf-branch",         type:"adjacent", label:"Log collection"},
   {source:"splunk",           target:"ise",               type:"adjacent", label:"Log collection"},
+  // Newer security nodes
+  {source:"secure-client",    target:"secure-access",     type:"direct",   label:"ZTNA agent"},
+  {source:"secure-client",    target:"duo",               type:"direct",   label:"MFA + posture"},
+  {source:"secure-client",    target:"umbrella",          type:"direct",   label:"Roaming DNS sec"},
+  {source:"secure-client",    target:"ise",               type:"direct",   label:"Posture / NAC"},
+  {source:"secure-client",    target:"secure-endpoint",   type:"adjacent", label:"AMP enabler"},
+  {source:"secure-workload",  target:"hypershield",       type:"adjacent", label:"Workload segmentation"},
+  {source:"secure-workload",  target:"aci",               type:"direct",   label:"DC policy plane"},
+  {source:"secure-workload",  target:"xdr",               type:"direct",   label:"Telemetry to XDR"},
+  {source:"secure-workload",  target:"intersight",        type:"adjacent", label:"Workload context"},
+  {source:"stealthwatch",     target:"xdr",               type:"direct",   label:"Network telemetry"},
+  {source:"stealthwatch",     target:"talos",             type:"direct",   label:"Threat intel"},
+  {source:"stealthwatch",     target:"splunk",            type:"direct",   label:"SIEM integration"},
+  {source:"stealthwatch",     target:"catalyst-access",   type:"adjacent", label:"NetFlow / ETA source"},
+  {source:"stealthwatch",     target:"nexus",             type:"adjacent", label:"DC flow telemetry"},
+  {source:"secure-web",       target:"talos",             type:"direct",   label:"URL / malware intel"},
+  {source:"secure-web",       target:"secure-access",     type:"adjacent", label:"SWG migration path"},
+  {source:"multicloud-defense", target:"sf-enterprise",   type:"adjacent", label:"Unified policy"},
+  {source:"multicloud-defense", target:"hypershield",     type:"adjacent", label:"Cloud + DC enforcement"},
+  {source:"multicloud-defense", target:"talos",           type:"direct",   label:"Threat intel"},
+  {source:"multicloud-defense", target:"xdr",             type:"direct",   label:"Cloud telemetry"},
+  {source:"vuln-mgmt",        target:"xdr",               type:"direct",   label:"Risk-based incidents"},
+  {source:"vuln-mgmt",        target:"talos",             type:"direct",   label:"Exploit intel"},
+  {source:"vuln-mgmt",        target:"secure-endpoint",   type:"adjacent", label:"Endpoint risk"},
+  {source:"vuln-mgmt",        target:"splunk",            type:"adjacent", label:"Asset enrichment"},
+  {source:"secure-equipment", target:"industrial-eth",    type:"direct",   label:"Embedded in IE/IR"},
+  {source:"secure-equipment", target:"cyber-vision",      type:"direct",   label:"OT context"},
+  {source:"secure-equipment", target:"duo",               type:"direct",   label:"MFA for OT access"},
+  {source:"identity-intel",   target:"duo",               type:"direct",   label:"Identity signals"},
+  {source:"identity-intel",   target:"ise",               type:"direct",   label:"NAC identity context"},
+  {source:"identity-intel",   target:"xdr",               type:"direct",   label:"ITDR to XDR"},
+  {source:"identity-intel",   target:"talos",             type:"adjacent", label:"Threat intel"},
   // Collaboration
   {source:"webex-app",        target:"webex-meetings",    type:"direct",   label:"Integrated suite"},
   {source:"webex-app",        target:"webex-calling",     type:"direct",   label:"Integrated suite"},
@@ -1490,7 +1570,196 @@ const PRODUCTS = [
    successor:"nexus-9500",  successorName:"Cisco Nexus 9500 (Spine)",
    migNote:"Nexus 9500 spine delivers higher density 400G, ACI integration, and modern NX-OS replacing legacy Nexus 7K.",
    desc:"Legacy modular enterprise DC core (7000/7700). EOS Oct 12, 2023; Last Support Oct 31, 2028.",
-   url:"https://www.cisco.com/c/en/us/support/switches/nexus-7000-series-switches/series.html"}
+   url:"https://www.cisco.com/c/en/us/support/switches/nexus-7000-series-switches/series.html"},
+
+  // ── ISE (Current appliances + subscription tiers)
+  {id:"sns-3715",       name:"Cisco SNS-3715 Appliance",     family:"ise",            status:"current",
+   desc:"Small Secure Network Server for ISE — up to 7,500 concurrent active sessions, 1U with redundant power, ideal for small/medium deployments.",
+   url:"https://www.cisco.com/c/en/us/products/collateral/security/identity-services-engine/secure-network-server-3700-ds.html"},
+  {id:"sns-3755",       name:"Cisco SNS-3755 Appliance",     family:"ise",            status:"current",
+   desc:"Medium Secure Network Server for ISE — up to 25,000 concurrent active sessions, used as PSN/MnT/PAN node in distributed ISE clusters.",
+   url:"https://www.cisco.com/c/en/us/products/collateral/security/identity-services-engine/secure-network-server-3700-ds.html"},
+  {id:"sns-3795",       name:"Cisco SNS-3795 Appliance",     family:"ise",            status:"current",
+   desc:"Large Secure Network Server for ISE — up to 100,000 concurrent active sessions, dual CPU and high-throughput for enterprise PSN/MnT.",
+   url:"https://www.cisco.com/c/en/us/products/collateral/security/identity-services-engine/secure-network-server-3700-ds.html"},
+  {id:"ise-essentials", name:"Cisco ISE Essentials",         family:"ise",            status:"current",
+   desc:"Base subscription: RADIUS/TACACS+, AAA, basic profiling, and guest access. Ideal for simple 802.1X / device admin deployments.",
+   url:"https://www.cisco.com/c/en/us/products/security/identity-services-engine/buying-guide.html"},
+  {id:"ise-advantage",  name:"Cisco ISE Advantage",          family:"ise",            status:"current",
+   desc:"Adds TrustSec/SGT, posture assessment, BYOD onboarding, MDM integration, and pxGrid for ecosystem integration with XDR and Stealthwatch.",
+   url:"https://www.cisco.com/c/en/us/products/security/identity-services-engine/buying-guide.html"},
+  {id:"ise-premier",    name:"Cisco ISE Premier",            family:"ise",            status:"current",
+   desc:"Adds AI Endpoint Analytics, AI-driven device profiling, and advanced ISE integrations — the recommended tier for Zero Trust workplace.",
+   url:"https://www.cisco.com/c/en/us/products/security/identity-services-engine/buying-guide.html"},
+
+  // ── DUO (Current tiers)
+  {id:"duo-free",       name:"Duo Free",                     family:"duo",            status:"current",
+   desc:"Free tier: up to 10 users, two-factor authentication (Duo Push, SMS, hardware tokens) for cloud and on-prem applications.",
+   url:"https://duo.com/editions-and-pricing"},
+  {id:"duo-essentials", name:"Duo Essentials",               family:"duo",            status:"current",
+   desc:"Per-user MFA with Duo Push, Verified Duo Push, FIDO2/WebAuthn passkeys, and single sign-on (SSO) for SaaS apps.",
+   url:"https://duo.com/editions-and-pricing"},
+  {id:"duo-advantage",  name:"Duo Advantage",                family:"duo",            status:"current",
+   desc:"Adds Trusted Endpoints (managed device check), Device Health, Risk-Based Authentication, and Verified Push for high-assurance flows.",
+   url:"https://duo.com/editions-and-pricing"},
+  {id:"duo-premier",    name:"Duo Premier",                  family:"duo",            status:"current",
+   desc:"Adds Duo Network Gateway (VPN-less remote access), passwordless authentication, and Duo Desktop for full Zero Trust workforce.",
+   url:"https://duo.com/editions-and-pricing"},
+
+  // ── UMBRELLA (Current tiers)
+  {id:"umb-dns-ess",    name:"Umbrella DNS Essentials",      family:"umbrella",       status:"current",
+   desc:"DNS-layer security: blocks malicious domains, content filtering across 80+ categories, off-network protection via Roaming client.",
+   url:"https://umbrella.cisco.com/products/packages"},
+  {id:"umb-dns-adv",    name:"Umbrella DNS Advantage",       family:"umbrella",       status:"current",
+   desc:"Adds intelligent proxy for risky domains, file inspection with AMP and Talos, and advanced reporting.",
+   url:"https://umbrella.cisco.com/products/packages"},
+  {id:"umb-sig-ess",    name:"Umbrella SIG Essentials",      family:"umbrella",       status:"current",
+   desc:"Secure Internet Gateway: full proxy SWG, cloud firewall (L3/L4), CASB inline controls, and DNS layer — entry into SASE.",
+   url:"https://umbrella.cisco.com/products/packages"},
+  {id:"umb-sig-adv",    name:"Umbrella SIG Advantage",       family:"umbrella",       status:"current",
+   desc:"Adds Remote Browser Isolation (RBI), DLP, full CASB with API integrations, and full SASE convergence — typically paired with Secure Access.",
+   url:"https://umbrella.cisco.com/products/packages"},
+
+  // ── SECURE ACCESS (Current tiers)
+  {id:"sa-essentials",  name:"Cisco Secure Access Essentials", family:"secure-access", status:"current",
+   desc:"SSE platform with ZTNA, SWG, cloud-delivered firewall, DNS security (Umbrella), and remote access — replaces VPN for hybrid workforce.",
+   url:"https://www.cisco.com/site/us/en/products/security/secure-access/index.html"},
+  {id:"sa-advantage",   name:"Cisco Secure Access Advantage",  family:"secure-access", status:"current",
+   desc:"Adds private app discovery, full RBI, inline CASB, DLP, and digital experience monitoring via ThousandEyes integration.",
+   url:"https://www.cisco.com/site/us/en/products/security/secure-access/index.html"},
+
+  // ── SECURE EMAIL (Current SKUs)
+  {id:"etd",            name:"Cisco Secure Email Threat Defense", family:"secure-email", status:"current",
+   desc:"Cloud-native API-based email security for Microsoft 365 and Google Workspace — BEC, account takeover, and ransomware defense.",
+   url:"https://www.cisco.com/site/us/en/products/security/email-security/threat-defense/index.html"},
+  {id:"esa-gateway",    name:"Cisco Secure Email Gateway",   family:"secure-email",   status:"current",
+   desc:"On-prem/virtual/cloud SMTP gateway (formerly ESA) — anti-spam, anti-malware, DMARC, encryption, and outbound DLP.",
+   url:"https://www.cisco.com/c/en/us/products/security/email-security/index.html"},
+  {id:"email-encrypt",  name:"Cisco Secure Email Encryption Service", family:"secure-email", status:"current",
+   desc:"Policy-driven email encryption (formerly Cisco Registered Envelope Service) for HIPAA, GLBA, and PCI compliance.",
+   url:"https://www.cisco.com/c/en/us/products/security/email-encryption/index.html"},
+
+  // ── SECURE ENDPOINT (Current tiers)
+  {id:"se-essentials",  name:"Cisco Secure Endpoint Essentials", family:"secure-endpoint", status:"current",
+   desc:"Cloud-delivered EDR: behavioral analysis, machine learning, retrospection, and SecureX integration. Replaces AMP Essentials.",
+   url:"https://www.cisco.com/c/en/us/products/security/amp-for-endpoints/buyers-guide.html"},
+  {id:"se-advantage",   name:"Cisco Secure Endpoint Advantage", family:"secure-endpoint", status:"current",
+   desc:"Adds Malware Analytics (Threat Grid) cloud sandbox, automated threat hunting, and Secure Malware Analytics integration.",
+   url:"https://www.cisco.com/c/en/us/products/security/amp-for-endpoints/buyers-guide.html"},
+  {id:"se-premier",     name:"Cisco Secure Endpoint Premier", family:"secure-endpoint", status:"current",
+   desc:"Adds SecureX Threat Hunting (managed) and Orbital Advanced Search — analyst-driven proactive hunting on every endpoint.",
+   url:"https://www.cisco.com/c/en/us/products/security/amp-for-endpoints/buyers-guide.html"},
+
+  // ── XDR (Current tiers)
+  {id:"xdr-essentials", name:"Cisco XDR Essentials",         family:"xdr",            status:"current",
+   desc:"Cross-domain detection and response: telemetry from endpoint, network, email, cloud, and identity with correlation and playbooks.",
+   url:"https://www.cisco.com/site/us/en/products/security/xdr/index.html"},
+  {id:"xdr-advantage",  name:"Cisco XDR Advantage",          family:"xdr",            status:"current",
+   desc:"Adds longer telemetry retention, advanced analytics, automated response actions, and AI Assistant for SecOps.",
+   url:"https://www.cisco.com/site/us/en/products/security/xdr/index.html"},
+  {id:"xdr-premier",    name:"Cisco XDR Premier",            family:"xdr",            status:"current",
+   desc:"Adds Talos-led 24×7 managed threat hunting, MDR services, and advanced playbook authoring.",
+   url:"https://www.cisco.com/site/us/en/products/security/xdr/index.html"},
+  {id:"securex",        name:"Cisco SecureX",                family:"xdr",            status:"eol",
+   eosDate:"Jul 31, 2024", eolDate:"Jul 31, 2024",
+   successor:"xdr-essentials", successorName:"Cisco XDR Essentials",
+   migNote:"SecureX features (orchestration, ribbon, threat response) have been consolidated into Cisco XDR. Existing SecureX tenants migrate to XDR.",
+   desc:"Cloud-native SOC platform retired and folded into Cisco XDR.",
+   url:"https://www.cisco.com/c/en/us/products/security/securex/index.html"},
+
+  // ── HYPERSHIELD (Current)
+  {id:"hypershield-sw", name:"Hypershield Subscription",     family:"hypershield",    status:"current",
+   desc:"Per-segment subscription enforcing AI-generated policy across workloads, switches, and DPUs in a distributed security fabric.",
+   url:"https://www.cisco.com/site/us/en/products/security/cisco-hypershield/index.html"},
+  {id:"hypershield-dpu",name:"Hypershield DPU / Smart Switch", family:"hypershield",  status:"current",
+   desc:"Hardware dataplane (Tesseract / AMD Pensando DPU, embedded in Nexus Smart Switches and N9300-FX-D) for inline AI policy enforcement at line rate.",
+   url:"https://www.cisco.com/site/us/en/products/security/cisco-hypershield/index.html"},
+
+  // ── TALOS (Service offerings)
+  {id:"talos-ir",       name:"Cisco Talos Incident Response", family:"talos",         status:"current",
+   desc:"Pre-paid retainer for emergency response, tabletop exercises, IR readiness assessments, and post-breach forensics by Talos analysts.",
+   url:"https://www.cisco.com/site/us/en/products/security/talos-incident-response/index.html"},
+
+  // ── CYBER VISION (Current components)
+  {id:"cv-center",      name:"Cisco Cyber Vision Center",    family:"cyber-vision",   status:"current",
+   desc:"Central management VM / appliance aggregating sensor telemetry, asset inventory, vulnerability detection, and OT/IT integration.",
+   url:"https://www.cisco.com/c/en/us/products/collateral/security/cyber-vision/datasheet-c78-743222.html"},
+  {id:"cv-sensor-iox",  name:"Cyber Vision IOx Sensor",      family:"cyber-vision",   status:"current",
+   desc:"Software sensor that runs as IOx container on IE3400/IE9300 industrial switches and IR1100 routers — DPI without span-port tap.",
+   url:"https://www.cisco.com/c/en/us/products/collateral/security/cyber-vision/datasheet-c78-743222.html"},
+  {id:"cv-sensor-hw",   name:"Cyber Vision Hardware Sensor (IC3000)", family:"cyber-vision", status:"current",
+   desc:"Dedicated IC3000-based passive sensor with SPAN/TAP input for monitoring industrial networks that don't run Cisco switches.",
+   url:"https://www.cisco.com/c/en/us/products/collateral/security/cyber-vision/datasheet-c78-743222.html"},
+
+  // ── SECURE CLIENT (Current modules)
+  {id:"secure-client-vpn", name:"Secure Client AnyConnect VPN Module", family:"secure-client", status:"current",
+   desc:"SSL/IPsec VPN module — the classic AnyConnect functionality bundled in the unified Secure Client agent.",
+   url:"https://www.cisco.com/c/en/us/products/security/anyconnect-secure-mobility-client/index.html"},
+  {id:"secure-client-zta", name:"Secure Client Zero Trust Module", family:"secure-client", status:"current",
+   desc:"ZTNA module that connects to Secure Access for per-app posture-based access without traditional VPN tunnels.",
+   url:"https://www.cisco.com/site/us/en/products/security/secure-access/index.html"},
+  {id:"secure-client-nvm", name:"Secure Client Network Visibility Module", family:"secure-client", status:"current",
+   desc:"Endpoint flow telemetry (IPFIX) module — feeds Secure Network Analytics for endpoint-aware NDR.",
+   url:"https://www.cisco.com/c/en/us/td/docs/security/vpn_client/anyconnect/Cisco-Secure-Client-5/admin/guide/b-cisco-secure-client-admin-guide-5-1/nvm.html"},
+
+  // ── SECURE WORKLOAD (Current SKUs)
+  {id:"sw-saas",        name:"Secure Workload SaaS",         family:"secure-workload", status:"current",
+   desc:"Cloud-delivered Secure Workload — agent-based and agent-less workload segmentation with no on-prem appliance.",
+   url:"https://www.cisco.com/site/us/en/products/security/secure-workload/index.html"},
+  {id:"sw-onprem",      name:"Secure Workload On-Prem (39RU/8RU)", family:"secure-workload", status:"current",
+   desc:"On-premises Secure Workload cluster (formerly Tetration) for air-gapped or regulated environments — 39RU large or 8RU small form factors.",
+   url:"https://www.cisco.com/site/us/en/products/security/secure-workload/index.html"},
+
+  // ── SECURE NETWORK ANALYTICS / STEALTHWATCH (Current)
+  {id:"sna-mgr",        name:"Secure Network Analytics Manager", family:"stealthwatch", status:"current",
+   desc:"Central management console for flow analytics, alarm tuning, and detection across the SNA architecture.",
+   url:"https://www.cisco.com/c/en/us/products/security/stealthwatch/index.html"},
+  {id:"sna-flow-coll",  name:"Flow Collector",               family:"stealthwatch",   status:"current",
+   desc:"Aggregates NetFlow / IPFIX from switches, routers, and firewalls — physical (FC4200) or virtual.",
+   url:"https://www.cisco.com/c/en/us/products/security/stealthwatch/index.html"},
+  {id:"sna-flow-sensor",name:"Flow Sensor",                  family:"stealthwatch",   status:"current",
+   desc:"Generates flow records from SPAN/TAP for segments where NetFlow is unavailable — adds Encrypted Traffic Analytics metadata.",
+   url:"https://www.cisco.com/c/en/us/products/security/stealthwatch/index.html"},
+
+  // ── SECURE WEB APPLIANCE (Current + EOS)
+  {id:"wsa-s195",       name:"Cisco Secure Web Appliance S195", family:"secure-web",  status:"current",
+   desc:"Branch / small enterprise SWG appliance: URL filtering, malware scanning, decryption — 500 Mbps throughput.",
+   url:"https://www.cisco.com/c/en/us/products/security/secure-web-appliance/index.html"},
+  {id:"wsa-s695",       name:"Cisco Secure Web Appliance S695", family:"secure-web",  status:"current",
+   desc:"Enterprise SWG appliance with 4 Gbps throughput, AMP, CASB, and ETA.",
+   url:"https://www.cisco.com/c/en/us/products/security/secure-web-appliance/index.html"},
+  {id:"wsa-virtual",    name:"Secure Web Appliance Virtual", family:"secure-web",     status:"current",
+   desc:"vWSA for VMware/KVM/Hyper-V — same feature set as physical WSA; deployed in branches, DMZs, or public-cloud egress.",
+   url:"https://www.cisco.com/c/en/us/products/security/secure-web-appliance/index.html"},
+
+  // ── MULTICLOUD DEFENSE (Current)
+  {id:"mcd-controller", name:"Multicloud Defense Controller", family:"multicloud-defense", status:"current",
+   desc:"SaaS control plane that orchestrates inline cloud firewalls across AWS / Azure / GCP / OCI — single policy, telemetry, and dashboards.",
+   url:"https://www.cisco.com/site/us/en/products/security/multicloud-defense/index.html"},
+  {id:"mcd-gateway",    name:"Multicloud Defense Gateway",   family:"multicloud-defense", status:"current",
+   desc:"Auto-scaling, ephemeral cloud firewall instances deployed in customer VPC/VNet — L4–L7 inspection, TLS decrypt, IDPS, and egress DLP.",
+   url:"https://www.cisco.com/site/us/en/products/security/multicloud-defense/index.html"},
+
+  // ── VULNERABILITY MANAGEMENT (Current)
+  {id:"vm-essentials",  name:"Vulnerability Management Essentials", family:"vuln-mgmt", status:"current",
+   desc:"Risk-based vulnerability prioritization (Kenna VM Essentials) — integrates with Qualys, Tenable, Rapid7, and CMDBs.",
+   url:"https://www.cisco.com/site/us/en/products/security/vulnerability-management/index.html"},
+  {id:"vm-premier",     name:"Vulnerability Management Premier", family:"vuln-mgmt", status:"current",
+   desc:"Adds Application Risk Module (AppSec) and Premier Connect for SLA-driven remediation across IT and security teams.",
+   url:"https://www.cisco.com/site/us/en/products/security/vulnerability-management/index.html"},
+
+  // ── SECURE EQUIPMENT ACCESS (Current)
+  {id:"sea-cloud",      name:"Secure Equipment Access Cloud", family:"secure-equipment", status:"current",
+   desc:"Cloud-managed remote access for OT — agent-less, per-asset session brokering via the IoT Operations Dashboard.",
+   url:"https://www.cisco.com/site/us/en/products/security/industrial-security/secure-equipment-access/index.html"},
+  {id:"sea-plus",       name:"Secure Equipment Access Plus", family:"secure-equipment", status:"current",
+   desc:"Adds session recording, audit logging, and per-asset MFA via Duo — meets NERC CIP and IEC 62443 remote-access controls.",
+   url:"https://www.cisco.com/site/us/en/products/security/industrial-security/secure-equipment-access/index.html"},
+
+  // ── IDENTITY INTELLIGENCE (Current)
+  {id:"ii-subscription", name:"Identity Intelligence Subscription", family:"identity-intel", status:"current",
+   desc:"Per-user ITDR subscription — correlates identities and entitlements across Duo, ISE, Azure AD/Entra, Okta, AD, HR systems.",
+   url:"https://www.cisco.com/site/us/en/products/security/identity-intelligence/index.html"}
 ];
 
 // Build lookup maps
@@ -1791,6 +2060,57 @@ const ICON_DEFS = `
   <rect x="13" y="16" width="2" height="3" fill="rgba(0,0,0,0.45)"/>
   <rect x="17" y="16" width="2" height="3" fill="rgba(0,0,0,0.45)"/>
 </symbol>
+<symbol id="icon-cloud" viewBox="0 0 24 24" fill="currentColor">
+  <path d="M7 19a4 4 0 0 1-1-7.9A6 6 0 0 1 18 11h.5a4.5 4.5 0 0 1 0 9H7z"/>
+  <circle cx="9.5"  cy="15.5" r="0.9" fill="rgba(0,0,0,0.35)"/>
+  <circle cx="13"   cy="15.5" r="0.9" fill="rgba(0,0,0,0.35)"/>
+  <circle cx="16.5" cy="15.5" r="0.9" fill="rgba(0,0,0,0.35)"/>
+</symbol>
+<symbol id="icon-cube" viewBox="0 0 24 24" fill="currentColor">
+  <path d="M12 2.5 3.5 7v10L12 21.5 20.5 17V7z"/>
+  <path d="M3.5 7 12 11.5 20.5 7" fill="none" stroke="rgba(0,0,0,0.45)" stroke-width="1.4"/>
+  <path d="M12 11.5V21.5" fill="none" stroke="rgba(0,0,0,0.45)" stroke-width="1.4"/>
+</symbol>
+<symbol id="icon-flow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+  <path d="M3 7c4 0 4 4 8 4s4-4 8-4"/>
+  <path d="M3 13c4 0 4 4 8 4s4-4 8-4"/>
+  <circle cx="3" cy="7"  r="1.2" fill="currentColor"/>
+  <circle cx="19" cy="7"  r="1.2" fill="currentColor"/>
+  <circle cx="3" cy="13" r="1.2" fill="currentColor"/>
+  <circle cx="19" cy="13" r="1.2" fill="currentColor"/>
+  <circle cx="11" cy="11" r="1.2" fill="currentColor"/>
+</symbol>
+<symbol id="icon-globe-lock" viewBox="0 0 24 24" fill="currentColor">
+  <circle cx="11" cy="11" r="8" fill="currentColor"/>
+  <path d="M3 11h16M11 3a13 13 0 0 1 0 16M11 3a13 13 0 0 0 0 16" fill="none" stroke="rgba(0,0,0,0.45)" stroke-width="1.4"/>
+  <rect x="14" y="14" width="8" height="7" rx="1.2" fill="currentColor"/>
+  <rect x="14" y="14" width="8" height="7" rx="1.2" fill="rgba(0,0,0,0.55)"/>
+  <path d="M16 14v-2a2 2 0 0 1 4 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+</symbol>
+<symbol id="icon-bug" viewBox="0 0 24 24" fill="currentColor">
+  <rect x="7" y="8" width="10" height="11" rx="5"/>
+  <path d="M9 6a3 3 0 0 1 6 0" fill="none" stroke="currentColor" stroke-width="1.8"/>
+  <path d="M3 12h4M17 12h4M5 6l3 3M19 6l-3 3M5 18l3-2M19 18l-3-2" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <circle cx="10" cy="12" r="0.9" fill="rgba(0,0,0,0.45)"/>
+  <circle cx="14" cy="12" r="0.9" fill="rgba(0,0,0,0.45)"/>
+</symbol>
+<symbol id="icon-wrench" viewBox="0 0 24 24" fill="currentColor">
+  <path d="M14.5 3a5.5 5.5 0 0 0-5.4 6.6L3 15.7 6.3 19l6.1-6.1A5.5 5.5 0 1 0 14.5 3zm0 8.5a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/>
+</symbol>
+<symbol id="icon-fingerprint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+  <path d="M6 12a6 6 0 0 1 12 0v2"/>
+  <path d="M8.5 12a3.5 3.5 0 0 1 7 0c0 1.5 0 3-.5 4.5"/>
+  <path d="M12 12v3a4 4 0 0 1-1.5 3"/>
+  <path d="M4 12a8 8 0 0 1 12.5-6.6"/>
+  <path d="M20 16c-.5 1.5-1.2 2.5-2 3.5"/>
+</symbol>
+<symbol id="icon-shield-network" viewBox="0 0 24 24" fill="currentColor">
+  <path d="M12 2 4 5v7c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V5l-8-3z"/>
+  <circle cx="8"  cy="10" r="1.4" fill="rgba(0,0,0,0.5)"/>
+  <circle cx="16" cy="10" r="1.4" fill="rgba(0,0,0,0.5)"/>
+  <circle cx="12" cy="15" r="1.4" fill="rgba(0,0,0,0.5)"/>
+  <path d="M8 10l4 5M16 10l-4 5M8 10h8" stroke="rgba(0,0,0,0.5)" stroke-width="1.1" fill="none"/>
+</symbol>
 `;
 defs.node().insertAdjacentHTML("beforeend", ICON_DEFS);
 
@@ -1814,6 +2134,14 @@ function iconKey(n) {
   if (id === "secure-endpoint")                                  return "endpoint";
   if (/^(talos|cyber-vision)$/.test(id))                         return "eye";
   if (id === "xdr")                                              return "radar";
+  if (id === "secure-client")                                    return "shield-network";
+  if (id === "secure-workload")                                  return "cube";
+  if (id === "stealthwatch")                                     return "flow";
+  if (id === "secure-web")                                       return "globe-lock";
+  if (id === "multicloud-defense")                               return "cloud";
+  if (id === "vuln-mgmt")                                        return "bug";
+  if (id === "secure-equipment")                                 return "wrench";
+  if (id === "identity-intel")                                   return "fingerprint";
   // Collaboration
   if (/^(webex-app|webex-connect)$/.test(id))                    return "chat";
   if (/^(webex-meetings|room-systems)$/.test(id))                return "video";
@@ -3214,6 +3542,14 @@ const TIERS = {
   "talos":             {tier:"Included with subscriptions",           model:"Embedded",                    note:"Talos intel is included in most Cisco security subscriptions."},
   "xdr":               {tier:"Essentials / Advantage / Premier",      model:"Per-incident or seat",        note:"Advantage/Premier add advanced playbooks and longer telemetry retention."},
   "cyber-vision":      {tier:"Sensor + Center licensing",             model:"Subscription + perpetual HW", note:"Per-network-zone licensing with central or hardware sensor."},
+  "secure-client":     {tier:"Premier / Apex / Plus",                 model:"Per-user subscription",       note:"Premier required for Posture; bundled with Duo and Secure Access subscriptions."},
+  "secure-workload":   {tier:"Essentials / Advantage",                model:"Per-workload subscription",   note:"Advantage adds advanced agent-less visibility and process forensics."},
+  "stealthwatch":      {tier:"Flow Rate License (per fps)",           model:"Subscription + virtual/HW",   note:"Sized by flows per second; ETA requires Advantage."},
+  "secure-web":        {tier:"Web Essentials / Premium / Advanced Malware", model:"Subscription + virtual/HW", note:"Advanced Malware adds AMP + sandboxing; consider Secure Access for SASE."},
+  "multicloud-defense":{tier:"Egress / Ingress / East-West",          model:"Hourly / annual subscription", note:"Marketplace metered billing on AWS/Azure/GCP."},
+  "vuln-mgmt":         {tier:"VM Essentials / Premier",               model:"Per-asset subscription",      note:"Premier adds Application Risk Module and SLA reporting."},
+  "secure-equipment":  {tier:"Included with IoT Ops Dashboard",       model:"Subscription",                note:"Bundled with Cisco IoT Operations Dashboard; per-asset enforcement."},
+  "identity-intel":    {tier:"Identity Intelligence Subscription",    model:"Per-user subscription",       note:"Add-on to Duo or standalone; correlates IdP, NAC, and HR data."},
   "webex-app":         {tier:"Webex Suite (per user)",                model:"Per-user subscription",       note:"Suite combines Meetings + Calling + Messaging + Webinars + Polls."},
   "webex-meetings":    {tier:"Standalone or Webex Suite",             model:"Per-user subscription",       note:"Suite is generally lower TCO than standalone."},
   "webex-calling":     {tier:"Professional / Standard / Workspace",   model:"Per-user/per-station subscription", note:"Professional adds Webex App + UC; Workspace is for shared phones/rooms."},
@@ -3588,6 +3924,10 @@ STYLE.textContent = `
     font-size:13px;padding:0 4px;opacity:0;transition:opacity .15s}
   .rp-item:hover .rp-pin{opacity:1}
   .rp-pin.pinned{opacity:1;color:#f59e0b}
+  .rp-cmp{background:transparent;border:none;color:var(--subtle);cursor:pointer;
+    font-size:12px;padding:0 4px;opacity:0;transition:opacity .15s;flex-shrink:0}
+  .rp-item:hover .rp-cmp{opacity:1}
+  .rp-cmp:hover{color:var(--accent)}
 
   /* Context menu */
   #ctx-menu{position:fixed;background:var(--surface);border:1px solid var(--border);
@@ -4085,6 +4425,7 @@ function renderRecentPinned(){
     return `<button class="rp-item" data-id="${id}">
       <div class="rp-dot" style="background:${c?CATS[c].color:"#444"}"></div>
       <div style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(item.name)}</div>
+      <button class="rp-cmp" data-cmp="${id}" title="Add to compare">⇆</button>
       <button class="rp-pin ${isP(id)?"pinned":""}" data-pin="${id}" title="${isP(id)?"Unpin":"Pin"}">${isP(id)?"★":"☆"}</button>
     </button>`;
   };
@@ -4092,13 +4433,18 @@ function renderRecentPinned(){
                     (recent.length ? `<div class="rp-sec">Recent</div>` + recent.filter(id => !pinned.includes(id)).map(itemHtml).join("") : "") +
                     (!pinned.length && !recent.length ? `<div style="padding:14px;color:var(--subtle);font-size:11px;text-align:center">View products to populate</div>` : "");
   panel.querySelectorAll("[data-id]").forEach(b => b.addEventListener("click", ev => {
-    if (ev.target.dataset.pin) return;
+    if (ev.target.dataset.pin || ev.target.dataset.cmp) return;
     const id = b.dataset.id;
     if (prodById[id]) window.showProductDetail(id);
     else window.jumpTo(id);
   }));
   panel.querySelectorAll("[data-pin]").forEach(b => b.addEventListener("click", ev => {
     ev.stopPropagation(); togglePin(b.dataset.pin);
+  }));
+  panel.querySelectorAll("[data-cmp]").forEach(b => b.addEventListener("click", ev => {
+    ev.stopPropagation();
+    const id = b.dataset.cmp;
+    addToCompare(id, prodById[id] ? "product" : "node");
   }));
 }
 function buildRecentPinned(){
@@ -4722,6 +5068,7 @@ function enhanceNodePanel(id){
     renderBreadcrumbs();
     insertPhotoPlaceholder(id, "node");
     insertTierBadge(id);
+    insertPinAndCompareBtns(id, "node");
   }, 0);
 }
 function enhanceProductPanel(id){
