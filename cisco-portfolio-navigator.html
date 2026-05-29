@@ -466,9 +466,10 @@
   </div>
   <div class="dv"></div>
   <div class="vm-seg" id="vm-seg" role="group" aria-label="Visualization level">
-    <button type="button" data-vm="overview"    title="Overview — 5 category bubbles">Overview</button>
-    <button type="button" data-vm="families"    class="active" title="Families — 52 product families (default)">Families</button>
-    <button type="button" data-vm="composition" disabled title="Composition — pick a family first">Composition</button>
+    <button type="button" data-vm="overview"     title="Overview — 5 category bubbles">Overview</button>
+    <button type="button" data-vm="families"     class="active" title="Families — 52 product families (default)">Families</button>
+    <button type="button" data-vm="composition"  disabled title="Composition — pick a family first">Composition</button>
+    <button type="button" data-vm="all-products" title="All Products — every family + product (dense; power-user view)">All</button>
   </div>
   <div class="dv"></div>
   <div class="fr" id="cpills"></div>
@@ -2786,6 +2787,40 @@ function buildOverviewView(){
   return { nodes, links };
 }
 
+// ── Synthesize All-Products mode: every family + every product in one graph.
+//    Heavy — ~350 nodes — so we use lower-strength forces in
+//    configureForcesForMode("all-products") and a compact product radius.
+function buildAllProductsView(){
+  const familyNodes = NODES.map(n => {
+    const cnt = PRODUCTS.filter(p => p.family === n.id).length;
+    return Object.assign({}, n, {
+      _kind: "family",
+      _r: 22,
+      _badge: cnt > 0 ? String(cnt) : null,
+      // Reset any prior pin from Composition.
+      fx: null, fy: null, _pinned: false
+    });
+  });
+  const productNodes = PRODUCTS.map(p => ({
+    id: p.id, name: p.name, category: p.category,
+    _kind: "product", _r: 7,
+    _productRef: p, _family: p.family
+  }));
+  // Family-to-family edges (preserve the original adjacency map).
+  const links = LINKS.map(l => Object.assign({}, l));
+  // Family-to-product "contains" edges.
+  PRODUCTS.forEach(p => {
+    links.push({ source: p.family, target: p.id, type: "composition", label: "contains" });
+  });
+  // Product-to-product succession edges (within and across families).
+  PRODUCTS.forEach(p => {
+    if (p.successor && (prodById[p.successor] || nodeById[p.successor])){
+      links.push({ source: p.id, target: p.successor, type: "succession", label: "replaced by" });
+    }
+  });
+  return { nodes: [...familyNodes, ...productNodes], links };
+}
+
 // ── Synthesize Composition-mode nodes/links for one family.
 function buildCompositionView(familyId){
   const fam = nodeById[familyId];
@@ -2846,6 +2881,9 @@ function applyViewLevel(mode, opts){
   } else if (mode === "composition"){
     const v = buildCompositionView(viewFocus);
     viewNodes = v.nodes; viewLinks = v.links;
+  } else if (mode === "all-products"){
+    const v = buildAllProductsView();
+    viewNodes = v.nodes; viewLinks = v.links;
   } else {
     // Families mode = the full graph; optionally focus a category by activating it.
     viewNodes = NODES.slice(); viewLinks = LINKS.slice();
@@ -2877,7 +2915,7 @@ function applyViewLevel(mode, opts){
   updateBreadcrumb();
 
   // Run the appropriate post-mode filter pass.
-  if (mode === "families") applyFilters();
+  if (mode === "families" || mode === "all-products") applyFilters();
   else {
     // Hide filter badge in other modes.
     const badge=document.getElementById("fbadge"); if (badge) badge.style.display="none";
@@ -2896,7 +2934,10 @@ function applyViewLevel(mode, opts){
   // Recenter view after mode change so the user always sees the new content.
   setTimeout(() => {
     const {w,h} = getDims();
-    const scale = mode === "overview" ? 0.95 : (mode === "composition" ? 1.05 : 0.78);
+    const scale = mode === "overview"     ? 0.95
+               : mode === "composition"   ? 1.05
+               : mode === "all-products"  ? 0.50
+               :                            0.78;
     svg.transition().duration(prev === mode ? 0 : 550)
       .call(zoom.transform, d3.zoomIdentity.translate(w/2, h/2).scale(scale));
   }, 50);
@@ -2912,6 +2953,17 @@ function configureForcesForMode(mode){
     sim.force("charge",  d3.forceManyBody().strength(-420));
     sim.force("collide", d3.forceCollide(d => d._r + 18).strength(0.95));
     sim.force("link").distance(d => d.type === "succession" ? 100 : 130).strength(0.6);
+  } else if (mode === "all-products"){
+    // Lighter forces tuned for ~350 nodes. Products stick close to their
+    // family via short "composition" links, families spread out via charge.
+    sim.force("charge",  d3.forceManyBody().strength(d => d._kind === "family" ? -380 : -45));
+    sim.force("collide", d3.forceCollide(d => d._r + 6).strength(0.9));
+    sim.force("link").distance(d => {
+      if (d.type === "composition")  return 32;
+      if (d.type === "succession")   return 80;
+      if (d.type === "direct")       return 180;
+      return 240;
+    }).strength(d => d.type === "composition" ? 0.9 : 0.25);
   } else {
     sim.force("charge",  d3.forceManyBody().strength(-560));
     sim.force("collide", d3.forceCollide(d => d._r + 30).strength(0.85));
@@ -2936,11 +2988,12 @@ function updateViewModeUI(){
       ? `Composition — ${nodeById[viewFocus]?.name || "current focus"}`
       : "Composition — pick a family first";
   }
-  // Category pills and filter dropdowns: muted in non-Families modes.
+  // Category pills and filter dropdowns: active in Families + All-Products,
+  // muted otherwise (Overview / Composition operate on synthesized data).
   const pills = document.getElementById("cpills");
   const ucs = document.getElementById("ucs");
   const inds = document.getElementById("inds");
-  const muted = viewMode !== "families";
+  const muted = !(viewMode === "families" || viewMode === "all-products");
   [pills, ucs, inds].forEach(el => {
     if (!el) return;
     el.style.opacity = muted ? 0.45 : 1;
@@ -3017,6 +3070,10 @@ window.getViewFocus   = () => viewFocus;
   }
   if (savedMode === "overview"){
     applyViewLevel("overview", { initial: true });
+    return;
+  }
+  if (savedMode === "all-products"){
+    applyViewLevel("all-products", { initial: true });
     return;
   }
   applyViewLevel("families", { initial: true });
@@ -3214,11 +3271,10 @@ window.filterTagInd = ind => { activeInd=ind; indEl.value=ind; applyFilters(); }
 
 // ── Filtering
 function applyFilters() {
-  // Category / use-case / industry filters only apply to the Families view.
-  // In Overview and Composition modes we always show the synthesized node set,
-  // so we short-circuit here. The pills/dropdowns are also visually muted
-  // in updateViewModeUI().
-  if (viewMode !== "families"){
+  // Category / use-case / industry filters apply in Families and All-Products
+  // modes. Overview and Composition short-circuit: they always show their
+  // synthesized node set.
+  if (viewMode === "overview" || viewMode === "composition"){
     const badge = document.getElementById("fbadge"); if (badge) badge.style.display = "none";
     if (ndEl) ndEl.style("display", null);
     if (lviz) lviz.style("display", null);
@@ -3226,12 +3282,29 @@ function applyFilters() {
     return;
   }
   const vis=new Set();
-  NODES.forEach(n=>{ if(activeCats.has(n.category)&&(!activeUC||n.useCases.includes(activeUC))&&(!activeInd||n.industries.includes(activeInd))) vis.add(n.id); });
+  if (viewMode === "all-products"){
+    // Both family + product nodes need to satisfy the filter set.
+    NODES.forEach(n=>{ if(activeCats.has(n.category)&&(!activeUC||n.useCases.includes(activeUC))&&(!activeInd||n.industries.includes(activeInd))) vis.add(n.id); });
+    PRODUCTS.forEach(p=>{
+      const fam = nodeById[p.family];
+      if (!fam) return;
+      if (activeCats.has(p.category)
+        && (!activeUC  || (fam.useCases  || []).includes(activeUC))
+        && (!activeInd || (fam.industries|| []).includes(activeInd))) vis.add(p.id);
+    });
+  } else {
+    NODES.forEach(n=>{ if(activeCats.has(n.category)&&(!activeUC||n.useCases.includes(activeUC))&&(!activeInd||n.industries.includes(activeInd))) vis.add(n.id); });
+  }
   if (ndEl) ndEl.style("display",d=>vis.has(d.id)?null:"none");
   if (lviz) lviz.style("display",l=>vis.has(sid(l))&&vis.has(tid(l))?null:"none");
   if (lhit) lhit.style("display",l=>vis.has(sid(l))&&vis.has(tid(l))?null:"none");
   const badge=document.getElementById("fbadge"),f=activeUC||activeInd||activeCats.size<Object.keys(CATS).length;
-  if(f){badge.textContent=`Showing ${vis.size} of ${NODES.length} portfolio families`;badge.style.display="block";}
+  if(f){
+    const total = viewMode === "all-products" ? (NODES.length + PRODUCTS.length) : NODES.length;
+    const label = viewMode === "all-products" ? "items" : "portfolio families";
+    badge.textContent=`Showing ${vis.size} of ${total} ${label}`;
+    badge.style.display="block";
+  }
   else badge.style.display="none";
 }
 
