@@ -3821,7 +3821,7 @@ document.addEventListener("keydown",ev=>{
   // The old "cisco-portfolio-tour-completed-v1" key still suppresses the *first-time* tour
   // for users who already completed v1; they can re-launch the latest via the ? button.
   const STORAGE_KEY = "cisco-portfolio-tour-completed-v1";
-  const TOUR_VERSION = "v2.1";
+  const TOUR_VERSION = "v2.2";
   const STORAGE_KEY_LATEST = "cisco-portfolio-tour-latest-seen";
 
   // Inject DOM
@@ -3868,8 +3868,30 @@ document.addEventListener("keydown",ev=>{
              <strong>product families</strong> (ISE, Meraki, Webex Devices …) and
              <strong>specific models</strong> (Cisco Desk Pro, Catalyst 9300, ASA 5525-X …).
              EOL/EOS items show colored badges.`,
-      tip: `Press <code>/</code> or <code>⌘K</code> / <code>Ctrl+K</code> from anywhere to focus search. As you type, the matching graph nodes pulse.`
+      tip: `Press <code>/</code> or <code>⌘K</code> / <code>Ctrl+K</code> from anywhere to focus search. As you type, the matching graph nodes pulse. Picking a <strong>specific product</strong> from the results auto-drills the graph into that product's family.`
     },
+
+    // ── View modes ───────────────────────────────────────────────────────────
+    {
+      target: "#vm-seg", place: "bottom",
+      title: "Drill down through four levels of detail",
+      body: `<span style="opacity:.6">(new in v2.1)</span> Same data, four lenses
+             — pick whichever zoom level fits the question you're asking:
+             <ul style="margin:8px 0 0 16px;padding:0">
+               <li><b>Overview</b> — 5 category bubbles. Best for first-look conversations.</li>
+               <li><b>Families</b> — 52 product families <em>(default)</em>. The classic map of how things connect.</li>
+               <li><b>Composition</b> — one family pinned in the middle, every specific SKU around it, with dashed purple <em>"replaced by"</em> arrows to successor products.</li>
+               <li><b>All</b> — every family + every product (~350 nodes) in one dense graph. Power-user view.</li>
+             </ul>`,
+      tip: `<b>Two fast ways into Composition:</b> double-click any family bubble in Families mode, or click the bright <em>"Explore N products"</em> button on any family's detail panel. A breadcrumb chip appears under the topbar so you always know where you are.`,
+      before: () => {
+        // Make sure we're in Families mode so the segmented control is in its default state.
+        if (window.getViewMode && window.getViewMode() !== "families") {
+          window.applyViewLevel && window.applyViewLevel("families");
+        }
+      }
+    },
+
     {
       target: "#cpills", place: "bottom",
       title: "Filter by category",
@@ -3891,8 +3913,10 @@ document.addEventListener("keydown",ev=>{
       body: `Each <strong>node</strong> is a product family, color-coded by category.
              <strong>Solid lines</strong> are direct integrations; <strong>dashed lines</strong>
              are adjacent / complementary.<br><br>
-             <strong>Click</strong> any node for details · <strong>Right-click</strong> for
-             a quick action menu · <strong>Scroll</strong> to zoom · <strong>Drag</strong> to pan.`,
+             <strong>Click</strong> any node for details · <strong>Double-click</strong>
+             a family to drill into its products (Composition mode) ·
+             <strong>Right-click</strong> for a quick action menu ·
+             <strong>Scroll</strong> to zoom · <strong>Drag</strong> to pan.`,
     },
 
     // ── Plans + sharing ──────────────────────────────────────────────────────
@@ -3978,8 +4002,9 @@ document.addEventListener("keydown",ev=>{
       target: "#panel", place: "right",
       title: "Rich detail panels",
       body: `Click any node or product for a detail panel with description, links,
-             use cases, and industries. <strong>v2 additions:</strong>
+             use cases, and industries.
              <ul style="margin:6px 0 0 16px;padding:0">
+               <li><b>Explore N products →</b> <span style="opacity:.6">(new in v2.1)</span> — bright button that drills the graph into Composition mode for this family</li>
                <li><b>Breadcrumbs</b> — back/forward navigation through visited items</li>
                <li><b>Licensing tier badge</b> — DNA / Advantage / Premier and similar</li>
                <li><b>Field notices</b> — surfaced PSIRT advisories where relevant</li>
@@ -4303,8 +4328,8 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.0.0";
-const DATA_UPDATED  = "2026-05-28";
+const APP_VERSION   = "2.1.0";
+const DATA_UPDATED  = "2026-05-29";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
   current:  "cpn-current-v2",
@@ -4589,6 +4614,17 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.1.0", date:"2026-05-29", items:[
+    "Four-level drill-down: Overview (5 category bubbles) → Families (52 families, the default) → Composition (one family + every product, with dashed succession edges) → All (every family + product, ~350 nodes)",
+    "Segmented control in the topbar plus a breadcrumb chip below it for navigating up the hierarchy",
+    "Explore N products → button on every family's detail panel, with double-click on family bubbles as the same shortcut",
+    "Product search now auto-promotes the graph into Composition mode for the matching product's family",
+    "Last view mode + focused family persist in localStorage and restore on reload",
+    "Catalog filled in across all 52 families — 97 new specific products (Catalyst Center appliances, full SD-WAN control plane, APIC/Nexus Dashboard, Silicon One, Wi-Fi 7 APs, IoT routers, the entire Webex SKU lineup, Intersight tiers, UCS FIs + M8 servers, ThousandEyes/AppDynamics/Splunk/FSO). 200 → 297 products.",
+    "Pin / Compare buttons now appear on family detail panels (not just product panels), and an inline ⇆ compare button is shown on each Recent / Pinned item",
+    "Smooth D3 enter/exit fade transitions between view modes; per-mode force tuning (charge / collide / link distance)",
+    "Bug fix: phantom edges in the All view from stale D3-mutated link references"
+  ]},
   {ver:"2.0.0", date:"2026-05-28", items:[
     "Saved & named plans with auto-save and shareable URLs",
     "Export to CSV, Markdown, PDF (print), and PPTX (best-effort via PptxGenJS)",
@@ -7090,11 +7126,12 @@ function openShortcuts(){
     ["T", "Toggle timeline view"],
     ["A", "Toggle AI assistant"],
     ["?", "Re-launch guided tour"],
+    ["Dbl-click family", "Drill into Composition view (graph)"],
     ["←/→/↑/↓", "Walk between connected nodes (when one selected)"],
     ["Enter / Space", "Open focused node"],
     ["Esc", "Close panel / cancel"]
   ];
-  alert("Keyboard shortcuts:\n\n" + lines.map(l => l[0].padEnd(15) + l[1]).join("\n"));
+  alert("Keyboard shortcuts:\n\n" + lines.map(l => l[0].padEnd(18) + l[1]).join("\n"));
 }
 
 /* ════════════════════════════════════════════════════════════════════════
