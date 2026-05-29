@@ -626,6 +626,12 @@ const NODES = [
    industries:["Service Provider","Financial Services","Government"],
    url:"https://www.cisco.com/site/us/en/products/networking/routers/index.html",
    docsUrl:"https://www.cisco.com/c/en/us/products/routers/index.html"},
+  {id:"secure-routers",    name:"Cisco 8000 Secure Routers",  category:"networking",
+   desc:"8100/8200/8300/8400/8500 Series single-box branch and edge routers introduced at Cisco Live 2025 — native SD-WAN, integrated SASE, next-gen firewall, and post-quantum security with up to 3× the throughput of previous-gen ISR/ASR.",
+   useCases:["SD-WAN / SASE","Zero Trust Security","Network Automation","Cloud Migration"],
+   industries:["Financial Services","Retail","Manufacturing","Healthcare","Government","Service Provider"],
+   url:"https://www.cisco.com/site/us/en/products/networking/secure-routers/index.html",
+   docsUrl:"https://newsroom.cisco.com/c/r/newsroom/en/us/a/y2025/m06/cisco-live-2025-networking.html"},
   {id:"nexus",             name:"Cisco Nexus Switches",        category:"networking",
    desc:"Nexus 3000/9000 data center switching with 400G/800G density, deep buffers, and NX-OS or ACI for AI/ML and hyperscale workloads.",
    useCases:["Data Center Modernization","AI Networking","Cloud Migration"],
@@ -903,6 +909,12 @@ const LINKS = [
   {source:"sdwan",            target:"thousandeyes",      type:"direct",   label:"WAN monitoring"},
   {source:"sdwan",            target:"isr-routers",       type:"direct",   label:"Runs on ISR"},
   {source:"isr-routers",      target:"wan-routers",       type:"adjacent", label:"WAN hierarchy"},
+  {source:"isr-routers",      target:"secure-routers",    type:"adjacent", label:"Next-gen succession"},
+  {source:"secure-routers",   target:"sdwan",             type:"direct",   label:"Native SD-WAN"},
+  {source:"secure-routers",   target:"secure-access",     type:"direct",   label:"Integrated SASE"},
+  {source:"secure-routers",   target:"sf-branch",         type:"adjacent", label:"Single-box NGFW"},
+  {source:"secure-routers",   target:"thousandeyes",      type:"direct",   label:"Embedded WAN assurance"},
+  {source:"secure-routers",   target:"silicon-one",       type:"adjacent", label:"Powered by"},
   {source:"nexus",            target:"aci",               type:"direct",   label:"Policy plane"},
   {source:"nexus",            target:"nexus-one",         type:"direct",   label:"Managed by Nexus One"},
   {source:"nexus",            target:"ucs",               type:"direct",   label:"Server fabric"},
@@ -1245,6 +1257,12 @@ const PRODUCTS = [
   {id:"c9300x",         name:"Cisco Catalyst 9300X",         family:"catalyst-access", status:"current",
    desc:"High-performance stackable access switch with 25G/100G uplinks and mGig ports for demanding AI/IoT applications.",
    url:"https://www.cisco.com/c/en/us/products/switches/catalyst-9300-series-switches/index.html"},
+  {id:"c9300m",         name:"Cisco Catalyst 9300-M",        family:"catalyst-access", status:"current",
+   desc:"AI-native stackable access switch with telemetry-first design, modern security policy enforcement, and scalable buffer for AI/ML edge workloads. Announced at Cisco Live 2025.",
+   url:"https://www.cisco.com/c/en/us/products/switches/catalyst-9300-series-switches/index.html"},
+  {id:"c9350",          name:"Cisco Catalyst C9350 Smart Switch", family:"catalyst-access", status:"current",
+   desc:"Next-gen fixed access Smart Switch powered by Silicon One — up to 51.2 Tbps throughput, sub-5-microsecond latency, and quantum-resistant security baked into hardware. Unveiled at Cisco Live 2025 alongside simplified ordering and management.",
+   url:"https://www.cisco.com/c/en/us/products/switches/catalyst-9000-series-switches/index.html"},
   {id:"c9400",          name:"Cisco Catalyst 9400",          family:"catalyst-core",   status:"current",
    desc:"Modular enterprise distribution/aggregation switch with up to 10Tbps capacity, PoE++, and redundant supervisors.",
    url:"https://www.cisco.com/c/en/us/products/switches/catalyst-9400-series-switches/index.html"},
@@ -1257,6 +1275,12 @@ const PRODUCTS = [
   {id:"c9600",          name:"Cisco Catalyst 9600",          family:"catalyst-core",   status:"current",
    desc:"Modular chassis core switch supporting up to 25.6Tbps total capacity with redundant power and supervisors.",
    url:"https://www.cisco.com/c/en/us/products/switches/catalyst-9600-series-switches/index.html"},
+  {id:"c9400m",         name:"Cisco Catalyst 9400-M",        family:"catalyst-core",   status:"current",
+   desc:"AI-native modular distribution switch with telemetry-first architecture and scalable security policy enforcement. Announced at Cisco Live 2025.",
+   url:"https://www.cisco.com/c/en/us/products/switches/catalyst-9400-series-switches/index.html"},
+  {id:"c9610",          name:"Cisco Catalyst C9610 Smart Switch", family:"catalyst-core",   status:"current",
+   desc:"Modular core Smart Switch powered by Silicon One delivering 51.2 Tbps switching capacity, quantum-resistant security, and unified management with Catalyst Center and Meraki dashboard. Cisco Live 2025 flagship.",
+   url:"https://www.cisco.com/c/en/us/products/switches/catalyst-9000-series-switches/index.html"},
 
   // ── CATALYST SWITCHES (EOL)
   {id:"c2960x",         name:"Cisco Catalyst 2960-X/XR",    family:"catalyst-access", status:"eol",
@@ -1512,6 +1536,23 @@ const PRODUCTS = [
   {id:"ncs-540",        name:"Cisco NCS 540 Series",         family:"wan-routers",    status:"current",
    desc:"Metro access and aggregation routing for service providers with up to 400G capacity and IOS-XR.",
    url:"https://www.cisco.com/c/en/us/products/routers/network-convergence-system-540-series-routers/index.html"},
+  // ── SECURE ROUTERS (Cisco Live 2025 — branch and edge)
+  {id:"sr-8100",        name:"Cisco 8100 Secure Router",     family:"secure-routers", status:"current",
+   desc:"Entry-tier branch Secure Router for small offices — single-box SD-WAN + SASE + NGFW + post-quantum security with up to 3× the throughput of legacy ISR 1100. Cisco Live 2025.",
+   url:"https://www.cisco.com/site/us/en/products/networking/secure-routers/index.html"},
+  {id:"sr-8200",        name:"Cisco 8200 Secure Router",     family:"secure-routers", status:"current",
+   desc:"Mid-range branch Secure Router with native SD-WAN, integrated SSE/SASE peering to Cisco Secure Access, and Snort 3 NGFW. Replaces ISR 4221/4331 with significantly higher throughput.",
+   url:"https://www.cisco.com/site/us/en/products/networking/secure-routers/index.html"},
+  {id:"sr-8300",        name:"Cisco 8300 Secure Router",     family:"secure-routers", status:"current",
+   desc:"Large-branch / small-campus Secure Router with multi-WAN, integrated SASE, NGFW, and embedded ThousandEyes assurance. Targets ISR 4431/4451 refresh.",
+   url:"https://www.cisco.com/site/us/en/products/networking/secure-routers/index.html"},
+  {id:"sr-8400",        name:"Cisco 8400 Secure Router",     family:"secure-routers", status:"current",
+   desc:"Aggregation / regional-hub Secure Router for SD-WAN hubs and campus edge with high-throughput crypto, integrated SASE, and post-quantum security baked in.",
+   url:"https://www.cisco.com/site/us/en/products/networking/secure-routers/index.html"},
+  {id:"sr-8500",        name:"Cisco 8500 Secure Router",     family:"secure-routers", status:"current",
+   desc:"Top-of-line Secure Router for headquarters / multi-region hub deployments — combines SD-WAN headend, SSE peering, NGFW, and 400G-class WAN edge into a single platform.",
+   url:"https://www.cisco.com/site/us/en/products/networking/secure-routers/index.html"},
+
   {id:"c8000",          name:"Cisco 8000 Series Routers",    family:"wan-routers",    status:"current",
    desc:"Silicon One-powered hyperscale router family for service providers and enterprises needing 400G+ WAN routing.",
    url:"https://www.cisco.com/c/en/us/products/routers/8000-series-routers/index.html"},
@@ -1897,6 +1938,12 @@ const PRODUCTS = [
   {id:"c9178",          name:"Cisco Catalyst 9178I (Wi-Fi 7)", family:"catalyst-wireless", status:"current",
    desc:"Flagship Wi-Fi 7 AP with 16-spatial-stream support and 25G uplink — designed for AI/ML and large-venue deployments.",
    url:"https://www.cisco.com/c/en/us/products/wireless/catalyst-9178-series-access-points/index.html"},
+  {id:"cw9179f",        name:"Cisco Wireless 9179F (Wi-Fi 7)", family:"catalyst-wireless", status:"current",
+   desc:"Wi-Fi 7 access point built for stadiums, large venues, and high-density campus deployments — integrates Ultra-Reliable Wireless Backhaul (URWB) with Wi-Fi in a single radio. Pairs with Cisco Campus Gateway for seamless cloud-managed roaming. Cisco Live 2025.",
+   url:"https://www.cisco.com/c/en/us/products/wireless/catalyst-wireless-9179f-series/index.html"},
+  {id:"campus-gateway", name:"Cisco Campus Gateway",         family:"catalyst-wireless", status:"current",
+   desc:"Cloud-managed roaming gateway introduced at Cisco Live 2025 — bridges Catalyst access points with the Meraki dashboard, enabling unified policy and seamless mobility across large campuses.",
+   url:"https://www.cisco.com/site/us/en/products/networking/wireless/index.html"},
 
   // ── MERAKI WIRELESS (additional)
   {id:"mr44",           name:"Meraki MR44",                   family:"meraki-wireless", status:"current",
@@ -2517,7 +2564,7 @@ function iconKey(n) {
   // Networking
   if (/^(catalyst-access|catalyst-core|meraki-switches|nexus|nexus-one)$/.test(id)) return "switch";
   if (/wireless/.test(id))                                       return "wifi";
-  if (/^(isr-routers|wan-routers)$/.test(id))                    return "router";
+  if (/^(isr-routers|wan-routers|secure-routers)$/.test(id))     return "router";
   if (/^(sdwan|meraki-mx)$/.test(id))                            return "globe";
   if (id === "silicon-one")                                      return "chip";
   if (/^(catalyst-center|intersight)$/.test(id))                 return "gear";
@@ -4449,6 +4496,7 @@ const TIERS = {
   "aci":               {tier:"ACI Essentials / Advantage / Premier",  model:"Subscription + perpetual HW", note:"Premier required for multi-site orchestrator and ND Insights."},
   "isr-routers":       {tier:"DNA Essentials / Advantage / Premier",  model:"Subscription + perpetual HW", note:"Premier for advanced security + ThousandEyes Agent embedded."},
   "wan-routers":       {tier:"IOS-XR feature licenses",                model:"Subscription + perpetual HW", note:"Per-tier feature pack licensing on ASR/NCS/8000."},
+  "secure-routers":    {tier:"Network Essentials / Advantage / Premier", model:"Subscription + perpetual HW", note:"Premier unlocks integrated SASE, NGFW, and ThousandEyes embedded agent. Post-quantum crypto included in Advantage+."},
   "industrial-eth":    {tier:"Network Essentials / Advantage",        model:"Subscription + perpetual HW", note:"Advantage adds Cyber Vision sensor + advanced QoS."},
   "sf-branch":         {tier:"Threat Defense / Threat + Malware / Threat+URL", model:"Subscription",      note:"Recommend Threat+Malware+URL for full UTM."},
   "sf-enterprise":     {tier:"Threat Defense / Threat + Malware / Threat+URL", model:"Subscription",      note:"FMC or Cisco Defense Orchestrator required for centralized mgmt."},
