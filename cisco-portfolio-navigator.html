@@ -5042,8 +5042,14 @@ STYLE.textContent = `
   /* Timeline view */
   #tl-wrap{position:fixed;top:var(--topbar-h);left:0;right:0;bottom:0;background:var(--bg);
     display:none;overflow:hidden;z-index:40;flex-direction:column}
-  #tl-wrap.show{display:flex}
+  /* Lift the timeline so the horizontal scrollbar at the bottom of #tl-canvas
+     isn't covered by other fixed chrome (#v2-footer, #tools, #hint), which
+     all paint above #tl-wrap (z-index 45–50 vs. tl-wrap's 40). */
+  #tl-wrap.show{display:flex;bottom:60px}
   body.planner-open #tl-wrap{right:490px}
+  body.tl-open #v2-footer{display:none}
+  body.tl-open #hint{display:none}
+  body.tl-open #tools{bottom:18px}
   #tl-head{padding:12px 22px;border-bottom:1px solid var(--border);
     display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;flex-wrap:nowrap}
   #tl-head > div:last-child{display:flex;gap:6px;align-items:center;flex-shrink:0;flex-wrap:nowrap}
