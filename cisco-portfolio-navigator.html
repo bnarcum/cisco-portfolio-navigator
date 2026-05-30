@@ -4794,57 +4794,7 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
   {ver:"2.3.9", date:"2026-05-30", items:[
-    "Revert: PowerPoint export restored to the original simple deck (pre-v2.3.0) — title, stack table, recommendations, bundle bars, footer. Uses PptxGenJS 3.12.0 with pp.writeFile() directly; removed polished slides, theme picker, charts, speaker notes, and all JSZip post-processing."
-  ]},
-  {ver:"2.3.8", date:"2026-05-30", items:[
-    "Fix: PowerPoint repair dialog (final). Byte-level diff of pre- vs post-repair files showed Mac PowerPoint strips every empty ZIP directory entry — 19 ghost folders including ppt/charts/ and ppt/embeddings/ with no chart files inside. Post-repair exports contain file entries only (zero paths ending in '/'). saveWithFix() now re-packs the deck with createFolders:false so no directory stubs are written. Also normalizes empty <a:ln></a:ln> to <a:ln/> and extends txBody injection to notesSlides."
-  ]},
-  {ver:"2.3.7", date:"2026-05-30", items:[
-    "Fix: PowerPoint repair dialog — root cause identified via GitHub issues #1441 and #1443. PptxGenJS addShape() without text emits <p:sp> elements missing the required <p:txBody> child (37 shapes across slides 2–4). The notesMaster ships 6 invalid placeholder shapes PowerPoint strips on repair. saveWithFix() now injects minimal txBody stubs into text-less shapes and replaces notesMaster with the minimal structure PowerPoint expects. Upgraded PptxGenJS 3.12.0 → 4.0.1."
-  ]},
-  {ver:"2.3.6", date:"2026-05-30", items:[
-    "Fix: PowerPoint repair dialog — replaced pp.addChart() on the Bundle Coverage slide with native shape bars. PptxGenJS 3.12.0's chart subsystem (chart XML, embedded Excel, chart rels) passes ZIP integrity checks but Mac PowerPoint still triggers repair after four separate post-process patches. Shape-based bars avoid the entire chart/embeddings subtree.",
-    "Post-process also fixes empty <a:t></a:t> text runs in notes slides that PptxGenJS emits in placeholder bodies."
-  ]},
-  {ver:"2.3.5", date:"2026-05-30", items:[
-    "Fix: PowerPoint repair dialog (fourth PptxGenJS bug). Byte-level diff of pre- vs post-repair files showed PptxGenJS emits an absolute chart relationship target Target=\"/ppt/charts/chart1.xml\" in slide rels; OOXML requires relative paths (../charts/chart1.xml). saveWithFix() now rewrites these. Also renames single-chart Excel embedding from Microsoft_Excel_Worksheet1.xlsx to Microsoft_Excel_Worksheet.xlsx and removes empty ppt/media/ directory entries."
-  ]},
-  {ver:"2.3.4", date:"2026-05-30", items:[
-    "Fix: PowerPoint repair dialog (third PptxGenJS bug found and patched). Diff between pre-repair and post-repair files showed PowerPoint was stripping an orphan <c:axId> entry inside <c:barChart>. PptxGenJS 3.12.0 emits 3 axId children inside the chart-type element when only 2 axes (catAx + valAx) are declared, violating the OOXML schema requirement of exactly 2 axId children for 2D bar charts. saveWithFix() now rebuilds the set of declared axis IDs and strips any <c:axId> not in that set.",
-    "Diagnostics: a new '[pptx] Stripped N orphan <c:axId>' / 'Chart axId integrity OK' log line accompanies the existing diagnostics."
-  ]},
-  {ver:"2.3.3", date:"2026-05-30", items:[
-    "Fix: PowerPoint repair dialog (the real one this time). The v2.3.1 [Content_Types].xml strip was correct as far as it went, but PptxGenJS 3.12.0 has a SECOND numbering bug — the chart file counter increments before assigning, so a deck with one chart ends up with chart2.xml and no chart1.xml. PowerPoint flags this on open and triggers the repair flow. The post-process in saveWithFix() now also renumbers chart files, chart rels, embedded Excel worksheets, slide rels, and Content_Types references to start from 1.",
-    "Diagnostics: a new '[pptx] Renumbering charts: …' / '[pptx] Chart numbering OK …' log line accompanies the existing slideMaster strip diagnostics so the renumber pass is verifiable from DevTools."
-  ]},
-  {ver:"2.3.2", date:"2026-05-30", items:[
-    "Reverted to a 4-slide deck: Title, Top Opportunities, Bundle Coverage, Use-Case Coverage.",
-    "Title slide restored to the original simple style (pre-v2.3.0): three lines on a dark background, no slide master, no decorative geometry, no stat cards.",
-    "Hardened the [Content_Types].xml fix by loading JSZip explicitly from the jsdelivr CDN instead of relying on PptxGenJS's UMD export. The bundled UMD does expose window.JSZip, but the explicit load is robust against future PptxGenJS bundling changes and easier to verify.",
-    "Added export diagnostics console logging — '[pptx] JSZip available', '[pptx] Override entries before strip', and '[pptx] Override entries after strip' — so the strip is verifiable from DevTools.",
-    "Dropped slide masters and per-slide footer/header chrome to minimize the OOXML surface area that PowerPoint validates on open.",
-    "Slide builders for the dropped slides (executive summary, stack tables, composition charts, gap fillers, risk timeline, migration plan, legacy/outgoing, embedded timeline, embedded architecture, next steps) are no longer called but remain in git history at 3dd8635 for easy revival."
-  ]},
-  {ver:"2.3.1", date:"2026-05-30", items:[
-    "Fix: PowerPoint no longer shows the 'file needed to be repaired' dialog on opening the export. Root cause was a PptxGenJS 3.12.0 bug in its [Content_Types].xml writer that emitted an <Override> entry for slideMaster1.xml … slideMasterN.xml (one per slide), even though only slideMaster1.xml is actually written to the package. The export now post-processes the generated ZIP via the JSZip global already bundled in pptxgen.bundle.min.js and strips the phantom Overrides before the file is saved — no new dependencies.",
-    "Timeline slide: full-bleed footprint (13.03×5.85 in) with a centered legend strip and a sharper html2canvas capture at scale 2. The capture renders the timeline wrapper off-screen via temporary inline styles (no '.show' class toggled, no chrome flicker) so the user's footer / hint / tools panes stay put. Multi-slide pagination kicks in past 12 years of data (2 slices) or 24 years (3 slices).",
-    "Architecture slide: switched from SVG-with-inlined-styles to a direct html2canvas raster of the live #gw container, so glow filters, gradients, and opacity layering survive into the deck.",
-    "Chart polish: doughnut + pie now show percentages alongside counts (showPercent / dataLabelFormatCode '0%'); every chart explicitly fills plotArea + chartArea with the theme background so dark slides never frame a white plot area; axis label / line colors are theme-aware; long category labels are clamped to 28 chars to avoid OOXML overflow.",
-    "Slide content hardening: every addText that pulls user / catalog data is now String(…)-coerced (no undefined writing invalid <a:t>), and card bodies (opportunities, migration, legacy, risk chips, use-case cells) opt into valign:'middle' + wrap:true so text never clips at the bottom edge.",
-    "Bundle gap slides cap the Missing list at 28 visible items (14 per column) with a '+ N more' summary, so bundles with a long tail of gaps don't render off the bottom of the slide.",
-    "Section dividers gain a vertical accent rail and a small SECTION label so they read as intentional milestones rather than empty dark panels.",
-    "Theme color tokens are now canonicalized to bare 6-char uppercase hex inside the export — any stray '#' prefix would have emitted malformed <a:srgbClr val='#XXXXXX'/> which PowerPoint treats as repair-worthy."
-  ]},
-  {ver:"2.3.0", date:"2026-05-30", items:[
-    "Polished PowerPoint export — replaced the bare 5-slide deck with a client-presentation-quality deliverable (20+ slides for a mid-sized plan).",
-    "Slide master + section dividers + slide numbers + presenter-side speaker notes auto-generated on every content slide.",
-    "Real charts (PptxGenJS native): status doughnut, tier pie, category bar, bundle coverage horizontal bar.",
-    "New slides: executive summary, tier + category distribution, per-bundle gap fillers, risk timeline (0–6mo / 6–12mo / 12–24mo / 24mo+), migration plan (today → future), legacy / outgoing replacements, use-case coverage grid, embedded portfolio timeline screenshot, architecture view (D3 SVG embed), Next Steps closing.",
-    "Theme picker — Dark / Light / Cisco Blue — persists to localStorage and swatches inline in the export menu.",
-    "Document metadata (title, author, company, subject, revision) for SharePoint, Outlook, and search indexers.",
-    "Status pills with category-color fills, paginated stack table (18/page) with EOS, EOL, and successor columns.",
-    "WCAG-AA contrast bump on muted text (8B949E → B0B7BD) for dark backgrounds.",
-    "Export menu wording updated; in-app tour reflects polished output."
+    "PowerPoint export: simple client-ready deck — title, current stack table, top recommendations, bundle coverage, and footer."
   ]},
   {ver:"2.2.1", date:"2026-05-30", items:[
     "Fix: timeline horizontal scrollbar now visible — the bottom footer / hint / tools chrome was painting over it. Switched to a :has(#tl-wrap.show) selector with !important so the chrome hides off pure DOM state regardless of cache or class-timing.",
