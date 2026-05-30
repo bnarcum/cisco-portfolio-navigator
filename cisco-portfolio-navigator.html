@@ -5058,11 +5058,23 @@ STYLE.textContent = `
   .tl-zoom button:hover:not(:disabled){background:var(--surface3);color:var(--accent)}
   .tl-zoom button:disabled{opacity:.35;cursor:not-allowed}
   .tl-zoom .tl-zoom-lvl{font-size:11px;color:var(--muted);padding:0 8px;border-left:1px solid var(--border);border-right:1px solid var(--border);min-width:46px;text-align:center}
-  /* Inner sized container that scales with zoom */
+  /* Inner sized container that scales with zoom. Width is explicitly set by
+     renderTimeline() in pixels (= LABEL_W + GAP + dataW + RIGHT_GUTTER) so
+     the canvas's overflow:auto produces a horizontal scrollbar whenever the
+     pixel-per-year math exceeds the viewport. */
   #tl-inner{position:relative;min-width:100%}
-  .tl-axis{display:grid;grid-template-columns:200px 1fr;gap:14px;
+  /* Grid: column 1 is 222px wide (200 visible + 22 padding-left baked in so
+     position:sticky; left:0 pins the label cell flush to the viewport edge
+     instead of sliding 22px before sticking). Column 2 is 1fr → the data
+     track. Right padding (22px) lives on the row itself as a gutter. */
+  .tl-axis{display:grid;grid-template-columns:222px 1fr;gap:14px;
     border-bottom:1px solid var(--border);position:sticky;top:0;
-    background:var(--bg);z-index:5;margin-bottom:14px;padding:0 22px}
+    background:var(--bg);z-index:5;margin-bottom:14px;padding:0 22px 0 0}
+  /* Empty first cell of the axis — sticky so its background covers row-label
+     borders/shadows that bleed up when the user scrolls horizontally. */
+  .tl-axis-lbl{position:sticky;left:0;background:var(--bg);z-index:7;
+    border-right:1px solid var(--border);
+    box-shadow:6px 0 8px -6px rgba(0,0,0,.55)}
   .tl-axis-track{position:relative;height:24px}
   .tl-axis-tick{position:absolute;font-size:10px;color:var(--subtle);
     font-weight:700;padding:5px 0;text-transform:uppercase;letter-spacing:.06em;
@@ -5070,11 +5082,21 @@ STYLE.textContent = `
   .tl-axis-tick.major{color:var(--muted)}
   .tl-axis-tick::before{content:"";position:absolute;left:50%;top:100%;
     width:1px;height:8px;background:var(--border)}
-  .tl-row{display:grid;grid-template-columns:200px 1fr;gap:14px;align-items:stretch;
-    padding:4px 22px 4px 22px;border-bottom:1px solid rgba(255,255,255,.03)}
+  .tl-row{display:grid;grid-template-columns:222px 1fr;gap:14px;align-items:stretch;
+    padding:4px 22px 4px 0;border-bottom:1px solid rgba(255,255,255,.03)}
   .tl-row:hover{background:rgba(255,255,255,.015)}
+  /* Row label cell — sticky on horizontal scroll so the family name stays
+     readable when the user scrolls out to year 2030. z-index sits above the
+     bars (which can reach z-index:11 on narrow:hover) and the today line
+     (z-index:2) so labels never get visually clipped by content scrolling
+     underneath. Solid bg + right border + small drop shadow give a clear
+     boundary between the sticky labels column and the scrolling data area. */
   .tl-row-lbl{font-size:12px;font-weight:500;color:var(--text);
-    display:flex;align-items:center;gap:7px;overflow:hidden;padding-top:6px}
+    display:flex;align-items:center;gap:7px;overflow:hidden;
+    padding:6px 0 0 22px;
+    position:sticky;left:0;background:var(--bg);z-index:15;
+    border-right:1px solid var(--border);
+    box-shadow:6px 0 8px -6px rgba(0,0,0,.55)}
   .tl-row-lbl .ld{flex-shrink:0;width:8px;height:8px;border-radius:50%}
   .tl-row-lbl .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   /* Recessed channel: subtle inner gradient (darker at top, faint highlight at bottom)
@@ -6572,8 +6594,26 @@ function buildContextMenu(){
 /* ════════════════════════════════════════════════════════════════════════
    [19] TIMELINE view (EOS/EOL)
    ════════════════════════════════════════════════════════════════════════*/
-/* Timeline state — zoom (1.0 = default), only-stack filter, and onlyStack mode. */
-const TL = { zoom: 1.0, minZoom: 1.0, maxZoom: 6, onlyStack: false };
+/* Timeline state — zoom (1.0 = comfortable density default), only-stack filter,
+   and the live year span that the FIT button + cursor-anchored wheel zoom both
+   need. yearSpan is refreshed by every renderTimeline() pass; minZoom is
+   recomputed each render so the user can always zoom out to fit-to-data even
+   if their window is wider than the default 1620 px (18yrs × 90 px/yr). */
+const TL = { zoom: 1.0, minZoom: 0.2, maxZoom: 6, onlyStack: false, yearSpan: 0 };
+
+/* Layout constants used by both the renderer and the zoom math. Keep these in
+   sync with the .tl-axis / .tl-row CSS: column 1 is TL_LABEL_W wide, gap is
+   TL_GAP wide, column 2 (the 1fr data track) holds the bars, and TL_PAD_R is
+   the right-side gutter that lives on the row itself. The total #tl-inner
+   width is therefore TL_LABEL_W + TL_GAP + dataW + TL_PAD_R, where
+   dataW = yearSpan × TL_BASE_PX_PER_YEAR × zoom. We pick 90 px/year as the
+   comfortable-density default — about a third wider than the old fit-to-canvas
+   density, enough to fit most product names on a 5-year EOS→EOL band without
+   looking sparse on a 1-year bar. */
+const TL_BASE_PX_PER_YEAR = 90;
+const TL_LABEL_W = 222; // 200 visible + 22 padding-left baked into the cell
+const TL_GAP     = 14;
+const TL_PAD_R   = 22;
 
 function buildTimelineView(){
   const tl = document.createElement("div");
@@ -6582,14 +6622,14 @@ function buildTimelineView(){
     <div id="tl-head">
       <div>
         <div class="tl-title">EOS / EOL Timeline</div>
-        <div class="tl-sub">Tracks lay out side-by-side per family. Hover narrow blocks for names · ⌘/Ctrl + scroll to zoom · drag to pan.</div>
+        <div class="tl-sub">Tracks lay out side-by-side per family. Scroll horizontally to pan years · hover narrow blocks for names · ⌘/Ctrl + scroll to zoom.</div>
       </div>
       <div style="display:flex;gap:6px;align-items:center">
         <div class="tl-zoom" role="group" aria-label="Zoom">
           <button id="tl-zoom-out" title="Zoom out (−)">−</button>
           <div class="tl-zoom-lvl" id="tl-zoom-lvl">100%</div>
           <button id="tl-zoom-in" title="Zoom in (+)">+</button>
-          <button id="tl-zoom-fit" title="Fit to view" style="border-left:1px solid var(--border);font-size:10px;letter-spacing:.04em">FIT</button>
+          <button id="tl-zoom-fit" title="Fit data span to viewport (no horizontal scroll)" style="border-left:1px solid var(--border);font-size:10px;letter-spacing:.04em">FIT</button>
         </div>
         <button class="rc-btn" id="tl-only-stack">Show only stack items</button>
         <button class="rc-btn" id="tl-close">Close</button>
@@ -6607,7 +6647,11 @@ function buildTimelineView(){
   $("#tl-close").addEventListener("click", closeTimelineView);
   $("#tl-zoom-in").addEventListener("click",  () => setTimelineZoom(TL.zoom * 1.4));
   $("#tl-zoom-out").addEventListener("click", () => setTimelineZoom(TL.zoom / 1.4));
-  $("#tl-zoom-fit").addEventListener("click", () => setTimelineZoom(1.0));
+  // FIT now means "shrink the data to fit the current viewport" — it computes
+  // the zoom that exactly fills the canvas track width with the full year span,
+  // which may be below 1.0 on small viewports. The "0" keyboard shortcut below
+  // resets to the comfortable-density default (1.0 = TL_BASE_PX_PER_YEAR).
+  $("#tl-zoom-fit").addEventListener("click", () => setTimelineZoom(fitTimelineZoom()));
 
   // ⌘/Ctrl + scroll zooms with the cursor as the anchor; plain scroll pans naturally.
   $("#tl-canvas").addEventListener("wheel", ev => {
@@ -6619,18 +6663,27 @@ function buildTimelineView(){
     const newZ = Math.max(TL.minZoom, Math.min(TL.maxZoom, prevZ * factor));
     if (newZ === prevZ) return;
     // Anchor zoom at cursor: keep the date under the cursor in the same screen x.
-    const labelW = 222; // 200 + 22 padding-left
-    const trackW = canvas.clientWidth - labelW;
+    // The data track lives in the 1fr column, which starts at TL_LABEL_W + TL_GAP
+    // inside #tl-inner. Its width = TL.yearSpan × TL_BASE_PX_PER_YEAR × zoom (no
+    // longer canvas-relative), so we anchor the cursor's ratio across that new
+    // pixel range and update scrollLeft so the same date stays under the cursor.
+    const trackOffset = TL_LABEL_W + TL_GAP;
+    const oldTrackW = TL.yearSpan * TL_BASE_PX_PER_YEAR * prevZ;
     const sx = ev.clientX - canvas.getBoundingClientRect().left;
-    const xWithinInner = canvas.scrollLeft + sx - labelW;
-    const ratio = trackW > 0 ? xWithinInner / (trackW * prevZ) : 0;
+    // If the cursor is over the sticky label column (or the year span is zero,
+    // which shouldn't happen but guards against div-by-zero on first paint),
+    // just zoom in place — there's no data under the cursor to anchor to.
+    if (sx < TL_LABEL_W || oldTrackW <= 0){ setTimelineZoom(newZ); return; }
+    const xWithinTrack = canvas.scrollLeft + sx - trackOffset;
+    const ratio = xWithinTrack / oldTrackW;
     setTimelineZoom(newZ);
-    // After re-render the new track width is trackW*newZ; restore so cursor sees same date
-    const newInnerX = ratio * (trackW * newZ);
-    canvas.scrollLeft = newInnerX - sx + labelW;
+    const newTrackW = TL.yearSpan * TL_BASE_PX_PER_YEAR * newZ;
+    canvas.scrollLeft = ratio * newTrackW + trackOffset - sx;
   }, { passive: false });
 
   // Keyboard shortcuts while timeline is open: +, -, 0
+  // "0" resets to 1.0 (the new comfortable-density default = TL_BASE_PX_PER_YEAR).
+  // To fit the whole data span into the viewport instead, use the FIT button.
   document.addEventListener("keydown", ev => {
     if (!$("#tl-wrap").classList.contains("show")) return;
     const tag = (ev.target.tagName || "").toLowerCase();
@@ -6659,6 +6712,17 @@ function setTimelineZoom(z){
   $("#tl-zoom-out").disabled = TL.zoom <= TL.minZoom + 0.001;
   $("#tl-zoom-in").disabled  = TL.zoom >= TL.maxZoom - 0.001;
   renderTimeline();
+}
+/* Compute the zoom value that exactly fits the full data range (TL.yearSpan)
+   into the visible canvas track width. Used by the FIT button and by
+   renderTimeline() to lower TL.minZoom so bird's-eye viewing is always
+   reachable, even when the data span is wider than the viewport at 1.0. */
+function fitTimelineZoom(){
+  const canvas = $("#tl-canvas");
+  if (!canvas || TL.yearSpan <= 0) return 1;
+  const trackPx = canvas.clientWidth - TL_LABEL_W - TL_GAP - TL_PAD_R;
+  if (trackPx <= 0) return 1;
+  return Math.max(0.05, trackPx / (TL.yearSpan * TL_BASE_PX_PER_YEAR));
 }
 function openTimelineView(){
   $("#tl-wrap").classList.add("show");
@@ -6699,8 +6763,10 @@ function packIntoLanes(blocks){
 function renderTimeline(){
   const inner = $("#tl-inner"); if (!inner) return;
   const canvas = $("#tl-canvas");
-  const innerW = (canvas.clientWidth - 22) * TL.zoom; // 22px right gutter
-  inner.style.width = innerW + "px";
+  // innerW is set below once the data year span is known — see "Window sizing".
+  // The new sizing is years × TL_BASE_PX_PER_YEAR × zoom rather than canvas-
+  // relative, so the timeline always renders at a comfortable density and the
+  // canvas's overflow:auto produces a native horizontal scrollbar as needed.
 
   const now = new Date();
 
@@ -6778,6 +6844,25 @@ function renderTimeline(){
     }
   });
 
+  /* Now that we know the year span, size #tl-inner in pixels (px-per-year
+     model) and refresh the dynamic minZoom so the user can always zoom
+     out to fit-the-data. The data track itself (the 1fr column) is
+     `dataW` wide; #tl-inner adds the sticky label column (TL_LABEL_W),
+     grid gap (TL_GAP), and a right-side gutter (TL_PAD_R). If TL.zoom is
+     currently below the fresh fit-zoom (e.g. the user resized the window
+     smaller after zooming out), clamp it back into range and let the next
+     setTimelineZoom call repaint cleanly. */
+  TL.yearSpan = endY - startY;
+  const fitZ = fitTimelineZoom();
+  TL.minZoom = Math.min(1, fitZ);
+  if (TL.zoom < TL.minZoom) TL.zoom = TL.minZoom;
+  const dataW  = TL.yearSpan * TL_BASE_PX_PER_YEAR * TL.zoom;
+  const innerW = TL_LABEL_W + TL_GAP + dataW + TL_PAD_R;
+  inner.style.width = innerW + "px";
+  // Keep the zoom-out button enabled state correct against the new minZoom.
+  const zoomOutBtn = $("#tl-zoom-out");
+  if (zoomOutBtn) zoomOutBtn.disabled = TL.zoom <= TL.minZoom + 0.001;
+
   const totalMs = (endY - startY) * 365.25 * 86400e3;
   const startMs = new Date(startY, 0, 1).getTime();
   const xFromDate = (s) => {
@@ -6805,8 +6890,10 @@ function renderTimeline(){
     ticks.push({ y, pct, label: isMajor ? String(Math.round(y)) : "", major: isMajor });
   }
   const todayPct = ((now.getTime() - startMs) / totalMs) * 100;
+  // The empty first cell gets a class so it can be position:sticky on
+  // horizontal scroll, matching the .tl-row-lbl behavior below.
   const axisHtml = `<div class="tl-axis">
-    <div></div>
+    <div class="tl-axis-lbl"></div>
     <div class="tl-axis-track">
       ${ticks.map(t => `<div class="tl-axis-tick ${t.major?"major":""}" style="left:${t.pct}%">${t.label}</div>`).join("")}
       <div class="tl-axis-today" style="left:${todayPct}%"></div>
@@ -6860,8 +6947,10 @@ function renderTimeline(){
       const laneH = 18, laneGap = 2;
       const trackH = laneCount * laneH + (laneCount - 1) * laneGap + 4;
       // Decide which blocks get text labels: only when block is wide enough
-      // in PIXELS to fit the name (rough proxy: width-percent * trackPx >= 60).
-      const trackPx = innerW - 200 - 14; // subtract label col + gap
+      // in PIXELS to fit the name (rough proxy: width-percent * trackPx >= 28).
+      // The data track (the 1fr column) is exactly dataW wide, so the bar's
+      // pixel width is widthPct/100 * dataW.
+      const trackPx = dataW;
       const blocksHtml = blocks.map(b => {
         const widthPct = b.right - b.left;
         const widthPx = widthPct/100 * trackPx;
@@ -6910,7 +6999,7 @@ function renderTimeline(){
     <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:12px;height:10px;background:rgba(245,158,11,.7);border-radius:2px"></span>End of Sale</span>
     <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:12px;height:10px;background:rgba(239,68,68,.78);border-radius:2px"></span>End of Life</span>
     <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:3px;height:10px;background:#00bceb"></span>Today</span>
-    <span style="margin-left:auto;color:var(--subtle)">Zoom: <code style="background:var(--surface2);padding:1px 5px;border-radius:3px">+</code> / <code style="background:var(--surface2);padding:1px 5px;border-radius:3px">−</code> / <code style="background:var(--surface2);padding:1px 5px;border-radius:3px">0</code> reset · <code style="background:var(--surface2);padding:1px 5px;border-radius:3px">⌘/Ctrl+scroll</code></span>
+    <span style="margin-left:auto;color:var(--subtle)">Zoom: <code style="background:var(--surface2);padding:1px 5px;border-radius:3px">+</code> / <code style="background:var(--surface2);padding:1px 5px;border-radius:3px">−</code> / <code style="background:var(--surface2);padding:1px 5px;border-radius:3px">0</code> reset · <code style="background:var(--surface2);padding:1px 5px;border-radius:3px">FIT</code> fit-to-data · <code style="background:var(--surface2);padding:1px 5px;border-radius:3px">⌘/Ctrl+scroll</code></span>
   </div>`;
 
   inner.innerHTML = stats + axisHtml + rowHtml + legend;
