@@ -46,7 +46,13 @@
     #search::placeholder{color:var(--subtle)}
     .si{position:absolute;left:9px;top:50%;transform:translateY(-50%);
       width:13px;height:13px;color:var(--muted);pointer-events:none}
-    #sr{position:absolute;top:calc(100% + 4px);left:0;right:0;
+    /* Dropdown is anchored to the search input's left edge, but its width is
+       independent of the search input's width — at minimum it matches the
+       input, but it's allowed to grow up to 380 px (or wider, capped at the
+       viewport) so that result rows like "Collaboration · Cisco Desk Devices"
+       stay on one line instead of stacking onto two or three. */
+    #sr{position:absolute;top:calc(100% + 4px);left:0;
+      min-width:100%;width:max(100%, 380px);max-width:min(560px, 90vw);
       background:var(--surface);border:1px solid var(--border);border-radius:8px;
       max-height:340px;overflow-y:auto;display:none;z-index:300}
     .sr-group{padding:6px 12px 2px;font-size:10px;font-weight:700;
@@ -54,6 +60,11 @@
     .sri{display:flex;align-items:center;gap:9px;padding:8px 12px;cursor:pointer;transition:background .1s}
     .sri:hover{background:var(--surface2)}
     .sri-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    /* The text column is the flex child that has to truncate. Without min-width:0
+       a flex child refuses to shrink below its intrinsic content width, which
+       defeats text-overflow:ellipsis. flex:1 lets it absorb the row's free space. */
+    .sri-text{min-width:0;flex:1}
+    .sri-text > div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .sri-eol{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;
       background:rgba(239,68,68,.15);color:#ef4444;flex-shrink:0}
     .sri-eos{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;
@@ -3492,11 +3503,11 @@ searchEl.addEventListener("input",()=>{
     btn.style.cssText = "width:100%;border:none;background:transparent;color:inherit;font:inherit;text-align:left";
     btn.innerHTML = `
       <div class="sri-dot" style="background:${color};pointer-events:none"></div>
-      <div style="pointer-events:none">
+      <div class="sri-text" style="pointer-events:none">
         <div style="font-size:12px;font-weight:500">${label}</div>
         <div style="font-size:10px;color:var(--muted)">${sublabel}</div>
       </div>
-      ${eolStatus ? `<div class="${eolStatus==='eol'?'sri-eol':'sri-eos'}" style="pointer-events:none">${eolStatus.toUpperCase()}</div>` : ""}
+      ${eolStatus ? `<div class="${eolStatus==='eol'?'sri-eol':'sri-eos'}" style="pointer-events:none;flex-shrink:0">${eolStatus.toUpperCase()}</div>` : ""}
     `;
     btn.addEventListener("click", ev => {
       ev.preventDefault();
