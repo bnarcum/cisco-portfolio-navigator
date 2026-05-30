@@ -124,8 +124,11 @@
     #pcl{position:absolute;top:14px;right:14px;width:32px;height:32px;
       background:var(--surface2);border:1px solid var(--border);border-radius:6px;
       color:var(--muted);font-size:18px;cursor:pointer;
-      display:flex;align-items:center;justify-content:center;transition:all .15s}
-    /* Invisible 48x48 hit area so the close button doesn't require pixel-precise hover. */
+      display:flex;align-items:center;justify-content:center;transition:all .15s;
+      z-index:2}
+    /* Invisible 48x48 hit area so the close button doesn't require pixel-precise hover.
+       z-index:2 above keeps the X (and its halo) above the breadcrumb's nav buttons,
+       which paint over the panel's top-right corner because they sit later in DOM. */
     #pcl::before{content:"";position:absolute;inset:-8px}
     #pcl:hover{border-color:var(--accent);color:var(--accent)}
     .p-badge{display:inline-flex;align-items:center;padding:2px 10px;border-radius:20px;
@@ -4943,7 +4946,7 @@ STYLE.textContent = `
   .p-photo svg{width:60px;height:60px;color:var(--accent);opacity:.65}
   .p-photo .p-photo-cat{position:absolute;bottom:6px;left:8px;font-size:9px;color:var(--subtle);
     text-transform:uppercase;letter-spacing:.1em;font-weight:700}
-  .p-bc{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);margin-bottom:10px;flex-wrap:wrap}
+  .p-bc{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);margin-bottom:10px;flex-wrap:wrap;padding-right:50px}
   .p-bc-i{background:transparent;border:none;color:var(--accent);cursor:pointer;font:inherit;padding:0}
   .p-bc-i:hover{text-decoration:underline}
   .p-bc-sep{color:var(--subtle)}
