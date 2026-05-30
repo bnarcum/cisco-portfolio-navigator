@@ -4506,7 +4506,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.3.4";
+const APP_VERSION   = "2.3.5";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -4795,6 +4795,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.3.5", date:"2026-05-30", items:[
+    "Fix: PowerPoint repair dialog (fourth PptxGenJS bug). Byte-level diff of pre- vs post-repair files showed PptxGenJS emits an absolute chart relationship target Target=\"/ppt/charts/chart1.xml\" in slide rels; OOXML requires relative paths (../charts/chart1.xml). saveWithFix() now rewrites these. Also renames single-chart Excel embedding from Microsoft_Excel_Worksheet1.xlsx to Microsoft_Excel_Worksheet.xlsx and removes empty ppt/media/ directory entries."
+  ]},
   {ver:"2.3.4", date:"2026-05-30", items:[
     "Fix: PowerPoint repair dialog (third PptxGenJS bug found and patched). Diff between pre-repair and post-repair files showed PowerPoint was stripping an orphan <c:axId> entry inside <c:barChart>. PptxGenJS 3.12.0 emits 3 axId children inside the chart-type element when only 2 axes (catAx + valAx) are declared, violating the OOXML schema requirement of exactly 2 axId children for 2D bar charts. saveWithFix() now rebuilds the set of declared axis IDs and strips any <c:axId> not in that set.",
     "Diagnostics: a new '[pptx] Stripped N orphan <c:axId>' / 'Chart axId integrity OK' log line accompanies the existing diagnostics."
@@ -6525,6 +6528,78 @@ async function exportPPTX(){
       }
     } catch (err){
       console.warn("[exportPPTX] Chart axId strip pass failed:", err);
+    }
+
+    // ── Fix absolute chart relationship targets in slide rels. ───────
+    // PptxGenJS 3.12.0 emits Target="/ppt/charts/chartN.xml" (absolute
+    // package-root path) but OOXML requires relationship targets to be
+    // relative to the .rels file. From ppt/slides/_rels/slideN.xml.rels
+    // the correct target is "../charts/chartN.xml". PowerPoint's repair
+    // dialog is triggered by the absolute path — confirmed by diffing
+    // pre- and post-repair files.
+    try {
+      const slideRelPaths = Object.keys(zip.files).filter(p => /^ppt\/slides\/_rels\/.*\.rels$/.test(p));
+      let absFixed = 0;
+      for (const path of slideRelPaths){
+        const f = zip.file(path);
+        if (!f) continue;
+        const xml = await f.async("string");
+        const fixed = xml.replace(
+          /Target="\/ppt\/charts\/chart(\d+)\.xml"/g,
+          'Target="../charts/chart$1.xml"'
+        );
+        if (fixed !== xml){
+          absFixed += 1;
+          zip.file(path, fixed);
+        }
+      }
+      if (absFixed > 0){
+        console.info(`[exportPPTX] Fixed absolute chart path in ${absFixed} slide rel file(s).`);
+      } else {
+        console.log("[pptx] Chart rel paths OK.");
+      }
+    } catch (err){
+      console.warn("[exportPPTX] Absolute chart path fix failed:", err);
+    }
+
+    // ── Rename single-chart Excel embedding to unnumbered name. ─────
+    // When there is exactly one chart, PowerPoint expects
+    // Microsoft_Excel_Worksheet.xlsx (no index), not Worksheet1.xlsx.
+    try {
+      const chartCount = Object.keys(zip.files).filter(p => /^ppt\/charts\/chart\d+\.xml$/.test(p)).length;
+      if (chartCount === 1){
+        const numbered = "ppt/embeddings/Microsoft_Excel_Worksheet1.xlsx";
+        const unnumbered = "ppt/embeddings/Microsoft_Excel_Worksheet.xlsx";
+        const wsFile = zip.file(numbered);
+        if (wsFile && !zip.file(unnumbered)){
+          const data = await wsFile.async("uint8array");
+          zip.file(unnumbered, data);
+          zip.remove(numbered);
+          const chartRelPaths = Object.keys(zip.files).filter(p => /^ppt\/charts\/_rels\/chart\d+\.xml\.rels$/.test(p));
+          for (const path of chartRelPaths){
+            const f = zip.file(path);
+            if (!f) continue;
+            const xml = await f.async("string");
+            const fixed = xml.replace(
+              /Microsoft_Excel_Worksheet1\.xlsx/g,
+              "Microsoft_Excel_Worksheet.xlsx"
+            );
+            if (fixed !== xml) zip.file(path, fixed);
+          }
+          console.info("[exportPPTX] Renamed single-chart Excel embedding to Microsoft_Excel_Worksheet.xlsx.");
+        }
+      }
+    } catch (err){
+      console.warn("[exportPPTX] Excel worksheet rename failed:", err);
+    }
+
+    // ── Remove empty ppt/media/ directory entry. ─────────────────────
+    // PptxGenJS sometimes writes a zero-byte media folder with no
+    // files; PowerPoint strips it on repair.
+    const mediaParts = Object.keys(zip.files).filter(p => p.startsWith("ppt/media"));
+    if (mediaParts.length === 1 && mediaParts[0] === "ppt/media/"){
+      zip.remove("ppt/media/");
+      console.log("[pptx] Removed empty ppt/media/ directory.");
     }
 
     const blob = await zip.generateAsync({
