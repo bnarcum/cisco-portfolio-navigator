@@ -4506,7 +4506,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.3.5";
+const APP_VERSION   = "2.3.6";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -4795,6 +4795,10 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.3.6", date:"2026-05-30", items:[
+    "Fix: PowerPoint repair dialog — replaced pp.addChart() on the Bundle Coverage slide with native shape bars. PptxGenJS 3.12.0's chart subsystem (chart XML, embedded Excel, chart rels) passes ZIP integrity checks but Mac PowerPoint still triggers repair after four separate post-process patches. Shape-based bars avoid the entire chart/embeddings subtree.",
+    "Post-process also fixes empty <a:t></a:t> text runs in notes slides that PptxGenJS emits in placeholder bodies."
+  ]},
   {ver:"2.3.5", date:"2026-05-30", items:[
     "Fix: PowerPoint repair dialog (fourth PptxGenJS bug). Byte-level diff of pre- vs post-repair files showed PptxGenJS emits an absolute chart relationship target Target=\"/ppt/charts/chart1.xml\" in slide rels; OOXML requires relative paths (../charts/chart1.xml). saveWithFix() now rewrites these. Also renames single-chart Excel embedding from Microsoft_Excel_Worksheet1.xlsx to Microsoft_Excel_Worksheet.xlsx and removes empty ppt/media/ directory entries."
   ]},
@@ -6258,7 +6262,12 @@ async function exportPPTX(){
   }
 
   function buildBundleCoverageSlide(){
-    // Same horizontal bar chart as v2.3.0 / v2.3.1 — kept verbatim.
+    // Shape-based horizontal bars instead of pp.addChart(). PptxGenJS
+    // 3.12.0's chart subsystem emits OOXML that passes ZIP integrity
+    // checks but still triggers PowerPoint's repair dialog on Mac
+    // (phantom slideMaster Overrides, wrong chart numbering, orphan
+    // axIds, absolute rel paths, multiLvlStrRef quirks, embedded Excel
+    // naming). Native shapes avoid the entire chart/embeddings subtree.
     const sl = pp.addSlide();
     sl.background = { color: T.bg };
     sl.addText("Solution Bundle Coverage",
@@ -6266,27 +6275,31 @@ async function exportPPTX(){
     sl.addText("How much of each Cisco solution bundle the customer already owns",
       { x:0.5, y:0.95, w:12.33, h:0.3, fontSize:11, color:T.subtle });
 
-    sl.addChart(pp.ChartType.bar, [{
-      name: "Coverage %",
-      labels: sm.bundles.map(b => String(b.name || "").slice(0, 40)),
-      values: sm.bundles.map(b => Number(b.pct) || 0)
-    }], {
-      x:0.5, y:1.4, w:12.33, h:5.4,
-      barDir: "bar",
-      chartColors: [T.accent],
-      chartColorsOpacity: 90,
-      valAxisMaxVal: 100, valAxisMinVal: 0,
-      showValue: true,
-      dataLabelColor: T.text, dataLabelFontBold: true, dataLabelFontSize: 11,
-      dataLabelPosition: "outEnd",
-      dataLabelFormatCode: "0\"%\"",
-      catAxisLabelColor: T.text, catAxisLabelFontSize: 11, catAxisLabelFontFace: "Calibri",
-      valAxisLabelColor: T.muted, valAxisLabelFontSize: 9, valAxisLabelFontFace: "Calibri",
-      valAxisLineColor: T.line, catAxisLineColor: T.line,
-      valGridLine: { style: "none" },
-      showLegend: false,
-      plotArea: { fill: { color: T.bg }, border: { color: T.bg, pt: 0 } },
-      chartArea: { fill: { color: T.bg }, border: { color: T.bg, pt: 0 } }
+    const bundles = sm.bundles.slice(0, 10);
+    const startY  = 1.45;
+    const rowH    = Math.min(0.55, 5.5 / Math.max(bundles.length, 1));
+    const labelW  = 4.4;
+    const barX    = 5.0;
+    const barMaxW = 6.5;
+    const pctX    = 11.7;
+
+    bundles.forEach((b, i) => {
+      const y   = startY + i * rowH;
+      const pct = Math.max(0, Math.min(100, Number(b.pct) || 0));
+      sl.addText(String(b.name || "").slice(0, 42),
+        { x:0.5, y, w:labelW, h:rowH * 0.85, fontSize:12, bold:true, color:T.text, valign:"middle" });
+      sl.addShape(pp.ShapeType.roundRect, {
+        x:barX, y:y + rowH * 0.22, w:barMaxW, h:rowH * 0.45,
+        fill:{ color:T.panel2 }, line:{ color:T.line, width:0.5 }, rectRadius:0.08
+      });
+      if (pct > 0){
+        sl.addShape(pp.ShapeType.roundRect, {
+          x:barX, y:y + rowH * 0.22, w:Math.max(barMaxW * (pct / 100), 0.08), h:rowH * 0.45,
+          fill:{ color:T.accent }, line:{ color:T.accent, width:0 }, rectRadius:0.08
+        });
+      }
+      sl.addText(`${pct}%`,
+        { x:pctX, y, w:0.9, h:rowH * 0.85, fontSize:13, bold:true, color:T.accent, align:"right", valign:"middle" });
     });
 
     const fullCov = sm.bundles.filter(b => Number(b.pct) === 100).length;
@@ -6600,6 +6613,29 @@ async function exportPPTX(){
     if (mediaParts.length === 1 && mediaParts[0] === "ppt/media/"){
       zip.remove("ppt/media/");
       console.log("[pptx] Removed empty ppt/media/ directory.");
+    }
+
+    // ── Fix empty <a:t></a:t> in notes slides. ───────────────────────
+    // PptxGenJS writes empty text runs in notes placeholders; some
+    // PowerPoint builds flag these on open.
+    try {
+      const notePaths = Object.keys(zip.files).filter(p => /^ppt\/notesSlides\/notesSlide\d+\.xml$/.test(p));
+      let noteFixed = 0;
+      for (const path of notePaths){
+        const f = zip.file(path);
+        if (!f) continue;
+        const xml = await f.async("string");
+        const fixed = xml.replace(/<a:t><\/a:t>/g, "<a:t> </a:t>");
+        if (fixed !== xml){
+          noteFixed += 1;
+          zip.file(path, fixed);
+        }
+      }
+      if (noteFixed > 0){
+        console.info(`[exportPPTX] Fixed empty notes text in ${noteFixed} notesSlide file(s).`);
+      }
+    } catch (err){
+      console.warn("[exportPPTX] Notes text fix failed:", err);
     }
 
     const blob = await zip.generateAsync({
