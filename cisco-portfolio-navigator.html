@@ -4506,7 +4506,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.3.2";
+const APP_VERSION   = "2.3.3";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -4795,6 +4795,10 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.3.3", date:"2026-05-30", items:[
+    "Fix: PowerPoint repair dialog (the real one this time). The v2.3.1 [Content_Types].xml strip was correct as far as it went, but PptxGenJS 3.12.0 has a SECOND numbering bug — the chart file counter increments before assigning, so a deck with one chart ends up with chart2.xml and no chart1.xml. PowerPoint flags this on open and triggers the repair flow. The post-process in saveWithFix() now also renumbers chart files, chart rels, embedded Excel worksheets, slide rels, and Content_Types references to start from 1.",
+    "Diagnostics: a new '[pptx] Renumbering charts: …' / '[pptx] Chart numbering OK …' log line accompanies the existing slideMaster strip diagnostics so the renumber pass is verifiable from DevTools."
+  ]},
   {ver:"2.3.2", date:"2026-05-30", items:[
     "Reverted to a 4-slide deck: Title, Top Opportunities, Bundle Coverage, Use-Case Coverage.",
     "Title slide restored to the original simple style (pre-v2.3.0): three lines on a dark background, no slide master, no decorative geometry, no stat cards.",
@@ -6381,6 +6385,93 @@ async function exportPPTX(){
       }
     } else {
       console.warn("[exportPPTX] [Content_Types].xml not found in generated ZIP — skipping strip.");
+    }
+
+    // ── Renumber chart files starting from 1. ─────────────────────────
+    // PptxGenJS 3.12.0 sometimes starts chart numbering at 2 instead of 1
+    // (the internal counter increments before assigning the file index),
+    // so a deck with one chart ends up with `chart2.xml` and no
+    // `chart1.xml`. PowerPoint flags this as inconsistent on open and
+    // triggers the repair dialog. We renumber any out-of-order chart
+    // files (chart, chart .rels, embedded xlsx) and update every
+    // reference: [Content_Types].xml, slide rels, chart rels.
+    try {
+      const chartRe = /^ppt\/charts\/chart(\d+)\.xml$/;
+      const chartList = Object.keys(zip.files)
+        .map(p => { const m = p.match(chartRe); return m ? { path:p, n:parseInt(m[1],10) } : null; })
+        .filter(Boolean)
+        .sort((a,b) => a.n - b.n);
+      const needsRenumber = chartList.length > 0 &&
+        chartList.some((c, i) => c.n !== i + 1);
+      if (needsRenumber){
+        const map = new Map();
+        chartList.forEach((c, i) => map.set(c.n, i + 1));
+        console.log("[pptx] Renumbering charts:", [...map.entries()].map(([o,n]) => `${o}→${n}`).join(", "));
+
+        // Buffer renamed parts before re-writing so we don't trample
+        // a destination path that's about to be sourced.
+        const moves = [];
+        for (const [oldN, newN] of map){
+          if (oldN === newN) continue;
+          const trios = [
+            { from:`ppt/charts/chart${oldN}.xml`,                          to:`ppt/charts/chart${newN}.xml` },
+            { from:`ppt/charts/_rels/chart${oldN}.xml.rels`,               to:`ppt/charts/_rels/chart${newN}.xml.rels` },
+            { from:`ppt/embeddings/Microsoft_Excel_Worksheet${oldN}.xlsx`, to:`ppt/embeddings/Microsoft_Excel_Worksheet${newN}.xlsx` }
+          ];
+          for (const { from, to } of trios){
+            const f = zip.file(from);
+            if (f){
+              const data = await f.async("uint8array");
+              moves.push({ from, to, data });
+            }
+          }
+        }
+        for (const { from } of moves) zip.remove(from);
+        for (const { to, data } of moves) zip.file(to, data);
+
+        // Update [Content_Types].xml chart references.
+        const ct2 = zip.file("[Content_Types].xml");
+        if (ct2){
+          const ct2Xml = await ct2.async("string");
+          const ct2Fixed = ct2Xml.replace(/\/ppt\/charts\/chart(\d+)\.xml/g, (full, n) => {
+            const newN = map.get(parseInt(n,10));
+            return newN ? `/ppt/charts/chart${newN}.xml` : full;
+          });
+          if (ct2Fixed !== ct2Xml) zip.file("[Content_Types].xml", ct2Fixed);
+        }
+
+        // Update slide rels that reference charts.
+        const slideRels = Object.keys(zip.files).filter(p => /^ppt\/slides\/_rels\/.*\.rels$/.test(p));
+        for (const path of slideRels){
+          const f = zip.file(path);
+          if (!f) continue;
+          const xml = await f.async("string");
+          const fixed = xml.replace(/charts\/chart(\d+)\.xml/g, (full, n) => {
+            const newN = map.get(parseInt(n,10));
+            return newN ? `charts/chart${newN}.xml` : full;
+          });
+          if (fixed !== xml) zip.file(path, fixed);
+        }
+
+        // Update chart rels (embedded worksheet references) — paths have
+        // already been moved, so look up the new names.
+        const chartRels = Object.keys(zip.files).filter(p => /^ppt\/charts\/_rels\/chart\d+\.xml\.rels$/.test(p));
+        for (const path of chartRels){
+          const f = zip.file(path);
+          if (!f) continue;
+          const xml = await f.async("string");
+          const fixed = xml.replace(/Microsoft_Excel_Worksheet(\d+)\.xlsx/g, (full, n) => {
+            const newN = map.get(parseInt(n,10));
+            return newN ? `Microsoft_Excel_Worksheet${newN}.xlsx` : full;
+          });
+          if (fixed !== xml) zip.file(path, fixed);
+        }
+        console.info(`[exportPPTX] Renumbered ${map.size} chart file(s).`);
+      } else {
+        console.log("[pptx] Chart numbering OK (no renumber needed).");
+      }
+    } catch (err){
+      console.warn("[exportPPTX] Chart renumber pass failed (continuing with original numbering):", err);
     }
 
     const blob = await zip.generateAsync({
