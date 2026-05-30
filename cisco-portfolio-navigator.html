@@ -4214,10 +4214,8 @@ document.addEventListener("keydown",ev=>{
       body: `Generate a shareable plan in <strong>Markdown, CSV, JSON, PDF (via
              print), PowerPoint (.pptx),</strong> or plain text. Each export
              includes the stack, EOS/EOL migration paths, top recommendations,
-             and bundle coverage. The PowerPoint export is a polished
-             multi-slide deck with native charts, section dividers, speaker
-             notes, an embedded portfolio timeline, and a Dark / Light / Cisco
-             Blue theme picker — drop it straight into a customer deck.`,
+             and bundle coverage. PowerPoint produces a simple 4–5 slide deck
+             ready to drop into a customer conversation.`,
       before: () => {
         // Close the planner so the export button (lower in planner) is visible
         document.getElementById("exp-menu")?.classList.remove("show");
@@ -4481,7 +4479,7 @@ document.addEventListener("keydown",ev=>{
    Adds (in roughly the order listed):
      [01] Shareable URL (encode stack + filters in hash)
      [02] Saved/named plans + auto-save
-     [03] Export (CSV, Markdown, PDF-via-print, polished PPTX with charts + themes)
+     [03] Export (CSV, Markdown, PDF-via-print, PPTX)
      [04] Migration plan generator (EOL/EOS items in stack → action checklist)
      [05] Competitor → Cisco replacement matrix (extended LEGACY)
      [06] Customer profile prefilter (vertical/size/mode)
@@ -4506,7 +4504,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.3.8";
+const APP_VERSION   = "2.3.9";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -4795,6 +4793,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.3.9", date:"2026-05-30", items:[
+    "Revert: PowerPoint export restored to the original simple deck (pre-v2.3.0) — title, stack table, recommendations, bundle bars, footer. Uses PptxGenJS 3.12.0 with pp.writeFile() directly; removed polished slides, theme picker, charts, speaker notes, and all JSZip post-processing."
+  ]},
   {ver:"2.3.8", date:"2026-05-30", items:[
     "Fix: PowerPoint repair dialog (final). Byte-level diff of pre- vs post-repair files showed Mac PowerPoint strips every empty ZIP directory entry — 19 ghost folders including ppt/charts/ and ppt/embeddings/ with no chart files inside. Post-repair exports contain file entries only (zero paths ending in '/'). saveWithFix() now re-packs the deck with createFolders:false so no directory stubs are written. Also normalizes empty <a:ln></a:ln> to <a:ln/> and extends txBody injection to notesSlides."
   ]},
@@ -5838,8 +5839,7 @@ function bootRestore(){
 }
 
 /* ════════════════════════════════════════════════════════════════════════
-   [03] EXPORT — CSV / Markdown / Print-PDF / Polished PPTX (charts, sections,
-   speaker notes, theme picker, embedded timeline + architecture views)
+   [03] EXPORT — CSV / Markdown / Print-PDF / PPTX
    ════════════════════════════════════════════════════════════════════════*/
 function buildExportMenu(){
   const orig = $("#exp-btn"); if (!orig) return;
@@ -5860,13 +5860,7 @@ function buildExportMenu(){
     <button class="em-item" data-fmt="pdf"><span class="em-icon">🖨</span>
       <div><div>Print → PDF</div><div class="em-sub">Browser print dialog</div></div></button>
     <button class="em-item" data-fmt="pptx"><span class="em-icon">▦</span>
-      <div><div>PowerPoint (.pptx)</div><div class="em-sub">Polished deck w/ charts, sections, notes</div></div></button>
-    <div class="em-theme" role="group" aria-label="PPTX theme">
-      <span class="em-theme-label">PPTX theme</span>
-      <span class="em-sw" data-th="dark"      title="Dark"></span>
-      <span class="em-sw" data-th="light"     title="Light"></span>
-      <span class="em-sw" data-th="ciscoBlue" title="Cisco Blue"></span>
-    </div>
+      <div><div>PowerPoint (.pptx)</div><div class="em-sub">Simple deck — stack, recs, bundles</div></div></button>
     <div class="em-sep"></div>
     <button class="em-item" data-fmt="txt"><span class="em-icon">📄</span>
       <div><div>Plain text (clipboard)</div><div class="em-sub">Quick copy for chat / email</div></div></button>
@@ -5889,22 +5883,8 @@ function buildExportMenu(){
     else if (fmt === "csv")  exportCSV();
     else if (fmt === "json") exportJSON();
     else if (fmt === "pdf")  exportPDF();
-    else if (fmt === "pptx") { try { await exportPPTX(); } catch(err){ console.warn("PPTX export failed", err); showToast("PPTX export failed — see console"); } }
+    else if (fmt === "pptx") { try { exportPPTX(); } catch(err){ console.warn("PPTX export failed", err); showToast("PPTX export failed — see console"); } }
     else if (fmt === "txt")  exportText();
-  }));
-  // Theme picker — persist selection and reflect it in the swatch border.
-  const refreshSwatchSel = () => {
-    const cur = (lsGet(STORAGE_KEYS.pptxTheme, "dark")) || "dark";
-    menu.querySelectorAll(".em-sw").forEach(sw => sw.classList.toggle("sel", sw.dataset.th === cur));
-  };
-  refreshSwatchSel();
-  menu.querySelectorAll(".em-sw").forEach(sw => sw.addEventListener("click", e => {
-    e.stopPropagation();
-    const th = sw.dataset.th;
-    if (!["dark","light","ciscoBlue"].includes(th)) return;
-    lsSet(STORAGE_KEYS.pptxTheme, th);
-    refreshSwatchSel();
-    showToast(`PPTX theme: ${th === "ciscoBlue" ? "Cisco Blue" : th[0].toUpperCase()+th.slice(1)}`);
   }));
 }
 function exportText(){
@@ -6058,723 +6038,72 @@ function exportPDF(){
   }, 100);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   exportPPTX — focused 4-slide client-presentation deck (async).
-
-   Scope was deliberately narrowed in v2.3.2 to the slides users actually
-   take into customer conversations:
-
-     1. Title — original simple pre-v2.3.0 style (three lines on a dark
-        background, no slide master, no decorative geometry).
-     2. Top Augmentation Recommendations — opportunity cards with rank
-        circles, score bars, and direct/adjacent integration counts.
-     3. Solution Bundle Coverage — horizontal bar chart of % owned per
-        Cisco solution bundle.
-     4. Use Case Coverage — 3-column grid of owned / unowned use-case
-        cards (capped at 24 — open dots flag cross-sell seeds).
-
-   The wider deck (executive summary, stack tables, composition charts,
-   per-bundle gaps, risk timeline, migration plan, legacy/outgoing,
-   embedded timeline screenshot, embedded D3 architecture, Next Steps)
-   was retired in v2.3.2 — see git history at commit 3dd8635 for the
-   full implementation if a revival is wanted later.
-
-   Repair-dialog hardening (still required even with 4 slides — the
-   PptxGenJS 3.12.0 bug emits ~3 phantom slideMaster Override entries
-   from internal bookkeeping regardless of slide count):
-     • JSZip is loaded explicitly from a CDN rather than relying on
-       PptxGenJS's UMD export. Empirically the pptxgenjs@3.12.0 bundle
-       does also expose window.JSZip via its UMD wrapper, but loading
-       it directly is robust against bundling changes and easier to
-       verify in DevTools.
-     • The export post-processes the generated ZIP with JSZip, opens
-       [Content_Types].xml, removes any <Override PartName=
-       "/ppt/slideMasters/slideMasterN.xml" .../> entry whose target
-       part isn't actually in the package, then re-zips and downloads
-       via Blob + URL.createObjectURL. We deliberately do NOT call
-       pp.writeFile (which would re-emit the phantoms).
-     • Diagnostic console.log lines fire on every export so the strip
-       is verifiable from DevTools.
-   ───────────────────────────────────────────────────────────────────────── */
-async function exportPPTX(){
-  // ── Lazy-load PptxGenJS (cached after first call). ────────────────────
+function exportPPTX(){
   if (typeof PptxGenJS === "undefined"){
     showToast("Loading PPTX library…");
-    try {
-      await new Promise((resolve, reject) => {
-        const s = document.createElement("script");
-        s.src = "https://cdn.jsdelivr.net/npm/pptxgenjs@4.0.1/dist/pptxgen.bundle.min.js";
-        s.onload  = resolve;
-        s.onerror = () => reject(new Error("pptxgenjs load failed"));
-        document.head.appendChild(s);
-      });
-    } catch (err){
-      console.warn("[exportPPTX] PptxGenJS load failed:", err);
-      showToast("PPTX export needs internet — try PDF instead");
-      return;
-    }
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.min.js";
+    s.onload  = () => exportPPTX();
+    s.onerror = () => showToast("PPTX export needs internet — try PDF instead");
+    document.head.appendChild(s);
+    return;
   }
-
-  // ── Lazy-load JSZip (separate from the pptxgenjs UMD). ────────────────
-  // The pptxgenjs@3.12.0 bundle's UMD wrapper does happen to also expose
-  // window.JSZip (the wrapper assigns the module.exports of bundled-
-  // module-1, which is JSZip itself, to window.JSZip), but that is an
-  // implementation detail of the current bundle and is fragile across
-  // PptxGenJS releases. We load a known JSZip version explicitly so the
-  // [Content_Types].xml strip below is robust and verifiable.
-  if (typeof window !== "undefined" && typeof window.JSZip === "undefined"){
-    try {
-      await new Promise((resolve, reject) => {
-        const s = document.createElement("script");
-        s.src = "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js";
-        s.onload  = resolve;
-        s.onerror = () => reject(new Error("jszip load failed"));
-        document.head.appendChild(s);
-      });
-    } catch (err){
-      console.warn("[exportPPTX] JSZip load failed:", err);
-      // saveWithFix() will fall back to pp.writeFile() and the repair
-      // dialog may appear, but the export still completes.
-    }
-  }
-
-  const sm = planSummary();
-
-  // ── Theme system ──────────────────────────────────────────────────────
-  // Colors are stored without the leading "#" because PptxGenJS expects
-  // bare hex throughout (shape fills, chartColors, text colors). The muted
-  // value was bumped from 8B949E to B0B7BD on the dark theme to clear
-  // WCAG AA contrast on the panel backgrounds.
-  const THEMES = {
-    dark:      { bg:"0D1117", panel:"161B22", panel2:"21262D", text:"E6EDF3", muted:"B0B7BD", subtle:"6E7681", accent:"00BCEB", accentDim:"007A99", ok:"2DCE5C", warn:"F59E0B", bad:"EF4444", line:"30363D" },
-    light:     { bg:"FFFFFF", panel:"F5F5F7", panel2:"E5E5EA", text:"1A1A1A", muted:"3A3A3C", subtle:"6E6E73", accent:"005073", accentDim:"007A99", ok:"008A3C", warn:"B45309", bad:"B91C1C", line:"D1D5DB" },
-    ciscoBlue: { bg:"00264D", panel:"003B73", panel2:"004F94", text:"FFFFFF", muted:"B8D4EC", subtle:"7FB0DA", accent:"00BCEB", accentDim:"7FDFFF", ok:"7BD389", warn:"FFB347", bad:"FF7B7B", line:"1E5089" }
-  };
-  const themeName = (lsGet(STORAGE_KEYS.pptxTheme || "pptxTheme", "dark")) || "dark";
-  const Traw = THEMES[themeName] || THEMES.dark;
-  // PptxGenJS requires bare 6-char hex everywhere — any stray "#" prefix
-  // causes the OOXML writer to emit malformed <a:srgbClr val="#XXXXXX"/>
-  // which PowerPoint flags as repair-worthy. Coerce every color token to
-  // a canonical 6-char uppercase hex (fallback to white on anything weird).
-  const cleanHex = v => {
-    const s = String(v || "").replace(/^#/, "").toUpperCase();
-    return /^[0-9A-F]{6}$/.test(s) ? s : "FFFFFF";
-  };
-  const T = Object.fromEntries(Object.entries(Traw).map(([k, v]) => [k, cleanHex(v)]));
-
-  // ── Deck setup + document metadata (shows up in SharePoint, Outlook,
-  // and Windows Explorer file previews). ────────────────────────────────
   const pp = new PptxGenJS();
-  pp.layout = "LAYOUT_WIDE"; // 13.33 × 7.5 inches
-  pp.title    = `${sm.acct} – Portfolio Plan`;
-  pp.author   = "Cisco Portfolio Navigator";
-  pp.company  = sm.profile.org || sm.profile.vertical || "Cisco";
-  pp.subject  = "Account portfolio plan";
-  pp.revision = APP_VERSION;
+  const sm = planSummary();
+  pp.layout = "LAYOUT_WIDE";
 
-  // No slide masters, no sections, no decorative chrome — keeping the
-  // deck dead-simple to minimize the OOXML surface area PowerPoint
-  // validates on open. The four slides set their own backgrounds when
-  // they want one.
+  // Slide 1: Title
+  let sl = pp.addSlide();
+  sl.background = { color: "0D1117" };
+  sl.addText("Cisco Account Plan", { x:0.6, y:0.6, w:12, h:0.6, fontSize:34, color:"00BCEB", bold:true, fontFace:"Calibri" });
+  sl.addText(String(sm.acct||""), { x:0.6, y:1.3, w:12, h:0.7, fontSize:28, color:"FFFFFF", bold:true });
+  sl.addText(`${sm.date}${sm.profile.vertical?" · "+sm.profile.vertical:""}${sm.profile.size?" · "+sm.profile.size:""}`,
+    { x:0.6, y:2.1, w:12, h:0.4, fontSize:14, color:"8B949E" });
 
-  // ── Slide builders (kept as inner functions so they share `pp`,
-  //    `sm`, and `T` via closure). To bring back any of the dropped
-  //    slides — executive summary, stack tables, composition charts,
-  //    per-bundle gap fillers, risk timeline, migration plan, legacy /
-  //    outgoing replacements, embedded portfolio timeline, embedded D3
-  //    architecture, Next Steps — copy the helper from commit 3dd8635
-  //    and call it from the build sequence at the bottom. ───────────────
+  // Slide 2: Stack
+  sl = pp.addSlide();
+  sl.background = { color: "0D1117" };
+  sl.addText("Current Stack", { x:0.5, y:0.4, w:12, h:0.5, fontSize:24, bold:true, color:"00BCEB" });
+  const rows = [[{text:"Product",options:{bold:true,color:"FFFFFF",fill:"21262D"}},{text:"Category",options:{bold:true,color:"FFFFFF",fill:"21262D"}},{text:"Status",options:{bold:true,color:"FFFFFF",fill:"21262D"}},{text:"Tier",options:{bold:true,color:"FFFFFF",fill:"21262D"}}]];
+  sm.items.slice(0, 18).forEach(it => rows.push([
+    {text:it.name, options:{color:"E6EDF3"}}, {text:it.category||"-",options:{color:"8B949E"}},
+    {text:it.status.toUpperCase(), options:{color: it.status==="eol"?"EF4444":it.status==="eos"?"F59E0B":"2DCE5C"}},
+    {text:it.tier||"-", options:{color:"8B949E", fontSize:10}}
+  ]));
+  sl.addTable(rows, { x:0.4, y:1.0, w:12.5, fontSize:11, color:"E6EDF3", border:{type:"solid",pt:0.5,color:"30363D"} });
 
-  function buildTitleSlide(){
-    // Original simple style from before commit e36c7ff (v2.3.0). The
-    // colors are hardcoded — the theme picker only re-themes slides 2-4.
-    const sl = pp.addSlide();
+  // Slide 3: Recommendations
+  if (sm.recs.length){
+    sl = pp.addSlide();
     sl.background = { color: "0D1117" };
-    sl.addText("Cisco Account Plan", {
-      x:0.6, y:0.6, w:12, h:0.6,
-      fontSize:34, color:"00BCEB", bold:true, fontFace:"Calibri"
-    });
-    sl.addText(String(sm.acct||""), {
-      x:0.6, y:1.3, w:12, h:0.7,
-      fontSize:28, color:"FFFFFF", bold:true
-    });
-    const meta = String(sm.date||"") +
-      (sm.profile && sm.profile.vertical ? " · " + sm.profile.vertical : "") +
-      (sm.profile && sm.profile.size     ? " · " + sm.profile.size     : "");
-    sl.addText(meta, {
-      x:0.6, y:2.1, w:12, h:0.4,
-      fontSize:14, color:"8B949E"
+    sl.addText("Top Augmentation Recommendations", { x:0.5, y:0.4, w:12, h:0.5, fontSize:24, bold:true, color:"00BCEB" });
+    sm.recs.slice(0, 6).forEach((r, i) => {
+      sl.addText(`${i+1}. ${r.name}`, { x:0.6, y:1.0+i*0.65, w:12, h:0.35, fontSize:15, bold:true, color:"FFFFFF" });
+      sl.addText(`${r.category} · score ${r.score} (${r.direct} direct + ${r.adjacent} adjacent)`,
+        { x:0.7, y:1.32+i*0.65, w:12, h:0.3, fontSize:12, color:"8B949E" });
     });
   }
 
-  function buildOpportunitiesSlide(){
-    // Same opportunity-card design as v2.3.0 / v2.3.1 — kept verbatim,
-    // only the slide master was dropped. PptxGenJS escapes `&`, `<`,
-    // `>` automatically when serializing addText, but every dynamic
-    // string is still String()-coerced in case the catalog ever feeds
-    // a non-string through.
-    const sl = pp.addSlide();
-    sl.background = { color: T.bg };
-    sl.addText("Top Augmentation Recommendations",
-      { x:0.5, y:0.4, w:12.33, h:0.55, fontSize:22, bold:true, color:T.accent });
-    sl.addText("Ranked by integration density with current stack (3× direct + adjacent)",
-      { x:0.5, y:0.95, w:12.33, h:0.3, fontSize:11, color:T.subtle });
+  // Slide 4: Bundle coverage
+  sl = pp.addSlide();
+  sl.background = { color: "0D1117" };
+  sl.addText("Solution Bundle Coverage", { x:0.5, y:0.4, w:12, h:0.5, fontSize:24, bold:true, color:"00BCEB" });
+  sm.bundles.slice(0,8).forEach((b, i) => {
+    sl.addText(b.name, { x:0.6, y:1.0+i*0.55, w:6.8, h:0.35, fontSize:14, color:"FFFFFF", bold:true });
+    sl.addShape(pp.ShapeType.rect, { x:7.4, y:1.05+i*0.55, w:4.5, h:0.25, fill:{color:"21262D"} });
+    sl.addShape(pp.ShapeType.rect, { x:7.4, y:1.05+i*0.55, w:4.5*(b.pct/100), h:0.25, fill:{color:"00BCEB"} });
+    sl.addText(`${b.pct}%`, { x:12.0, y:1.0+i*0.55, w:0.8, h:0.35, fontSize:13, color:"00BCEB", bold:true });
+  });
 
-    const maxScore = Math.max(...sm.recs.map(r => Number(r.score) || 0), 1);
-    const topRecs  = sm.recs.slice(0, 8);
-    const cardH = 0.6, cardGap = 0.08, startY = 1.45;
+  // Footer slide
+  sl = pp.addSlide();
+  sl.background = { color: "0D1117" };
+  sl.addText("Generated by Cisco Portfolio Navigator", { x:0.5, y:3.4, w:12, h:0.5, fontSize:14, color:"8B949E", align:"center" });
+  sl.addText(`v${APP_VERSION} · ${new Date().toISOString().slice(0,10)}`,
+    { x:0.5, y:3.9, w:12, h:0.4, fontSize:12, color:"6E7681", align:"center" });
 
-    topRecs.forEach((r, i) => {
-      const y = startY + i * (cardH + cardGap);
-      const isTop3 = i < 3;
-      const rankColor = isTop3 ? T.accent : T.subtle;
-
-      sl.addShape(pp.ShapeType.roundRect, {
-        x:0.5, y, w:12.33, h:cardH,
-        fill:{color:T.panel}, line:{color:T.line, width:1}, rectRadius:0.06
-      });
-      sl.addShape(pp.ShapeType.ellipse, {
-        x:0.7, y:y+0.1, w:0.4, h:0.4,
-        fill:{color:rankColor}, line:{color:rankColor, width:0}
-      });
-      sl.addText(String(i+1),
-        { x:0.7, y:y+0.12, w:0.4, h:0.4, fontSize:14, bold:true, color:"FFFFFF", align:"center" });
-
-      sl.addText(String(r.name||""),
-        { x:1.3, y:y+0.05, w:6.3, h:0.3,  fontSize:13, bold:true, color:T.text, valign:"middle", wrap:true });
-      sl.addText(String(r.category||"—"),
-        { x:1.3, y:y+0.33, w:6.3, h:0.22, fontSize:10, color:T.muted, valign:"middle", wrap:true });
-
-      const score = Math.max(0, Number(r.score) || 0);
-      const barX = 7.8, barY = y + 0.18, barW = 2.8, barH = 0.24;
-      sl.addShape(pp.ShapeType.rect,
-        { x:barX, y:barY, w:barW, h:barH, fill:{color:T.panel2}, line:{color:T.line, width:0} });
-      sl.addShape(pp.ShapeType.rect,
-        { x:barX, y:barY, w:barW * (score / maxScore), h:barH, fill:{color:T.accent}, line:{color:T.accent, width:0} });
-
-      sl.addText(`${Number(r.direct)||0} direct + ${Number(r.adjacent)||0} adjacent`,
-        { x:10.8, y:y+0.05, w:1.9, h:0.25, fontSize:10, color:T.muted, align:"right" });
-      sl.addText(`score ${score}`,
-        { x:10.8, y:y+0.3,  w:1.9, h:0.25, fontSize:11, bold:true, color:T.accent, align:"right" });
-    });
-
-    const top3names = sm.recs.slice(0, 3).map(r => String(r.name||"")).join(", ");
-    const top1 = sm.recs[0] || {};
-    sl.addNotes(
-      `Top opportunity is ${String(top1.name||"")}, with ${Number(top1.direct)||0} direct integrations to existing stack ` +
-      `and ${Number(top1.adjacent)||0} adjacent. Score-weighted ranking (3× direct + adjacent) puts ${top3names} ` +
-      `as the immediate next conversations. Anchor pilots on the top three before broadening scope.`
-    );
-  }
-
-  function buildBundleCoverageSlide(){
-    // Shape-based horizontal bars instead of pp.addChart(). PptxGenJS
-    // 3.12.0's chart subsystem emits OOXML that passes ZIP integrity
-    // checks but still triggers PowerPoint's repair dialog on Mac
-    // (phantom slideMaster Overrides, wrong chart numbering, orphan
-    // axIds, absolute rel paths, multiLvlStrRef quirks, embedded Excel
-    // naming). Native shapes avoid the entire chart/embeddings subtree.
-    const sl = pp.addSlide();
-    sl.background = { color: T.bg };
-    sl.addText("Solution Bundle Coverage",
-      { x:0.5, y:0.4, w:12.33, h:0.55, fontSize:22, bold:true, color:T.accent });
-    sl.addText("How much of each Cisco solution bundle the customer already owns",
-      { x:0.5, y:0.95, w:12.33, h:0.3, fontSize:11, color:T.subtle });
-
-    const bundles = sm.bundles.slice(0, 10);
-    const startY  = 1.45;
-    const rowH    = Math.min(0.55, 5.5 / Math.max(bundles.length, 1));
-    const labelW  = 4.4;
-    const barX    = 5.0;
-    const barMaxW = 6.5;
-    const pctX    = 11.7;
-
-    bundles.forEach((b, i) => {
-      const y   = startY + i * rowH;
-      const pct = Math.max(0, Math.min(100, Number(b.pct) || 0));
-      sl.addText(String(b.name || "").slice(0, 42),
-        { x:0.5, y, w:labelW, h:rowH * 0.85, fontSize:12, bold:true, color:T.text, valign:"middle" });
-      sl.addShape(pp.ShapeType.roundRect, {
-        x:barX, y:y + rowH * 0.22, w:barMaxW, h:rowH * 0.45,
-        fill:{ color:T.panel2 }, line:{ color:T.line, width:0.5 }, rectRadius:0.08
-      });
-      if (pct > 0){
-        sl.addShape(pp.ShapeType.roundRect, {
-          x:barX, y:y + rowH * 0.22, w:Math.max(barMaxW * (pct / 100), 0.08), h:rowH * 0.45,
-          fill:{ color:T.accent }, line:{ color:T.accent, width:0 }, rectRadius:0.08
-        });
-      }
-      sl.addText(`${pct}%`,
-        { x:pctX, y, w:0.9, h:rowH * 0.85, fontSize:13, bold:true, color:T.accent, align:"right", valign:"middle" });
-    });
-
-    const fullCov = sm.bundles.filter(b => Number(b.pct) === 100).length;
-    const weakest = sm.bundles.slice().sort((a, b) => (Number(a.pct)||0) - (Number(b.pct)||0))[0];
-    sl.addNotes(
-      `${fullCov} of ${sm.bundles.length} bundle${sm.bundles.length===1?"":"s"} already fully covered. ` +
-      `Largest gap: ${String(weakest && weakest.name || "n/a")} at ${Number(weakest && weakest.pct)||0}%. ` +
-      `Bundles below 60% are the natural cross-sell conversations.`
-    );
-  }
-
-  function buildUseCaseSlide(){
-    // Same 3-column grid design as v2.3.0 / v2.3.1, but always single
-    // page. Pagination would imply N>1 slides, which the user explicitly
-    // scoped out in v2.3.2 — overflow is summarized in a footer line.
-    const sl = pp.addSlide();
-    sl.background = { color: T.bg };
-    sl.addText("Use Case Coverage",
-      { x:0.5, y:0.4, w:12.33, h:0.55, fontSize:22, bold:true, color:T.accent });
-    sl.addText(`Filled dots indicate use cases addressed by current stack (${(sm.stackUCs && sm.stackUCs.size) || 0} of ${sm.allUC.length})`,
-      { x:0.5, y:0.95, w:12.33, h:0.3, fontSize:11, color:T.subtle });
-
-    const MAX_UCS = 24;
-    const ucList  = sm.allUC.slice(0, MAX_UCS);
-    const cols    = 3, gap = 0.18;
-    const ucCellW = (12.33 - (cols - 1) * gap) / cols;
-    const ucCellH = 0.6;
-
-    ucList.forEach((uc, i) => {
-      const rr = Math.floor(i / cols), cc = i % cols;
-      const x  = 0.5 + cc * (ucCellW + gap);
-      const y  = 1.4 + rr * (ucCellH + 0.1);
-      const owned = !!(sm.stackUCs && sm.stackUCs.has(uc));
-      sl.addShape(pp.ShapeType.roundRect, {
-        x, y, w: ucCellW, h: ucCellH,
-        fill: { color: T.panel },
-        line: { color: owned ? T.ok : T.line, width: owned ? 2 : 1 },
-        rectRadius: 0.08
-      });
-      sl.addText(owned ? "●" : "○",
-        { x: x + 0.1, y: y + 0.05, w: 0.4, h: 0.5, fontSize: 18, bold: true, color: owned ? T.ok : T.muted, valign:"middle", align:"center" });
-      sl.addText(String(uc||""),
-        { x: x + 0.55, y: y + 0.05, w: ucCellW - 0.65, h: 0.5, fontSize: 11, color: owned ? T.text : T.muted, valign:"middle", wrap:true });
-    });
-
-    if (sm.allUC.length > MAX_UCS){
-      const overflow = sm.allUC.length - MAX_UCS;
-      sl.addText(`+ ${overflow} more use case${overflow === 1 ? "" : "s"}`,
-        { x:0.5, y:7.0, w:12.33, h:0.3, fontSize:10, color:T.muted, italic:true, align:"center" });
-    }
-
-    const ownedHere = ucList.filter(uc => sm.stackUCs && sm.stackUCs.has(uc)).length;
-    sl.addNotes(
-      `${ownedHere} of ${ucList.length} use case${ucList.length===1?"":"s"} on this slide are covered. ` +
-      "Open dots are unaddressed scenarios — natural seeds for cross-sell discovery."
-    );
-  }
-
-  // ── Save with the [Content_Types].xml phantom-Override strip. ─────
-  // PptxGenJS 3.12.0 has a bug in `makeXmlContTypes` (gen-xml.ts) that
-  // emits an <Override PartName="/ppt/slideMasters/slideMasterN.xml"/>
-  // entry for every slide, even though only slideMaster1.xml is
-  // actually written to the package. PowerPoint scans
-  // [Content_Types].xml on open, sees Override entries pointing at
-  // parts that aren't in the ZIP, and triggers the
-  // "PowerPoint found a problem with content" repair dialog before
-  // showing the deck. We deliberately do NOT call pp.writeFile here —
-  // that would re-emit the phantoms. Instead, generate the buffer,
-  // post-process the ZIP via JSZip, and download manually as a Blob.
-  async function saveWithFix(){
-    const fileName = `Cisco_Plan_${String(sm.acct||"plan").replace(/\s+/g, "-")}.pptx`;
-    const Z = (typeof window !== "undefined" && window.JSZip) ? window.JSZip : null;
-    console.log("[pptx] JSZip available:", !!Z);
-    if (!Z){
-      console.warn("[exportPPTX] JSZip global not found; falling back to writeFile (repair dialog will appear).");
-      await pp.writeFile({ fileName });
-      return;
-    }
-    const buffer = await pp.write({ outputType: "arraybuffer" });
-    const zip    = await Z.loadAsync(buffer);
-    const ctFile = zip.file("[Content_Types].xml");
-    if (ctFile){
-      const ctXml = await ctFile.async("string");
-      const overrideRe = /<Override\s+PartName="\/ppt\/slideMasters\/slideMaster\d+\.xml"[^>]*\/>/g;
-      const beforeCount = (ctXml.match(overrideRe) || []).length;
-      console.log("[pptx] Override entries before strip:", beforeCount);
-
-      let stripped = 0;
-      const fixedXml = ctXml.replace(
-        /<Override\s+PartName="\/ppt\/slideMasters\/slideMaster(\d+)\.xml"[^>]*\/>/g,
-        (full, n) => {
-          if (zip.file(`ppt/slideMasters/slideMaster${n}.xml`)) return full;
-          stripped += 1;
-          return "";
-        }
-      );
-      zip.file("[Content_Types].xml", fixedXml);
-
-      const afterCount = (fixedXml.match(overrideRe) || []).length;
-      console.log("[pptx] Override entries after strip:", afterCount);
-      if (stripped > 0){
-        console.info(`[exportPPTX] Stripped ${stripped} phantom slideMaster Override entries from [Content_Types].xml`);
-      }
-    } else {
-      console.warn("[exportPPTX] [Content_Types].xml not found in generated ZIP — skipping strip.");
-    }
-
-    // ── Renumber chart files starting from 1. ─────────────────────────
-    // PptxGenJS 3.12.0 sometimes starts chart numbering at 2 instead of 1
-    // (the internal counter increments before assigning the file index),
-    // so a deck with one chart ends up with `chart2.xml` and no
-    // `chart1.xml`. PowerPoint flags this as inconsistent on open and
-    // triggers the repair dialog. We renumber any out-of-order chart
-    // files (chart, chart .rels, embedded xlsx) and update every
-    // reference: [Content_Types].xml, slide rels, chart rels.
-    try {
-      const chartRe = /^ppt\/charts\/chart(\d+)\.xml$/;
-      const chartList = Object.keys(zip.files)
-        .map(p => { const m = p.match(chartRe); return m ? { path:p, n:parseInt(m[1],10) } : null; })
-        .filter(Boolean)
-        .sort((a,b) => a.n - b.n);
-      const needsRenumber = chartList.length > 0 &&
-        chartList.some((c, i) => c.n !== i + 1);
-      if (needsRenumber){
-        const map = new Map();
-        chartList.forEach((c, i) => map.set(c.n, i + 1));
-        console.log("[pptx] Renumbering charts:", [...map.entries()].map(([o,n]) => `${o}→${n}`).join(", "));
-
-        // Buffer renamed parts before re-writing so we don't trample
-        // a destination path that's about to be sourced.
-        const moves = [];
-        for (const [oldN, newN] of map){
-          if (oldN === newN) continue;
-          const trios = [
-            { from:`ppt/charts/chart${oldN}.xml`,                          to:`ppt/charts/chart${newN}.xml` },
-            { from:`ppt/charts/_rels/chart${oldN}.xml.rels`,               to:`ppt/charts/_rels/chart${newN}.xml.rels` },
-            { from:`ppt/embeddings/Microsoft_Excel_Worksheet${oldN}.xlsx`, to:`ppt/embeddings/Microsoft_Excel_Worksheet${newN}.xlsx` }
-          ];
-          for (const { from, to } of trios){
-            const f = zip.file(from);
-            if (f){
-              const data = await f.async("uint8array");
-              moves.push({ from, to, data });
-            }
-          }
-        }
-        for (const { from } of moves) zip.remove(from);
-        for (const { to, data } of moves) zip.file(to, data);
-
-        // Update [Content_Types].xml chart references.
-        const ct2 = zip.file("[Content_Types].xml");
-        if (ct2){
-          const ct2Xml = await ct2.async("string");
-          const ct2Fixed = ct2Xml.replace(/\/ppt\/charts\/chart(\d+)\.xml/g, (full, n) => {
-            const newN = map.get(parseInt(n,10));
-            return newN ? `/ppt/charts/chart${newN}.xml` : full;
-          });
-          if (ct2Fixed !== ct2Xml) zip.file("[Content_Types].xml", ct2Fixed);
-        }
-
-        // Update slide rels that reference charts.
-        const slideRels = Object.keys(zip.files).filter(p => /^ppt\/slides\/_rels\/.*\.rels$/.test(p));
-        for (const path of slideRels){
-          const f = zip.file(path);
-          if (!f) continue;
-          const xml = await f.async("string");
-          const fixed = xml.replace(/charts\/chart(\d+)\.xml/g, (full, n) => {
-            const newN = map.get(parseInt(n,10));
-            return newN ? `charts/chart${newN}.xml` : full;
-          });
-          if (fixed !== xml) zip.file(path, fixed);
-        }
-
-        // Update chart rels (embedded worksheet references) — paths have
-        // already been moved, so look up the new names.
-        const chartRels = Object.keys(zip.files).filter(p => /^ppt\/charts\/_rels\/chart\d+\.xml\.rels$/.test(p));
-        for (const path of chartRels){
-          const f = zip.file(path);
-          if (!f) continue;
-          const xml = await f.async("string");
-          const fixed = xml.replace(/Microsoft_Excel_Worksheet(\d+)\.xlsx/g, (full, n) => {
-            const newN = map.get(parseInt(n,10));
-            return newN ? `Microsoft_Excel_Worksheet${newN}.xlsx` : full;
-          });
-          if (fixed !== xml) zip.file(path, fixed);
-        }
-        console.info(`[exportPPTX] Renumbered ${map.size} chart file(s).`);
-      } else {
-        console.log("[pptx] Chart numbering OK (no renumber needed).");
-      }
-    } catch (err){
-      console.warn("[exportPPTX] Chart renumber pass failed (continuing with original numbering):", err);
-    }
-
-    // ── Strip orphan <c:axId> entries from chart XML. ────────────────
-    // PptxGenJS 3.12.0 emits an extra <c:axId> inside the chart-type
-    // element (e.g. <c:barChart>) that has no corresponding axis
-    // declaration. OOXML schema for 2D bar charts requires exactly 2
-    // axId children inside the chart-type element, matching the catAx
-    // and valAx declarations. The orphan triggers PowerPoint's repair
-    // dialog on open. We rebuild the set of declared axis IDs (those
-    // that head a <c:catAx>/<c:valAx>/<c:dateAx>/<c:serAx> block) and
-    // remove any <c:axId val="..."/> not in that set.
-    try {
-      const chartXmlFiles = Object.keys(zip.files).filter(p => /^ppt\/charts\/chart\d+\.xml$/.test(p));
-      let totalOrphans = 0, filesFixed = 0;
-      for (const path of chartXmlFiles){
-        const f = zip.file(path);
-        if (!f) continue;
-        const xml = await f.async("string");
-        // Per OOXML schema, <c:axId> is the FIRST child of every axis
-        // declaration. Match the open tag immediately followed (with
-        // optional whitespace) by <c:axId>.
-        const declared = new Set();
-        for (const ax of ["catAx","valAx","dateAx","serAx"]){
-          const re = new RegExp(`<c:${ax}>\\s*<c:axId\\s+val="(\\d+)"\\s*/>`, "g");
-          let m;
-          while ((m = re.exec(xml)) !== null) declared.add(m[1]);
-        }
-        // Strip any <c:axId val="N"/> whose N isn't in the declared set.
-        // (Declared <c:axId> entries are inside <c:catAx>/<c:valAx>/...
-        // so they're skipped automatically — we only remove orphans
-        // sitting bare inside the chart-type element.)
-        const fixed = xml.replace(/<c:axId\s+val="(\d+)"\s*\/>/g, (full, n) => {
-          return declared.has(n) ? full : "";
-        });
-        if (fixed !== xml){
-          const before = (xml.match(/<c:axId\s+val="\d+"\s*\/>/g) || []).length;
-          const after  = (fixed.match(/<c:axId\s+val="\d+"\s*\/>/g) || []).length;
-          totalOrphans += (before - after);
-          filesFixed   += 1;
-          zip.file(path, fixed);
-        }
-      }
-      if (filesFixed > 0){
-        console.info(`[exportPPTX] Stripped ${totalOrphans} orphan <c:axId> from ${filesFixed} chart file(s).`);
-      } else {
-        console.log("[pptx] Chart axId integrity OK.");
-      }
-    } catch (err){
-      console.warn("[exportPPTX] Chart axId strip pass failed:", err);
-    }
-
-    // ── Fix absolute chart relationship targets in slide rels. ───────
-    // PptxGenJS 3.12.0 emits Target="/ppt/charts/chartN.xml" (absolute
-    // package-root path) but OOXML requires relationship targets to be
-    // relative to the .rels file. From ppt/slides/_rels/slideN.xml.rels
-    // the correct target is "../charts/chartN.xml". PowerPoint's repair
-    // dialog is triggered by the absolute path — confirmed by diffing
-    // pre- and post-repair files.
-    try {
-      const slideRelPaths = Object.keys(zip.files).filter(p => /^ppt\/slides\/_rels\/.*\.rels$/.test(p));
-      let absFixed = 0;
-      for (const path of slideRelPaths){
-        const f = zip.file(path);
-        if (!f) continue;
-        const xml = await f.async("string");
-        const fixed = xml.replace(
-          /Target="\/ppt\/charts\/chart(\d+)\.xml"/g,
-          'Target="../charts/chart$1.xml"'
-        );
-        if (fixed !== xml){
-          absFixed += 1;
-          zip.file(path, fixed);
-        }
-      }
-      if (absFixed > 0){
-        console.info(`[exportPPTX] Fixed absolute chart path in ${absFixed} slide rel file(s).`);
-      } else {
-        console.log("[pptx] Chart rel paths OK.");
-      }
-    } catch (err){
-      console.warn("[exportPPTX] Absolute chart path fix failed:", err);
-    }
-
-    // ── Rename single-chart Excel embedding to unnumbered name. ─────
-    // When there is exactly one chart, PowerPoint expects
-    // Microsoft_Excel_Worksheet.xlsx (no index), not Worksheet1.xlsx.
-    try {
-      const chartCount = Object.keys(zip.files).filter(p => /^ppt\/charts\/chart\d+\.xml$/.test(p)).length;
-      if (chartCount === 1){
-        const numbered = "ppt/embeddings/Microsoft_Excel_Worksheet1.xlsx";
-        const unnumbered = "ppt/embeddings/Microsoft_Excel_Worksheet.xlsx";
-        const wsFile = zip.file(numbered);
-        if (wsFile && !zip.file(unnumbered)){
-          const data = await wsFile.async("uint8array");
-          zip.file(unnumbered, data);
-          zip.remove(numbered);
-          const chartRelPaths = Object.keys(zip.files).filter(p => /^ppt\/charts\/_rels\/chart\d+\.xml\.rels$/.test(p));
-          for (const path of chartRelPaths){
-            const f = zip.file(path);
-            if (!f) continue;
-            const xml = await f.async("string");
-            const fixed = xml.replace(
-              /Microsoft_Excel_Worksheet1\.xlsx/g,
-              "Microsoft_Excel_Worksheet.xlsx"
-            );
-            if (fixed !== xml) zip.file(path, fixed);
-          }
-          console.info("[exportPPTX] Renamed single-chart Excel embedding to Microsoft_Excel_Worksheet.xlsx.");
-        }
-      }
-    } catch (err){
-      console.warn("[exportPPTX] Excel worksheet rename failed:", err);
-    }
-
-    // ── Normalize empty line elements in slide/notes XML. ────────────
-    // PptxGenJS emits <a:ln></a:ln> on no-border text boxes; PowerPoint
-    // rewrites these to self-closing <a:ln/> during repair.
-    try {
-      const lnPaths = Object.keys(zip.files).filter(p =>
-        /^ppt\/(slides|notesSlides)\/(slide|notesSlide)\d+\.xml$/.test(p)
-      );
-      let lnFixed = 0;
-      for (const path of lnPaths){
-        const f = zip.file(path);
-        if (!f) continue;
-        const xml = await f.async("string");
-        const fixed = xml.replace(/<a:ln><\/a:ln>/g, "<a:ln/>");
-        if (fixed !== xml){
-          lnFixed += 1;
-          zip.file(path, fixed);
-        }
-      }
-      if (lnFixed > 0){
-        console.info(`[exportPPTX] Normalized empty <a:ln> in ${lnFixed} slide/notes file(s).`);
-      }
-    } catch (err){
-      console.warn("[exportPPTX] Empty <a:ln> normalization failed:", err);
-    }
-
-    // ── Fix empty <a:t></a:t> in notes slides. ───────────────────────
-    // PptxGenJS writes empty text runs in notes placeholders; some
-    // PowerPoint builds flag these on open.
-    try {
-      const notePaths = Object.keys(zip.files).filter(p => /^ppt\/notesSlides\/notesSlide\d+\.xml$/.test(p));
-      let noteFixed = 0;
-      for (const path of notePaths){
-        const f = zip.file(path);
-        if (!f) continue;
-        const xml = await f.async("string");
-        const fixed = xml.replace(/<a:t><\/a:t>/g, "<a:t> </a:t>");
-        if (fixed !== xml){
-          noteFixed += 1;
-          zip.file(path, fixed);
-        }
-      }
-      if (noteFixed > 0){
-        console.info(`[exportPPTX] Fixed empty notes text in ${noteFixed} notesSlide file(s).`);
-      }
-    } catch (err){
-      console.warn("[exportPPTX] Notes text fix failed:", err);
-    }
-
-    // ── Inject missing <p:txBody> on text-less shapes (PptxGenJS #1441). ─
-    // addShape() without accompanying text produces <p:sp> blocks with
-    // nvSpPr + spPr but NO txBody — an OOXML schema violation. PowerPoint
-    // triggers repair and injects txBody on open. Confirmed on the user's
-    // export: 37 shapes across slides 2–4 were missing txBody.
-    const TXBODY_STUB = '<p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:endParaRPr lang="en-US"/></a:p></p:txBody>';
-    function injectMissingTxBody(xml){
-      return xml.replace(/<p:sp>([\s\S]*?)<\/p:sp>/g, (full, inner) => {
-        return inner.includes("<p:txBody>") ? full : "<p:sp>" + inner + TXBODY_STUB + "</p:sp>";
-      });
-    }
-    try {
-      const slideXmlPaths = Object.keys(zip.files).filter(p =>
-        /^ppt\/(slides\/slide|notesSlides\/notesSlide)\d+\.xml$/.test(p)
-      );
-      let txFixed = 0, txCount = 0;
-      for (const path of slideXmlPaths){
-        const f = zip.file(path);
-        if (!f) continue;
-        const xml = await f.async("string");
-        const before = (xml.match(/<p:sp>[\s\S]*?<\/p:sp>/g) || []).filter(b => !b.includes("<p:txBody>")).length;
-        const fixed = injectMissingTxBody(xml);
-        if (fixed !== xml){
-          txCount += before;
-          txFixed += 1;
-          zip.file(path, fixed);
-        }
-      }
-      if (txFixed > 0){
-        console.info(`[exportPPTX] Injected txBody into ${txCount} text-less shape(s) on ${txFixed} slide(s) (#1441).`);
-      } else {
-        console.log("[pptx] Shape txBody integrity OK.");
-      }
-    } catch (err){
-      console.warn("[exportPPTX] txBody injection failed:", err);
-    }
-
-    // ── Minimal notesMaster (PptxGenJS #1443). ─────────────────────────
-    // The default notesMaster contains 6 placeholder shapes PowerPoint
-    // considers invalid and removes during repair, triggering the dialog.
-    // Replace spTree with the empty structure PowerPoint itself produces
-    // after repair (keeps clrMap + notesStyle intact).
-    try {
-      const nmPath = "ppt/notesMasters/notesMaster1.xml";
-      const nmFile = zip.file(nmPath);
-      if (nmFile){
-        const nm = await nmFile.async("string");
-        const minimalSpTree =
-          "<p:spTree>" +
-          "<p:nvGrpSpPr><p:cNvPr id=\"1\" name=\"\"/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>" +
-          "<p:grpSpPr><a:xfrm><a:off x=\"0\" y=\"0\"/><a:ext cx=\"0\" cy=\"0\"/>" +
-          "<a:chOff x=\"0\" y=\"0\"/><a:chExt cx=\"0\" cy=\"0\"/></a:xfrm></p:grpSpPr>" +
-          "</p:spTree>";
-        const hadPlaceholders = (nm.match(/<p:ph /g) || []).length;
-        const fixed = nm.replace(/<p:spTree>[\s\S]*?<\/p:spTree>/, minimalSpTree);
-        if (fixed !== nm){
-          zip.file(nmPath, fixed);
-          console.info(`[exportPPTX] Replaced notesMaster spTree (removed ${hadPlaceholders} invalid placeholders, #1443).`);
-        }
-      }
-    } catch (err){
-      console.warn("[exportPPTX] notesMaster fix failed:", err);
-    }
-
-    // ── Re-pack without ZIP directory stubs. ─────────────────────────
-    // PptxGenJS (and JSZip.loadAsync) carry 15–19 zero-byte directory
-    // entries (ppt/charts/, ppt/embeddings/, _rels/ stubs, etc.). Mac
-    // PowerPoint treats these as package corruption and triggers repair.
-    // Post-repair exports contain file entries only — zero paths ending
-    // in "/". Rebuilding with createFolders:false omits all dir stubs.
-    // Also drops orphaned empty chart/embed folders left when no charts
-    // are in the deck.
-    let outZip = zip;
-    try {
-      const cleanZip = new Z();
-      const filePaths = Object.keys(zip.files)
-        .filter(p => !p.endsWith("/"))
-        .sort();
-      for (const path of filePaths){
-        const entry = zip.file(path);
-        if (!entry) continue;
-        const data = await entry.async("uint8array");
-        cleanZip.file(path, data, { createFolders: false });
-      }
-      outZip = cleanZip;
-      console.info(`[exportPPTX] Re-packed ${filePaths.length} file entries (no directory stubs).`);
-    } catch (err){
-      console.warn("[exportPPTX] Clean re-pack failed; using patched ZIP as-is:", err);
-    }
-
-    const blob = await outZip.generateAsync({
-      type: "blob",
-      mimeType: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-      compression: "DEFLATE",
-      compressionOptions: { level: 6 }
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => { try { URL.revokeObjectURL(url); a.remove(); } catch (_) {} }, 0);
-  }
-
-  // ── Build the deck (4 slides; each slide-builder skips itself if
-  //    its source data is empty so the deck never has a content-less
-  //    slide that PowerPoint could flag). ────────────────────────────
-  buildTitleSlide();
-  if (sm.recs    && sm.recs.length    > 0) buildOpportunitiesSlide();
-  if (sm.bundles && sm.bundles.length > 0) buildBundleCoverageSlide();
-  if (sm.allUC   && sm.allUC.length   > 0) buildUseCaseSlide();
-
-  await saveWithFix();
-  showToast(`PPTX exported (${themeName === "ciscoBlue" ? "Cisco Blue" : themeName[0].toUpperCase()+themeName.slice(1)} theme)`);
+  pp.writeFile({ fileName: `Cisco_Plan_${String(sm.acct||"plan").replace(/\s+/g,"-")}.pptx` });
+  showToast("PPTX exported");
 }
 
 /* ════════════════════════════════════════════════════════════════════════
