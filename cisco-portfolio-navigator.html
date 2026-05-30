@@ -5050,24 +5050,36 @@ STYLE.textContent = `
   #tl-head .tl-title{font-size:14px;font-weight:700}
   #tl-head .tl-sub{font-size:11px;color:var(--muted);margin-top:2px}
   #tl-canvas{flex:1;
-    /* overflow-x:scroll (vs auto) reserves a permanent track at the bottom so the
-       scrollbar always has somewhere to live, and the -webkit-appearance:none on
-       ::-webkit-scrollbar below forces "classic" non-overlay scrollbars on macOS
-       Chrome/Safari. Without that opt-out, those browsers render OS overlay
-       scrollbars that fade out the moment you stop scrolling, ignoring most
-       custom ::-webkit-scrollbar styling. */
-    overflow-x:scroll;overflow-y:auto;padding:0 0 30px;position:relative;
-    /* Firefox uses the standardized properties below; Chrome/Safari ignore them
-       in favor of the webkit pseudos. */
-    scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.30) rgba(0,0,0,.35)}
-  #tl-canvas::-webkit-scrollbar{-webkit-appearance:none;height:14px;width:10px}
-  #tl-canvas::-webkit-scrollbar-track{background:rgba(0,0,0,.40);
-    border-top:1px solid rgba(255,255,255,.06)}
-  #tl-canvas::-webkit-scrollbar-thumb{background:rgba(255,255,255,.30);
-    border-radius:7px;border:2px solid transparent;background-clip:padding-box;
-    box-shadow:0 0 0 1px rgba(0,0,0,.4) inset}
-  #tl-canvas::-webkit-scrollbar-thumb:hover{background:rgba(0,188,235,.65);background-clip:padding-box}
-  #tl-canvas::-webkit-scrollbar-corner{background:rgba(0,0,0,.40)}
+    /* overflow-x:scroll (vs auto) permanently reserves a track at the bottom.
+       We deliberately do NOT set scrollbar-color/scrollbar-width here: in
+       Chrome 113+ those properties opt the element into the new "Fluent"
+       scrollbar path which respects macOS auto-hide and ignores the
+       ::-webkit-scrollbar rules below. By keeping only the webkit pseudos,
+       Chrome and Safari render a classic always-visible scrollbar that we
+       can style. Firefox is handled by the @supports block below. */
+    overflow-x:scroll;overflow-y:auto;padding:0 0 30px;position:relative}
+  /* High-contrast classic scrollbar for Chrome / Safari (macOS + everywhere) */
+  #tl-canvas::-webkit-scrollbar{-webkit-appearance:none;height:16px;width:12px;
+    background:#0d1117}
+  #tl-canvas::-webkit-scrollbar-track{background:#0d1117;
+    border-top:1px solid rgba(255,255,255,.10);
+    box-shadow:inset 0 1px 0 rgba(0,0,0,.6)}
+  #tl-canvas::-webkit-scrollbar-thumb{
+    background:linear-gradient(180deg, rgba(0,188,235,.85) 0%, rgba(0,122,153,.85) 100%);
+    border-radius:8px;border:2px solid #0d1117;background-clip:padding-box;
+    box-shadow:0 0 0 1px rgba(0,0,0,.6) inset, 0 0 6px rgba(0,188,235,.35)}
+  #tl-canvas::-webkit-scrollbar-thumb:hover{
+    background:linear-gradient(180deg, rgba(0,212,255,1) 0%, rgba(0,150,190,1) 100%);
+    background-clip:padding-box}
+  #tl-canvas::-webkit-scrollbar-thumb:active{
+    background:#00d4ff;background-clip:padding-box}
+  #tl-canvas::-webkit-scrollbar-corner{background:#0d1117}
+  /* Firefox-only: scoped via @supports so Chrome doesn't pick up these
+     properties and switch off the webkit path above. */
+  @supports (-moz-appearance:none){
+    #tl-canvas{scrollbar-width:auto;
+      scrollbar-color:rgba(0,188,235,.85) #0d1117}
+  }
   .tl-zoom{display:inline-flex;align-items:center;gap:0;background:var(--surface2);
     border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-right:4px}
   .tl-zoom button{background:transparent;border:none;color:var(--muted);
