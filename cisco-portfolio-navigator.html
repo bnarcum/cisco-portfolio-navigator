@@ -4506,7 +4506,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.3.7";
+const APP_VERSION   = "2.3.8";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -4795,6 +4795,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.3.8", date:"2026-05-30", items:[
+    "Fix: PowerPoint repair dialog (final). Byte-level diff of pre- vs post-repair files showed Mac PowerPoint strips every empty ZIP directory entry — 19 ghost folders including ppt/charts/ and ppt/embeddings/ with no chart files inside. Post-repair exports contain file entries only (zero paths ending in '/'). saveWithFix() now re-packs the deck with createFolders:false so no directory stubs are written. Also normalizes empty <a:ln></a:ln> to <a:ln/> and extends txBody injection to notesSlides."
+  ]},
   {ver:"2.3.7", date:"2026-05-30", items:[
     "Fix: PowerPoint repair dialog — root cause identified via GitHub issues #1441 and #1443. PptxGenJS addShape() without text emits <p:sp> elements missing the required <p:txBody> child (37 shapes across slides 2–4). The notesMaster ships 6 invalid placeholder shapes PowerPoint strips on repair. saveWithFix() now injects minimal txBody stubs into text-less shapes and replaces notesMaster with the minimal structure PowerPoint expects. Upgraded PptxGenJS 3.12.0 → 4.0.1."
   ]},
@@ -6609,13 +6612,29 @@ async function exportPPTX(){
       console.warn("[exportPPTX] Excel worksheet rename failed:", err);
     }
 
-    // ── Remove empty ppt/media/ directory entry. ─────────────────────
-    // PptxGenJS sometimes writes a zero-byte media folder with no
-    // files; PowerPoint strips it on repair.
-    const mediaParts = Object.keys(zip.files).filter(p => p.startsWith("ppt/media"));
-    if (mediaParts.length === 1 && mediaParts[0] === "ppt/media/"){
-      zip.remove("ppt/media/");
-      console.log("[pptx] Removed empty ppt/media/ directory.");
+    // ── Normalize empty line elements in slide/notes XML. ────────────
+    // PptxGenJS emits <a:ln></a:ln> on no-border text boxes; PowerPoint
+    // rewrites these to self-closing <a:ln/> during repair.
+    try {
+      const lnPaths = Object.keys(zip.files).filter(p =>
+        /^ppt\/(slides|notesSlides)\/(slide|notesSlide)\d+\.xml$/.test(p)
+      );
+      let lnFixed = 0;
+      for (const path of lnPaths){
+        const f = zip.file(path);
+        if (!f) continue;
+        const xml = await f.async("string");
+        const fixed = xml.replace(/<a:ln><\/a:ln>/g, "<a:ln/>");
+        if (fixed !== xml){
+          lnFixed += 1;
+          zip.file(path, fixed);
+        }
+      }
+      if (lnFixed > 0){
+        console.info(`[exportPPTX] Normalized empty <a:ln> in ${lnFixed} slide/notes file(s).`);
+      }
+    } catch (err){
+      console.warn("[exportPPTX] Empty <a:ln> normalization failed:", err);
     }
 
     // ── Fix empty <a:t></a:t> in notes slides. ───────────────────────
@@ -6653,7 +6672,9 @@ async function exportPPTX(){
       });
     }
     try {
-      const slideXmlPaths = Object.keys(zip.files).filter(p => /^ppt\/slides\/slide\d+\.xml$/.test(p));
+      const slideXmlPaths = Object.keys(zip.files).filter(p =>
+        /^ppt\/(slides\/slide|notesSlides\/notesSlide)\d+\.xml$/.test(p)
+      );
       let txFixed = 0, txCount = 0;
       for (const path of slideXmlPaths){
         const f = zip.file(path);
@@ -6703,7 +6724,33 @@ async function exportPPTX(){
       console.warn("[exportPPTX] notesMaster fix failed:", err);
     }
 
-    const blob = await zip.generateAsync({
+    // ── Re-pack without ZIP directory stubs. ─────────────────────────
+    // PptxGenJS (and JSZip.loadAsync) carry 15–19 zero-byte directory
+    // entries (ppt/charts/, ppt/embeddings/, _rels/ stubs, etc.). Mac
+    // PowerPoint treats these as package corruption and triggers repair.
+    // Post-repair exports contain file entries only — zero paths ending
+    // in "/". Rebuilding with createFolders:false omits all dir stubs.
+    // Also drops orphaned empty chart/embed folders left when no charts
+    // are in the deck.
+    let outZip = zip;
+    try {
+      const cleanZip = new Z();
+      const filePaths = Object.keys(zip.files)
+        .filter(p => !p.endsWith("/"))
+        .sort();
+      for (const path of filePaths){
+        const entry = zip.file(path);
+        if (!entry) continue;
+        const data = await entry.async("uint8array");
+        cleanZip.file(path, data, { createFolders: false });
+      }
+      outZip = cleanZip;
+      console.info(`[exportPPTX] Re-packed ${filePaths.length} file entries (no directory stubs).`);
+    } catch (err){
+      console.warn("[exportPPTX] Clean re-pack failed; using patched ZIP as-is:", err);
+    }
+
+    const blob = await outZip.generateAsync({
       type: "blob",
       mimeType: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
       compression: "DEFLATE",
