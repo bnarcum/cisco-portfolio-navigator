@@ -4506,7 +4506,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.3.1";
+const APP_VERSION   = "2.3.2";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -4795,6 +4795,14 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.3.2", date:"2026-05-30", items:[
+    "Reverted to a 4-slide deck: Title, Top Opportunities, Bundle Coverage, Use-Case Coverage.",
+    "Title slide restored to the original simple style (pre-v2.3.0): three lines on a dark background, no slide master, no decorative geometry, no stat cards.",
+    "Hardened the [Content_Types].xml fix by loading JSZip explicitly from the jsdelivr CDN instead of relying on PptxGenJS's UMD export. The bundled UMD does expose window.JSZip, but the explicit load is robust against future PptxGenJS bundling changes and easier to verify.",
+    "Added export diagnostics console logging — '[pptx] JSZip available', '[pptx] Override entries before strip', and '[pptx] Override entries after strip' — so the strip is verifiable from DevTools.",
+    "Dropped slide masters and per-slide footer/header chrome to minimize the OOXML surface area that PowerPoint validates on open.",
+    "Slide builders for the dropped slides (executive summary, stack tables, composition charts, gap fillers, risk timeline, migration plan, legacy/outgoing, embedded timeline, embedded architecture, next steps) are no longer called but remain in git history at 3dd8635 for easy revival."
+  ]},
   {ver:"2.3.1", date:"2026-05-30", items:[
     "Fix: PowerPoint no longer shows the 'file needed to be repaired' dialog on opening the export. Root cause was a PptxGenJS 3.12.0 bug in its [Content_Types].xml writer that emitted an <Override> entry for slideMaster1.xml … slideMasterN.xml (one per slide), even though only slideMaster1.xml is actually written to the package. The export now post-processes the generated ZIP via the JSZip global already bundled in pptxgen.bundle.min.js and strips the phantom Overrides before the file is saved — no new dependencies.",
     "Timeline slide: full-bleed footprint (13.03×5.85 in) with a centered legend strip and a sharper html2canvas capture at scale 2. The capture renders the timeline wrapper off-screen via temporary inline styles (no '.show' class toggled, no chrome flicker) so the user's footer / hint / tools panes stay put. Multi-slide pagination kicks in past 12 years of data (2 slices) or 24 years (3 slices).",
@@ -6030,37 +6038,42 @@ function exportPDF(){
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   exportPPTX — polished client-presentation deck (async).
+   exportPPTX — focused 4-slide client-presentation deck (async).
 
-   Replaces the previous bare-bones 5-slide export with a 20+ slide deliverable:
-     • Hero title slide with stat cards and decorative pattern
-     • Executive summary with status doughnut
-     • Section divider slides (CISCO_SECTION master)
-     • Paginated stack table (18/page) with status pills + EOS/EOL/Successor
-     • Tier + category distribution (pie + bar)
-     • Real bundle coverage chart (horizontal bar)
-     • Per-bundle gap analysis (top 4 weakest)
-     • Top opportunity cards with score bars + rank circles
-     • Risk timeline (0–6 / 6–12 / 12–24 / 24+ month buckets)
-     • Migration plan (today → future, arrows)
-     • Legacy / competitor outgoing replacements
-     • Use-case coverage grid
-     • Embedded portfolio timeline screenshot (html2canvas)
-     • Embedded D3 architecture SVG
-     • Next-steps closing slide
+   Scope was deliberately narrowed in v2.3.2 to the slides users actually
+   take into customer conversations:
 
-   Every content slide has presenter-side speaker notes auto-generated from
-   plan data. Theme picker (Dark / Light / Cisco Blue) persists to
-   localStorage and re-themes the whole deck.
+     1. Title — original simple pre-v2.3.0 style (three lines on a dark
+        background, no slide master, no decorative geometry).
+     2. Top Augmentation Recommendations — opportunity cards with rank
+        circles, score bars, and direct/adjacent integration counts.
+     3. Solution Bundle Coverage — horizontal bar chart of % owned per
+        Cisco solution bundle.
+     4. Use Case Coverage — 3-column grid of owned / unowned use-case
+        cards (capped at 24 — open dots flag cross-sell seeds).
 
-   Hardening notes:
-     • All external lib loads (PptxGenJS, html2canvas) and visual embeds
-       (timeline screenshot, architecture SVG) are wrapped in try/catch so
-       the export still succeeds if any optional dep / DOM source is
-       missing.
-     • Each addSlide() goes through the CISCO_MAIN slide master, which
-       supplies background, accent rails, footer, and slide numbers — no
-       per-slide background coloring required.
+   The wider deck (executive summary, stack tables, composition charts,
+   per-bundle gaps, risk timeline, migration plan, legacy/outgoing,
+   embedded timeline screenshot, embedded D3 architecture, Next Steps)
+   was retired in v2.3.2 — see git history at commit 3dd8635 for the
+   full implementation if a revival is wanted later.
+
+   Repair-dialog hardening (still required even with 4 slides — the
+   PptxGenJS 3.12.0 bug emits ~3 phantom slideMaster Override entries
+   from internal bookkeeping regardless of slide count):
+     • JSZip is loaded explicitly from a CDN rather than relying on
+       PptxGenJS's UMD export. Empirically the pptxgenjs@3.12.0 bundle
+       does also expose window.JSZip via its UMD wrapper, but loading
+       it directly is robust against bundling changes and easier to
+       verify in DevTools.
+     • The export post-processes the generated ZIP with JSZip, opens
+       [Content_Types].xml, removes any <Override PartName=
+       "/ppt/slideMasters/slideMasterN.xml" .../> entry whose target
+       part isn't actually in the package, then re-zips and downloads
+       via Blob + URL.createObjectURL. We deliberately do NOT call
+       pp.writeFile (which would re-emit the phantoms).
+     • Diagnostic console.log lines fire on every export so the strip
+       is verifiable from DevTools.
    ───────────────────────────────────────────────────────────────────────── */
 async function exportPPTX(){
   // ── Lazy-load PptxGenJS (cached after first call). ────────────────────
@@ -6078,6 +6091,29 @@ async function exportPPTX(){
       console.warn("[exportPPTX] PptxGenJS load failed:", err);
       showToast("PPTX export needs internet — try PDF instead");
       return;
+    }
+  }
+
+  // ── Lazy-load JSZip (separate from the pptxgenjs UMD). ────────────────
+  // The pptxgenjs@3.12.0 bundle's UMD wrapper does happen to also expose
+  // window.JSZip (the wrapper assigns the module.exports of bundled-
+  // module-1, which is JSZip itself, to window.JSZip), but that is an
+  // implementation detail of the current bundle and is fragile across
+  // PptxGenJS releases. We load a known JSZip version explicitly so the
+  // [Content_Types].xml strip below is robust and verifiable.
+  if (typeof window !== "undefined" && typeof window.JSZip === "undefined"){
+    try {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js";
+        s.onload  = resolve;
+        s.onerror = () => reject(new Error("jszip load failed"));
+        document.head.appendChild(s);
+      });
+    } catch (err){
+      console.warn("[exportPPTX] JSZip load failed:", err);
+      // saveWithFix() will fall back to pp.writeFile() and the repair
+      // dialog may appear, but the export still completes.
     }
   }
 
@@ -6115,366 +6151,56 @@ async function exportPPTX(){
   pp.subject  = "Account portfolio plan";
   pp.revision = APP_VERSION;
 
-  // ── Slide masters ─────────────────────────────────────────────────────
-  // CISCO_MAIN: standard content slide with thin accent rails, footer
-  // labels, and a slide number in the bottom-right.
-  // CISCO_SECTION: divider slide with a single accent bar; the per-slide
-  // builder adds the big centered title.
-  const mainObjects = [
-    { rect: { x:0,    y:0,    w:13.33, h:0.06, fill:{ color: T.accent } } },
-    { rect: { x:0,    y:7.44, w:13.33, h:0.06, fill:{ color: T.accent } } },
-    { text: { text:"Cisco Portfolio Navigator", options:{ x:0.4, y:7.05, w:5,   h:0.3, fontSize:9, color: T.subtle } } },
-    { text: { text: sm.acct,                    options:{ x:5.4, y:7.05, w:5.5, h:0.3, fontSize:9, color: T.subtle, align:"center" } } }
-  ];
-  if (sm.profile && sm.profile.draft === true){
-    mainObjects.push({
-      text: { text:"DRAFT", options:{
-        x:1.6, y:2.6, w:10, h:2.3,
-        fontSize:160, bold:true, color: T.bad,
-        align:"center", transparency:82, rotate:315
-      } }
+  // No slide masters, no sections, no decorative chrome — keeping the
+  // deck dead-simple to minimize the OOXML surface area PowerPoint
+  // validates on open. The four slides set their own backgrounds when
+  // they want one.
+
+  // ── Slide builders (kept as inner functions so they share `pp`,
+  //    `sm`, and `T` via closure). To bring back any of the dropped
+  //    slides — executive summary, stack tables, composition charts,
+  //    per-bundle gap fillers, risk timeline, migration plan, legacy /
+  //    outgoing replacements, embedded portfolio timeline, embedded D3
+  //    architecture, Next Steps — copy the helper from commit 3dd8635
+  //    and call it from the build sequence at the bottom. ───────────────
+
+  function buildTitleSlide(){
+    // Original simple style from before commit e36c7ff (v2.3.0). The
+    // colors are hardcoded — the theme picker only re-themes slides 2-4.
+    const sl = pp.addSlide();
+    sl.background = { color: "0D1117" };
+    sl.addText("Cisco Account Plan", {
+      x:0.6, y:0.6, w:12, h:0.6,
+      fontSize:34, color:"00BCEB", bold:true, fontFace:"Calibri"
+    });
+    sl.addText(String(sm.acct||""), {
+      x:0.6, y:1.3, w:12, h:0.7,
+      fontSize:28, color:"FFFFFF", bold:true
+    });
+    const meta = String(sm.date||"") +
+      (sm.profile && sm.profile.vertical ? " · " + sm.profile.vertical : "") +
+      (sm.profile && sm.profile.size     ? " · " + sm.profile.size     : "");
+    sl.addText(meta, {
+      x:0.6, y:2.1, w:12, h:0.4,
+      fontSize:14, color:"8B949E"
     });
   }
-  pp.defineSlideMaster({
-    title: "CISCO_MAIN",
-    background: { color: T.bg },
-    objects: mainObjects,
-    slideNumber: { x:12.7, y:7.05, w:0.5, h:0.3, fontSize:9, color: T.subtle, align:"right" }
-  });
-  pp.defineSlideMaster({
-    title: "CISCO_SECTION",
-    background: { color: T.panel },
-    objects: [
-      { rect: { x:0, y:3.5, w:13.33, h:0.5, fill:{ color: T.accent } } }
-    ]
-  });
 
-  // ── Section grouping (shows up in PPT's Outline + Sections sidebar). ──
-  pp.addSection({ title:"Overview" });
-  pp.addSection({ title:"Stack" });
-  pp.addSection({ title:"Opportunities" });
-  pp.addSection({ title:"Coverage" });
-  pp.addSection({ title:"Risk & Migration" });
-  pp.addSection({ title:"Reference" });
-
-  // ── Helpers (defined once, used throughout) ────────────────────────────
-  const addSlide = (sectionTitle) => pp.addSlide({ masterName:"CISCO_MAIN", sectionTitle });
-  const addSectionDivider = (title, subtitle, sectionTitle) => {
-    const sl = pp.addSlide({ masterName:"CISCO_SECTION", sectionTitle: sectionTitle || title });
-    // Subtle large-scale accent block + small section label tag, so dividers
-    // feel distinctive rather than empty dark panels.
-    sl.addShape(pp.ShapeType.rect, { x:0, y:0, w:0.18, h:7.5, fill:{color:T.accent}, line:{color:T.accent, width:0} });
-    sl.addText("SECTION", { x:0.5, y:1.95, w:12.33, h:0.35, fontSize:11, bold:true, color:T.accent, align:"center", charSpacing:400, wrap:true });
-    sl.addText(title, { x:0.5, y:2.4, w:12.33, h:1.3, fontSize:60, bold:true, color:T.text, align:"center", fontFace:"Calibri", valign:"middle", wrap:true });
-    if (subtitle) sl.addText(subtitle, { x:0.5, y:4.2, w:12.33, h:0.6, fontSize:16, color:T.muted, align:"center", valign:"middle", wrap:true });
-    sl.addNotes(`Section: ${title}.${subtitle ? " " + subtitle : ""}`);
-    return sl;
-  };
-  const paginate = (arr, n) => { const o=[]; for (let i=0; i<arr.length; i+=n) o.push(arr.slice(i, i+n)); return o; };
-
-  // ── Aggregates (computed once, referenced everywhere) ──────────────────
-  const eolCount     = sm.items.filter(it => it.status === "eol").length;
-  const eosCount     = sm.items.filter(it => it.status === "eos").length;
-  const currentCount = sm.items.filter(it => it.status === "current").length;
-  const eoEosTotal   = eolCount + eosCount;
-  const recCount     = sm.recs.length;
-  const catCount     = new Set(sm.items.map(it => it.category).filter(Boolean)).size;
-  const avgBundle    = sm.bundles.length ? Math.round(sm.bundles.reduce((a,b)=>a+b.pct,0) / sm.bundles.length) : 0;
-  const topRec       = sm.recs[0];
-
-  // ═════════════════════════════════════════════════════════════════════
-  //  OVERVIEW SECTION
-  // ═════════════════════════════════════════════════════════════════════
-
-  // ── Hero title slide ──────────────────────────────────────────────────
-  let sl = addSlide("Overview");
-
-  // Brand mark area (top-left): a Cisco-tone accent square + label.
-  sl.addShape(pp.ShapeType.rect, { x:0.5, y:0.45, w:0.3, h:0.3, fill:{color:T.accent}, line:{color:T.accent, width:0} });
-  sl.addText("CISCO PORTFOLIO NAVIGATOR", { x:0.95, y:0.45, w:6.5, h:0.3, fontSize:10, bold:true, color:T.accent, charSpacing:200 });
-
-  // Account name (largest text on the slide).
-  sl.addText(sm.acct, { x:0.5, y:1.0, w:7.8, h:1.6, fontSize:52, bold:true, color:T.text, fontFace:"Calibri" });
-  sl.addText("Portfolio Plan", { x:0.5, y:2.45, w:7.8, h:0.5, fontSize:22, color:T.accent, bold:true, fontFace:"Calibri" });
-
-  // Profile metadata line (date · vertical · size · mode).
-  const profileLine = [sm.date, sm.profile.vertical, sm.profile.size, sm.profile.mode].filter(Boolean).join("  ·  ");
-  sl.addText(profileLine, { x:0.5, y:3.0, w:7.8, h:0.4, fontSize:13, color:T.subtle });
-
-  // Three stat cards (left half).
-  const statY = 4.0;
-  const cards = [
-    { val: String(sm.items.length), valColor: T.text, label:"PRODUCTS",      sub:"in current stack" },
-    { val: String(eoEosTotal),
-      valColor: eolCount > 0 ? T.bad : (eoEosTotal > 0 ? T.warn : T.subtle),
-      label:"EOL + EOS",
-      sub: `${eolCount} EOL · ${eosCount} EOS` },
-    { val: String(recCount), valColor: T.accent, label:"OPPORTUNITIES", sub:"growth recs identified" }
-  ];
-  cards.forEach((c, i) => {
-    const x = 0.5 + i * 2.55;
-    sl.addShape(pp.ShapeType.roundRect, { x, y:statY, w:2.4, h:2.6, fill:{color:T.panel}, line:{color:T.line, width:1}, rectRadius:0.12 });
-    sl.addText(c.val,   { x, y:statY+0.2,  w:2.4, h:1.4, fontSize:62, bold:true, color:c.valColor, align:"center", fontFace:"Calibri" });
-    sl.addText(c.label, { x, y:statY+1.7,  w:2.4, h:0.35, fontSize:11, bold:true, color:T.muted, align:"center", charSpacing:200 });
-    sl.addText(c.sub,   { x, y:statY+2.05, w:2.4, h:0.35, fontSize:10, color:T.subtle, align:"center" });
-  });
-
-  // Decorative geometric pattern (right half) — staggered low-alpha
-  // rounded rectangles for visual interest. Skips cells that would
-  // overflow the right edge to keep the layout clean.
-  const gridStartX = 8.6;
-  const cellW = 0.95, cellH = 0.95, gridGap = 0.2;
-  for (let row = 0; row < 5; row++){
-    for (let col = 0; col < 4; col++){
-      const offset = (row % 2 === 0) ? 0 : cellW / 2;
-      const px = gridStartX + col * (cellW + gridGap) + offset;
-      const py = 1.0 + row * (cellH + gridGap);
-      if (px + cellW > 13.05) continue;
-      const transp = 70 + ((row * 3 + col * 5) % 25);
-      sl.addShape(pp.ShapeType.roundRect, {
-        x: px, y: py, w: cellW, h: cellH,
-        fill: { color: T.accent, transparency: transp },
-        line: { color: T.accent, width: 0 },
-        rectRadius: 0.1
-      });
-    }
-  }
-
-  sl.addNotes(
-    `Plan generated ${sm.date}. Customer: ${sm.acct}` +
-    `${sm.profile.vertical ? ", vertical: " + sm.profile.vertical : ""}` +
-    `${sm.profile.size ? ", size: " + sm.profile.size : ""}` +
-    `${sm.profile.mode ? ", mode: " + sm.profile.mode : ""}. ` +
-    `${sm.items.length} products mapped, ${recCount} growth opportunities identified.` +
-    `${eolCount > 0 ? " " + eolCount + " EOL product" + (eolCount===1?"":"s") + " require immediate migration discussion." : ""}`
-  );
-
-  // ── Executive summary slide ───────────────────────────────────────────
-  sl = addSlide("Overview");
-  sl.addText("Executive Summary", { x:0.5, y:0.4, w:12.33, h:0.55, fontSize:26, bold:true, color:T.accent });
-  sl.addText(`Generated ${sm.date}`, { x:0.5, y:0.95, w:12.33, h:0.3, fontSize:11, color:T.subtle });
-
-  // Left: takeaway bullets.
-  const bulletItems = [
-    `Stack of ${sm.items.length} product${sm.items.length===1?"":"s"} spanning ${catCount} ${catCount===1?"category":"categories"}`,
-    `${eolCount} EOL / ${eosCount} EOS within sight — migration plan included`,
-    topRec
-      ? `Top opportunity: ${topRec.name} (${topRec.direct} direct + ${topRec.adjacent} adjacent integrations)`
-      : "No augmentation recommendations matched this stack — verify scope",
-    `Bundle alignment averages ${avgBundle}% across ${sm.bundles.length} packaged solution${sm.bundles.length===1?"":"s"}`
-  ];
-  if (sm.legacy.length){
-    bulletItems.push(`${sm.legacy.length} legacy / competitor item${sm.legacy.length===1?"":"s"} earmarked for replacement`);
-  }
-  sl.addText(
-    bulletItems.map(b => ({ text: b, options: { bullet: { type: "bullet" }, color: T.text, fontSize: 15, paraSpaceAfter: 10 } })),
-    { x:0.5, y:1.5, w:6.4, h:5.4 }
-  );
-
-  // Right: lifecycle status doughnut (only meaningful when the stack
-  // has products; otherwise show a placeholder note).
-  if (sm.items.length > 0){
-    sl.addChart(pp.ChartType.doughnut, [{
-      name: "Lifecycle status",
-      labels: ["Current", "EOS", "EOL"],
-      values: [Number(currentCount)||0, Number(eosCount)||0, Number(eolCount)||0]
-    }], {
-      x:7.2, y:1.4, w:5.6, h:5.2,
-      chartColors: [T.ok, T.warn, T.bad],
-      chartColorsOpacity: 100,
-      holeSize: 60,
-      showLegend: true,
-      legendPos: "b",
-      legendColor: T.text,
-      legendFontSize: 12,
-      legendFontFace: "Calibri",
-      showValue: true,
-      showPercent: true,
-      dataLabelColor: "FFFFFF",
-      dataLabelFontBold: true,
-      dataLabelFontSize: 11,
-      dataLabelPosition: "ctr",
-      dataLabelFormatCode: "0%",
-      showTitle: true,
-      title: "Lifecycle status",
-      titleColor: T.muted,
-      titleFontSize: 12,
-      titleFontFace: "Calibri",
-      plotArea: { fill: { color: T.bg }, border: { color: T.bg, pt: 0 } },
-      chartArea: { fill: { color: T.bg }, border: { color: T.bg, pt: 0 } }
-    });
-  } else {
-    sl.addText("Stack is empty — add products to populate the chart.",
-      { x:7.2, y:3.4, w:5.6, h:0.5, fontSize:13, color:T.muted, align:"center", italic:true });
-  }
-
-  sl.addNotes(
-    `Customer's current Cisco footprint covers ${sm.items.length} products across ${catCount} categories.` +
-    `${eolCount > 0 ? " " + eolCount + " are EOL — these should be discussed first." : ""}` +
-    ` Bundle alignment averages ${avgBundle}%.` +
-    `${topRec ? " Top recommendation is " + topRec.name + " with " + topRec.direct + " direct integrations." : ""}`
-  );
-
-  // ═════════════════════════════════════════════════════════════════════
-  //  STACK SECTION
-  // ═════════════════════════════════════════════════════════════════════
-  addSectionDivider("Current Stack",
-    `${sm.items.length} product${sm.items.length===1?"":"s"} across ${catCount} ${catCount===1?"category":"categories"}`,
-    "Stack");
-
-  // ── Paginated stack pages (18 rows / page). ───────────────────────────
-  if (sm.items.length > 0){
-    const stackPages = paginate(sm.items, 18);
-    stackPages.forEach((page, idx) => {
-      sl = addSlide("Stack");
-      const title = stackPages.length > 1
-        ? `Current Stack (page ${idx+1} of ${stackPages.length}) — ${sm.items.length} products`
-        : `Current Stack — ${sm.items.length} product${sm.items.length===1?"":"s"}`;
-      sl.addText(title, { x:0.5, y:0.4, w:12.33, h:0.55, fontSize:22, bold:true, color:T.accent });
-
-      const showSucc = page.some(it => it.successor);
-      const hdrOpt = { bold:true, color:T.text, fill:{color:T.panel2}, align:"left", fontSize:11, valign:"middle" };
-      const hdrOptCtr = { ...hdrOpt, align:"center" };
-      const headers = [
-        { text:"Product",  options: hdrOpt },
-        { text:"Category", options: hdrOpt },
-        { text:"Tier",     options: hdrOpt },
-        { text:"Status",   options: hdrOptCtr },
-        { text:"EOS",      options: hdrOptCtr },
-        { text:"EOL",      options: hdrOptCtr }
-      ];
-      if (showSucc) headers.push({ text:"Successor", options: hdrOpt });
-
-      const tableRows = [headers];
-      page.forEach(it => {
-        const statusColor = it.status === "eol" ? T.bad
-                          : it.status === "eos" ? T.warn
-                          : T.ok;
-        const row = [
-          { text: it.name,                       options: { color: T.text,  fontSize: 10, bold: true } },
-          { text: it.category || "—",            options: { color: T.muted, fontSize: 10 } },
-          { text: it.tier || "—",                options: { color: T.muted, fontSize: 9 } },
-          { text: it.status.toUpperCase(),       options: { fill: { color: statusColor }, color: "FFFFFF", bold: true, align: "center", fontSize: 10 } },
-          { text: it.eosDate || "—",             options: { color: T.muted, fontSize: 9, align: "center" } },
-          { text: it.eolDate || "—",             options: { color: T.muted, fontSize: 9, align: "center" } }
-        ];
-        if (showSucc){
-          row.push({ text: it.successor || "—", options: { color: it.successor ? T.ok : T.muted, fontSize: 10, bold: !!it.successor } });
-        }
-        tableRows.push(row);
-      });
-
-      const colW = showSucc
-        ? [2.5, 1.8, 2.2, 1.0, 1.2, 1.2, 2.6]   // sum = 12.5
-        : [3.1, 2.2, 3.0, 1.1, 1.55, 1.55];      // sum = 12.5
-
-      sl.addTable(tableRows, {
-        x:0.4, y:1.05, w:12.5, colW,
-        fontSize:10, color:T.text,
-        border:{ type:"solid", pt:0.5, color:T.line },
-        rowH: 0.32,
-        autoPage: false
-      });
-
-      const pageEol = page.filter(p => p.status === "eol").length;
-      const pageEos = page.filter(p => p.status === "eos").length;
-      sl.addNotes(
-        `Stack page ${idx+1} of ${stackPages.length}. ${page.length} product${page.length===1?"":"s"} listed. ` +
-        `${pageEol} EOL, ${pageEos} EOS on this page. ` +
-        `Discuss lifecycle position, licensing tier, and successor paths.`
-      );
-    });
-
-    // ── Tier + Category distribution slide ──────────────────────────────
-    sl = addSlide("Stack");
-    sl.addText("Stack Composition", { x:0.5, y:0.4, w:12.33, h:0.55, fontSize:22, bold:true, color:T.accent });
-    sl.addText("Licensing tier mix · Products per category", { x:0.5, y:0.95, w:12.33, h:0.3, fontSize:11, color:T.subtle });
-
-    // Tier buckets — split by presence of a license tier (subscription
-    // model) vs catalog/perpetual. This is the most actionable cut
-    // available from planSummary data without re-walking TIERS.
-    const licensed = sm.items.filter(it => it.tier && it.tier.length).length;
-    const untiered = sm.items.length - licensed;
-    const tierLabels = [], tierValues = [];
-    if (licensed) { tierLabels.push("Licensed (subscription)"); tierValues.push(licensed); }
-    if (untiered) { tierLabels.push("Untiered / catalog");      tierValues.push(untiered); }
-
-    if (tierValues.length > 0){
-      sl.addChart(pp.ChartType.pie, [{
-        name: "Licensing tier",
-        labels: tierLabels,
-        values: tierValues.map(v => Number(v)||0)
-      }], {
-        x:0.5, y:1.4, w:5.8, h:5.4,
-        chartColors:[T.accent, T.accentDim, T.subtle],
-        showLegend:true, legendPos:"b", legendColor:T.text, legendFontSize:11, legendFontFace:"Calibri",
-        showValue:true, showPercent:true,
-        dataLabelColor:"FFFFFF", dataLabelFontBold:true, dataLabelFontSize:11,
-        dataLabelFormatCode:"0%",
-        showTitle:true, title:"Licensing tier", titleColor:T.muted, titleFontSize:12, titleFontFace:"Calibri",
-        plotArea: { fill: { color: T.bg }, border: { color: T.bg, pt: 0 } },
-        chartArea: { fill: { color: T.bg }, border: { color: T.bg, pt: 0 } }
-      });
-    }
-
-    // Per-category bar chart, sorted descending. Category colors mirror
-    // the in-app CATS palette so the deck visually ties back to the UI.
-    const catColorMap = {
-      "Networking":    "00BCEB",
-      "Security":      "FF6B35",
-      "Collaboration": "2DCE5C",
-      "Computing":     "A855F7",
-      "Observability": "F59E0B"
-    };
-    const catCounts = {};
-    sm.items.forEach(it => { if (it.category) catCounts[it.category] = (catCounts[it.category] || 0) + 1; });
-    const catEntries = Object.entries(catCounts).sort((a,b) => b[1] - a[1]);
-    if (catEntries.length > 0){
-      const catColors = catEntries.map(([k]) => catColorMap[k] || T.accent);
-      sl.addChart(pp.ChartType.bar, [{
-        name: "Products",
-        labels: catEntries.map(([k]) => String(k).slice(0, 28)),
-        values: catEntries.map(([,v]) => Number(v)||0)
-      }], {
-        x:6.7, y:1.4, w:6.2, h:5.4,
-        barDir:"bar",
-        chartColors: catColors,
-        showLegend:false,
-        showValue:true, dataLabelColor:T.text, dataLabelFontSize:11, dataLabelFontBold:true,
-        dataLabelPosition:"outEnd",
-        catAxisLabelColor:T.text, catAxisLabelFontSize:11, catAxisLabelFontFace:"Calibri",
-        valAxisLabelColor:T.muted, valAxisLabelFontSize:9, valAxisLabelFontFace:"Calibri",
-        valAxisLineColor: T.line, catAxisLineColor: T.line,
-        valGridLine: { style: "none" },
-        valAxisMinVal:0,
-        showTitle:true, title:"Products per category", titleColor:T.muted, titleFontSize:12, titleFontFace:"Calibri",
-        plotArea: { fill: { color: T.bg }, border: { color: T.bg, pt: 0 } },
-        chartArea: { fill: { color: T.bg }, border: { color: T.bg, pt: 0 } }
-      });
-    }
-
-    sl.addNotes(
-      `Stack composition — ${licensed} licensed (subscription model), ${untiered} catalog / perpetual.` +
-      ` Largest category: ${catEntries[0]?.[0] || "n/a"} with ${catEntries[0]?.[1] || 0} product${(catEntries[0]?.[1] || 0)===1?"":"s"}.` +
-      ` Watch for single-category concentration — diversified stacks unlock more bundle pricing.`
-    );
-  }
-
-  // ═════════════════════════════════════════════════════════════════════
-  //  OPPORTUNITIES SECTION
-  // ═════════════════════════════════════════════════════════════════════
-  if (sm.recs.length > 0){
-    addSectionDivider("Opportunities",
-      `Top ${Math.min(sm.recs.length, 8)} augmentation recommendation${Math.min(sm.recs.length,8)===1?"":"s"}`,
-      "Opportunities");
-
-    sl = addSlide("Opportunities");
-    sl.addText("Top Augmentation Recommendations", { x:0.5, y:0.4, w:12.33, h:0.55, fontSize:22, bold:true, color:T.accent });
+  function buildOpportunitiesSlide(){
+    // Same opportunity-card design as v2.3.0 / v2.3.1 — kept verbatim,
+    // only the slide master was dropped. PptxGenJS escapes `&`, `<`,
+    // `>` automatically when serializing addText, but every dynamic
+    // string is still String()-coerced in case the catalog ever feeds
+    // a non-string through.
+    const sl = pp.addSlide();
+    sl.background = { color: T.bg };
+    sl.addText("Top Augmentation Recommendations",
+      { x:0.5, y:0.4, w:12.33, h:0.55, fontSize:22, bold:true, color:T.accent });
     sl.addText("Ranked by integration density with current stack (3× direct + adjacent)",
       { x:0.5, y:0.95, w:12.33, h:0.3, fontSize:11, color:T.subtle });
 
-    const maxScore = Math.max(...sm.recs.map(r => r.score), 1);
-    const topRecs = sm.recs.slice(0, 8);
+    const maxScore = Math.max(...sm.recs.map(r => Number(r.score) || 0), 1);
+    const topRecs  = sm.recs.slice(0, 8);
     const cardH = 0.6, cardGap = 0.08, startY = 1.45;
 
     topRecs.forEach((r, i) => {
@@ -6482,60 +6208,57 @@ async function exportPPTX(){
       const isTop3 = i < 3;
       const rankColor = isTop3 ? T.accent : T.subtle;
 
-      // Card background.
       sl.addShape(pp.ShapeType.roundRect, {
         x:0.5, y, w:12.33, h:cardH,
         fill:{color:T.panel}, line:{color:T.line, width:1}, rectRadius:0.06
       });
-      // Rank circle.
       sl.addShape(pp.ShapeType.ellipse, {
         x:0.7, y:y+0.1, w:0.4, h:0.4,
         fill:{color:rankColor}, line:{color:rankColor, width:0}
       });
-      sl.addText(String(i+1), { x:0.7, y:y+0.12, w:0.4, h:0.4, fontSize:14, bold:true, color:"FFFFFF", align:"center" });
+      sl.addText(String(i+1),
+        { x:0.7, y:y+0.12, w:0.4, h:0.4, fontSize:14, bold:true, color:"FFFFFF", align:"center" });
 
-      // Product name + category.
-      sl.addText(String(r.name||""),     { x:1.3, y:y+0.05, w:6.3, h:0.3,  fontSize:13, bold:true, color:T.text, valign:"middle", wrap:true });
-      sl.addText(String(r.category||"—"),{ x:1.3, y:y+0.33, w:6.3, h:0.22, fontSize:10, color:T.muted, valign:"middle", wrap:true });
+      sl.addText(String(r.name||""),
+        { x:1.3, y:y+0.05, w:6.3, h:0.3,  fontSize:13, bold:true, color:T.text, valign:"middle", wrap:true });
+      sl.addText(String(r.category||"—"),
+        { x:1.3, y:y+0.33, w:6.3, h:0.22, fontSize:10, color:T.muted, valign:"middle", wrap:true });
 
-      // Score bar (visual proportional indicator).
+      const score = Math.max(0, Number(r.score) || 0);
       const barX = 7.8, barY = y + 0.18, barW = 2.8, barH = 0.24;
-      sl.addShape(pp.ShapeType.rect, { x:barX, y:barY, w:barW, h:barH, fill:{color:T.panel2}, line:{color:T.line, width:0} });
-      sl.addShape(pp.ShapeType.rect, { x:barX, y:barY, w:barW * (r.score/maxScore), h:barH, fill:{color:T.accent}, line:{color:T.accent, width:0} });
+      sl.addShape(pp.ShapeType.rect,
+        { x:barX, y:barY, w:barW, h:barH, fill:{color:T.panel2}, line:{color:T.line, width:0} });
+      sl.addShape(pp.ShapeType.rect,
+        { x:barX, y:barY, w:barW * (score / maxScore), h:barH, fill:{color:T.accent}, line:{color:T.accent, width:0} });
 
-      // Right-aligned integration counts.
-      sl.addText(`${r.direct} direct + ${r.adjacent} adjacent`,
+      sl.addText(`${Number(r.direct)||0} direct + ${Number(r.adjacent)||0} adjacent`,
         { x:10.8, y:y+0.05, w:1.9, h:0.25, fontSize:10, color:T.muted, align:"right" });
-      sl.addText(`score ${r.score}`,
+      sl.addText(`score ${score}`,
         { x:10.8, y:y+0.3,  w:1.9, h:0.25, fontSize:11, bold:true, color:T.accent, align:"right" });
     });
 
-    const top3names = sm.recs.slice(0,3).map(r => r.name).join(", ");
+    const top3names = sm.recs.slice(0, 3).map(r => String(r.name||"")).join(", ");
+    const top1 = sm.recs[0] || {};
     sl.addNotes(
-      `Top opportunity is ${sm.recs[0].name}, with ${sm.recs[0].direct} direct integrations to existing stack ` +
-      `and ${sm.recs[0].adjacent} adjacent. Score-weighted ranking (3× direct + adjacent) puts ${top3names} ` +
+      `Top opportunity is ${String(top1.name||"")}, with ${Number(top1.direct)||0} direct integrations to existing stack ` +
+      `and ${Number(top1.adjacent)||0} adjacent. Score-weighted ranking (3× direct + adjacent) puts ${top3names} ` +
       `as the immediate next conversations. Anchor pilots on the top three before broadening scope.`
     );
   }
 
-  // ═════════════════════════════════════════════════════════════════════
-  //  COVERAGE SECTION
-  // ═════════════════════════════════════════════════════════════════════
-  addSectionDivider("Bundle & Use Case Coverage",
-    `${sm.bundles.length} packaged solution${sm.bundles.length===1?"":"s"} · ${sm.allUC.length} use case${sm.allUC.length===1?"":"s"}`,
-    "Coverage");
-
-  // ── Bundle coverage chart ─────────────────────────────────────────────
-  if (sm.bundles.length > 0){
-    sl = addSlide("Coverage");
-    sl.addText("Solution Bundle Coverage", { x:0.5, y:0.4, w:12.33, h:0.55, fontSize:22, bold:true, color:T.accent });
+  function buildBundleCoverageSlide(){
+    // Same horizontal bar chart as v2.3.0 / v2.3.1 — kept verbatim.
+    const sl = pp.addSlide();
+    sl.background = { color: T.bg };
+    sl.addText("Solution Bundle Coverage",
+      { x:0.5, y:0.4, w:12.33, h:0.55, fontSize:22, bold:true, color:T.accent });
     sl.addText("How much of each Cisco solution bundle the customer already owns",
       { x:0.5, y:0.95, w:12.33, h:0.3, fontSize:11, color:T.subtle });
 
     sl.addChart(pp.ChartType.bar, [{
       name: "Coverage %",
       labels: sm.bundles.map(b => String(b.name || "").slice(0, 40)),
-      values: sm.bundles.map(b => Number(b.pct)||0)
+      values: sm.bundles.map(b => Number(b.pct) || 0)
     }], {
       x:0.5, y:1.4, w:12.33, h:5.4,
       barDir: "bar",
@@ -6555,521 +6278,91 @@ async function exportPPTX(){
       chartArea: { fill: { color: T.bg }, border: { color: T.bg, pt: 0 } }
     });
 
-    const fullCov = sm.bundles.filter(b => b.pct === 100).length;
-    const weakest = sm.bundles.slice().sort((a,b) => a.pct - b.pct)[0];
+    const fullCov = sm.bundles.filter(b => Number(b.pct) === 100).length;
+    const weakest = sm.bundles.slice().sort((a, b) => (Number(a.pct)||0) - (Number(b.pct)||0))[0];
     sl.addNotes(
       `${fullCov} of ${sm.bundles.length} bundle${sm.bundles.length===1?"":"s"} already fully covered. ` +
-      `Largest gap: ${weakest?.name || "n/a"} at ${weakest?.pct || 0}%. ` +
+      `Largest gap: ${String(weakest && weakest.name || "n/a")} at ${Number(weakest && weakest.pct)||0}%. ` +
       `Bundles below 60% are the natural cross-sell conversations.`
     );
   }
 
-  // ── Per-bundle gap-filler slides (top 4 weakest). ─────────────────────
-  const gapBundles = sm.bundles
-    .filter(b => b.pct < 100)
-    .sort((a,b) => (a.pct - b.pct) || (b.missing.length - a.missing.length))
-    .slice(0, 4);
-  gapBundles.forEach(b => {
-    sl = addSlide("Coverage");
-    sl.addText(b.name, { x:0.5, y:0.4, w:12.33, h:0.6, fontSize:26, bold:true, color:T.accent });
-    sl.addText("Bundle gap analysis — what's missing to close the loop",
-      { x:0.5, y:1.0, w:12.33, h:0.3, fontSize:11, color:T.subtle });
-
-    // Big percentage stat (left).
-    const pctColor = b.pct < 25 ? T.bad : b.pct < 75 ? T.warn : T.ok;
-    sl.addShape(pp.ShapeType.roundRect, { x:0.5, y:1.6, w:3.4, h:3.4, fill:{color:T.panel}, line:{color:T.line, width:1}, rectRadius:0.12 });
-    sl.addText(`${b.pct}%`, { x:0.5, y:1.85, w:3.4, h:1.8, fontSize:84, bold:true, color:pctColor, align:"center", fontFace:"Calibri" });
-    sl.addText("COVERED",   { x:0.5, y:3.55, w:3.4, h:0.4, fontSize:13, bold:true, color:T.muted, align:"center", charSpacing:200 });
-    sl.addText(`${b.owned} of ${b.total} products`,
-      { x:0.5, y:4.05, w:3.4, h:0.4, fontSize:12, color:T.subtle, align:"center" });
-
-    // Missing items (right, two columns). Cap at 28 visible (14 per column)
-    // so very gap-y bundles don't run off the slide; remainder summarised.
-    sl.addText(`Missing (${b.missing.length})`,
-      { x:4.2, y:1.6, w:8.6, h:0.4, fontSize:16, bold:true, color:T.text });
-    const MAX_VIS_PER_COL = 14;
-    const MAX_VIS = MAX_VIS_PER_COL * 2;
-    const visible = b.missing.slice(0, MAX_VIS);
-    const overflow = Math.max(0, b.missing.length - MAX_VIS);
-    const half = Math.ceil(visible.length / 2);
-    const col1 = visible.slice(0, half);
-    const col2 = visible.slice(half);
-    if (col1.length){
-      sl.addText(
-        col1.map(m => ({ text: String(m||""), options: { bullet: { type: "bullet" }, color: T.text, fontSize: 12, paraSpaceAfter: 4 } })),
-        { x:4.2, y:2.1, w:4.3, h:4.3, valign:"top", wrap:true }
-      );
-    }
-    if (col2.length){
-      sl.addText(
-        col2.map(m => ({ text: String(m||""), options: { bullet: { type: "bullet" }, color: T.text, fontSize: 12, paraSpaceAfter: 4 } })),
-        { x:8.5, y:2.1, w:4.3, h:4.3, valign:"top", wrap:true }
-      );
-    }
-    if (overflow > 0){
-      sl.addText(`+ ${overflow} more`,
-        { x:4.2, y:6.5, w:8.6, h:0.4, fontSize:12, italic:true, color:T.muted, align:"center" });
-    }
-
-    sl.addNotes(
-      `${b.name} sits at ${b.pct}% coverage. Closing the gap means adding ${b.missing.length} product${b.missing.length===1?"":"s"}: ` +
-      `${b.missing.slice(0,4).join(", ")}${b.missing.length > 4 ? " and " + (b.missing.length - 4) + " more" : ""}.`
-    );
-  });
-
-  // ── Use-case coverage grid (paginated). ───────────────────────────────
-  if (sm.allUC.length > 0){
-    const ucPerSlide = 24;
-    const ucPages = paginate(sm.allUC, ucPerSlide);
-    ucPages.forEach((page, idx) => {
-      sl = addSlide("Coverage");
-      const title = ucPages.length > 1
-        ? `Use Case Coverage (page ${idx+1} of ${ucPages.length})`
-        : "Use Case Coverage";
-      sl.addText(title, { x:0.5, y:0.4, w:12.33, h:0.55, fontSize:22, bold:true, color:T.accent });
-      sl.addText(`Filled dots indicate use cases addressed by current stack (${sm.stackUCs.size} of ${sm.allUC.length})`,
-        { x:0.5, y:0.95, w:12.33, h:0.3, fontSize:11, color:T.subtle });
-
-      const cols = 3, gap = 0.18;
-      const ucCellW = (12.33 - (cols - 1) * gap) / cols, ucCellH = 0.6;
-      page.forEach((uc, i) => {
-        const rr = Math.floor(i / cols), cc = i % cols;
-        const x = 0.5 + cc * (ucCellW + gap), y = 1.4 + rr * (ucCellH + 0.1);
-        const owned = sm.stackUCs.has(uc);
-        sl.addShape(pp.ShapeType.roundRect, {
-          x, y, w: ucCellW, h: ucCellH,
-          fill: { color: T.panel },
-          line: { color: owned ? T.ok : T.line, width: owned ? 2 : 1 },
-          rectRadius: 0.08
-        });
-        sl.addText(owned ? "●" : "○",
-          { x: x + 0.1, y: y + 0.05, w: 0.4, h: 0.5, fontSize: 18, bold: true, color: owned ? T.ok : T.muted, valign:"middle", align:"center" });
-        sl.addText(String(uc||""),
-          { x: x + 0.55, y: y + 0.05, w: ucCellW - 0.65, h: 0.5, fontSize: 11, color: owned ? T.text : T.muted, valign:"middle", wrap:true });
-      });
-
-      const ownedHere = page.filter(uc => sm.stackUCs.has(uc)).length;
-      sl.addNotes(
-        `Use case coverage page ${idx+1} of ${ucPages.length}. ${ownedHere} of ${page.length} use cases on this page are covered. ` +
-        `Open dots are unaddressed scenarios — natural seeds for cross-sell discovery.`
-      );
-    });
-  }
-
-  // ═════════════════════════════════════════════════════════════════════
-  //  RISK & MIGRATION SECTION
-  // ═════════════════════════════════════════════════════════════════════
-  addSectionDivider("Risk & Migration",
-    "EOS / EOL timeline · migration mapping · legacy replacement",
-    "Risk & Migration");
-
-  // ── Risk timeline buckets (0–6 / 6–12 / 12–24 / 24+ months). ──────────
-  const datedItems = sm.items.filter(it => it.eolDate || it.eosDate);
-  if (datedItems.length > 0){
-    // Tolerant date parser — accepts ISO, "Oct 2026", "Aug 2, 2026",
-    // bare year strings, and approximates ("~2026") with mid-year.
-    const parseLooseDate = (s) => {
-      if (!s) return null;
-      const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(s);
-      if (iso) return new Date(+iso[1], +iso[2] - 1, +iso[3]);
-      const monYr = /^([A-Za-z]+)\s+(\d{4})$/.exec(s);
-      if (monYr){ const d = new Date(`${monYr[1]} 1, ${monYr[2]}`); if (isFinite(d)) return d; }
-      const yrOnly = /^~?(\d{4})$/.exec(s);
-      if (yrOnly) return new Date(+yrOnly[1], 5, 30);
-      const d = new Date(s);
-      return isFinite(d) ? d : null;
-    };
-    const now = new Date();
-    const monthsFromNow = (d) => d ? (d.getFullYear() - now.getFullYear()) * 12 + (d.getMonth() - now.getMonth()) : null;
-
-    const buckets = {
-      "0-6":   { items: [], label: "0 – 6 months",   color: T.bad },
-      "6-12":  { items: [], label: "6 – 12 months",  color: T.warn },
-      "12-24": { items: [], label: "12 – 24 months", color: "EAB308" },
-      "24+":   { items: [], label: "24+ months",     color: T.ok }
-    };
-    datedItems.forEach(it => {
-      const target = parseLooseDate(it.eolDate) || parseLooseDate(it.eosDate);
-      const m = monthsFromNow(target);
-      if (m === null) return;
-      let key;
-      if (m < 6)       key = "0-6";
-      else if (m < 12) key = "6-12";
-      else if (m < 24) key = "12-24";
-      else             key = "24+";
-      buckets[key].items.push(it);
-    });
-
-    sl = addSlide("Risk & Migration");
-    sl.addText("Lifecycle Risk Timeline", { x:0.5, y:0.4, w:12.33, h:0.55, fontSize:22, bold:true, color:T.accent });
-    sl.addText("Items with announced EOS / EOL dates, bucketed by months from today",
+  function buildUseCaseSlide(){
+    // Same 3-column grid design as v2.3.0 / v2.3.1, but always single
+    // page. Pagination would imply N>1 slides, which the user explicitly
+    // scoped out in v2.3.2 — overflow is summarized in a footer line.
+    const sl = pp.addSlide();
+    sl.background = { color: T.bg };
+    sl.addText("Use Case Coverage",
+      { x:0.5, y:0.4, w:12.33, h:0.55, fontSize:22, bold:true, color:T.accent });
+    sl.addText(`Filled dots indicate use cases addressed by current stack (${(sm.stackUCs && sm.stackUCs.size) || 0} of ${sm.allUC.length})`,
       { x:0.5, y:0.95, w:12.33, h:0.3, fontSize:11, color:T.subtle });
 
-    const bkeys = ["0-6", "6-12", "12-24", "24+"];
-    const colW2 = (12.33 - 0.3 * 3) / 4;
-    bkeys.forEach((k, i) => {
-      const b = buckets[k];
-      const x = 0.5 + i * (colW2 + 0.3), y = 1.45;
-      // Header stripe.
-      sl.addShape(pp.ShapeType.rect, { x, y, w: colW2, h: 0.1, fill:{color:b.color}, line:{color:b.color, width:0} });
-      // Header text.
-      sl.addText(b.label, { x, y: y + 0.18, w: colW2, h: 0.35, fontSize: 13, bold: true, color: T.text, align: "center" });
-      sl.addText(`${b.items.length} ${b.items.length === 1 ? "product" : "products"}`,
-        { x, y: y + 0.55, w: colW2, h: 0.3, fontSize: 11, color: T.muted, align: "center" });
+    const MAX_UCS = 24;
+    const ucList  = sm.allUC.slice(0, MAX_UCS);
+    const cols    = 3, gap = 0.18;
+    const ucCellW = (12.33 - (cols - 1) * gap) / cols;
+    const ucCellH = 0.6;
 
-      // Stacked chips.
-      const chipsToShow = b.items.slice(0, 8);
-      chipsToShow.forEach((it, j) => {
-        const cy = y + 1.0 + j * 0.42;
-        sl.addShape(pp.ShapeType.roundRect, { x: x + 0.1, y: cy, w: colW2 - 0.2, h: 0.36, fill:{color:T.panel}, line:{color:T.line, width:1}, rectRadius: 0.04 });
-        sl.addText(String(it.name||""), { x: x + 0.2, y: cy + 0.04, w: colW2 - 0.4, h: 0.28, fontSize: 10, color: T.text, bold: true, valign:"middle", wrap:true });
+    ucList.forEach((uc, i) => {
+      const rr = Math.floor(i / cols), cc = i % cols;
+      const x  = 0.5 + cc * (ucCellW + gap);
+      const y  = 1.4 + rr * (ucCellH + 0.1);
+      const owned = !!(sm.stackUCs && sm.stackUCs.has(uc));
+      sl.addShape(pp.ShapeType.roundRect, {
+        x, y, w: ucCellW, h: ucCellH,
+        fill: { color: T.panel },
+        line: { color: owned ? T.ok : T.line, width: owned ? 2 : 1 },
+        rectRadius: 0.08
       });
-      if (b.items.length > 8){
-        const cy = y + 1.0 + 8 * 0.42;
-        sl.addText(`+ ${b.items.length - 8} more`,
-          { x: x + 0.1, y: cy, w: colW2 - 0.2, h: 0.3, fontSize: 10, color: T.muted, italic: true, align: "center" });
-      }
+      sl.addText(owned ? "●" : "○",
+        { x: x + 0.1, y: y + 0.05, w: 0.4, h: 0.5, fontSize: 18, bold: true, color: owned ? T.ok : T.muted, valign:"middle", align:"center" });
+      sl.addText(String(uc||""),
+        { x: x + 0.55, y: y + 0.05, w: ucCellW - 0.65, h: 0.5, fontSize: 11, color: owned ? T.text : T.muted, valign:"middle", wrap:true });
     });
 
-    const imminent = buckets["0-6"].items.length;
-    const soon     = buckets["6-12"].items.length;
+    if (sm.allUC.length > MAX_UCS){
+      const overflow = sm.allUC.length - MAX_UCS;
+      sl.addText(`+ ${overflow} more use case${overflow === 1 ? "" : "s"}`,
+        { x:0.5, y:7.0, w:12.33, h:0.3, fontSize:10, color:T.muted, italic:true, align:"center" });
+    }
+
+    const ownedHere = ucList.filter(uc => sm.stackUCs && sm.stackUCs.has(uc)).length;
     sl.addNotes(
-      `Lifecycle risk view. ${imminent} ${imminent === 1 ? "product is" : "products are"} less than 6 months from EOL/EOS ` +
-      `— these are the immediate concerns. ${soon} more within 12 months. ` +
-      `Schedule migration conversations before the 6-month line to avoid scramble renewals.`
+      `${ownedHere} of ${ucList.length} use case${ucList.length===1?"":"s"} on this slide are covered. ` +
+      "Open dots are unaddressed scenarios — natural seeds for cross-sell discovery."
     );
   }
 
-  // ── Migration plan (today → future) ───────────────────────────────────
-  const migItems = sm.items.filter(it => it.successor);
-  if (migItems.length > 0){
-    const migPages = paginate(migItems, 10);
-    migPages.forEach((page, idx) => {
-      sl = addSlide("Risk & Migration");
-      const title = migPages.length > 1
-        ? `Migration Plan (page ${idx+1} of ${migPages.length})`
-        : "Migration Plan";
-      sl.addText(title, { x:0.5, y:0.4, w:12.33, h:0.55, fontSize:22, bold:true, color:T.accent });
-      sl.addText("Today → Future state per product with a defined successor path",
-        { x:0.5, y:0.95, w:12.33, h:0.3, fontSize:11, color:T.subtle });
-
-      sl.addText("TODAY",  { x:0.5, y:1.35, w:5.8, h:0.3, fontSize:11, bold:true, color:T.muted, charSpacing:300 });
-      sl.addText("FUTURE", { x:7.4, y:1.35, w:5.4, h:0.3, fontSize:11, bold:true, color:T.muted, charSpacing:300 });
-
-      page.forEach((it, i) => {
-        const y = 1.75 + i * 0.52;
-        // Left card.
-        sl.addShape(pp.ShapeType.roundRect, { x:0.5, y, w:5.8, h:0.44, fill:{color:T.panel}, line:{color:T.line, width:1}, rectRadius:0.05 });
-        sl.addText(String(it.name||""), { x:0.7, y:y+0.04, w:4.0, h:0.22, fontSize:11.5, bold:true, color:T.text, valign:"middle", wrap:true });
-        sl.addText(
-          it.eolDate ? `EOL ${it.eolDate}` : it.eosDate ? `EOS ${it.eosDate}` : "EOL pending",
-          { x:0.7, y:y+0.23, w:4.0, h:0.2, fontSize:9, color: it.eolDate ? T.warn : T.muted, valign:"middle", wrap:true }
-        );
-        // Arrow.
-        sl.addText("→", { x:6.4, y:y+0.0, w:0.9, h:0.45, fontSize:22, bold:true, color:T.accent, align:"center", valign:"middle" });
-        // Right card.
-        sl.addShape(pp.ShapeType.roundRect, { x:7.4, y, w:5.4, h:0.44, fill:{color:T.panel}, line:{color:T.ok, width:1.5}, rectRadius:0.05 });
-        sl.addText(String(it.successor||""), { x:7.6, y:y+0.08, w:5.0, h:0.3, fontSize:12, bold:true, color:T.ok, valign:"middle", wrap:true });
-      });
-
-      sl.addNotes(
-        `Migration page ${idx+1} of ${migPages.length}. ${page.length} product${page.length===1?"":"s"} with defined successor paths. ` +
-        `Use this to drive renewal cadence and pre-EOL refresh quotes.`
-      );
-    });
-  }
-
-  // ── Legacy / outgoing replacements ────────────────────────────────────
-  if (sm.legacy && sm.legacy.length > 0){
-    const legacyPages = paginate(sm.legacy, 10);
-    legacyPages.forEach((page, idx) => {
-      sl = addSlide("Risk & Migration");
-      const title = legacyPages.length > 1
-        ? `Legacy & Outgoing (page ${idx+1} of ${legacyPages.length})`
-        : "Legacy & Outgoing";
-      sl.addText(title, { x:0.5, y:0.4, w:12.33, h:0.55, fontSize:22, bold:true, color:T.accent });
-      sl.addText("Customer's legacy / competitor footprint mapped to Cisco replacements",
-        { x:0.5, y:0.95, w:12.33, h:0.3, fontSize:11, color:T.subtle });
-
-      sl.addText("TODAY",        { x:0.5, y:1.35, w:5.8, h:0.3, fontSize:11, bold:true, color:T.muted, charSpacing:300 });
-      sl.addText("REPLACE WITH", { x:7.4, y:1.35, w:5.4, h:0.3, fontSize:11, bold:true, color:T.muted, charSpacing:300 });
-
-      page.forEach((l, i) => {
-        const y = 1.75 + i * 0.52;
-        const replacements = (l.replaces || []).map(r => nameOf(r)).join(", ") || "—";
-        sl.addShape(pp.ShapeType.roundRect, { x:0.5, y, w:5.8, h:0.44, fill:{color:T.panel}, line:{color:T.line, width:1}, rectRadius:0.05 });
-        sl.addText(String(l.name||""), { x:0.7, y:y+0.03, w:5.4, h:0.2, fontSize:11.5, bold:true, color:T.text, valign:"middle", wrap:true });
-        sl.addText(String(l.reason||""), { x:0.7, y:y+0.22, w:5.4, h:0.22, fontSize:8.5, color:T.muted, italic:true, valign:"middle", wrap:true });
-        sl.addText("→", { x:6.4, y:y+0.0, w:0.9, h:0.45, fontSize:22, bold:true, color:T.accent, align:"center", valign:"middle" });
-        sl.addShape(pp.ShapeType.roundRect, { x:7.4, y, w:5.4, h:0.44, fill:{color:T.panel}, line:{color:T.ok, width:1.5}, rectRadius:0.05 });
-        sl.addText(replacements, { x:7.6, y:y+0.08, w:5.0, h:0.3, fontSize:11, bold:true, color:T.ok, valign:"middle", wrap:true });
-      });
-
-      sl.addNotes(
-        `Legacy / outgoing page ${idx+1} of ${legacyPages.length}. ${page.length} item${page.length===1?"":"s"}, ` +
-        `mostly competitor or pre-Cisco kit with direct Cisco replacement paths. ` +
-        `Lead with TCO and Talos integration where applicable.`
-      );
-    });
-  }
-
-  // ═════════════════════════════════════════════════════════════════════
-  //  REFERENCE SECTION (embedded visuals + closing)
-  // ═════════════════════════════════════════════════════════════════════
-  addSectionDivider("Reference",
-    "Embedded portfolio timeline · architecture view · next steps",
-    "Reference");
-
-  // ── Shared off-screen capture helpers ────────────────────────────────
-  // html2canvas reads the live DOM, so to avoid the visible "flash" the
-  // earlier version had we don't toggle the user-facing `.show` class on
-  // #tl-wrap. Instead we temporarily reposition the wrapper off the
-  // viewport with high-specificity inline styles, paint into it, capture,
-  // and restore. The :has(#tl-wrap.show) chrome-hiding selector is never
-  // tripped, so the user's footer/hint/tools panes stay untouched.
-  const ensureHtml2Canvas = async () => {
-    if (typeof html2canvas !== "undefined") return true;
-    try {
-      await new Promise((resolve, reject) => {
-        const sct = document.createElement("script");
-        sct.src = "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
-        sct.onload = resolve;
-        sct.onerror = () => reject(new Error("html2canvas load failed"));
-        document.head.appendChild(sct);
-      });
-      return typeof html2canvas !== "undefined";
-    } catch (_){ return false; }
-  };
-  const OFFSCREEN_CSS =
-    "position:fixed !important;left:-99999px !important;top:0 !important;" +
-    "right:auto !important;bottom:auto !important;" +
-    "display:flex !important;visibility:visible !important;opacity:1 !important;" +
-    "pointer-events:none !important;z-index:-1 !important;";
-  const captureCanvas = async (el, sourceW, sourceH, scale) => {
-    const w = Math.max(1, sourceW || el.scrollWidth || el.clientWidth);
-    const h = Math.max(1, sourceH || el.scrollHeight || el.clientHeight);
-    return html2canvas(el, {
-      backgroundColor: "#" + T.bg,
-      scale: scale || 1.5,
-      useCORS: true,
-      logging: false,
-      width: w, height: h,
-      windowWidth: w, windowHeight: h,
-      foreignObjectRendering: false
-    });
-  };
-  // Slice a wide canvas into N equal-width PNGs (for splitting a long
-  // timeline across multiple slides). Returns array of dataURLs.
-  const sliceCanvasHorizontally = (canvas, parts) => {
-    const out = [];
-    if (parts <= 1) return [canvas.toDataURL("image/png")];
-    const sliceW = Math.floor(canvas.width / parts);
-    for (let i = 0; i < parts; i++){
-      const c = document.createElement("canvas");
-      c.width = (i === parts - 1) ? (canvas.width - sliceW * i) : sliceW;
-      c.height = canvas.height;
-      const ctx = c.getContext("2d");
-      ctx.fillStyle = "#" + T.bg;
-      ctx.fillRect(0, 0, c.width, c.height);
-      ctx.drawImage(canvas, sliceW * i, 0, c.width, c.height, 0, 0, c.width, c.height);
-      out.push(c.toDataURL("image/png"));
+  // ── Save with the [Content_Types].xml phantom-Override strip. ─────
+  // PptxGenJS 3.12.0 has a bug in `makeXmlContTypes` (gen-xml.ts) that
+  // emits an <Override PartName="/ppt/slideMasters/slideMasterN.xml"/>
+  // entry for every slide, even though only slideMaster1.xml is
+  // actually written to the package. PowerPoint scans
+  // [Content_Types].xml on open, sees Override entries pointing at
+  // parts that aren't in the ZIP, and triggers the
+  // "PowerPoint found a problem with content" repair dialog before
+  // showing the deck. We deliberately do NOT call pp.writeFile here —
+  // that would re-emit the phantoms. Instead, generate the buffer,
+  // post-process the ZIP via JSZip, and download manually as a Blob.
+  async function saveWithFix(){
+    const fileName = `Cisco_Plan_${String(sm.acct||"plan").replace(/\s+/g, "-")}.pptx`;
+    const Z = (typeof window !== "undefined" && window.JSZip) ? window.JSZip : null;
+    console.log("[pptx] JSZip available:", !!Z);
+    if (!Z){
+      console.warn("[exportPPTX] JSZip global not found; falling back to writeFile (repair dialog will appear).");
+      await pp.writeFile({ fileName });
+      return;
     }
-    return out;
-  };
-
-  // ── Embedded portfolio timeline screenshot. ───────────────────────────
-  try {
-    if (await ensureHtml2Canvas()){
-      const tlWrap = document.querySelector("#tl-wrap");
-      const tlEl   = document.querySelector("#tl-canvas");
-      const wasOpen = !!tlWrap?.classList.contains("show");
-
-      // Stash current inline style, swap in off-screen layout so the
-      // timeline lays out at our target capture dimensions without ever
-      // appearing on screen.
-      const savedCss = tlWrap ? tlWrap.style.cssText : "";
-      if (tlWrap && !wasOpen){
-        tlWrap.style.cssText =
-          OFFSCREEN_CSS +
-          "width:2400px !important;height:1400px !important;";
-      }
-      try {
-        renderTimeline?.();
-      } catch (_) {}
-      // Two RAFs + a short tick to let lane-packing + CSS settle.
-      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-      await new Promise(r => setTimeout(r, 220));
-
-      // Prefer #tl-inner (the actual content) over #tl-canvas (the scroll
-      // viewport): inner has the tight, true content width set by
-      // renderTimeline (yearSpan × px/year + label + gutter), so the
-      // captured image isn't padded with empty viewport space.
-      const tlInner = document.querySelector("#tl-inner");
-      const captureEl = (tlInner && tlInner.scrollWidth > 0) ? tlInner : tlEl;
-      if (captureEl && captureEl.scrollWidth > 0 && captureEl.scrollHeight > 0){
-        const fullW = captureEl.scrollWidth;
-        const fullH = captureEl.scrollHeight;
-        const canvas = await captureCanvas(captureEl, fullW, fullH, 2);
-
-        // Decide pagination from year span (set by renderTimeline). 12 yr
-        // per slide caps the px/year ratio at a readable density once
-        // the image is scaled to fit the slide.
-        const years = (typeof TL !== "undefined" && Number.isFinite(TL.yearSpan)) ? TL.yearSpan : 0;
-        const parts = years > 24 ? 3 : years > 12 ? 2 : 1;
-        const slices = sliceCanvasHorizontally(canvas, parts);
-
-        // Slide dimensions — give the timeline almost the full bleed.
-        const slideW = 13.33, slideH = 7.5;
-        const imgX = 0.15, imgY = 1.05;
-        const imgW = slideW - 0.30;        // 13.03
-        const imgH = 5.85;                 // leaves room for title + legend
-        slices.forEach((dataUrl, idx) => {
-          sl = addSlide("Reference");
-          const title = parts > 1
-            ? `Portfolio Timeline (part ${idx+1} of ${parts})`
-            : "Portfolio Timeline";
-          sl.addText(title, { x:0.5, y:0.4, w:12.33, h:0.55, fontSize:24, bold:true, color:T.accent, fontFace:"Calibri" });
-          sl.addText(`EOS / EOL milestones for the ${sm.items.length}-item stack`,
-            { x:0.5, y:0.95, w:12.33, h:0.3, fontSize:11, color:T.subtle });
-          // sizing:"contain" preserves aspect; PptxGenJS letterboxes
-          // within the box rather than stretching.
-          sl.addImage({ data: dataUrl, x: imgX, y: imgY, w: imgW, h: imgH, sizing: { type:"contain", w: imgW, h: imgH } });
-          // Tiny legend strip pinned to the bottom of the slide.
-          const legendY = 7.05;
-          const swatches = [
-            { color: T.ok,  label: "Current" },
-            { color: T.warn,label: "EOS" },
-            { color: T.bad, label: "EOL" }
-          ];
-          const swW = 2.4;
-          const legStartX = (slideW - swW * swatches.length) / 2;
-          swatches.forEach((sw, i) => {
-            const x = legStartX + i * swW;
-            sl.addShape(pp.ShapeType.rect, { x, y: legendY + 0.05, w:0.18, h:0.18, fill:{color:sw.color}, line:{color:sw.color, width:0} });
-            sl.addText(sw.label, { x: x + 0.25, y: legendY, w: swW - 0.3, h: 0.3, fontSize: 10, color: T.muted, valign:"middle", wrap:true });
-          });
-          sl.addNotes(
-            (parts > 1 ? `Timeline slice ${idx+1} of ${parts}. ` : "") +
-            "Live snapshot of the portfolio timeline view. Each bar is a product, colored by lifecycle status. " +
-            "Walk the dense clusters to flag refresh windows; the long-tail bars are healthy through the planning horizon."
-          );
-        });
-      }
-      // Restore the wrapper to whatever the user had before — usually the
-      // empty cssText so the stylesheet rules win again.
-      if (tlWrap && !wasOpen){
-        tlWrap.style.cssText = savedCss;
-      }
-    }
-  } catch (err){
-    console.warn("[exportPPTX] Timeline screenshot skipped:", err);
-  }
-
-  // ── Embedded architecture view (D3 graph in #gw). ─────────────────────
-  // The previous build inlined the SVG and recomputed styles; that
-  // approach lost the <defs>-based glow/filter rendering and produced a
-  // flat picture. We rasterize the whole #gw container via html2canvas
-  // instead, which captures the live SVG paint (filters, gradients,
-  // opacity layering) verbatim.
-  try {
-    if (await ensureHtml2Canvas()){
-      const gwEl = document.querySelector("#gw");
-      if (gwEl){
-        const bbox = gwEl.getBoundingClientRect();
-        if (bbox.width > 16 && bbox.height > 16){
-          const canvas = await captureCanvas(gwEl, gwEl.scrollWidth, gwEl.scrollHeight, 1.75);
-          const dataUrl = canvas.toDataURL("image/png");
-
-          sl = addSlide("Reference");
-          sl.addText("Architecture View", { x:0.5, y:0.4, w:12.33, h:0.55, fontSize:24, bold:true, color:T.accent, fontFace:"Calibri" });
-          sl.addText("D3 graph of current Cisco footprint and supporting connections",
-            { x:0.5, y:0.95, w:12.33, h:0.3, fontSize:11, color:T.subtle });
-
-          const imgX = 0.15, imgY = 1.05;
-          const imgW = 13.03, imgH = 6.30;
-          sl.addImage({ data: dataUrl, x: imgX, y: imgY, w: imgW, h: imgH, sizing: { type:"contain", w: imgW, h: imgH } });
-
-          sl.addNotes(
-            "Architecture view, rasterized live from the D3 graph. Node color encodes category; edges encode integrations. " +
-            "Use as a portfolio map during whiteboarding sessions — the dense clusters point at platform plays."
-          );
-        }
-      }
-    }
-  } catch (err){
-    console.warn("[exportPPTX] Architecture view skipped:", err);
-  }
-
-  // ── Closing slide: Next Steps ─────────────────────────────────────────
-  sl = addSlide("Reference");
-  sl.addText("Next Steps", { x:0.5, y:0.6, w:12.33, h:0.8, fontSize:36, bold:true, color:T.accent, align:"center", fontFace:"Calibri" });
-  sl.addText("Recommended cadence after this conversation",
-    { x:0.5, y:1.3, w:12.33, h:0.4, fontSize:14, color:T.subtle, align:"center" });
-
-  const steps = [
-    { num:"1", title:"Address EOL Risk",
-      body: `Review the ${eoEosTotal} EOL/EOS item${eoEosTotal===1?"":"s"} and confirm migration plan.` +
-            (migItems.length ? ` ${migItems.length} have defined successor paths.` : ""),
-      color: T.bad },
-    { num:"2", title:"Pilot Top Opportunity",
-      body: topRec
-        ? `Scope a pilot for ${topRec.name} (${topRec.direct} direct integrations to current stack).`
-        : "Identify a growth opportunity with the customer and scope a pilot.",
-      color: T.accent },
-    { num:"3", title:"Quarterly Plan Review",
-      body: "Reconvene in 90 days; revisit bundle coverage, refresh roadmap, and re-rank opportunities.",
-      color: T.ok }
-  ];
-  const cardW2 = (12.33 - 0.6 * 2) / 3;
-  steps.forEach((s, i) => {
-    const x = 0.5 + i * (cardW2 + 0.6), y = 2.1;
-    sl.addShape(pp.ShapeType.roundRect, { x, y, w: cardW2, h: 4.4, fill:{color:T.panel}, line:{color:T.line, width:1}, rectRadius:0.12 });
-    // Numbered circle.
-    sl.addShape(pp.ShapeType.ellipse, { x: x + cardW2 / 2 - 0.45, y: y + 0.4, w: 0.9, h: 0.9, fill:{color:s.color}, line:{color:s.color, width:0} });
-    sl.addText(s.num, { x: x + cardW2 / 2 - 0.45, y: y + 0.46, w: 0.9, h: 0.8, fontSize: 38, bold: true, color:"FFFFFF", align:"center", fontFace:"Calibri" });
-    sl.addText(s.title, { x: x + 0.2, y: y + 1.55, w: cardW2 - 0.4, h: 0.6, fontSize: 18, bold: true, color: T.text, align:"center" });
-    sl.addText(s.body,  { x: x + 0.3, y: y + 2.25, w: cardW2 - 0.6, h: 1.9, fontSize: 12, color: T.muted, align:"center", valign:"top" });
-  });
-
-  sl.addText(`Generated by Cisco Portfolio Navigator v${APP_VERSION}  ·  ${sm.date}`,
-    { x:0.5, y:6.75, w:12.33, h:0.3, fontSize:10, color:T.subtle, align:"center" });
-
-  sl.addNotes(
-    `Closing: ${eoEosTotal} EOL/EOS item${eoEosTotal===1?"":"s"} to triage, ${recCount} growth opportunit${recCount===1?"y":"ies"}. ` +
-    `Schedule the 90-day follow-up before leaving the room. Send this deck plus the JSON / Markdown export for the customer's records.`
-  );
-
-  // ── Write file ────────────────────────────────────────────────────────
-  // We deliberately do NOT call `pp.writeFile(...)` directly. PptxGenJS
-  // 3.12.0 has a bug in `makeXmlContTypes` (gen-xml.ts) that emits an
-  // `<Override PartName="/ppt/slideMasters/slideMasterN.xml" ...>` entry
-  // for EVERY slide, even though only `slideMaster1.xml` is actually
-  // written to the package. PowerPoint scans `[Content_Types].xml` on
-  // open, sees Override entries pointing at parts that aren't in the
-  // ZIP, and triggers the "PowerPoint found a problem with content"
-  // repair dialog before showing the deck.
-  //
-  // The fix is a post-process: generate the deck to a buffer, open it
-  // with the JSZip instance the pptxgen.bundle.min.js already exposes on
-  // `window.JSZip`, strip Override entries for non-existent slide
-  // masters, then trigger the download. This adds no new dependencies.
-  const fileName = `Cisco_Plan_${sm.acct.replace(/\s+/g, "-")}.pptx`;
-  const Z = (typeof window !== "undefined" && window.JSZip) ? window.JSZip : null;
-  if (!Z){
-    // JSZip is bundled into pptxgen.bundle.min.js. If for some reason it
-    // didn't expose the global, fall back to PptxGenJS's writer so the
-    // user still gets a deck — even with the repair dialog — rather
-    // than nothing.
-    console.warn("[exportPPTX] JSZip global not found; falling back to writeFile (repair dialog will appear).");
-    await pp.writeFile({ fileName });
-  } else {
     const buffer = await pp.write({ outputType: "arraybuffer" });
-    const zip = await Z.loadAsync(buffer);
+    const zip    = await Z.loadAsync(buffer);
     const ctFile = zip.file("[Content_Types].xml");
     if (ctFile){
       const ctXml = await ctFile.async("string");
-      // Only keep Override entries whose target part actually exists.
-      // The phantom entries are for slideMaster2.xml..slideMasterN.xml.
+      const overrideRe = /<Override\s+PartName="\/ppt\/slideMasters\/slideMaster\d+\.xml"[^>]*\/>/g;
+      const beforeCount = (ctXml.match(overrideRe) || []).length;
+      console.log("[pptx] Override entries before strip:", beforeCount);
+
       let stripped = 0;
       const fixedXml = ctXml.replace(
         /<Override\s+PartName="\/ppt\/slideMasters\/slideMaster(\d+)\.xml"[^>]*\/>/g,
@@ -7080,10 +6373,16 @@ async function exportPPTX(){
         }
       );
       zip.file("[Content_Types].xml", fixedXml);
+
+      const afterCount = (fixedXml.match(overrideRe) || []).length;
+      console.log("[pptx] Override entries after strip:", afterCount);
       if (stripped > 0){
         console.info(`[exportPPTX] Stripped ${stripped} phantom slideMaster Override entries from [Content_Types].xml`);
       }
+    } else {
+      console.warn("[exportPPTX] [Content_Types].xml not found in generated ZIP — skipping strip.");
     }
+
     const blob = await zip.generateAsync({
       type: "blob",
       mimeType: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
@@ -7098,6 +6397,16 @@ async function exportPPTX(){
     a.click();
     setTimeout(() => { try { URL.revokeObjectURL(url); a.remove(); } catch (_) {} }, 0);
   }
+
+  // ── Build the deck (4 slides; each slide-builder skips itself if
+  //    its source data is empty so the deck never has a content-less
+  //    slide that PowerPoint could flag). ────────────────────────────
+  buildTitleSlide();
+  if (sm.recs    && sm.recs.length    > 0) buildOpportunitiesSlide();
+  if (sm.bundles && sm.bundles.length > 0) buildBundleCoverageSlide();
+  if (sm.allUC   && sm.allUC.length   > 0) buildUseCaseSlide();
+
+  await saveWithFix();
   showToast(`PPTX exported (${themeName === "ciscoBlue" ? "Cisco Blue" : themeName[0].toUpperCase()+themeName.slice(1)} theme)`);
 }
 
