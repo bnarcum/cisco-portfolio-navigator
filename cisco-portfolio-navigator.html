@@ -5083,18 +5083,21 @@ STYLE.textContent = `
     background:linear-gradient(180deg, rgba(0,0,0,.18), rgba(255,255,255,.015));
     box-shadow:0 1px 0 rgba(255,255,255,.04) inset, 0 -1px 0 rgba(0,0,0,.35) inset;
     border-radius:4px;min-height:24px}
-  .tl-block{position:absolute;height:16px;border-radius:4px;font-size:9.5px;
-    color:#fff;display:flex;align-items:center;padding:0 6px;cursor:pointer;
-    overflow:hidden;white-space:nowrap;font-weight:600;
+  .tl-block{position:absolute;height:16px;line-height:16px;border-radius:4px;font-size:9.5px;
+    color:#fff;display:block;padding:0 6px;cursor:pointer;
+    overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:600;
     /* Glassy pill: highlight on the top edge, fade to a soft shade near the bottom.
        background-image is layered on top of background-color from the status classes
-       below (.cur/.eos/.eol), so the colored fill still drives the meaning. */
+       below (.cur/.eos/.eol), so the colored fill still drives the meaning.
+       Vertical centering uses line-height (not flex) so that text-overflow:ellipsis
+       can truncate the direct text node — flex children wouldn't ellipsis without
+       an extra wrapper element. */
     background-image:linear-gradient(180deg, rgba(255,255,255,.18) 0%, rgba(255,255,255,0) 35%, rgba(0,0,0,.18) 100%);
     box-shadow:
       0 1px 0 rgba(255,255,255,.10) inset,
       0 -1px 0 rgba(0,0,0,.22) inset,
       0 1px 2px rgba(0,0,0,.4);
-    transition:transform .12s,box-shadow .12s,filter .12s;line-height:1}
+    transition:transform .12s,box-shadow .12s,filter .12s}
   .tl-block:hover{transform:translateY(-2px);
     box-shadow:
       0 1px 0 rgba(255,255,255,.14) inset,
@@ -6700,10 +6703,7 @@ function renderTimeline(){
   inner.style.width = innerW + "px";
 
   const now = new Date();
-  const startY = now.getFullYear() - 5;
-  const endY   = now.getFullYear() + 6;
-  const totalMs = (endY - startY) * 365.25 * 86400e3;
-  const startMs = new Date(startY, 0, 1).getTime();
+
   /* Tolerant date parser used by the timeline.
      Returns a Date or null. Handles:
        ISO              "2026-10-31"
@@ -6726,6 +6726,26 @@ function renderTimeline(){
     const d = new Date(t);
     return Number.isNaN(d.getTime()) ? null : d;
   };
+
+  /* Window sizing.
+     Floor at now-5 / now+6 so the default still feels familiar when no old
+     data is present, but EXPAND outward when products have older EOLs or
+     further-out EOS milestones. Without this, ~19 legacy products with
+     pre-2021 EOS dates clamp visually to the left edge instead of landing
+     at their real position. */
+  let startY = now.getFullYear() - 5;
+  let endY   = now.getFullYear() + 6;
+  PRODUCTS.forEach(p => {
+    for (const s of [p.eosDate, p.eolDate]) {
+      const d = parseFuzzyDate(s); if (!d) continue;
+      const y = d.getFullYear();
+      if (y     < startY) startY = y;
+      if (y + 1 > endY)   endY   = y + 1;
+    }
+  });
+
+  const totalMs = (endY - startY) * 365.25 * 86400e3;
+  const startMs = new Date(startY, 0, 1).getTime();
   const xFromDate = (s) => {
     const d = parseFuzzyDate(s);
     if (!d) return null;
@@ -6806,7 +6826,11 @@ function renderTimeline(){
       const blocksHtml = blocks.map(b => {
         const widthPct = b.right - b.left;
         const widthPx = widthPct/100 * trackPx;
-        const narrow = widthPx < 60;
+        // Threshold of 28 px — bars wider than this show their name with
+        // a clean text-overflow:ellipsis when needed. Below 28 px even "..."
+        // doesn't render usefully, so we hide the label and rely on the
+        // existing tooltip + .narrow:hover expand-on-hover behavior.
+        const narrow = widthPx < 28;
         const top = b.lane * (laneH + laneGap);
         const label = narrow ? "" : escapeHtml(b.p.name);
         // If either milestone is unknown, tag the block so CSS can fade the
