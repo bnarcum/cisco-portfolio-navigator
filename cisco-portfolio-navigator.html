@@ -6406,6 +6406,48 @@ function wireSearchPulse(){
 }
 
 /* ════════════════════════════════════════════════════════════════════════
+   [15a] ADAPTIVE SEARCH PLACEHOLDER
+
+   The search input shares a single 58px topbar row with logo, view-mode
+   segmented control, category pills, two dropdowns, Reset, and the
+   Account Planner button — every sibling has flex-shrink:0, so the
+   search box ends up with whatever's left (often ~260–340 px on 1280–
+   1440 px windows). The full "Search products, models, use cases…"
+   placeholder doesn't fit and gets clipped without an ellipsis (CSS
+   text-overflow doesn't apply to placeholders).
+
+   Solution: ResizeObserver on .sw swaps to progressively shorter
+   placeholder text as the rendered input narrows. Three tiers,
+   chosen so each tier comfortably fits at 13 px font-size:
+     ≥ 360 px → full hint
+     ≥ 240 px → medium hint
+     <  240 px → short hint
+   The full hint is also exposed via `title` so power users can
+   hover the input for the long-form description.
+   ════════════════════════════════════════════════════════════════════════*/
+function wireAdaptivePlaceholder(){
+  const inp = $("#search");
+  const sw  = document.querySelector(".sw");
+  if (!inp || !sw || typeof ResizeObserver === "undefined") return;
+  const PLACEHOLDERS = [
+    {min: 360, text: "Search products, models, use cases…"},
+    {min: 240, text: "Search products & families…"},
+    {min: 0,   text: "Search…"}
+  ];
+  const FULL_HINT = "Search products, models, use cases — try a model name, family (ISE, Meraki), or use case (zero trust, AI networking)";
+  inp.setAttribute("title", FULL_HINT);
+  inp.setAttribute("aria-label", FULL_HINT);
+  const apply = (w) => {
+    const next = PLACEHOLDERS.find(p => w >= p.min).text;
+    if (inp.placeholder !== next) inp.placeholder = next;
+  };
+  // Initial sync (ResizeObserver fires once on observe in modern browsers, but be safe)
+  apply(sw.getBoundingClientRect().width);
+  const ro = new ResizeObserver(([entry]) => apply(entry.contentRect.width));
+  ro.observe(sw);
+}
+
+/* ════════════════════════════════════════════════════════════════════════
    [14] RIGHT-CLICK context menu
    ════════════════════════════════════════════════════════════════════════*/
 function buildContextMenu(){
@@ -7350,6 +7392,7 @@ function boot(){
   buildChangelog();
   wireRefArchToUC();
   wireSearchPulse();
+  wireAdaptivePlaceholder();
   wireKeyboardA11y();
   watchStackForAutoSave();
   watchAnalysisResults();
