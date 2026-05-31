@@ -4538,7 +4538,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.4.2";
+const APP_VERSION   = "2.4.3";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -4827,6 +4827,10 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.4.3", date:"2026-05-31", items:[
+    "Guided Plan reveal: Ask AI quick-action chips (exec summary, 90-day roadmap, customer email, explain gap) plus footer Ask AI button.",
+    "AI Assistant now includes current account plan context (stack, augmentations, legacy migrations, bundle gaps) when a plan exists."
+  ]},
   {ver:"2.4.2", date:"2026-05-31", items:[
     "Favicon — portfolio graph icon shows in browser tabs and bookmarks (inline SVG).",
     "Guided tour updated with a new Guided Plan step; tour version bumped to v2.3."
@@ -5085,6 +5089,15 @@ STYLE.textContent = `
   .gw-stat .gw-sl{font-size:9px;color:var(--subtle);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
   .gw-toprecs{font-size:11px;color:var(--muted);line-height:1.55}
   .gw-toprecs li{margin:4px 0 4px 16px}
+  .gw-ai-section{margin-top:14px;padding-top:14px;border-top:1px solid var(--border);text-align:left}
+  .gw-ai-section .gw-ai-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--subtle);margin-bottom:8px}
+  .gw-ai-chips{display:flex;flex-wrap:wrap;gap:6px}
+  .gw-ai-chip{background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.45);border-radius:6px;
+    color:#c4b5fd;font-size:10.5px;font-weight:600;padding:5px 10px;cursor:pointer;font-family:inherit;
+    transition:all .15s}
+  .gw-ai-chip:hover{background:rgba(168,85,247,.25);border-color:#a855f7;color:#fff}
+  .gw-btn.ai-accent{border-color:#a855f7;color:#c4b5fd}
+  .gw-btn.ai-accent:hover{background:rgba(168,85,247,.15);border-color:#a855f7;color:#fff}
   #gw-foot{padding:12px 22px 18px;border-top:1px solid var(--border);
     display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0}
   #gw-foot .gw-step-lbl{font-size:11px;color:var(--subtle);font-weight:600}
@@ -6444,6 +6457,17 @@ const WIZARD_SIZES = [
 let wizardOpen = false;
 const wizardState = { step: 1, industry: null, size: null, domains: new Set(), legacy: new Set() };
 
+const WIZARD_AI_PROMPTS = [
+  { label: "Exec summary", q: "Write a concise executive summary of this account plan for my sales leader — current situation, stack strengths, gaps, and recommended next steps." },
+  { label: "90-day roadmap", q: "Based on this guided plan, propose a prioritized 90-day roadmap with quick wins, migration items, and longer-term augmentations." },
+  { label: "Customer email", q: "Draft a professional follow-up email to the customer summarizing what we learned, what's in place today, and 3 recommended next steps." },
+  { label: "Explain biggest gap", q: "Explain the biggest bundle or capability gap in this plan — why it matters for this industry and what Cisco products would close it." }
+];
+
+function wizardAskAi(prompt) {
+  if (typeof openAiWithPrompt === "function") openAiWithPrompt(prompt, { closeWizard: true, send: true });
+}
+
 function wizardDomainsForIndustry(industryId) {
   return WIZARD_DOMAINS.filter(d => !industryId || !(d.hideFor || []).includes(industryId));
 }
@@ -6663,12 +6687,23 @@ function wizardShowReveal() {
         </div>
         ${recs.length ? `<div class="gw-toprecs"><strong style="color:var(--text);font-size:11px">Top augmentations</strong><ul>${recs.map(r => `<li>${escapeHtml(r)}</li>`).join("")}</ul></div>` : ""}
         ${weak.pct < 50 ? `<div style="margin-top:10px;font-size:11px;color:var(--orange)">Gap alert: ${escapeHtml(weak.name)} at ${weak.pct}% coverage</div>` : ""}
+        <div class="gw-ai-section">
+          <div class="gw-ai-lbl">Ask AI about this plan</div>
+          <div class="gw-ai-chips" id="gw-ai-chips">
+            ${WIZARD_AI_PROMPTS.map(p => `<button type="button" class="gw-ai-chip" data-q="${escapeHtml(p.q)}">${escapeHtml(p.label)}</button>`).join("")}
+          </div>
+        </div>
       </div>
     </div>`;
+  $("#gw-body").querySelectorAll(".gw-ai-chip").forEach(chip => {
+    chip.addEventListener("click", () => wizardAskAi(chip.dataset.q));
+  });
   $("#gw-next").disabled = false;
   $("#gw-next").textContent = "Open full analysis";
   const gBtn = $("#gw-graph");
   if (gBtn) gBtn.style.display = "inline-block";
+  const aiBtn = $("#gw-ai");
+  if (aiBtn) aiBtn.style.display = "inline-block";
   highlightStack();
 }
 
@@ -6681,6 +6716,8 @@ function openGuidedWizard() {
   wizardOpen = true;
   const gBtn = $("#gw-graph");
   if (gBtn) gBtn.style.display = "none";
+  const aiBtn = $("#gw-ai");
+  if (aiBtn) aiBtn.style.display = "none";
   $("#gw-overlay").classList.add("show");
   document.body.style.overflow = "hidden";
   wizardRenderStep();
@@ -6729,6 +6766,7 @@ function buildGuidedWizard() {
         <span class="gw-step-lbl" id="gw-step-lbl">Step 1 of 5</span>
         <div class="gw-actions">
           <button type="button" class="gw-btn ghost" id="gw-skip">Skip wizard</button>
+          <button type="button" class="gw-btn ai-accent" id="gw-ai" style="display:none">Ask AI</button>
           <button type="button" class="gw-btn" id="gw-graph" style="display:none">Explore graph</button>
           <button type="button" class="gw-btn" id="gw-back">Back</button>
           <button type="button" class="gw-btn primary" id="gw-next" disabled>Continue</button>
@@ -6741,6 +6779,9 @@ function buildGuidedWizard() {
   $("#gw-back").addEventListener("click", wizardBack);
   $("#gw-next").addEventListener("click", wizardNext);
   $("#gw-graph").addEventListener("click", () => { closeGuidedWizard(false); highlightStack(); });
+  $("#gw-ai").addEventListener("click", () => wizardAskAi(
+    "Based on this guided account plan, what are the top 3 priorities I should focus on in my next customer conversation?"
+  ));
   ov.addEventListener("click", e => { if (e.target === ov) closeGuidedWizard(false); });
   document.addEventListener("keydown", e => {
     if (!wizardOpen) return;
@@ -8063,10 +8104,15 @@ async function sendAi(){
   loading.textContent = "Thinking";
   wrap.appendChild(loading); wrap.scrollTop = wrap.scrollHeight;
   const ctx = buildAiContext();
-  const sys = `You are a Cisco solution architect. Recommend specific Cisco products from the catalog below.
+  const planCtx = buildPlanContext();
+  let sys = `You are a Cisco solution architect. Recommend specific Cisco products from the catalog below.
 When suggesting products, use exact names from the catalog so they can be linked.
-Respond concisely (max 5 short paragraphs or a bulleted stack).
-CATALOG:\n${ctx}`;
+Respond concisely (max 5 short paragraphs or a bulleted stack).`;
+  if (planCtx) {
+    sys += `\n\nCURRENT ACCOUNT PLAN (from Account Planner / Guided Plan — treat as ground truth for this conversation):\n${planCtx}`;
+  }
+  sys += `\n\nCATALOG:\n${ctx}`;
+  const maxTok = planCtx ? 900 : 700;
   try {
     const url = cfg.proxy ? cfg.proxy + encodeURIComponent(cfg.url) : cfg.url;
     const r = await fetch(url, {
@@ -8074,7 +8120,7 @@ CATALOG:\n${ctx}`;
       headers: {"Content-Type":"application/json","Authorization":"Bearer "+key},
       body: JSON.stringify({ model: cfg.model || "gpt-4o-mini",
         messages: [{role:"system",content:sys},{role:"user",content:q}],
-        temperature: 0.3, max_tokens: 700 })
+        temperature: 0.3, max_tokens: maxTok })
     });
     if (!r.ok){
       const body = await r.text().catch(() => "");
@@ -8120,8 +8166,57 @@ CATALOG:\n${ctx}`;
     wrap.appendChild(er); wrap.scrollTop = wrap.scrollHeight;
   }
 }
+function buildPlanContext(){
+  if (!stack.size && !legacySel.size) return "";
+  const s = planSummary();
+  const lines = [];
+  lines.push(`Account: ${s.acct}`);
+  if (wizardState.industry) {
+    const t = INDUSTRY_TEMPLATES.find(x => x.id === wizardState.industry);
+    if (t) lines.push(`Industry (guided plan): ${t.name}`);
+    if (wizardState.size) lines.push(`Size: ${wizardState.size}`);
+    if (wizardState.domains.size) {
+      const domNames = [...wizardState.domains]
+        .map(id => WIZARD_DOMAINS.find(d => d.id === id)?.label).filter(Boolean);
+      if (domNames.length) lines.push(`Capabilities confirmed: ${domNames.join(", ")}`);
+    }
+  } else if (s.profile.vertical || s.profile.size || s.profile.mode) {
+    lines.push(`Profile: ${[s.profile.vertical, s.profile.size, s.profile.mode].filter(Boolean).join(" · ")}`);
+  }
+  lines.push(`Current stack (${s.items.length}): ${s.items.map(i => i.name).join(", ")}`);
+  if (s.recs.length) lines.push(`Top augmentations: ${s.recs.slice(0, 6).map(r => r.name).join(", ")}`);
+  if (s.legacy.length) {
+    lines.push(`Legacy / refresh triggers: ${s.legacy.map(l => l.name).join(", ")}`);
+    s.legacy.forEach(l => {
+      const tos = (l.replaces || []).map(r => nameOf(r)).filter(Boolean).join(", ");
+      if (tos) lines.push(`  Migration: ${l.name} → ${tos}`);
+    });
+  }
+  if (s.bundles.length) {
+    lines.push(`Strongest bundle: ${s.bundles[0].name} (${s.bundles[0].pct}%)`);
+    const weak = s.bundles[s.bundles.length - 1];
+    if (weak && weak.pct < 60) lines.push(`Biggest gap: ${weak.name} (${weak.pct}%)`);
+  }
+  if (wizardState.industry) {
+    try { lines.push(`Summary: ${wizardNarrative()}`); } catch(e){}
+  }
+  return lines.join("\n");
+}
+
 function buildAiContext(){
   return NODES.map(n => `- ${n.name} [${CATS[n.category].label}]: ${n.desc.slice(0,140)}`).join("\n");
+}
+
+function openAiWithPrompt(prompt, opts = {}) {
+  const { closeWizard = false, send = true } = opts;
+  if (closeWizard && wizardOpen) closeGuidedWizard(false);
+  const panel = $("#ai-panel");
+  if (!panel) { showToast("AI Assistant not ready"); return; }
+  panel.classList.add("show");
+  const inp = $("#ai-input");
+  if (inp) inp.value = prompt;
+  inp?.focus();
+  if (send) sendAi();
 }
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -8291,7 +8386,7 @@ window.__cpnV2 = {
     buildProfileBox, buildTemplatesStrip, buildComparePanel, buildRecentPinned,
     addPlannerTabs, refreshPlansBtn, applyRefArch, clearRefArch, renderTimeline,
     openTimelineView, closeTimelineView, setTimelineZoom,
-    showStackDiff, sendAi, openChangelog, boot, savePlan, loadPlan, deletePlan,
+    showStackDiff, sendAi, openAiWithPrompt, buildPlanContext, openChangelog, boot, savePlan, loadPlan, deletePlan,
     listPlans, planSummary }
 };
 })();
