@@ -3028,7 +3028,70 @@ function buildCompositionView(familyId){
 // SPATIAL — optional 3D portfolio map
 // ══════════════════════════════════════
 const SPATIAL_LIB = "vendor/3d-force-graph.min.js";
-const spatialState = { graph: null, active: false, libPromise: null, resizeObs: null };
+const spatialState = { graph: null, active: false, libPromise: null, spritePromise: null, resizeObs: null, labelCache: new Map() };
+
+function loadSpriteTextLib(){
+  if (window.SpriteText) return Promise.resolve();
+  if (spatialState.spritePromise) return spatialState.spritePromise;
+  spatialState.spritePromise = new Promise((resolve, reject) => {
+    const onReady = () => {
+      if (window.SpriteText) resolve();
+      else { spatialState.spritePromise = null; reject(new Error("sprite-export")); }
+    };
+    window.addEventListener("spatial-spritetext-ready", onReady, { once: true });
+    const s = document.createElement("script");
+    s.type = "module";
+    s.textContent = `import SpriteText from "./vendor/three-spritetext.mjs";
+window.SpriteText = SpriteText.default || SpriteText;
+window.dispatchEvent(new Event("spatial-spritetext-ready"));`;
+    s.onerror = () => {
+      window.removeEventListener("spatial-spritetext-ready", onReady);
+      spatialState.spritePromise = null;
+      reject(new Error("sprite-lib"));
+    };
+    document.head.appendChild(s);
+  });
+  return spatialState.spritePromise;
+}
+
+function styleSpatialLabelSprite(sprite, node){
+  if (selected && selected.id === node.id){
+    sprite.color = "#ffffff";
+    sprite.backgroundColor = "rgba(0,188,235,0.38)";
+    sprite.textHeight = 3.6;
+  } else if (stack.has(node.id)){
+    sprite.color = "#ffffff";
+    sprite.backgroundColor = "rgba(0,188,235,0.22)";
+    sprite.textHeight = 3.4;
+  } else {
+    sprite.color = "#e6edf3";
+    sprite.backgroundColor = "rgba(13,17,23,0.78)";
+    sprite.textHeight = 3.2;
+  }
+}
+
+function getSpatialLabelSprite(node){
+  let sprite = spatialState.labelCache.get(node.id);
+  if (!sprite){
+    sprite = new SpriteText(node.name);
+    sprite.padding = 2;
+    sprite.borderRadius = 3;
+    sprite.fontWeight = "600";
+    sprite.center.y = -0.85;
+    if (sprite.material) sprite.material.depthWrite = false;
+    spatialState.labelCache.set(node.id, sprite);
+  } else if (sprite.text !== node.name){
+    sprite.text = node.name;
+  }
+  styleSpatialLabelSprite(sprite, node);
+  return sprite;
+}
+
+function refreshSpatialLabelStyles(){
+  spatialState.labelCache.forEach((sprite, id) => {
+    styleSpatialLabelSprite(sprite, { id, name: nodeById[id]?.name || sprite.text });
+  });
+}
 
 function getSpatialDims(){
   const gw = document.getElementById("gw");
@@ -3103,10 +3166,11 @@ function initSpatialGraph(){
     .width(w).height(h)
     .backgroundColor("#0d1117")
     .showNavInfo(false)
-    .nodeLabel("name")
     .nodeColor(spatialNodeColor)
     .nodeVal("val")
     .nodeOpacity(0.92)
+    .nodeThreeObject(node => getSpatialLabelSprite(node))
+    .nodeThreeObjectExtend(true)
     .linkColor(l => l.type === "direct" ? "rgba(0,188,235,0.45)" : "rgba(110,118,129,0.28)")
     .linkWidth(l => l.type === "direct" ? 1.4 : 0.6)
     .linkOpacity(0.55)
@@ -3138,6 +3202,7 @@ function refreshSpatialGraph(){
   if (!spatialState.graph) return;
   spatialState.graph.graphData(data);
   spatialState.graph.nodeColor(spatialNodeColor);
+  refreshSpatialLabelStyles();
 }
 
 function focusSpatialNode(id, ms){
@@ -3159,6 +3224,7 @@ function selectNodeSpatial(d, graphNode){
   showDetailPanel(d);
   if (spatialState.graph){
     spatialState.graph.nodeColor(spatialNodeColor);
+    refreshSpatialLabelStyles();
     const focus = () => focusSpatialNode(d.id, 700);
     if (graphNode) focus();
     else setTimeout(focus, 500);
@@ -3171,6 +3237,7 @@ function enterSpatialView(){
   const wrap = ensureSpatialDOM();
   wrap.style.display = "block";
   return loadSpatialLib()
+    .then(() => loadSpriteTextLib())
     .then(() => {
       if (!spatialState.active) return;
       initSpatialGraph();
@@ -3183,6 +3250,8 @@ function enterSpatialView(){
       let msg = "Spatial view failed to start.";
       if (reason === "spatial-lib" || reason === "spatial-export"){
         msg = "Spatial view could not load the 3D library.";
+      } else if (reason === "sprite-lib" || reason === "sprite-export"){
+        msg = "Spatial view could not load label rendering.";
       } else if (!window.WebGLRenderingContext){
         msg = "Spatial view needs WebGL, which is unavailable in this browser.";
       } else {
@@ -3473,6 +3542,7 @@ function selectNode(d) {
   if (viewMode === "spatial"){
     focusSpatialNode(d.id, 700);
     if (spatialState.graph) spatialState.graph.nodeColor(spatialNodeColor);
+    refreshSpatialLabelStyles();
     return;
   }
   const {w,h}=getDims(), t=d3.zoomTransform(svgEl);
@@ -3484,6 +3554,7 @@ function selectNode(d) {
 function resetHL() {
   if (viewMode === "spatial"){
     if (spatialState.graph) spatialState.graph.nodeColor(spatialNodeColor);
+    refreshSpatialLabelStyles();
     return;
   }
   ndEl.each(function(nd){
@@ -3501,6 +3572,7 @@ function resetHL() {
 function highlightStack() {
   if (viewMode === "spatial"){
     if (spatialState.graph) spatialState.graph.nodeColor(spatialNodeColor);
+    refreshSpatialLabelStyles();
     return;
   }
   if(selected) return; if(!stack.size){ resetHL(); return; }
@@ -4316,7 +4388,7 @@ document.addEventListener("keydown",ev=>{
                <li><b>Families</b> — 52 product families <em>(default)</em>. The classic map of how things connect.</li>
                <li><b>Composition</b> — one family pinned in the middle, every specific SKU around it, with dashed purple <em>"replaced by"</em> arrows to successor products.</li>
                <li><b>All</b> — every family + every product (~350 nodes) in one dense graph. Power-user view.</li>
-               <li><b>Spatial</b> — optional 3D map of families. Orbit, zoom, and click nodes for details.</li>
+               <li><b>Spatial</b> — optional 3D map of families with always-visible name labels. Orbit, zoom, and click nodes for details.</li>
              </ul>`,
       tip: `<b>Two fast ways into Composition:</b> double-click any family bubble in Families mode, or click the bright <em>"Explore N products"</em> button on any family's detail panel. A breadcrumb chip appears under the topbar so you always know where you are.`,
       before: () => {
@@ -4786,7 +4858,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.7.1";
+const APP_VERSION   = "2.7.2";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -5076,6 +5148,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.7.2", date:"2026-05-31", items:[
+    "Spatial view — always-visible family name labels on every node (vendored three-spritetext), with highlight styling for selection and stack items."
+  ]},
   {ver:"2.7.1", date:"2026-05-31", items:[
     "Spatial view — 3D library bundled locally (vendor/3d-force-graph.min.js) so Spatial works without external CDN access on corporate networks.",
     "Clearer Spatial error messages when WebGL or library init fails."
