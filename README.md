@@ -96,22 +96,6 @@ The assistant works fully client-side via your own API key. It supports any Open
 - Use the offline / local instructions above (serve the file via `python3 -m http.server`)
 - Or download the HTML file and open it directly (`file://` works once you set `OLLAMA_ORIGINS="*"` and restart Ollama)
 
-## Screenshots
-
-| README hero | GitHub social preview (1280×640) |
-|---|---|
-| `docs/hero.png` | `docs/social-preview.png` |
-
-To update the repo card image on GitHub: **Settings → General → Social preview → Upload** `docs/social-preview.png`.
-
-To refresh screenshots after UI changes:
-
-```bash
-npm install playwright@1.49.0 --no-save
-npx playwright install chromium
-node scripts/capture-readme-screenshots.mjs
-```
-
 ## Tech
 
 Single, self-contained HTML file. No build step, no dependencies to install — D3.js is loaded from a CDN. ~460 KB total.
