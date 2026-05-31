@@ -3027,7 +3027,7 @@ function buildCompositionView(familyId){
 // ══════════════════════════════════════
 // SPATIAL — optional 3D portfolio map
 // ══════════════════════════════════════
-const SPATIAL_LIB = "https://cdn.jsdelivr.net/npm/3d-force-graph@1.73.5/dist/3d-force-graph.min.js";
+const SPATIAL_LIB = "vendor/3d-force-graph.min.js";
 const spatialState = { graph: null, active: false, libPromise: null, resizeObs: null };
 
 function getSpatialDims(){
@@ -3068,7 +3068,10 @@ function loadSpatialLib(){
     const s = document.createElement("script");
     s.src = SPATIAL_LIB;
     s.async = true;
-    s.onload = () => resolve();
+    s.onload = () => {
+      if (window.ForceGraph3D) resolve();
+      else { spatialState.libPromise = null; reject(new Error("spatial-export")); }
+    };
     s.onerror = () => { spatialState.libPromise = null; reject(new Error("spatial-lib")); };
     document.head.appendChild(s);
   });
@@ -3114,9 +3117,9 @@ function initSpatialGraph(){
       const d = nodeById[node.id];
       if (d) selectNodeSpatial(d, node);
     })
-    .onNodeHover(node => { document.body.style.cursor = node ? "pointer" : null; })
-    .d3Force("charge").strength(-120)
-    .d3Force("link").distance(l => l.type === "direct" ? 55 : 90);
+    .onNodeHover(node => { document.body.style.cursor = node ? "pointer" : null; });
+  spatialState.graph.d3Force("charge").strength(-120);
+  spatialState.graph.d3Force("link").distance(l => l.type === "direct" ? 55 : 90);
 
   if (!spatialState.resizeObs){
     spatialState.resizeObs = new ResizeObserver(() => {
@@ -3175,8 +3178,17 @@ function enterSpatialView(){
       const dims = getSpatialDims();
       if (spatialState.graph) spatialState.graph.width(dims.w).height(dims.h);
     })
-    .catch(() => {
-      if (typeof showToast === "function") showToast("Spatial view needs network access to load the 3D library.");
+    .catch(err => {
+      const reason = err && err.message;
+      let msg = "Spatial view failed to start.";
+      if (reason === "spatial-lib" || reason === "spatial-export"){
+        msg = "Spatial view could not load the 3D library.";
+      } else if (!window.WebGLRenderingContext){
+        msg = "Spatial view needs WebGL, which is unavailable in this browser.";
+      } else {
+        msg = "Spatial view failed to start (WebGL may be disabled or unavailable).";
+      }
+      if (typeof showToast === "function") showToast(msg);
       applyViewLevel("families");
     });
 }
@@ -4774,7 +4786,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.7.0";
+const APP_VERSION   = "2.7.1";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -5064,6 +5076,10 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.7.1", date:"2026-05-31", items:[
+    "Spatial view — 3D library bundled locally (vendor/3d-force-graph.min.js) so Spatial works without external CDN access on corporate networks.",
+    "Clearer Spatial error messages when WebGL or library init fails."
+  ]},
   {ver:"2.7.0", date:"2026-05-31", items:[
     "Spatial view — optional 3D map of product families: orbit, zoom, and click any node to open the detail panel. Respects category / use-case / industry filters and highlights stack items.",
     "Spatial view persists in localStorage like other view modes; press Esc (with panel closed) or the breadcrumb × to return to Families."
