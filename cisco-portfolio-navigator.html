@@ -4479,7 +4479,7 @@ document.addEventListener("keydown",ev=>{
   // The old "cisco-portfolio-tour-completed-v1" key still suppresses the *first-time* tour
   // for users who already completed v1; they can re-launch the latest via the ? button.
   const STORAGE_KEY = "cisco-portfolio-tour-completed-v1";
-  const TOUR_VERSION = "v2.4";
+  const TOUR_VERSION = "v2.5";
   const STORAGE_KEY_LATEST = "cisco-portfolio-tour-latest-seen";
 
   // Inject DOM
@@ -4510,9 +4510,10 @@ document.addEventListener("keydown",ev=>{
       title: "Welcome to the Cisco Portfolio Navigator",
       body: `This tool helps you <strong>explore the Cisco portfolio</strong>,
              <strong>build account plans</strong> with augment / replace / bundle
-             recommendations, <strong>visualize EOS/EOL timelines</strong>, and even
-             generate stacks with a built-in <strong>AI assistant</strong>.<br><br>
-             We'll cover the highlights in ~90 seconds. Skip any time with
+             recommendations, <strong>visualize EOS/EOL timelines</strong>, browse an
+             optional <strong>3D Spatial map</strong>, and generate stacks with a built-in
+             <strong>AI assistant</strong>.<br><br>
+             We'll cover the highlights in ~2 minutes. Skip any time with
              <code>Esc</code> or the Skip button.`
     },
 
@@ -4530,18 +4531,33 @@ document.addEventListener("keydown",ev=>{
     // ── View modes ───────────────────────────────────────────────────────────
     {
       target: "#vm-seg", place: "bottom",
-      title: "Drill down through four levels of detail",
+      title: "Five ways to explore the portfolio",
       body: `Same data, multiple lenses — pick whichever zoom level fits the question you're asking:
              <ul style="margin:8px 0 0 16px;padding:0">
                <li><b>Overview</b> — 5 category bubbles. Best for first-look conversations.</li>
-               <li><b>Families</b> — 52 product families <em>(default)</em>. The classic map of how things connect.</li>
+               <li><b>Families</b> — 52 product families <em>(default)</em>. The classic 2D map of how things connect.</li>
                <li><b>Composition</b> — one family pinned in the middle, every specific SKU around it, with dashed purple <em>"replaced by"</em> arrows to successor products.</li>
                <li><b>All</b> — every family + every product (~350 nodes) in one dense graph. Power-user view.</li>
-               <li><b>Spatial</b> — optional 3D map of families with always-visible name labels; double-click a family to explore its products in 3D.</li>
+               <li><b>Spatial</b> — immersive 3D map of families with always-visible name labels; orbit and zoom freely.</li>
              </ul>`,
-      tip: `<b>Two fast ways into Composition:</b> double-click any family bubble in Families mode, or click the bright <em>"Explore N products"</em> button on any family's detail panel. A breadcrumb chip appears under the topbar so you always know where you are.`,
+      tip: `<b>Two fast ways into Composition (2D or Spatial):</b> double-click any family bubble, or click <em>"Explore N products"</em> on its detail panel. In Spatial, double-click drills into a 3D composition where products orbit the family node. A breadcrumb chip under the topbar tracks your level — <code>Esc</code> steps back.`,
       before: () => {
-        // Make sure we're in Families mode so the segmented control is in its default state.
+        if (window.getViewMode && window.getViewMode() !== "families") {
+          window.applyViewLevel && window.applyViewLevel("families");
+        }
+      }
+    },
+
+    {
+      target: '#vm-seg button[data-vm="spatial"]', place: "bottom",
+      title: "Spatial view — 3D portfolio map",
+      body: `Switch to <strong>Spatial</strong> for an immersive 3D force graph of product families.
+             Every node shows an always-visible name label. Click a family for its detail panel;
+             filters (category, use case, industry) and stack highlights work the same as in 2D.<br><br>
+             <strong>Double-click</strong> a family — or use <em>Explore N products</em> on the panel —
+             to drill into a 3D composition where SKUs orbit the family center, with purple succession links.`,
+      tip: `Spatial libraries are bundled locally (no CDN). Press <code>Esc</code> with the panel closed to step back one level, or return all the way to Families. Requires WebGL.`,
+      before: () => {
         if (window.getViewMode && window.getViewMode() !== "families") {
           window.applyViewLevel && window.applyViewLevel("families");
         }
@@ -4566,13 +4582,20 @@ document.addEventListener("keydown",ev=>{
     {
       target: "#gw", place: "left",
       title: "The interactive graph",
-      body: `Each <strong>node</strong> is a product family, color-coded by category.
+      body: `In 2D modes, each <strong>node</strong> is a product family, color-coded by category.
              <strong>Solid lines</strong> are direct integrations; <strong>dashed lines</strong>
              are adjacent / complementary.<br><br>
              <strong>Click</strong> any node for details · <strong>Double-click</strong>
              a family to drill into its products (Composition mode) ·
              <strong>Right-click</strong> for a quick action menu ·
-             <strong>Scroll</strong> to zoom · <strong>Drag</strong> to pan.`,
+             <strong>Scroll</strong> to zoom · <strong>Drag</strong> to pan.<br><br>
+             Switch to <strong>Spatial</strong> for the same relationships in 3D — orbit with drag,
+             zoom with scroll, and double-click families to explore products in depth.`,
+      before: () => {
+        if (window.getViewMode && window.getViewMode() === "spatial") {
+          window.applyViewLevel && window.applyViewLevel("families");
+        }
+      }
     },
 
     // ── Plans + sharing ──────────────────────────────────────────────────────
@@ -4597,10 +4620,13 @@ document.addEventListener("keydown",ev=>{
       body: `The fastest way to build a plan: a <strong>5-step wizard</strong> that walks
              you through industry, customer size, what's already deployed, and any
              legacy refresh triggers — then auto-builds the stack and runs analysis.<br><br>
+             On the results screen, pick an <strong>AI deliverable</strong> — executive summary,
+             90-day roadmap, customer follow-up email, or capability gap analysis — and generate
+             it inline without leaving the wizard. Results persist with your session.<br><br>
              When you're done, the button stays <strong>Guided Plan</strong> with a green
              outline so you can return to your results, edit answers, or Ask AI without starting over.`,
-      tip: `Press <code>G</code> from anywhere to launch it. You can refine everything
-            afterward in the Account Planner.`,
+      tip: `Press <code>G</code> from anywhere to launch it. Generated deliverables can be
+            included as polished slides when you export to PowerPoint.`,
       before: () => {
         document.getElementById("plans-menu")?.classList.remove("show");
         document.getElementById("gw-overlay")?.classList.remove("show");
@@ -4670,8 +4696,8 @@ document.addEventListener("keydown",ev=>{
              <strong style="color:#f87171">Replace</strong> — EOL/EOS items with their official successors<br>
              <strong>Bundles</strong> — pre-defined solution bundles the stack partially covers<br>
              <strong>Coverage</strong> — use cases & industries the current stack addresses<br>
-             <strong style="color:#f59e0b">Migrate</strong> <span style="opacity:.6">(new)</span> — actionable migration plan with dates &amp; successors<br>
-             <strong style="color:#ef4444">Warnings</strong> <span style="opacity:.6">(new)</span> — compatibility &amp; dependency gaps in your stack`,
+             <strong style="color:#f59e0b">Migrate</strong> — actionable migration plan with dates &amp; successors<br>
+             <strong style="color:#ef4444">Warnings</strong> — compatibility &amp; dependency gaps in your stack`,
     },
 
     // ── Detail panel goodies ─────────────────────────────────────────────────
@@ -4681,7 +4707,7 @@ document.addEventListener("keydown",ev=>{
       body: `Click any node or product for a detail panel with description, links,
              use cases, and industries.
              <ul style="margin:6px 0 0 16px;padding:0">
-               <li><b>Explore N products →</b> <span style="opacity:.6">(new in v2.1)</span> — bright button that drills the graph into Composition mode for this family</li>
+               <li><b>Explore N products →</b> — drills into Composition (2D) or Spatial composition (3D) for this family</li>
                <li><b>Breadcrumbs</b> — back/forward navigation through visited items</li>
                <li><b>Licensing tier badge</b> — DNA / Advantage / Premier and similar</li>
                <li><b>Field notices</b> — surfaced PSIRT advisories where relevant</li>
@@ -4716,8 +4742,9 @@ document.addEventListener("keydown",ev=>{
       body: `Generate a shareable plan in <strong>Markdown, CSV, JSON, PDF (via
              print), PowerPoint (.pptx),</strong> or plain text. Each export
              includes the stack, EOS/EOL migration paths, top recommendations,
-             and bundle coverage. PowerPoint produces a 4–6 slide deck
-             ready to drop into a customer conversation.`,
+             and bundle coverage. PowerPoint produces a customer-ready deck — including
+             an Account Discovery Summary and one polished slide per AI deliverable
+             you generated in Guided Plan.`,
       before: () => {
         // Close the planner so the export button (lower in planner) is visible
         document.getElementById("exp-menu")?.classList.remove("show");
@@ -4751,8 +4778,10 @@ document.addEventListener("keydown",ev=>{
              Zoom"</em>), justify recommendations, or compare options.
              <strong>Bring your own key</strong> — OpenRouter, Groq, LM Studio,
              Ollama, OpenAI, Anthropic, or any OpenAI-compatible endpoint.<br><br>
-             Click Configure to pick a provider — the dialog tells you which
-             options work from <code>file://</code> vs need a local HTTP server.`,
+             When you have an account plan (Guided Plan or manual stack), the assistant
+             automatically includes that context in its answers. Click Configure to pick
+             a provider — the dialog tells you which options work from <code>file://</code>
+             vs need a local HTTP server.`,
     },
 
     // ── Footer + changelog + shortcuts ───────────────────────────────────────
@@ -4763,7 +4792,8 @@ document.addEventListener("keydown",ev=>{
              (changelog) and the keyboard shortcuts cheat-sheet.<br><br>
              Try <code>?</code> any time to relaunch this tour, <code>G</code> for Guided Plan,
              <code>/</code> to focus search, <code>a</code> to open the AI assistant,
-             <code>t</code> to toggle the timeline.`,
+             <code>t</code> to toggle the timeline. In Spatial view, <code>Esc</code> steps
+             back one level at a time.`,
     },
 
     // ── Wrap-up ──────────────────────────────────────────────────────────────
@@ -4808,6 +4838,9 @@ document.addEventListener("keydown",ev=>{
       document.getElementById("cmp-panel")?.classList.remove("open");
       window.__cpnV2?.phases?.closeCompare?.();
       window.closePanel && window.closePanel();
+      if (window.getViewMode && window.getViewMode() === "spatial") {
+        window.applyViewLevel && window.applyViewLevel("families");
+      }
     } catch(e){}
     if (completed) {
       try {
@@ -4964,7 +4997,7 @@ document.addEventListener("keydown",ev=>{
   } else if (latestSeen !== TOUR_VERSION) {
     // Returning user — show a persistent "new" badge until they re-take it
     fab.classList.add("pulse", "new-badge");
-    fab.title = "Take the updated tour (new features in v2)";
+    fab.title = "Take the updated tour (Spatial view & Guided Plan AI)";
     setTimeout(() => fab.classList.remove("pulse"), 8000);
   } else {
     // Already seen the latest tour — just a brief pulse on load
@@ -5298,19 +5331,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
   {ver:"2.7.3", date:"2026-05-31", items:[
-    "Spatial view — double-click a family to drill into a 3D composition (products orbit the family node); Esc or breadcrumb steps back one level.",
-    "Fixed overlapping hint bars in Spatial view (2D graph hint hidden while Spatial is active)."
-  ]},
-  {ver:"2.7.2", date:"2026-05-31", items:[
-    "Spatial view — always-visible family name labels on every node (vendored three-spritetext), with highlight styling for selection and stack items."
-  ]},
-  {ver:"2.7.1", date:"2026-05-31", items:[
-    "Spatial view — 3D library bundled locally (vendor/3d-force-graph.min.js) so Spatial works without external CDN access on corporate networks.",
-    "Clearer Spatial error messages when WebGL or library init fails."
-  ]},
-  {ver:"2.7.0", date:"2026-05-31", items:[
-    "Spatial view — optional 3D map of product families: orbit, zoom, and click any node to open the detail panel. Respects category / use-case / industry filters and highlights stack items.",
-    "Spatial view persists in localStorage like other view modes; press Esc (with panel closed) or the breadcrumb × to return to Families."
+    "Spatial view — optional 3D map of product families: orbit and zoom the graph, always-visible name labels, click any node for the detail panel. Respects category / use-case / industry filters, highlights stack items, and persists in localStorage like other view modes (Esc or breadcrumb × to return to Families).",
+    "Double-click a family — or use Explore N products on its detail panel — to drill into a 3D composition where products orbit the family node with purple succession links; Esc or the breadcrumb steps back one level at a time.",
+    "Spatial runs fully offline — 3D and label libraries are bundled locally (no CDN). Clearer errors when WebGL or init fails; the 2D graph hint bar is hidden while Spatial is active."
   ]},
   {ver:"2.6.1", date:"2026-05-31", items:[
     "Guided Plan — 5-step wizard (industry → size → capabilities → legacy refresh) that builds your stack, runs analysis, and persists your session so you can reopen, edit answers, or start over.",
