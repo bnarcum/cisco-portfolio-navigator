@@ -4009,7 +4009,7 @@ document.addEventListener("keydown",ev=>{
   // The old "cisco-portfolio-tour-completed-v1" key still suppresses the *first-time* tour
   // for users who already completed v1; they can re-launch the latest via the ? button.
   const STORAGE_KEY = "cisco-portfolio-tour-completed-v1";
-  const TOUR_VERSION = "v2.3";
+  const TOUR_VERSION = "v2.4";
   const STORAGE_KEY_LATEST = "cisco-portfolio-tour-latest-seen";
 
   // Inject DOM
@@ -4129,7 +4129,8 @@ document.addEventListener("keydown",ev=>{
       body: `The fastest way to build a plan: a <strong>5-step wizard</strong> that walks
              you through industry, customer size, what's already deployed, and any
              legacy refresh triggers — then auto-builds the stack and runs analysis.<br><br>
-             Great for first conversations when you don't know the full stack yet.`,
+             When you're done, the button becomes <strong>Review plan</strong> so you can
+             return to your results, edit answers, or Ask AI without starting over.`,
       tip: `Press <code>G</code> from anywhere to launch it. You can refine everything
             afterward in the Account Planner.`,
       before: () => {
@@ -4538,7 +4539,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.4.3";
+const APP_VERSION   = "2.4.4";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -4827,6 +4828,10 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.4.4", date:"2026-05-31", items:[
+    "Guided Plan session persistence — reopen lands on your reveal screen; Edit answers, Start over, and Back from results.",
+    "Top bar shows Review plan when a guided session exists; Ask AI labeling unified; Configure AI hint when no API key."
+  ]},
   {ver:"2.4.3", date:"2026-05-31", items:[
     "Guided Plan reveal: Ask AI quick-action chips (exec summary, 90-day roadmap, customer email, explain gap) plus footer Ask AI button.",
     "AI Assistant now includes current account plan context (stack, augmentations, legacy migrations, bundle gaps) when a plan exists."
@@ -5111,8 +5116,10 @@ STYLE.textContent = `
   .gw-btn.primary:disabled{opacity:.35;cursor:not-allowed}
   .gw-btn.ghost{background:transparent;border-color:transparent;color:var(--subtle)}
   .gw-btn.ghost:hover{color:var(--text)}
-
-  /* Detail panel tiers + photos + breadcrumbs */
+  .gw-ai-hint{font-size:10.5px;color:var(--subtle);margin-top:8px;line-height:1.45}
+  .gw-ai-hint button{background:none;border:none;padding:0;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;text-decoration:underline}
+  #guided-btn.has-plan{border-color:var(--green);color:var(--green)}
+  #guided-btn.has-plan:hover{background:rgba(45,206,92,.1)}
   .p-tier{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:5px;
     font-size:10px;font-weight:600;background:var(--surface3);color:var(--muted);margin-right:5px}
   .p-tier .dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
@@ -6455,7 +6462,70 @@ const WIZARD_SIZES = [
 ];
 
 let wizardOpen = false;
-const wizardState = { step: 1, industry: null, size: null, domains: new Set(), legacy: new Set() };
+const wizardState = {
+  step: 1, industry: null, size: null,
+  domains: new Set(), legacy: new Set(),
+  completed: false, needsReapply: false, appliedFp: null
+};
+
+function wizardFingerprint() {
+  return JSON.stringify({
+    i: wizardState.industry, s: wizardState.size,
+    d: [...wizardState.domains].sort(), l: [...wizardState.legacy].sort()
+  });
+}
+
+function wizardIsComplete() {
+  return wizardState.completed && wizardState.industry && wizardState.size;
+}
+
+function markWizardDirty() {
+  if (wizardState.completed) wizardState.needsReapply = true;
+}
+
+function refreshGuidedBtnLabel() {
+  const btn = $("#guided-btn");
+  if (!btn) return;
+  const label = wizardIsComplete() ? "Review plan" : "Guided Plan";
+  const textNode = [...btn.childNodes].find(n => n.nodeType === 3);
+  if (textNode) textNode.textContent = " " + label;
+  btn.classList.toggle("has-plan", wizardIsComplete());
+  btn.title = wizardIsComplete()
+    ? "Review your guided plan — edit answers or Ask AI"
+    : "Step-by-step guided account plan";
+}
+
+function wizardResetAll() {
+  wizardState.step = 1;
+  wizardState.industry = null;
+  wizardState.size = null;
+  wizardState.domains.clear();
+  wizardState.legacy.clear();
+  wizardState.completed = false;
+  wizardState.needsReapply = false;
+  wizardState.appliedFp = null;
+  refreshGuidedBtnLabel();
+}
+
+function aiIsConfigured() {
+  const key = lsGet(STORAGE_KEYS.aiKey, "");
+  const cfg = lsGet(STORAGE_KEYS.aiCfg, {});
+  return !!(key && cfg.url);
+}
+
+function wizardUpdateFooterForStep() {
+  const onReveal = wizardState.step === 5;
+  const editBtn = $("#gw-edit");
+  const resetBtn = $("#gw-reset");
+  const gBtn = $("#gw-graph");
+  const aiBtn = $("#gw-ai");
+  const btnBack = $("#gw-back");
+  if (editBtn) editBtn.style.display = onReveal ? "inline-block" : "none";
+  if (resetBtn) resetBtn.style.display = onReveal ? "inline-block" : "none";
+  if (gBtn) gBtn.style.display = onReveal ? "inline-block" : "none";
+  if (aiBtn) aiBtn.style.display = onReveal ? "inline-block" : "none";
+  if (btnBack) btnBack.style.visibility = wizardState.step > 1 ? "visible" : "hidden";
+}
 
 const WIZARD_AI_PROMPTS = [
   { label: "Exec summary", q: "Write a concise executive summary of this account plan for my sales leader — current situation, stack strengths, gaps, and recommended next steps." },
@@ -6507,6 +6577,10 @@ function wizardApplyPlan() {
   analyzed = true;
   scheduleAutoSave();
   window.runAnalysis();
+  wizardState.appliedFp = wizardFingerprint();
+  wizardState.completed = true;
+  wizardState.needsReapply = false;
+  refreshGuidedBtnLabel();
 }
 
 function wizardNarrative() {
@@ -6548,10 +6622,11 @@ function wizardRenderStep() {
     d.classList.toggle("done", i + 1 < wizardState.step);
     d.classList.toggle("cur", i + 1 === wizardState.step);
   });
-  footLbl.textContent = `Step ${wizardState.step} of 5`;
-  btnBack.style.visibility = wizardState.step > 1 && wizardState.step < 5 ? "visible" : "hidden";
+  footLbl.textContent = wizardState.step === 5 ? "Your plan" : `Step ${wizardState.step} of 5`;
+  btnBack.style.visibility = wizardState.step > 1 ? "visible" : "hidden";
   btnNext.textContent = wizardState.step === 4 ? "Build my plan →" : wizardState.step === 5 ? "Open full analysis" : "Continue";
   btnNext.classList.toggle("primary", true);
+  wizardUpdateFooterForStep();
 
   if (wizardState.step === 1) {
     body.innerHTML = `
@@ -6572,6 +6647,7 @@ function wizardRenderStep() {
       card.addEventListener("click", () => {
         wizardState.industry = card.dataset.id;
         wizardState.domains.clear();
+        markWizardDirty();
         body.querySelectorAll(".gw-card").forEach(c => c.classList.toggle("sel", c.dataset.id === wizardState.industry));
         const t = INDUSTRY_TEMPLATES.find(x => x.id === wizardState.industry);
         const prev = $("#gw-ind-preview");
@@ -6594,6 +6670,7 @@ function wizardRenderStep() {
     body.querySelectorAll(".gw-card").forEach(card => {
       card.addEventListener("click", () => {
         wizardState.size = card.dataset.id;
+        markWizardDirty();
         body.querySelectorAll(".gw-card").forEach(c => c.classList.toggle("sel", c.dataset.id === wizardState.size));
         btnNext.disabled = false;
       });
@@ -6618,6 +6695,7 @@ function wizardRenderStep() {
         const id = tile.dataset.id;
         if (wizardState.domains.has(id)) wizardState.domains.delete(id);
         else wizardState.domains.add(id);
+        markWizardDirty();
         tile.classList.toggle("sel", wizardState.domains.has(id));
         const cnt = wizardBuildStackIds().size;
         const prev = body.querySelector(".gw-preview");
@@ -6644,6 +6722,7 @@ function wizardRenderStep() {
         const id = tile.dataset.id;
         if (wizardState.legacy.has(id)) wizardState.legacy.delete(id);
         else wizardState.legacy.add(id);
+        markWizardDirty();
         tile.classList.toggle("sel", wizardState.legacy.has(id));
         const prev = body.querySelector(".gw-preview");
         if (prev) prev.innerHTML = wizardState.legacy.size
@@ -6653,16 +6732,23 @@ function wizardRenderStep() {
     });
     btnNext.disabled = false;
   } else if (wizardState.step === 5) {
-    body.innerHTML = `<div id="gw-reveal"><div class="gw-spin">Building your account map…</div></div>`;
-    btnBack.style.visibility = "hidden";
+    const reapply = wizardState.needsReapply || !wizardState.completed;
     btnNext.disabled = true;
     footLbl.textContent = "Your plan";
-    setTimeout(() => wizardShowReveal(), 600);
+    if (reapply) {
+      body.innerHTML = `<div id="gw-reveal"><div class="gw-spin">Building your account map…</div></div>`;
+      wizardUpdateFooterForStep();
+      setTimeout(() => wizardShowReveal({ reapply: true }), 600);
+    } else {
+      wizardShowReveal({ reapply: false });
+    }
   }
 }
 
-function wizardShowReveal() {
-  wizardApplyPlan();
+function wizardShowReveal(opts = {}) {
+  const reapply = opts.reapply !== false;
+  if (reapply) wizardApplyPlan();
+  else if (!analyzed && stack.size) window.runAnalysis();
   const t = INDUSTRY_TEMPLATES.find(x => x.id === wizardState.industry);
   const eff = new Set([...stack].map(id => getEffectiveNodeId(id)));
   const bundles = BUNDLES.map(b => {
@@ -6674,6 +6760,9 @@ function wizardShowReveal() {
   const recs = wizardTopRecs(3);
   const repCnt = $("#rep-cnt")?.textContent || "0";
   const acct = $("#acct-name")?.value.trim() || "Your account";
+  const aiHint = aiIsConfigured()
+    ? ""
+    : `<div class="gw-ai-hint">First time using Ask AI? <button type="button" id="gw-ai-cfg">Configure AI</button> once (OpenRouter recommended). Your plan stays here when you return.</div>`;
 
   $("#gw-body").innerHTML = `
     <div id="gw-reveal">
@@ -6688,39 +6777,45 @@ function wizardShowReveal() {
         ${recs.length ? `<div class="gw-toprecs"><strong style="color:var(--text);font-size:11px">Top augmentations</strong><ul>${recs.map(r => `<li>${escapeHtml(r)}</li>`).join("")}</ul></div>` : ""}
         ${weak.pct < 50 ? `<div style="margin-top:10px;font-size:11px;color:var(--orange)">Gap alert: ${escapeHtml(weak.name)} at ${weak.pct}% coverage</div>` : ""}
         <div class="gw-ai-section">
-          <div class="gw-ai-lbl">Ask AI about this plan</div>
+          <div class="gw-ai-lbl">Ask AI — exec summary, email, roadmap &amp; more</div>
           <div class="gw-ai-chips" id="gw-ai-chips">
             ${WIZARD_AI_PROMPTS.map(p => `<button type="button" class="gw-ai-chip" data-q="${escapeHtml(p.q)}">${escapeHtml(p.label)}</button>`).join("")}
           </div>
+          ${aiHint}
         </div>
       </div>
     </div>`;
   $("#gw-body").querySelectorAll(".gw-ai-chip").forEach(chip => {
     chip.addEventListener("click", () => wizardAskAi(chip.dataset.q));
   });
+  $("#gw-ai-cfg")?.addEventListener("click", () => {
+    closeGuidedWizard(false);
+    $("#ai-panel")?.classList.add("show");
+    $("#ai-cfg")?.click();
+  });
   $("#gw-next").disabled = false;
   $("#gw-next").textContent = "Open full analysis";
-  const gBtn = $("#gw-graph");
-  if (gBtn) gBtn.style.display = "inline-block";
-  const aiBtn = $("#gw-ai");
-  if (aiBtn) aiBtn.style.display = "inline-block";
+  wizardUpdateFooterForStep();
   highlightStack();
 }
 
 function openGuidedWizard() {
-  wizardState.step = 1;
-  wizardState.industry = null;
-  wizardState.size = null;
-  wizardState.domains.clear();
-  wizardState.legacy.clear();
   wizardOpen = true;
-  const gBtn = $("#gw-graph");
-  if (gBtn) gBtn.style.display = "none";
-  const aiBtn = $("#gw-ai");
-  if (aiBtn) aiBtn.style.display = "none";
+  if (wizardIsComplete()) {
+    wizardState.step = 5;
+  } else if (!wizardState.industry) {
+    wizardState.step = 1;
+  }
+  // else: resume in-progress step (unchanged)
   $("#gw-overlay").classList.add("show");
   document.body.style.overflow = "hidden";
-  wizardRenderStep();
+  if (wizardState.step === 5 && wizardIsComplete() && !wizardState.needsReapply) {
+    wizardUpdateFooterForStep();
+    wizardShowReveal({ reapply: false });
+  } else {
+    wizardUpdateFooterForStep();
+    wizardRenderStep();
+  }
 }
 
 function closeGuidedWizard(openPlannerAfter) {
@@ -6743,7 +6838,7 @@ function wizardNext() {
 }
 
 function wizardBack() {
-  if (wizardState.step <= 1 || wizardState.step >= 5) return;
+  if (wizardState.step <= 1) return;
   wizardState.step--;
   wizardRenderStep();
 }
@@ -6765,7 +6860,9 @@ function buildGuidedWizard() {
       <div id="gw-foot">
         <span class="gw-step-lbl" id="gw-step-lbl">Step 1 of 5</span>
         <div class="gw-actions">
-          <button type="button" class="gw-btn ghost" id="gw-skip">Skip wizard</button>
+          <button type="button" class="gw-btn ghost" id="gw-edit" style="display:none">Edit answers</button>
+          <button type="button" class="gw-btn ghost" id="gw-reset" style="display:none">Start over</button>
+          <button type="button" class="gw-btn ghost" id="gw-skip">Close</button>
           <button type="button" class="gw-btn ai-accent" id="gw-ai" style="display:none">Ask AI</button>
           <button type="button" class="gw-btn" id="gw-graph" style="display:none">Explore graph</button>
           <button type="button" class="gw-btn" id="gw-back">Back</button>
@@ -6776,6 +6873,12 @@ function buildGuidedWizard() {
   document.body.appendChild(ov);
   $("#guided-btn")?.addEventListener("click", openGuidedWizard);
   $("#gw-skip").addEventListener("click", () => closeGuidedWizard(false));
+  $("#gw-edit").addEventListener("click", () => { wizardState.step = 1; wizardRenderStep(); });
+  $("#gw-reset").addEventListener("click", () => {
+    if (!confirm("Start over? Your guided plan answers will be cleared. The current stack in Account Planner stays until you build a new plan.")) return;
+    wizardResetAll();
+    wizardRenderStep();
+  });
   $("#gw-back").addEventListener("click", wizardBack);
   $("#gw-next").addEventListener("click", wizardNext);
   $("#gw-graph").addEventListener("click", () => { closeGuidedWizard(false); highlightStack(); });
@@ -7790,14 +7893,14 @@ function applyFacets(){
    ════════════════════════════════════════════════════════════════════════*/
 function buildAiAssistant(){
   const fab = document.createElement("button");
-  fab.id = "ai-fab"; fab.title = "AI assistant — generate stacks, justify recs";
+  fab.id = "ai-fab"; fab.title = "Ask AI — generate stacks, justify recs (BYOK)";
   document.body.appendChild(fab);
 
   const p = document.createElement("div");
   p.id = "ai-panel";
   p.innerHTML = `
     <div class="ai-h">
-      <div class="t">AI Assistant <span style="font-weight:400;color:var(--muted);font-size:10px;margin-left:6px">BYOK</span></div>
+      <div class="t">Ask AI <span style="font-weight:400;color:var(--muted);font-size:10px;margin-left:6px">BYOK</span></div>
       <div class="acts">
         <button id="ai-cfg">Configure</button>
         <button id="ai-clr">Clear</button>
@@ -8097,7 +8200,14 @@ async function sendAi(){
   const cfg = lsGet(STORAGE_KEYS.aiCfg, {});
   if (!key || !cfg.url){
     const e = document.createElement("div"); e.className = "ai-m err";
-    e.innerHTML = `No API key configured. Click <strong>Configure</strong> to add an OpenAI-compatible endpoint, model, and key.`;
+    e.innerHTML = `No API key configured. Set up Ask AI once — your guided plan stays saved when you return.`;
+    const fixWrap = document.createElement("div");
+    fixWrap.style.cssText = "margin-top:10px;display:flex;gap:6px;flex-wrap:wrap";
+    const b1 = document.createElement("button"); b1.className = "ai-cfg-fix";
+    b1.textContent = "Configure AI";
+    b1.addEventListener("click", () => $("#ai-cfg").click());
+    fixWrap.appendChild(b1);
+    e.appendChild(fixWrap);
     wrap.appendChild(e); wrap.scrollTop = wrap.scrollHeight; return;
   }
   const loading = document.createElement("div"); loading.className = "ai-m bot ai-loading";
@@ -8326,6 +8436,7 @@ function boot(){
   buildProfileBox();
   buildTemplatesStrip();
   buildGuidedWizard();
+  refreshGuidedBtnLabel();
   addPlannerTabs();
   buildComparePanel();
   buildRecentPinned();
