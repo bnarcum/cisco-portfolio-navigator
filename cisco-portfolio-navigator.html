@@ -4042,9 +4042,7 @@ document.addEventListener("keydown",ev=>{
              recommendations, <strong>visualize EOS/EOL timelines</strong>, and even
              generate stacks with a built-in <strong>AI assistant</strong>.<br><br>
              We'll cover the highlights in ~90 seconds. Skip any time with
-             <code>Esc</code> or the Skip button.`,
-      tip: `<b>New in v2.4:</b> <strong>Guided Plan</strong> wizard — build a customer stack in 5 taps
-            (industry → size → capabilities → legacy refresh → instant recommendations).`
+             <code>Esc</code> or the Skip button.`
     },
 
     // ── Top bar fundamentals ─────────────────────────────────────────────────
@@ -4538,7 +4536,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.4.5";
+const APP_VERSION   = "2.5.0";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -4827,36 +4825,12 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
-  {ver:"2.4.5", date:"2026-05-31", items:[
-    "Fix: Guided Plan top-bar label no longer duplicates; button always reads Guided Plan (green outline when a session exists).",
-    "Floating AI button now labeled Ask AI.",
-    "PowerPoint export adds an Account Discovery Summary slide when the plan was built via Guided Plan."
-  ]},
-  {ver:"2.4.4", date:"2026-05-31", items:[
-    "Guided Plan session persistence — reopen lands on your reveal screen; Edit answers, Start over, and Back from results.",
-    "Top bar shows Review plan when a guided session exists; Ask AI labeling unified; Configure AI hint when no API key."
-  ]},
-  {ver:"2.4.3", date:"2026-05-31", items:[
-    "Guided Plan reveal: Ask AI quick-action chips (exec summary, 90-day roadmap, customer email, explain gap) plus footer Ask AI button.",
-    "AI Assistant now includes current account plan context (stack, augmentations, legacy migrations, bundle gaps) when a plan exists."
-  ]},
-  {ver:"2.4.2", date:"2026-05-31", items:[
-    "Favicon — portfolio graph icon shows in browser tabs and bookmarks (inline SVG).",
-    "Guided tour updated with a new Guided Plan step; tour version bumped to v2.3."
-  ]},
-  {ver:"2.4.1", date:"2026-05-31", items:[
-    "Fix: Guided Plan Continue button stayed disabled after selecting an industry on step 1."
-  ]},
-  {ver:"2.4.0", date:"2026-05-30", items:[
-    "Guided Plan wizard — 5-step flow (industry, size, capabilities, legacy refresh) that builds your stack and runs analysis automatically.",
-    "New Guided Plan button in the top bar; reveal screen summarizes stack size, bundle coverage, and top recommendations with one-click jump to planner or graph."
-  ]},
-  {ver:"2.3.9", date:"2026-05-30", items:[
-    "PowerPoint export: simple client-ready deck — title, current stack table, top recommendations, bundle coverage, and footer."
-  ]},
-  {ver:"2.2.1", date:"2026-05-30", items:[
-    "Fix: timeline horizontal scrollbar now visible — the bottom footer / hint / tools chrome was painting over it. Switched to a :has(#tl-wrap.show) selector with !important so the chrome hides off pure DOM state regardless of cache or class-timing.",
-    "Fix: category chips, use-case dropdown, industry dropdown, and Filters drawer now apply in Timeline view — the renderer was iterating PRODUCTS unconditionally. Refactored to reuse the same predicate as the graph view, and re-renders the timeline on every filter change while open."
+  {ver:"2.5.0", date:"2026-05-31", items:[
+    "Guided Plan — 5-step wizard (industry → size → capabilities → legacy refresh) that builds your stack, runs analysis, and persists your session so you can reopen, edit answers, or start over.",
+    "Guided Plan reveal — summary with quick jumps to planner/graph; Ask AI chips for exec summary, 90-day roadmap, customer email, and gap explanation.",
+    "AI Assistant includes account plan context (stack, augmentations, legacy migrations, bundle gaps) when a plan exists.",
+    "PowerPoint export — client-ready deck with optional Account Discovery Summary slide when the plan was built via Guided Plan.",
+    "UI polish — portfolio favicon, Guided Plan tour step, Ask AI FAB label, stable top-bar Guided Plan button with green outline when a session exists."
   ]},
   {ver:"2.2.0", date:"2026-05-29", items:[
     "Catalog refresh — Cisco Live 2025 + early 2026 product wave (~28 new products, 2 new families)",
@@ -4867,10 +4841,9 @@ const CHANGELOG = [
     "Devices: Desk Pro G2 (dual-lens 4K, Agentic Director, Spatial Meetings), Wireless Phone 9821 (Wi-Fi 6E, PhoneOS, man-down detection), Desk Phone 9811 (named 7811 successor)",
     "Webex AI lineup split out: AI Codec, AI Routing, Translator Agent, Agent Assistant — discoverable individually in search and compare",
     "Data center / AI infra: Silicon One G300 ASIC, UCS C845A M8 (Secure AI Factory with NVIDIA)",
-    "EoX sweep: ip-7821 (EOL15900, Oct 2026 / Oct 2031), ip-7811 (EOL15899), conf-7832 moved to EOS; successor links corrected to point at real catalog ids"
-  ]},
-  {ver:"2.1.1", date:"2026-05-29", items:[
-    "Compare now mirrors the pinned list — pin (★) anything and it appears in the compare panel automatically. Closing the compare panel no longer wipes your pins; clicking × on a column unpins that item. Increased visible columns from 3 to 4."
+    "EoX sweep: ip-7821 (EOL15900, Oct 2026 / Oct 2031), ip-7811 (EOL15899), conf-7832 moved to EOS; successor links corrected to point at real catalog ids",
+    "Timeline view filters now match the graph (category chips, use case, industry, Filters drawer).",
+    "Fix: timeline horizontal scrollbar no longer hidden behind footer chrome."
   ]},
   {ver:"2.1.0", date:"2026-05-29", items:[
     "Four-level drill-down: Overview (5 category bubbles) → Families (52 families, the default) → Composition (one family + every product, with dashed succession edges) → All (every family + product, ~350 nodes)",
@@ -4880,6 +4853,7 @@ const CHANGELOG = [
     "Last view mode + focused family persist in localStorage and restore on reload",
     "Catalog filled in across all 52 families — 97 new specific products (Catalyst Center appliances, full SD-WAN control plane, APIC/Nexus Dashboard, Silicon One, Wi-Fi 7 APs, IoT routers, the entire Webex SKU lineup, Intersight tiers, UCS FIs + M8 servers, ThousandEyes/AppDynamics/Splunk/FSO). 200 → 297 products.",
     "Pin / Compare buttons now appear on family detail panels (not just product panels), and an inline ⇆ compare button is shown on each Recent / Pinned item",
+    "Compare mirrors the pinned list — pin anything and it appears in compare; closing compare no longer wipes pins; up to 4 columns.",
     "Smooth D3 enter/exit fade transitions between view modes; per-mode force tuning (charge / collide / link distance)",
     "Bug fix: phantom edges in the All view from stale D3-mutated link references"
   ]},
@@ -4903,20 +4877,10 @@ const CHANGELOG = [
     "Field notices / PSIRT badges (curated)",
     "Data-freshness footer + this changelog"
   ]},
-  {ver:"1.3.0", date:"2026-05-27", items:[
-    "Replaced colored node circles with category-themed SVG icons",
-  ]},
-  {ver:"1.2.0", date:"2026-05-26", items:[
-    "Guided WalkMe-style tour for first-time users",
-    "Specific Cisco EOL bulletin URLs",
-    "Account Planner search add-to-stack fix"
-  ]},
-  {ver:"1.1.0", date:"2026-05-25", items:[
-    "Expanded portfolio to 130+ specific models",
-    "EOL/EOS dates, migration paths, successor links"
-  ]},
-  {ver:"1.0.0", date:"2026-05-24", items:[
-    "Initial release with 44 product families, force-directed graph, and Account Planner"
+  {ver:"1.x", date:"May 2025", items:[
+    "Initial release — 44 product families, force-directed graph, and Account Planner",
+    "130+ specific models with EOL/EOS dates, migration paths, and successor links",
+    "Guided tour, EOL bulletin URLs, and category-themed SVG node icons"
   ]},
 ];
 
