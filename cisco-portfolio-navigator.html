@@ -4536,7 +4536,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.6.0";
+const APP_VERSION   = "2.6.1";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -4826,6 +4826,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.6.1", date:"2026-05-31", items:[
+    "PowerPoint AI deliverable slides — one slide per topic with auto-fit text; polished titles (Executive Summary, 90-Day Roadmap, etc.)."
+  ]},
   {ver:"2.6.0", date:"2026-05-31", items:[
     "Guided Plan reveal — select any or all AI deliverables (exec summary, roadmap, customer email, gap analysis) and generate inline slides without leaving the wizard.",
     "AI deliverables persist with your guided session and export to PowerPoint when generated."
@@ -5927,7 +5930,7 @@ function buildExportMenu(){
     <button class="em-item" data-fmt="pdf"><span class="em-icon">🖨</span>
       <div><div>Print → PDF</div><div class="em-sub">Browser print dialog</div></div></button>
     <button class="em-item" data-fmt="pptx"><span class="em-icon">▦</span>
-      <div><div>PowerPoint (.pptx)</div><div class="em-sub">Simple deck — stack, recs, bundles</div></div></button>
+      <div><div>PowerPoint (.pptx)</div><div class="em-sub">Deck — stack, recs, bundles, AI deliverables</div></div></button>
     <div class="em-sep"></div>
     <button class="em-item" data-fmt="txt"><span class="em-icon">📄</span>
       <div><div>Plain text (clipboard)</div><div class="em-sub">Quick copy for chat / email</div></div></button>
@@ -6105,37 +6108,19 @@ function exportPDF(){
   }, 100);
 }
 
-function pptxSplitText(text, maxLen = 1400) {
-  if (!text || text.length <= maxLen) return [text];
-  const chunks = [];
-  let rest = text;
-  while (rest.length > maxLen) {
-    let cut = rest.lastIndexOf("\n\n", maxLen);
-    if (cut < maxLen * 0.5) cut = rest.lastIndexOf("\n", maxLen);
-    if (cut < maxLen * 0.5) cut = rest.lastIndexOf(" ", maxLen);
-    if (cut < 0) cut = maxLen;
-    chunks.push(rest.slice(0, cut).trim());
-    rest = rest.slice(cut).trim();
-  }
-  if (rest) chunks.push(rest);
-  return chunks;
-}
-
 function exportPptxAiDeliverables(pp) {
   if (typeof WIZARD_AI_PROMPTS === "undefined" || !wizardState.aiResponses) return;
   const fp = wizardFingerprint();
   WIZARD_AI_PROMPTS.forEach(p => {
     const resp = wizardState.aiResponses[p.id];
     if (!resp?.text || resp.fp !== fp) return;
-    pptxSplitText(resp.text).forEach((chunk, i) => {
-      const sl = pp.addSlide();
-      sl.background = { color: "0D1117" };
-      sl.addText(i === 0 ? p.label : `${p.label} (cont.)`, {
-        x: 0.5, y: 0.35, w: 12, h: 0.5, fontSize: 24, bold: true, color: "00BCEB"
-      });
-      sl.addText(chunk, {
-        x: 0.6, y: 1.0, w: 12.2, h: 5.8, fontSize: 12, color: "E6EDF3", valign: "top"
-      });
+    const sl = pp.addSlide();
+    sl.background = { color: "0D1117" };
+    sl.addText(p.slideTitle || p.label, {
+      x: 0.5, y: 0.35, w: 12, h: 0.5, fontSize: 24, bold: true, color: "00BCEB"
+    });
+    sl.addText(resp.text, {
+      x: 0.6, y: 0.95, w: 12.2, h: 6.2, fontSize: 12, color: "E6EDF3", valign: "top", shrinkText: true
     });
   });
 }
@@ -6644,10 +6629,10 @@ function wizardUpdateFooterForStep() {
 }
 
 const WIZARD_AI_PROMPTS = [
-  { id: "exec", label: "Exec summary", q: "Write a concise executive summary of this account plan for my sales leader — current situation, stack strengths, gaps, and recommended next steps." },
-  { id: "roadmap", label: "90-day roadmap", q: "Based on this guided plan, propose a prioritized 90-day roadmap with quick wins, migration items, and longer-term augmentations." },
-  { id: "email", label: "Customer email", q: "Draft a professional follow-up email to the customer summarizing what we learned, what's in place today, and 3 recommended next steps." },
-  { id: "gap", label: "Explain biggest gap", q: "Explain the biggest bundle or capability gap in this plan — why it matters for this industry and what Cisco products would close it." }
+  { id: "exec", label: "Exec summary", slideTitle: "Executive Summary", q: "Write a concise executive summary of this account plan for my sales leader — current situation, stack strengths, gaps, and recommended next steps." },
+  { id: "roadmap", label: "90-day roadmap", slideTitle: "90-Day Roadmap", q: "Based on this guided plan, propose a prioritized 90-day roadmap with quick wins, migration items, and longer-term augmentations." },
+  { id: "email", label: "Customer email", slideTitle: "Customer Follow-Up Email", q: "Draft a professional follow-up email to the customer summarizing what we learned, what's in place today, and 3 recommended next steps." },
+  { id: "gap", label: "Explain biggest gap", slideTitle: "Biggest Capability Gap", q: "Explain the biggest bundle or capability gap in this plan — why it matters for this industry and what Cisco products would close it." }
 ];
 
 function wizardPromptById(id) {
