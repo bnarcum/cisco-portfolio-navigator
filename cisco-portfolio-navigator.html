@@ -5336,15 +5336,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
   {ver:"2.7.5", date:"2026-05-31", items:[
-    "Compare — separate compare queue (independent of ★ Pin): Show in Compare adds items to a visible chip list and side-by-side columns; Pin only saves to Recent/Pinned."
-  ]},
-  {ver:"2.7.4", date:"2026-05-31", items:[
-    "Compare — Show in Compare always adds or promotes the current item to the compare row (up to 4 columns); button labels update to reflect pin/compare state."
-  ]},
-  {ver:"2.7.3", date:"2026-05-31", items:[
-    "Spatial view — optional 3D map of product families: orbit and zoom the graph, always-visible name labels, click any node for the detail panel. Respects category / use-case / industry filters, highlights stack items, and persists in localStorage like other view modes (Esc or breadcrumb × to return to Families).",
-    "Double-click a family — or use Explore N products on its detail panel — to drill into a 3D composition where products orbit the family node with purple succession links; Esc or the breadcrumb steps back one level at a time.",
-    "Spatial runs fully offline — 3D and label libraries are bundled locally (no CDN). Clearer errors when WebGL or init fails; the 2D graph hint bar is hidden while Spatial is active."
+    "Spatial view — optional 3D map of product families with always-visible labels, orbit/zoom navigation, filters, and stack highlights. Double-click a family (or Explore N products) to drill into a 3D composition; Esc or the breadcrumb steps back. Bundled offline (no CDN); 2D hint bar hidden while Spatial is active.",
+    "Guided tour updated (v2.5) — new Spatial step, Guided Plan AI deliverables, and export/AI context coverage.",
+    "Compare — separate compare queue independent of ★ Pin: Show in Compare adds items to a visible chip list (up to 4) with side-by-side detail columns; Pin only saves to Recent/Pinned. Clear button and remove via chip or column ×."
   ]},
   {ver:"2.6.1", date:"2026-05-31", items:[
     "Guided Plan — 5-step wizard (industry → size → capabilities → legacy refresh) that builds your stack, runs analysis, and persists your session so you can reopen, edit answers, or start over.",
@@ -7861,7 +7855,7 @@ function openComparePanel(){
 function closeCompare(){
   const cmp = $("#cmp-panel"); if (cmp) cmp.classList.remove("open");
   document.body.classList.remove("cmp-open");
-  // Intentionally NOT clearing pins — they persist for the next session.
+  // Compare list persists while the panel is hidden.
 }
 function buildComparePanel(){
   const p = document.createElement("div");
