@@ -529,29 +529,18 @@
     .sc-leg-dot.in-stack{background:var(--accent);border-color:var(--accent)}
     .sc-leg-dot.ref-only{border-style:dashed;opacity:.55}
     #sc-panel-scroll{flex:1;overflow-y:auto;padding:12px 20px 24px}
-    .sc-topo{position:relative;width:100%;min-height:380px;background:var(--canvas, var(--bg));
-      border:1px solid var(--border);border-radius:10px;overflow:hidden}
-    :root{--canvas:var(--bg)}
-    .sc-topo-hud{position:absolute;left:10px;bottom:8px;z-index:2;pointer-events:none;
-      font-size:10px;color:var(--subtle);background:rgba(13,17,23,.75);padding:4px 10px;border-radius:12px;
-      border:1px solid var(--border)}
-    #sc-topo-svg{display:block;width:100%;height:auto;min-height:360px;cursor:grab}
-    #sc-topo-svg:active{cursor:grabbing}
-    .sc-zone rect{fill:rgba(255,255,255,.02);stroke:var(--border);stroke-width:1;stroke-dasharray:6 4;
-      rx:8;ry:8}
-    .sc-zone text.sc-zone-label{font-size:10px;font-weight:700;fill:var(--subtle);
-      text-transform:uppercase;letter-spacing:.06em}
-    .sc-zone text.sc-zone-hint{font-size:9px;fill:var(--subtle);opacity:.85}
-    .sc-topo .sc-tlink{stroke-linecap:round}
-    .sc-topo .sc-tlink.direct{stroke:#4a5568;stroke-opacity:.85;stroke-width:2}
-    .sc-topo .sc-tlink.adjacent{stroke:#2d3748;stroke-opacity:.55;stroke-width:1.5;stroke-dasharray:5 4}
-    .sc-topo .sc-tlink.flow{stroke:var(--accent);stroke-opacity:.35;stroke-width:1.2;stroke-dasharray:3 5}
-    .sc-topo .sc-nd{cursor:pointer}
-    .sc-topo .sc-nd .gr{fill-opacity:0}
-    .sc-topo .sc-nd.in-stack .mc{stroke:#fff;stroke-width:2.5}
-    .sc-topo .sc-nd.in-stack .gr{fill-opacity:.22}
-    .sc-topo .sc-nd .nl{font-size:9px;fill:var(--muted)}
-    .sc-topo .sc-nd:hover .mc{stroke:#fff;stroke-width:2}
+    .sc-stack{display:flex;flex-direction:column;gap:0;max-width:720px}
+    .sc-layer{border:1px solid var(--border);border-radius:10px;margin-bottom:0;
+      background:var(--surface);overflow:hidden}
+    .sc-layer + .sc-layer{margin-top:0;border-top:none;border-radius:0}
+    .sc-layer:first-child{border-radius:10px 10px 0 0}
+    .sc-layer:last-child{border-radius:0 0 10px 10px;margin-bottom:0}
+    .sc-layer:only-child{border-radius:10px}
+    .sc-layer-hd{padding:8px 14px;background:var(--surface2);border-bottom:1px solid var(--border)}
+    .sc-layer-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text)}
+    .sc-layer-hint{font-size:10px;color:var(--subtle);margin-top:2px}
+    .sc-layer-chips{padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+    .sc-arrow{display:flex;justify-content:center;padding:4px 0;color:var(--subtle);font-size:14px;line-height:1}
     .sc-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:8px;
       font-size:11px;font-weight:600;cursor:pointer;border:2px solid var(--border);
       background:var(--surface2);color:var(--text);transition:all .12s;font-family:inherit}
@@ -641,7 +630,7 @@
       <div class="sc-sub">Pick an outcome · see how Cisco products layer together</div>
     </div>
     <div class="sc-tab-seg" id="sc-tab-seg" role="tablist" style="display:none">
-      <button type="button" data-sc-tab="stack" class="active" role="tab">Topology</button>
+      <button type="button" data-sc-tab="stack" class="active" role="tab">Stack flow</button>
       <button type="button" data-sc-tab="matrix" role="tab">Where it runs</button>
     </div>
     <div class="sc-head-actions">
@@ -661,11 +650,10 @@
         <div id="sc-legend">
           <span><i class="sc-leg-dot in-stack"></i> In your account stack</span>
           <span><i class="sc-leg-dot ref-only"></i> In reference architecture</span>
-          <span>— Solid = direct integration · Dashed = complementary</span>
-          <span>— Zones = architecture layers (top → bottom)</span>
+          <span>↓ Traffic / policy flow (top → bottom)</span>
         </div>
         <div id="sc-panel-scroll">
-          <div id="sc-stack-panel" class="sc-topo"></div>
+          <div id="sc-stack-panel" class="sc-stack"></div>
           <div id="sc-matrix-panel" class="sc-matrix" style="display:none"></div>
         </div>
         <div id="sc-foot-actions"></div>
@@ -4677,7 +4665,6 @@ function enterScenarioView(pickId){
   }
 }
 function exitScenarioView(){
-  destroyScenarioTopo();
   const wrap = document.getElementById("sc-wrap");
   if (wrap){ wrap.classList.remove("show"); wrap.hidden = true; }
   document.body.classList.remove("scenarios-open");
@@ -4692,11 +4679,6 @@ function setScenarioTab(tab){
   const matrixP = document.getElementById("sc-matrix-panel");
   if (stackP) stackP.style.display = tab === "stack" ? "" : "none";
   if (matrixP) matrixP.style.display = tab === "matrix" ? "" : "none";
-  if (tab === "matrix") destroyScenarioTopo();
-  else {
-    const sc = window.cpnScenarioState.id && scById()[window.cpnScenarioState.id];
-    if (sc) renderScenarioStack(sc);
-  }
 }
 function selectScenario(id){
   const sc = scById()[id];
@@ -4739,229 +4721,31 @@ function renderScenarioChip(famId, note){
     ${scEsc(n.name)}${note ? `<span class="sc-chip-note">${scEsc(note)}</span>` : ""}
   </button>`;
 }
-
-const scTopoState = { sim: null, ro: null, scenarioId: null };
-
-function destroyScenarioTopo(){
-  if (scTopoState.sim){ scTopoState.sim.stop(); scTopoState.sim = null; }
-  if (scTopoState.ro){ scTopoState.ro.disconnect(); scTopoState.ro = null; }
-  scTopoState.scenarioId = null;
-  const svg = document.getElementById("sc-topo-svg");
-  if (svg) svg.innerHTML = "";
-}
-
-function scTopoLinkKey(l){
-  const s = typeof l.source === "object" ? l.source.id : l.source;
-  const t = typeof l.target === "object" ? l.target.id : l.target;
-  return s + "→" + t + "·" + (l.type || "");
-}
-
-function buildScenarioTopoData(sc, width, height){
-  const layers = sc.layers || [];
-  const layerCount = Math.max(layers.length, 1);
-  const padX = 44, padY = 36;
-  const zoneH = (height - padY * 2) / layerCount;
-  const layerOf = {};
-  layers.forEach((layer, li) => {
-    (layer.families || []).forEach(fid => { layerOf[fid] = li; });
+function renderScenarioStack(sc){
+  const el = document.getElementById("sc-stack-panel");
+  if (!el) return;
+  let html = "";
+  sc.layers.forEach((layer, i) => {
+    if (i > 0) html += `<div class="sc-arrow" aria-hidden="true">↓</div>`;
+    const chips = (layer.families || []).map(fid => renderScenarioChip(fid)).join("");
+    const empty = !chips && layer.hint;
+    html += `<div class="sc-layer">
+      <div class="sc-layer-hd">
+        <div class="sc-layer-title">${scEsc(layer.label)}</div>
+        ${layer.hint ? `<div class="sc-layer-hint">${scEsc(layer.hint)}</div>` : ""}
+      </div>
+      <div class="sc-layer-chips">${chips || (empty ? `<span style="font-size:11px;color:var(--subtle)">${scEsc(layer.hint)}</span>` : `<span style="font-size:11px;color:var(--subtle)">—</span>`)}</div>
+    </div>`;
   });
-
-  const nodes = sc.products.filter(id => nodeById[id]).map(id => {
-    const base = nodeById[id];
-    const li = layerOf[id] ?? 0;
-    const fams = layers[li]?.families || [];
-    const idx = Math.max(0, fams.indexOf(id));
-    const n = fams.length || 1;
-    const spread = Math.min(width - padX * 2, Math.max(220, n * 100));
-    const seedX = width / 2 + (idx - (n - 1) / 2) * (spread / Math.max(n, 1));
-    const seedY = padY + li * zoneH + zoneH / 2;
-    return Object.assign({}, base, {
-      _scLayer: li,
-      _seedX: seedX,
-      _seedY: seedY,
-      _r: Math.min(22, Math.max(14, 28 - n * 1.2)),
-      x: seedX,
-      y: seedY
-    });
-  });
-
-  const idSet = new Set(nodes.map(n => n.id));
-  const links = [];
-  LINKS.forEach(l => {
-    const s = sid(l), t = tid(l);
-    if (!idSet.has(s) || !idSet.has(t)) return;
-    links.push({ source: s, target: t, type: l.type, label: l.label });
-  });
-
-  // Light inter-layer hints when adjacent layers share no graph edge (pedagogy)
-  for (let li = 0; li < layers.length - 1; li++){
-    const a = (layers[li].families || []).filter(id => idSet.has(id));
-    const b = (layers[li + 1].families || []).filter(id => idSet.has(id));
-    if (!a.length || !b.length) continue;
-    const hasBridge = links.some(l => {
-      const s = sid(l), t = tid(l);
-      return (a.includes(s) && b.includes(t)) || (a.includes(t) && b.includes(s));
-    });
-    if (!hasBridge){
-      links.push({
-        source: a[0],
-        target: b[0],
-        type: "flow",
-        label: "Typical path"
-      });
-    }
-  }
-
-  const zones = layers.map((layer, li) => ({
-    layer,
-    li,
-    x: padX,
-    y: padY + li * zoneH,
-    w: width - padX * 2,
-    h: zoneH - 6
-  }));
-
-  return { nodes, links, zones, padX, padY, zoneH, layerCount };
-}
-
-function buildScTopoNode(enter){
-  const g = enter.append("g").attr("class", d => "sc-nd" + (stackHasFamily(d.id) ? " in-stack" : ""))
-    .attr("role", "button").attr("tabindex", 0)
-    .on("click", (ev, d) => {
-      ev.stopPropagation();
-      showDetailPanel(d);
+  el.innerHTML = html;
+  el.querySelectorAll("[data-sc-fam]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const n = nodeById[btn.dataset.scFam];
+      if (!n) return;
+      showDetailPanel(n);
       document.getElementById("panel").classList.add("open");
     });
-  g.append("circle").attr("class", "gr")
-    .attr("r", d => d._r + 8).attr("fill", d => catColor(d.category));
-  g.append("circle").attr("class", "mc")
-    .attr("r", d => d._r).attr("fill", d => catColor(d.category))
-    .attr("fill-opacity", 0.9).attr("stroke", "transparent").attr("stroke-width", 2);
-  g.append("use").attr("class", "icn")
-    .attr("href", d => "#icon-" + iconKey(d))
-    .attr("width", d => d._r * 1.45)
-    .attr("height", d => d._r * 1.45)
-    .attr("x", d => -d._r * 0.725)
-    .attr("y", d => -d._r * 0.725)
-    .attr("fill", "#fff")
-    .style("pointer-events", "none");
-  g.append("text").attr("class", "nl")
-    .attr("y", d => d._r + 13)
-    .text(d => d.name.length > 28 ? d.name.slice(0, 26) + "…" : d.name)
-    .style("text-anchor", "middle").style("pointer-events", "none");
-}
-
-function renderScenarioStack(sc){
-  const panel = document.getElementById("sc-stack-panel");
-  if (!panel || typeof d3 === "undefined") return;
-
-  destroyScenarioTopo();
-  scTopoState.scenarioId = sc.id;
-
-  panel.className = "sc-topo";
-  panel.innerHTML = `<div class="sc-topo-hud">Drag to pan · Scroll to zoom · Click a node for details</div><svg id="sc-topo-svg" aria-label="Scenario topology diagram"></svg>`;
-
-  const svgEl = document.getElementById("sc-topo-svg");
-  const panelW = Math.max(520, panel.clientWidth || 640);
-  const layerRows = (sc.layers || []).length;
-  const height = Math.max(380, Math.min(560, 70 + layerRows * 88));
-  const width = panelW;
-
-  const data = buildScenarioTopoData(sc, width, height);
-  const svg = d3.select(svgEl)
-    .attr("width", width)
-    .attr("height", height)
-    .attr("viewBox", `0 0 ${width} ${height}`);
-
-  const root = svg.append("g");
-  const zoom = d3.zoom()
-    .scaleExtent([0.45, 2.2])
-    .on("zoom", ev => root.attr("transform", ev.transform));
-  svg.call(zoom).on("dblclick.zoom", null);
-
-  const zonesG = root.append("g").attr("class", "sc-zones");
-  const zoneJoin = zonesG.selectAll("g.sc-zone").data(data.zones, d => d.li);
-  zoneJoin.join(
-    enter => {
-      const z = enter.append("g").attr("class", "sc-zone");
-      z.append("rect").attr("x", d => d.x).attr("y", d => d.y)
-        .attr("width", d => d.w).attr("height", d => d.h);
-      z.append("text").attr("class", "sc-zone-label")
-        .attr("x", d => d.x + 10).attr("y", d => d.y + 14)
-        .text(d => d.layer.label);
-      z.append("text").attr("class", "sc-zone-hint")
-        .attr("x", d => d.x + 10).attr("y", d => d.y + 26)
-        .text(d => (d.layer.families && d.layer.families.length) ? "" : (d.layer.hint || "").slice(0, 52));
-    },
-    update => update,
-    exit => exit.remove()
-  );
-
-  const linkG = root.append("g").attr("class", "sc-links");
-  const linkSel = linkG.selectAll("line.sc-tlink").data(data.links, scTopoLinkKey);
-  const linkEnter = linkSel.enter().append("line").attr("class", d => "sc-tlink " + (d.type || "adjacent"))
-    .on("mouseover", (ev, l) => {
-      const tn = document.getElementById("tn");
-      const tc = document.getElementById("tc");
-      const tip = document.getElementById("tip");
-      if (!tn || !tip) return;
-      tn.textContent = l.label || l.type || "link";
-      const s = nodeById[sid(l)]?.name || sid(l);
-      const t = nodeById[tid(l)]?.name || tid(l);
-      tc.textContent = `${s} → ${t}`;
-      tip.style.display = "block";
-      moveTip(ev);
-    })
-    .on("mousemove", moveTip)
-    .on("mouseout", hideTip);
-  const linkAll = linkEnter.merge(linkSel);
-  linkSel.exit().remove();
-
-  const nodeG = root.append("g").attr("class", "sc-nodes");
-  const nodeSel = nodeG.selectAll("g.sc-nd").data(data.nodes, d => d.id);
-  nodeSel.join(
-    enter => buildScTopoNode(enter),
-    update => update.attr("class", d => "sc-nd" + (stackHasFamily(d.id) ? " in-stack" : "")),
-    exit => exit.remove()
-  );
-
-  const yForLayer = li => data.padY + li * data.zoneH + data.zoneH / 2;
-
-  const sim = d3.forceSimulation(data.nodes)
-    .force("link", d3.forceLink(data.links).id(d => d.id)
-      .distance(d => d.type === "flow" ? 70 : d.type === "direct" ? 95 : 120)
-      .strength(d => d.type === "flow" ? 0.15 : 0.55))
-    .force("charge", d3.forceManyBody().strength(-320))
-    .force("x", d3.forceX(d => d._seedX).strength(0.12))
-    .force("y", d3.forceY(d => yForLayer(d._scLayer)).strength(0.55))
-    .force("collide", d3.forceCollide(d => d._r + 22).strength(0.9))
-    .alphaDecay(0.06);
-
-  function tick(){
-    linkAll
-      .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
-      .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
-    nodeG.selectAll("g.sc-nd").attr("transform", d => `translate(${d.x},${d.y})`);
-  }
-  sim.on("tick", tick);
-  sim.on("end", () => {
-    svg.transition().duration(400).call(
-      zoom.transform,
-      d3.zoomIdentity.translate(width * 0.02, 8).scale(0.92)
-    );
   });
-
-  scTopoState.sim = sim;
-
-  if (typeof ResizeObserver !== "undefined"){
-    scTopoState.ro = new ResizeObserver(() => {
-      if (window.cpnScenarioState?.id !== sc.id || scTopoState.scenarioId !== sc.id) return;
-      if (document.getElementById("sc-stack-panel")?.style.display === "none") return;
-      const w = panel.clientWidth;
-      if (w > 0 && Math.abs(w - width) > 40) renderScenarioStack(sc);
-    });
-    scTopoState.ro.observe(panel);
-  }
 }
 function renderScenarioMatrix(sc){
   const el = document.getElementById("sc-matrix-panel");
@@ -5019,7 +4803,7 @@ function renderScenarioDetail(){
     foot.innerHTML = `<span style="font-size:11px;color:var(--muted);align-self:center">
       Reference stack: ${sc.products.length} families · <strong style="color:var(--accent)">${inCount}</strong> in your account plan</span>`;
   }
-  if (window.cpnScenarioState.tab !== "matrix") renderScenarioStack(sc);
+  renderScenarioStack(sc);
   renderScenarioMatrix(sc);
 }
 function openScenarioInGraph(){
@@ -5160,8 +4944,8 @@ document.addEventListener("keydown",ev=>{
       target: '#vm-seg button[data-vm="scenarios"]', place: "bottom",
       title: "Scenarios — teach how solutions fit together",
       body: `Open <strong>Scenarios</strong> when your audience is new to Cisco. Pick an outcome like
-             <em>Secure remote workers</em> on the left,              then explore the <strong>Topology</strong> graph (zones + integrations)
-             or flip to <strong>Where it runs</strong> (cloud vs on-prem × inline vs out-of-band).
+             <em>Secure remote workers</em> on the left, then walk through the <strong>Stack flow</strong>
+             (traffic top → bottom) or flip to <strong>Where it runs</strong> (cloud vs on-prem × inline vs out-of-band).
              Chips glow when they're already in your account stack. Use <strong>Open in graph</strong> or
              <strong>Add gaps to plan</strong> to continue in the portfolio map or planner.`,
       tip: `Press <code>Y</code> to toggle Scenarios from anywhere. <code>Esc</code> returns to Families.`
@@ -6123,7 +5907,7 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
   {ver:"2.8.0", date:"2026-06-01", items:[
-    "Scenarios view — new topbar mode with an <strong>I need to…</strong> picker, interactive <strong>Topology</strong> mini-graph (D3 force layout, architecture zone bands, real portfolio integration links, pan/zoom), and <strong>Where it runs</strong> deployment matrix (cloud vs on-prem × inline vs out-of-band + endpoint).",
+    "Scenarios view — new topbar mode with an <strong>I need to…</strong> picker, layered <strong>stack flow</strong> diagram (traffic top → bottom), and <strong>Where it runs</strong> deployment matrix (cloud vs on-prem × inline vs out-of-band + endpoint).",
     "Eight curated scenarios aligned to reference architectures (SD-WAN/SASE, Zero Trust, Hybrid Work, AI Networking, DC modernization, OT, automation, DC networking).",
     "Scenario actions — <strong>Open in graph</strong> overlays the reference arch on Families view; <strong>Add gaps to plan</strong> fills missing families; chips highlight account-stack coverage and open the detail panel.",
     "Keyboard <code>Y</code> toggles Scenarios view; <code>Esc</code> returns to Families from Scenarios."
