@@ -62,18 +62,18 @@ try {
   const visuals = await page.evaluate(() => {
     const g = window.__cpnSpatialGraph?.();
     const scene = g?.scene?.();
-    let coreMeshes = 0;
-    let glowMeshes = 0;
+    let tileSprites = 0;
+    let pedestals = 0;
     let labels = 0;
     scene?.traverse(o => {
-      if (o.isMesh && o.material?.type === "MeshLambertMaterial") coreMeshes++;
-      if (o.isMesh && o.material?.type === "MeshBasicMaterial") glowMeshes++;
+      if (o.userData?.role === "tile") tileSprites++;
+      if (o.userData?.role === "pedestal") pedestals++;
       if (o.userData?.role === "label" || (o.type === "Sprite" && typeof o.text === "string")) labels++;
     });
     return {
       hasThree: !!window.__cpnTHREE?.__bundled,
-      coreMeshes,
-      glowMeshes,
+      tileSprites,
+      pedestals,
       labelSprites: labels,
     };
   });
@@ -88,7 +88,8 @@ try {
   if (result.canvasCount < 1) fails.push("no WebGL canvas");
   if (graphNodes < 9) fails.push(`graph has ${graphNodes} nodes, expected family + products`);
   if (!visuals.hasThree) fails.push("bundled Three.js not captured for spatial orbs");
-  if (visuals.coreMeshes < 14) fails.push(`expected polished orbs, got ${visuals.coreMeshes} shaded meshes`);
+  if (visuals.pedestals < 10) fails.push(`expected icon tile nodes, got ${visuals.pedestals} pedestals`);
+  if (visuals.tileSprites < 8) fails.push(`expected icon tiles, got ${visuals.tileSprites} tile sprites`);
   if (!/Room Systems/i.test(result.hud)) fails.push("HUD missing family name");
   if (errors.length) fails.push(`page errors: ${errors[0]}`);
 
