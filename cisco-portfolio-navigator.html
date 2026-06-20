@@ -6207,6 +6207,7 @@ function resolveFamilyForPanel(d){
 function openFamilyProductDrawer(familyId){
   const fam = nodeById[familyId];
   if (!fam) return;
+  pushBreadcrumb({ type: "node", id: familyId });
   const d = resolveFamilyForPanel({ id: familyId, _kind: "family" });
   selected = d;
   hideTip();
@@ -7709,7 +7710,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.15.0";
+const APP_VERSION   = "2.15.1";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -8134,6 +8135,10 @@ const CHANGELOG = [
   {ver:"2.14.3", date:"2026-06-20", items:[
     "Overview — single click opens Families with all three pillars; double-click a card to focus one pillar.",
     "Families — All pillars row in legend; labels on hover only (fixes overlap when one pillar is focused); expanded grid when filtered."
+  ]},
+  {ver:"2.15.1", date:"2026-06-20", items:[
+    "Fix — product detail breadcrumbs show the product's portfolio family (e.g. Room Systems › Room Kit Pro G2), not unrelated prior navigation history.",
+    "Family product drawer — opening a family now records it in breadcrumb history; back/forward and family crumb clicks stay in composition context."
   ]},
   {ver:"2.15.0", date:"2026-06-20", items:[
     "New family: cloud-control — Cisco Cloud Control (AgenticOps platform with Collaboration Control Hub, AI Canvas, and AI Assistant).",
@@ -9301,6 +9306,7 @@ function enhancePanelAuto(){
 // Wrap window.* navigation functions so we know what was last opened.
 const _origShowPD = window.showProductDetail;
 window.showProductDetail = function(id){
+  ensureProductBreadcrumbContext(id);
   _origShowPD(id);
   const pb = $("#pbody"); if (pb){ pb.dataset.lastId = id; pb.dataset.lastKind = "product"; }
   pushRecent(id); pushBreadcrumb({type:"product", id}); enhancePanelAuto();
@@ -10566,6 +10572,54 @@ function buildGuidedWizard() {
    [17] BREADCRUMBS + back/forward in detail panel
    ════════════════════════════════════════════════════════════════════════*/
 const bcHistory = []; let bcIndex = -1;
+
+function productFamilyEntry(productId){
+  const p = prodById[productId];
+  if (!p?.family || !nodeById[p.family]) return null;
+  return { type: "node", id: p.family };
+}
+
+/** Keep the product's portfolio family as the breadcrumb parent — not stale nav history. */
+function ensureProductBreadcrumbContext(productId){
+  const familyEntry = productFamilyEntry(productId);
+  if (!familyEntry) return;
+
+  if (bcIndex < bcHistory.length - 1) bcHistory.splice(bcIndex + 1);
+
+  const last = bcHistory[bcIndex];
+  const prev = bcIndex > 0 ? bcHistory[bcIndex - 1] : null;
+  const parentOk = prev && prev.type === "node" && prev.id === familyEntry.id;
+
+  if (last?.type === "product" && last.id === productId){
+    if (!parentOk){
+      if (prev?.type === "node") bcHistory[bcIndex - 1] = { ...familyEntry };
+      else {
+        bcHistory.splice(bcIndex, 0, { ...familyEntry });
+        bcIndex++;
+      }
+    }
+    return;
+  }
+
+  if (!(last?.type === "node" && last.id === familyEntry.id)){
+    bcHistory.push({ ...familyEntry });
+    bcIndex = bcHistory.length - 1;
+  }
+}
+
+function goToFamilyBreadcrumb(familyId){
+  const sp = pushBreadcrumb; pushBreadcrumb = () => {};
+  for (let i = bcIndex; i >= 0; i--){
+    if (bcHistory[i].type === "node" && bcHistory[i].id === familyId){
+      bcIndex = i;
+      break;
+    }
+  }
+  if (bcIndex < bcHistory.length - 1) bcHistory.splice(bcIndex + 1);
+  openFamilyProductDrawer(familyId);
+  pushBreadcrumb = sp;
+}
+
 function pushBreadcrumb(entry){
   // Trim forward history if user navigates from middle
   if (bcIndex < bcHistory.length - 1) bcHistory.splice(bcIndex + 1);
@@ -10584,21 +10638,34 @@ function navHistory(delta){
   // Temporarily avoid pushing
   const savedPush = pushBreadcrumb; pushBreadcrumb = () => {};
   if (e.type === "product") window.showProductDetail(e.id);
-  else                       window.jumpTo(e.id);
+  else if (viewMode === "composition" && nodeById[e.id]) openFamilyProductDrawer(e.id);
+  else window.jumpTo(e.id);
   pushBreadcrumb = savedPush;
 }
 function renderBreadcrumbs(){
   const pb = $("#pbody"); if (!pb) return;
-  // Build crumb HTML
-  const start = Math.max(0, bcIndex - 3);
-  const slice = bcHistory.slice(start, bcIndex + 1);
-  const crumbs = slice.map((e, idx) => {
-    const realIdx = start + idx;
-    const name = nameOf(e.id);
-    if (realIdx === bcIndex)
-      return `<span style="color:var(--text);font-weight:600">${escapeHtml(name)}</span>`;
-    return `<button class="p-bc-i" data-i="${realIdx}">${escapeHtml(name)}</button><span class="p-bc-sep">›</span>`;
-  }).join("");
+  pb.querySelector(".p-bc")?.remove();
+  const current = bcHistory[bcIndex];
+  if (!current) return;
+
+  let crumbs = "";
+  if (current.type === "product"){
+    const fam = productFamilyEntry(current.id);
+    if (fam){
+      crumbs += `<button class="p-bc-i" data-jump="family" data-id="${escapeHtml(fam.id)}">${escapeHtml(nameOf(fam.id))}</button><span class="p-bc-sep">›</span>`;
+    }
+    crumbs += `<span style="color:var(--text);font-weight:600">${escapeHtml(nameOf(current.id))}</span>`;
+  } else {
+    const start = Math.max(0, bcIndex - 3);
+    crumbs = bcHistory.slice(start, bcIndex + 1).map((e, idx) => {
+      const realIdx = start + idx;
+      const name = nameOf(e.id);
+      if (realIdx === bcIndex)
+        return `<span style="color:var(--text);font-weight:600">${escapeHtml(name)}</span>`;
+      return `<button class="p-bc-i" data-i="${realIdx}">${escapeHtml(name)}</button><span class="p-bc-sep">›</span>`;
+    }).join("");
+  }
+
   const navHtml = `<div class="p-bc-nav">
     <button id="bc-back" title="Back" ${bcIndex<=0?"disabled":""}>‹</button>
     <button id="bc-fwd" title="Forward" ${bcIndex>=bcHistory.length-1?"disabled":""}>›</button>
@@ -10607,16 +10674,21 @@ function renderBreadcrumbs(){
   bcDiv.className = "p-bc";
   bcDiv.innerHTML = crumbs + navHtml;
   pb.insertBefore(bcDiv, pb.firstChild);
-  bcDiv.querySelectorAll(".p-bc-i").forEach(b => b.addEventListener("click", () => {
+  bcDiv.querySelectorAll(".p-bc-i[data-jump='family']").forEach(b => {
+    b.addEventListener("click", () => goToFamilyBreadcrumb(b.dataset.id));
+  });
+  bcDiv.querySelectorAll(".p-bc-i[data-i]").forEach(b => b.addEventListener("click", () => {
     const i = parseInt(b.dataset.i, 10);
     bcIndex = i;
     const e = bcHistory[i];
     const sp = pushBreadcrumb; pushBreadcrumb = () => {};
-    if (e.type === "product") window.showProductDetail(e.id); else window.jumpTo(e.id);
+    if (e.type === "product") window.showProductDetail(e.id);
+    else if (viewMode === "composition" && nodeById[e.id]) openFamilyProductDrawer(e.id);
+    else window.jumpTo(e.id);
     pushBreadcrumb = sp;
   }));
-  $("#bc-back").addEventListener("click", () => navHistory(-1));
-  $("#bc-fwd").addEventListener("click",  () => navHistory(+1));
+  bcDiv.querySelector("#bc-back")?.addEventListener("click", () => navHistory(-1));
+  bcDiv.querySelector("#bc-fwd")?.addEventListener("click", () => navHistory(+1));
 }
 
 /* ════════════════════════════════════════════════════════════════════════
