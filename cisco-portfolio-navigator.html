@@ -5202,7 +5202,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.7.9";
+const APP_VERSION   = "2.7.10";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -5493,6 +5493,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.7.9", date:"2026-06-17", items:[
+    "dCloud panel only appears when the open product or family matches a demo entry — primary flag no longer shows demos on unrelated products."
+  ]},
   {ver:"2.7.8", date:"2026-06-17", items:[
     "Connected Technologies — toggle extended ecosystem (2-hop) in family detail panels; graph highlight and product-panel jump show the wider neighborhood.",
     "Context menu Connections filter now includes families within 2 hops."
@@ -7893,18 +7896,23 @@ async function loadDcloudLinks(){
 function dcloudRankEntries({ familyIds = [], productIds = [], useCases = [], limit = 5, requireProductOrFamily = false } = {}){
   if (!DCLOUD_ENTRIES.length) return [];
   const scored = DCLOUD_ENTRIES.map(e => {
-    let score = 0;
+    const productSpecific = (e.products?.length ?? 0) > 0;
     const familyHit = familyIds.some(f => e.families?.includes(f));
     const productHit = productIds.some(p => e.products?.includes(p));
     const useCaseHit = useCases.some(u => e.useCases?.includes(u));
+    if (productSpecific){
+      if (!productHit) return null;
+    } else {
+      const relevant = requireProductOrFamily
+        ? (familyHit || productHit)
+        : (familyHit || productHit || useCaseHit);
+      if (!relevant) return null;
+    }
+    let score = 0;
     if (e.primary) score += 1;
     if (familyHit) score += 3;
     if (productHit) score += 5;
     if (useCaseHit) score += 2;
-    const relevant = requireProductOrFamily
-      ? (familyHit || productHit)
-      : (familyHit || productHit || useCaseHit);
-    if (!relevant) return null;
     return { entry: e, score };
   }).filter(Boolean);
   scored.sort((a, b) => b.score - a.score || (b.entry.primary ? 1 : 0) - (a.entry.primary ? 1 : 0));
@@ -7919,13 +7927,19 @@ function dcloudRankEntries({ familyIds = [], productIds = [], useCases = [], lim
   return out;
 }
 
-function dcloudLinksFor({ familyId, productId } = {}){
-  return dcloudRankEntries({
-    familyIds: familyId ? [familyId] : [],
-    productIds: productId ? [productId] : [],
-    limit: 5,
-    requireProductOrFamily: true
-  });
+function dcloudLinksFor({ familyId, productId, kind = "node" } = {}){
+  return DCLOUD_ENTRIES.filter(e => {
+    if ((e.products?.length ?? 0) > 0){
+      return kind === "product" && productId && e.products.includes(productId);
+    }
+    if (kind === "product" && familyId){
+      return e.families?.includes(familyId);
+    }
+    if (kind === "node" && familyId){
+      return e.families?.includes(familyId);
+    }
+    return false;
+  }).sort((a, b) => (b.primary ? 1 : 0) - (a.primary ? 1 : 0));
 }
 
 function dcloudStackContext(){
@@ -8013,8 +8027,8 @@ function insertDcloudLinks(id, kind){
   const product = kind === "product" ? prodById[id] : null;
   const entries = dcloudLinksFor(
     kind === "product"
-      ? { productId: id, familyId: product?.family }
-      : { familyId: id }
+      ? { productId: id, familyId: product?.family, kind: "product" }
+      : { familyId: id, kind: "node" }
   );
   if (!entries.length) return;
 
