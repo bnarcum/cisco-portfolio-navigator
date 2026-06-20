@@ -5132,9 +5132,16 @@ function selectNodeSpatial(d, graphNode){
   }
 }
 
+function validFamilyFocus(id){
+  return id && nodeById[id] && PRODUCTS.some(p => p.family === id && productMatchesFilters(p)) ? id : null;
+}
+
+function resolveFamilyFocus(opts = {}){
+  return validFamilyFocus(opts.focusFamily || viewFocus || spatialState.focusFamily);
+}
+
 function enterSpatialView(){
   spatialState.active = true;
-  spatialState.focusFamily = null;
   document.body.classList.add("spatial-open");
   svgEl.style.display = "none";
   const wrap = ensureSpatialDOM();
@@ -5182,20 +5189,33 @@ function applyViewLevel(mode, opts){
   opts = opts || {};
   const prev = viewMode;
 
-  if (prev === "spatial" && mode !== "spatial") exitSpatialView();
+  if (prev === "spatial" && mode !== "spatial"){
+    if (mode === "composition" && !opts.focusFamily && spatialState.focusFamily){
+      opts.focusFamily = spatialState.focusFamily;
+    }
+    exitSpatialView();
+  }
 
   if (mode === "spatial"){
+    const familyFocus = resolveFamilyFocus(opts);
     viewMode = "spatial";
     viewFocus = null;
-    spatialState.focusFamily = null;
+    spatialState.focusFamily = familyFocus;
     selected = null;
+    closePanel();
+    hideTip();
     updateViewModeUI();
     updateBreadcrumb();
     if (!opts.initial){
       try{ localStorage.setItem(VIEW_MODE_KEY, viewMode); }catch(e){}
-      try{ localStorage.setItem(VIEW_FOCUS_KEY, ""); }catch(e){}
+      try{ localStorage.setItem(VIEW_FOCUS_KEY, familyFocus || ""); }catch(e){}
     }
-    enterSpatialView().then(() => applyFilters());
+    enterSpatialView().then(() => {
+      applyFilters();
+      updateSpatialHud();
+      updateBreadcrumb();
+      if (familyFocus) setTimeout(() => focusSpatialNode(familyFocus, 900), 350);
+    });
     return;
   }
 
@@ -5336,10 +5356,11 @@ function updateViewModeUI(){
   // Composition button enabled only when we have a valid focus to drill into.
   const compBtn = seg && seg.querySelector('button[data-vm="composition"]');
   if (compBtn){
-    const canComp = !!viewFocus;
+    const compFocus = viewFocus || spatialState.focusFamily;
+    const canComp = !!compFocus;
     compBtn.disabled = !canComp && viewMode !== "composition";
     compBtn.title = canComp || viewMode === "composition"
-      ? `Composition — ${nodeById[viewFocus]?.name || "current focus"}`
+      ? `Composition — ${nodeById[compFocus]?.name || "current focus"}`
       : "Composition — pick a family first";
   }
   // Category pills and filter dropdowns: active in Families + All-Products,
@@ -5424,6 +5445,8 @@ document.querySelectorAll("#vm-seg button[data-vm]").forEach(btn => {
 window.applyViewLevel = applyViewLevel;
 window.getViewMode    = () => viewMode;
 window.getViewFocus   = () => viewFocus;
+window.getSpatialFocus = () => spatialState.focusFamily;
+window.__cpnSpatialGraph = () => spatialState.graph;
 
 // ── Initial mount: read persisted preferences and render the right view.
 (function bootViewLevel(){
@@ -5450,7 +5473,8 @@ window.getViewFocus   = () => viewFocus;
     return;
   }
   if (savedMode === "spatial"){
-    applyViewLevel("spatial", { initial: true });
+    const ff = validFamilyFocus(savedFocus);
+    applyViewLevel("spatial", { focusFamily: ff || undefined, initial: true });
     return;
   }
   applyViewLevel("families", { initial: true });
@@ -6960,7 +6984,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.22.9";
+const APP_VERSION   = "2.23.0";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -7251,6 +7275,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.23.0", date:"2026-06-20", items:[
+    "Spatial — switching from Composition keeps the current family selection and opens its 3D product orbit; Composition button works from Spatial drill-in too."
+  ]},
   {ver:"2.22.9", date:"2026-06-20", items:[
     "Composition — pin family hub at graph origin after drill-in (fixes off-center orbit from stale pillar sim coords); Playwright regression test added."
   ]},

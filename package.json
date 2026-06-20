@@ -5,7 +5,8 @@
   "scripts": {
     "test:pillar-layout": "node scripts/test-pillar-layout.mjs",
     "test:composition": "node scripts/test-composition-view.mjs",
-    "test": "npm run test:pillar-layout && npm run test:composition"
+    "test:composition-spatial": "node scripts/test-composition-spatial.mjs",
+    "test": "npm run test:pillar-layout && npm run test:composition && npm run test:composition-spatial"
   },
   "devDependencies": {
     "playwright": "^1.49.0"
