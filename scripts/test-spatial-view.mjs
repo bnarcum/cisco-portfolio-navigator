@@ -18,8 +18,10 @@ await new Promise((resolve, reject) => {
   setTimeout(resolve, 400);
 });
 
+const WEBGL_ARGS = ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"];
+
 let exitCode = 0;
-const browser = await chromium.launch();
+const browser = await chromium.launch({ args: WEBGL_ARGS });
 try {
   const page = await browser.newPage();
   const errors = [];

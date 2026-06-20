@@ -4783,7 +4783,7 @@ function buildCompositionView(familyId){
 // SPATIAL — optional 3D portfolio map
 // ══════════════════════════════════════
 const SPATIAL_LIB = "vendor/3d-force-graph.min.js";
-const spatialState = { graph: null, active: false, libPromise: null, spritePromise: null, resizeObs: null, labelCache: new Map(), focusFamily: null, lastNodeClick: null };
+const spatialState = { graph: null, active: false, libPromise: null, spritePromise: null, resizeObs: null, labelCache: new Map(), textureCache: new Map(), focusFamily: null, lastNodeClick: null, hoveredId: null, lightsAdded: false, threeCaptured: false, meshTemplate: null };
 
 function spatialResolveName(id){
   return nodeById[id]?.name || prodById[id]?.name || id;
@@ -4791,6 +4791,233 @@ function spatialResolveName(id){
 
 function clearSpatialLabelCache(){
   spatialState.labelCache.clear();
+  spatialState.textureCache.forEach(t => t.dispose?.());
+  spatialState.textureCache.clear();
+}
+
+function captureBundledTHREE(){
+  if (window.__cpnTHREE?.__bundled) return window.__cpnTHREE;
+  const scene = spatialState.graph?.scene();
+  if (!scene) return null;
+  let refMesh = null;
+  scene.traverse(o => { if (o.isMesh && o.geometry && !refMesh) refMesh = o; });
+  if (!refMesh) return null;
+  spatialState.meshTemplate = refMesh;
+  const matCtor = refMesh.material.constructor;
+  const THREE = {
+    __bundled: true,
+    Mesh: refMesh.constructor,
+    MeshBasicMaterial: matCtor,
+    MeshLambertMaterial: matCtor,
+    Group: refMesh.parent?.constructor || refMesh.constructor,
+    AmbientLight: scene.children.find(c => c.type === "AmbientLight")?.constructor,
+    DirectionalLight: scene.children.find(c => c.type === "DirectionalLight")?.constructor
+  };
+  scene.traverse(o => {
+    if (o.isMesh && o.material?.type === "MeshBasicMaterial") THREE.MeshBasicMaterial = o.material.constructor;
+    if (o.isMesh && o.material?.type === "MeshLambertMaterial") THREE.MeshLambertMaterial = o.material.constructor;
+    if (o.isSprite && !THREE.Sprite) THREE.Sprite = o.constructor;
+    if (o.material?.type === "SpriteMaterial" && !THREE.SpriteMaterial){
+      THREE.SpriteMaterial = o.material.constructor;
+    }
+  });
+  window.__cpnTHREE = THREE;
+  spatialState.threeCaptured = true;
+  return THREE;
+}
+
+function finishSpatialGraphSetup(){
+  if (spatialState.threeCaptured) return true;
+  if (!captureBundledTHREE()) return false;
+  spatialState.graph
+    .nodeColor(() => "rgba(0,0,0,0)")
+    .nodeOpacity(0)
+    .nodeThreeObject(node => buildSpatialNodeObject(node))
+    .nodeThreeObjectExtend(false)
+    .nodeThreeObjectUpdate((obj, node) => updateSpatialNodeGroup(obj, node));
+  return true;
+}
+
+function ensureSpatialTHREE(){
+  if (window.__cpnTHREE?.__bundled) return window.__cpnTHREE;
+  return captureBundledTHREE();
+}
+
+const SPATIAL_NODE_REL = 4.2;
+
+function spatialNodeRadius(node){
+  return Math.cbrt(node.val || 1) * SPATIAL_NODE_REL;
+}
+
+function spatialHexToNum(hex){
+  return parseInt(String(hex).replace("#", ""), 16);
+}
+
+function spatialCategoryPalette(node){
+  const palettes = {
+    networking:    { base: "#02a8d4", emissive: "#003344", glow: "#02c8ff" },
+    collaboration: { base: "#28b863", emissive: "#0a2818", glow: "#3ddf7a" },
+    security:      { base: "#e08000", emissive: "#331a00", glow: "#ff9000" },
+    computing:     { base: "#0850dd", emissive: "#001a44", glow: "#0a60ff" },
+    observability: { base: "#d07010", emissive: "#2a1800", glow: "#ff9000" }
+  };
+  return palettes[node.category] || palettes.networking;
+}
+
+function spatialNodeAccent(node){
+  if (selected && selected.id === node.id) return { core: 0xffffff, emissive: 0x224466, glow: 0x66e0ff, emissiveInt: 0.55, glowOp: 0.48 };
+  if (stack.has(node.id)) return { core: 0xffffff, emissive: 0x1a3344, glow: 0x02c8ff, emissiveInt: 0.42, glowOp: 0.38 };
+  const p = spatialCategoryPalette(node);
+  return { core: spatialHexToNum(p.base), emissive: spatialHexToNum(p.emissive), glow: spatialHexToNum(p.glow), emissiveInt: 0.32, glowOp: 0.24 };
+}
+
+function spatialDisplayName(node){
+  const name = node.name || spatialResolveName(node.id);
+  if (node.kind === "product" && spatialState.focusFamily && name.length > 24){
+    return name.slice(0, 22) + "…";
+  }
+  return name;
+}
+
+function spatialLabelVisible(node){
+  if (node.kind === "family" || !spatialState.focusFamily) return true;
+  const id = node.id;
+  return (selected && selected.id === id) || stack.has(id) || spatialState.hoveredId === id;
+}
+
+function spatialThumbScale(radius){
+  return radius * 1.05;
+}
+
+function getSpatialThumbSprite(node, radius){
+  const url = matrixImageUrl(node.id);
+  const THREE = ensureSpatialTHREE();
+  if (!url || !THREE?.Sprite || !THREE?.SpriteMaterial) return null;
+  if (!spatialState.textureCache.has(url)) return null;
+  const tex = spatialState.textureCache.get(url);
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, opacity: 0.96 });
+  const sprite = new THREE.Sprite(mat);
+  sprite.userData.role = "thumb";
+  const s = spatialThumbScale(radius);
+  sprite.scale.set(s, s, 1);
+  sprite.renderOrder = 1;
+  return sprite;
+}
+
+function preloadSpatialTextures(nodes){
+  nodes.forEach(n => {
+    if (n.kind !== "product") return;
+    const url = matrixImageUrl(n.id);
+    if (!url || spatialState.textureCache.has(url)) return;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      spatialState.textureCache.set(url, { image: img, needsUpdate: true });
+      if (spatialState.active) refreshSpatialGraph();
+    };
+    img.src = url;
+  });
+}
+
+function updateSpatialNodeGroup(group, node){
+  if (!group || !window.__cpnTHREE) return;
+  const radius = spatialNodeRadius(node);
+  const accent = spatialNodeAccent(node);
+  group.traverse(obj => {
+    if (obj.userData?.role === "glow" && obj.material){
+      obj.material.color.setHex(accent.glow);
+      obj.material.opacity = accent.glowOp;
+    }
+    if (obj.userData?.role === "core" && obj.material){
+      obj.material.color.setHex(accent.core);
+      if (obj.material.emissive?.setHex) obj.material.emissive.setHex(accent.emissive);
+      if (obj.material.emissiveIntensity != null) obj.material.emissiveIntensity = accent.emissiveInt + 0.15;
+    }
+    if (obj.userData?.role === "label"){
+      styleSpatialLabelSprite(obj, node);
+      if (obj.text !== spatialDisplayName(node)) obj.text = spatialDisplayName(node);
+      obj.visible = spatialLabelVisible(node);
+      obj.position.y = radius * 0.55 + (node.kind === "family" ? 3.4 : 2.6);
+    }
+  });
+}
+
+function buildSpatialNodeObject(node){
+  const THREE = ensureSpatialTHREE();
+  const template = spatialState.meshTemplate;
+  if (!THREE?.Group || !template) return getSpatialLabelSprite(node);
+  const group = new THREE.Group();
+  group.userData.nodeId = node.id;
+  const scale = spatialNodeRadius(node) / spatialNodeRadius({ val: 1 });
+  const accent = spatialNodeAccent(node);
+
+  const glow = template.clone();
+  glow.material = new THREE.MeshBasicMaterial({
+    color: accent.glow,
+    transparent: true,
+    opacity: accent.glowOp,
+    depthWrite: false
+  });
+  glow.userData.role = "glow";
+  glow.scale.set(scale * 1.32, scale * 1.32, scale * 1.32);
+  group.add(glow);
+
+  const core = template.clone();
+  const coreMatOpts = { color: accent.core, transparent: true, opacity: 0.93 };
+  if (THREE.MeshLambertMaterial !== THREE.MeshBasicMaterial){
+    coreMatOpts.emissive = accent.emissive;
+    coreMatOpts.emissiveIntensity = accent.emissiveInt + 0.15;
+  }
+  core.material = new THREE.MeshLambertMaterial(coreMatOpts);
+  core.userData.role = "core";
+  core.scale.set(scale, scale, scale);
+  group.add(core);
+
+  if (node.kind === "product" && matrixImageUrl(node.id)){
+    const thumb = getSpatialThumbSprite(node, spatialNodeRadius(node));
+    if (thumb) group.add(thumb);
+  }
+
+  const label = getSpatialLabelSprite(node);
+  label.userData.role = "label";
+  label.position.y = spatialNodeRadius(node) * 0.55 + (node.kind === "family" ? 3.4 : 2.6);
+  label.visible = spatialLabelVisible(node);
+  group.add(label);
+
+  group.userData.spatialRadius = spatialNodeRadius(node);
+  return group;
+}
+
+function ensureSpatialLights(){
+  if (spatialState.lightsAdded || !spatialState.graph) return;
+  const THREE = ensureSpatialTHREE();
+  if (!THREE?.AmbientLight || !THREE.DirectionalLight) return;
+  const scene = spatialState.graph.scene();
+  scene.add(new THREE.AmbientLight(0x1a2840, 0.95));
+  const key = new THREE.DirectionalLight(0xf0f6ff, 1.05);
+  key.position.set(90, 130, 70);
+  scene.add(key);
+  const fill = new THREE.DirectionalLight(0x02c8ff, 0.28);
+  fill.position.set(-70, 50, -90);
+  scene.add(fill);
+  spatialState.lightsAdded = true;
+}
+
+function refreshSpatialNodeVisuals(){
+  if (!spatialState.graph) return;
+  const nodes = spatialState.graph.graphData()?.nodes || [];
+  const byId = Object.fromEntries(nodes.map(n => [n.id, n]));
+  spatialState.labelCache.forEach((sprite, id) => {
+    const node = byId[id] || { id, name: spatialResolveName(id), kind: prodById[id] ? "product" : "family" };
+    if (sprite.text !== spatialDisplayName(node)) sprite.text = spatialDisplayName(node);
+    styleSpatialLabelSprite(sprite, node);
+    sprite.visible = spatialLabelVisible(node);
+  });
+  spatialState.graph.scene()?.traverse(obj => {
+    if (!obj.userData?.nodeId) return;
+    const node = byId[obj.userData.nodeId];
+    if (node) updateSpatialNodeGroup(obj, node);
+  });
 }
 
 function spatialLinkColor(l){
@@ -4815,15 +5042,15 @@ function spatialLinkParticles(l){
 function configureSpatialForces(){
   if (!spatialState.graph) return;
   if (spatialState.focusFamily){
-    spatialState.graph.d3Force("charge").strength(-85);
+    spatialState.graph.d3Force("charge").strength(-145);
     spatialState.graph.d3Force("link").distance(l => {
-      if (l.type === "composition") return 36;
-      if (l.type === "succession") return 50;
-      return 55;
+      if (l.type === "composition") return 58;
+      if (l.type === "succession") return 62;
+      return 68;
     });
   } else {
-    spatialState.graph.d3Force("charge").strength(-120);
-    spatialState.graph.d3Force("link").distance(l => l.type === "direct" ? 55 : 90);
+    spatialState.graph.d3Force("charge").strength(-135);
+    spatialState.graph.d3Force("link").distance(l => l.type === "direct" ? 62 : 98);
   }
 }
 
@@ -4847,8 +5074,8 @@ function buildSpatialCompositionData(familyId){
     kind: n._kind,
     color: CATS[n.category].color,
     val: n._kind === "family"
-      ? (stack.has(n.id) ? 5.5 : 5)
-      : (stack.has(n.id) ? 2.2 : (n._productRef?.status === "current" ? 1.8 : 1.4)),
+      ? (stack.has(n.id) ? 6 : 5.5)
+      : (stack.has(n.id) ? 2.4 : (n._productRef?.status === "current" ? 2 : 1.6)),
     ...(n._kind === "family" ? { fx: 0, fy: 0, fz: 0 } : {})
   }));
   const links = v.links.map(l => ({
@@ -4905,33 +5132,38 @@ window.dispatchEvent(new Event("spatial-spritetext-ready"));`;
 }
 
 function styleSpatialLabelSprite(sprite, node){
+  const isProduct = node.kind === "product" && spatialState.focusFamily;
   if (selected && selected.id === node.id){
     sprite.color = "#ffffff";
-    sprite.backgroundColor = "rgba(2,200,255,0.38)";
-    sprite.textHeight = 3.6;
+    sprite.backgroundColor = "rgba(2,200,255,0.42)";
+    sprite.textHeight = isProduct ? 3.2 : 3.6;
   } else if (stack.has(node.id)){
     sprite.color = "#ffffff";
-    sprite.backgroundColor = "rgba(2,200,255,0.22)";
-    sprite.textHeight = 3.4;
+    sprite.backgroundColor = "rgba(2,200,255,0.26)";
+    sprite.textHeight = isProduct ? 3 : 3.4;
   } else {
-    sprite.color = "#FFFFFF";
-    sprite.backgroundColor = "rgba(13,17,23,0.78)";
-    sprite.textHeight = 3.2;
+    sprite.color = "#e8eef5";
+    sprite.backgroundColor = "rgba(7,24,45,0.88)";
+    sprite.textHeight = isProduct ? 2.6 : 3.2;
   }
+  sprite.strokeWidth = 0.35;
+  sprite.strokeColor = "rgba(2,200,255,0.35)";
 }
 
 function getSpatialLabelSprite(node){
   let sprite = spatialState.labelCache.get(node.id);
+  const labelText = spatialDisplayName(node);
   if (!sprite){
-    sprite = new SpriteText(node.name);
-    sprite.padding = 2;
-    sprite.borderRadius = 3;
+    sprite = new SpriteText(labelText);
+    sprite.userData.role = "label";
+    sprite.padding = 2.5;
+    sprite.borderRadius = 4;
     sprite.fontWeight = "600";
     sprite.center.y = -0.85;
     if (sprite.material) sprite.material.depthWrite = false;
     spatialState.labelCache.set(node.id, sprite);
-  } else if (sprite.text !== node.name){
-    sprite.text = node.name;
+  } else if (sprite.text !== labelText){
+    sprite.text = labelText;
   }
   styleSpatialLabelSprite(sprite, node);
   return sprite;
@@ -5036,11 +5268,7 @@ function initSpatialGraph(){
     .width(w).height(h)
     .backgroundColor("#07182D")
     .showNavInfo(false)
-    .nodeColor(spatialNodeColor)
     .nodeVal("val")
-    .nodeOpacity(0.92)
-    .nodeThreeObject(node => getSpatialLabelSprite(node))
-    .nodeThreeObjectExtend(true)
     .linkColor(spatialLinkColor)
     .linkWidth(spatialLinkWidth)
     .linkOpacity(0.55)
@@ -5067,8 +5295,7 @@ function initSpatialGraph(){
           hideTip();
           showProductDetail(node.id);
           if (spatialState.graph){
-            spatialState.graph.nodeColor(spatialNodeColor);
-            refreshSpatialLabelStyles();
+            refreshSpatialNodeVisuals();
             focusSpatialNode(node.id, 700);
           }
           return;
@@ -5077,8 +5304,17 @@ function initSpatialGraph(){
         if (d) selectNodeSpatial(d, node);
       }, 350);
     })
-    .onNodeHover(node => { document.body.style.cursor = node ? "pointer" : null; });
+    .onNodeHover(node => {
+      document.body.style.cursor = node ? "pointer" : null;
+      const next = node?.id || null;
+      if (spatialState.hoveredId !== next){
+        spatialState.hoveredId = next;
+        refreshSpatialNodeVisuals();
+      }
+    });
+  spatialState.graph.graphData({ nodes: [{ id: "__three_probe__", val: 1 }], links: [] });
   configureSpatialForces();
+  ensureSpatialLights();
 
   if (!spatialState.resizeObs){
     spatialState.resizeObs = new ResizeObserver(() => {
@@ -5097,10 +5333,19 @@ function refreshSpatialGraph(){
     : buildSpatialGraphData();
   if (!spatialState.graph) initSpatialGraph();
   if (!spatialState.graph) return;
-  spatialState.graph.graphData(data);
-  configureSpatialForces();
-  spatialState.graph.nodeColor(spatialNodeColor);
-  refreshSpatialLabelStyles();
+  const applyData = () => {
+    if (!finishSpatialGraphSetup()) return;
+    preloadSpatialTextures(data.nodes);
+    spatialState.graph.graphData(data);
+    configureSpatialForces();
+    ensureSpatialLights();
+    refreshSpatialNodeVisuals();
+  };
+  if (!spatialState.threeCaptured){
+    requestAnimationFrame(() => requestAnimationFrame(applyData));
+  } else {
+    applyData();
+  }
 }
 
 function focusSpatialNode(id, ms){
@@ -5124,8 +5369,7 @@ function selectNodeSpatial(d, graphNode){
   if (pb){ pb.dataset.lastId = d.id; pb.dataset.lastKind = "node"; }
   window.__cpnV2?.phases?.enhanceDetailPanel?.();
   if (spatialState.graph){
-    spatialState.graph.nodeColor(spatialNodeColor);
-    refreshSpatialLabelStyles();
+    refreshSpatialNodeVisuals();
     const focus = () => focusSpatialNode(d.id, 700);
     if (graphNode) focus();
     else setTimeout(focus, 500);
@@ -5511,8 +5755,7 @@ function selectNode(d, opts = {}) {
   showDetailPanel(d);
   if (viewMode === "spatial"){
     focusSpatialNode(d.id, 700);
-    if (spatialState.graph) spatialState.graph.nodeColor(spatialNodeColor);
-    refreshSpatialLabelStyles();
+    if (spatialState.graph) refreshSpatialNodeVisuals();
     return;
   }
   if (viewMode === "composition"){
@@ -5531,8 +5774,7 @@ function selectNode(d, opts = {}) {
 
 function resetHL() {
   if (viewMode === "spatial"){
-    if (spatialState.graph) spatialState.graph.nodeColor(spatialNodeColor);
-    refreshSpatialLabelStyles();
+    if (spatialState.graph) refreshSpatialNodeVisuals();
     return;
   }
   if (viewMode === "composition"){
@@ -5566,8 +5808,7 @@ function resetHL() {
 
 function highlightStack() {
   if (viewMode === "spatial"){
-    if (spatialState.graph) spatialState.graph.nodeColor(spatialNodeColor);
-    refreshSpatialLabelStyles();
+    if (spatialState.graph) refreshSpatialNodeVisuals();
     return;
   }
   if (viewMode === "composition"){
@@ -6984,7 +7225,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.23.0";
+const APP_VERSION   = "2.24.1";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -7275,6 +7516,12 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.24.1", date:"2026-06-20", items:[
+    "Side drawer — product hero fallback uses a light stage background and category-colored icons (fixes black-on-black icons for products without Device Matrix images)."
+  ]},
+  {ver:"2.24.0", date:"2026-06-20", items:[
+    "Spatial — polished 3D orbs with glass/metallic materials, category glow, rim lighting, and matrix product thumbnails; labels show on hover in family orbit to reduce overlap."
+  ]},
   {ver:"2.23.0", date:"2026-06-20", items:[
     "Spatial — switching from Composition keeps the current family selection and opens its 3D product orbit; Composition button works from Spatial drill-in too."
   ]},
@@ -7754,8 +8001,10 @@ STYLE.textContent = `
   .p-hero img{width:100%;height:100%;object-fit:contain;padding:12px 16px 18px;box-sizing:border-box;
     filter:drop-shadow(0 2px 8px rgba(15,23,42,0.12));position:relative;z-index:1;background:#fff}
   .p-hero-fallback{display:flex;align-items:center;justify-content:center;height:100%;position:absolute;inset:0;z-index:0;
-    background:linear-gradient(165deg, #1a2332 0%, #0a1018 100%)}
-  .p-hero-fallback svg{width:68px;height:68px;color:var(--accent);opacity:.65}
+    background:linear-gradient(165deg, #f8fafc 0%, #eef2f7 100%)}
+  .p-hero-fallback svg{width:68px;height:68px;opacity:.88}
+  .p-hero--icon-only .p-hero-fallback{z-index:1}
+  .p-hero--icon-only .p-hero-scrim{background:linear-gradient(180deg, transparent 70%, rgba(15,23,42,0.06) 100%)}
   .p-hero-scrim{position:absolute;inset:0;background:linear-gradient(180deg, transparent 58%, rgba(15,23,42,0.1) 100%);
     pointer-events:none;z-index:2}
   .p-hero-meta{position:absolute;left:10px;right:10px;bottom:8px;display:flex;justify-content:space-between;
@@ -10050,20 +10299,23 @@ function insertProductHero(id, kind){
   const n = (kind === "product") ? prodById[id] : nodeById[id];
   if (!n) return;
   const cat = catOf(id);
+  const iconFill = cat ? CATS[cat].color : "#64748b";
   const imgUrl = (kind === "product") ? matrixImageUrl(id) : null;
   const symId = "#icon-" + (kind === "node" ? iconKey(nodeById[id]) :
     iconKey({ _kind: "product", _productRef: prodById[id], id }));
+  const heroSvg = `<svg viewBox="0 0 256 256"><use href="${symId}" fill="${iconFill}"/></svg>`;
   const hero = document.createElement("div");
-  hero.className = "p-hero";
+  hero.className = "p-hero" + (imgUrl ? "" : " p-hero--icon-only");
   if (imgUrl){
     hero.innerHTML = `
-      <div class="p-hero-fallback" aria-hidden="true"><svg viewBox="0 0 256 256" style="color:${cat ? CATS[cat].color : "#fff"}"><use href="${symId}"/></svg></div>
-      <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(n.name)}" loading="lazy" onerror="this.style.display='none'"/>
+      <div class="p-hero-fallback" aria-hidden="true">${heroSvg}</div>
+      <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(n.name)}" loading="lazy"
+        onerror="var h=this.closest('.p-hero');if(h)h.classList.add('p-hero--icon-only');this.remove()"/>
       <div class="p-hero-scrim"></div>
       <div class="p-hero-meta"><span></span><span class="p-hero-cat">${cat ? escapeHtml(CATS[cat].label) : ""}</span></div>`;
   } else {
     hero.innerHTML = `
-      <div class="p-hero-fallback"><svg viewBox="0 0 256 256" style="color:${cat ? CATS[cat].color : "#fff"}"><use href="${symId}"/></svg></div>
+      <div class="p-hero-fallback">${heroSvg}</div>
       <div class="p-hero-scrim"></div>
       <div class="p-hero-meta"><span></span><span class="p-hero-cat">${cat ? escapeHtml(CATS[cat].label) : ""}</span></div>`;
   }

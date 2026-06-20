@@ -19,8 +19,10 @@ await new Promise((resolve, reject) => {
   setTimeout(resolve, 400);
 });
 
+const WEBGL_ARGS = ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"];
+
 let exitCode = 0;
-const browser = await chromium.launch();
+const browser = await chromium.launch({ args: WEBGL_ARGS });
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   const errors = [];
@@ -57,7 +59,26 @@ try {
     return g.graphData?.()?.nodes?.length ?? 0;
   });
 
-  console.log(JSON.stringify({ ...result, graphNodes, errors: errors.slice(0, 4) }, null, 2));
+  const visuals = await page.evaluate(() => {
+    const g = window.__cpnSpatialGraph?.();
+    const scene = g?.scene?.();
+    let coreMeshes = 0;
+    let glowMeshes = 0;
+    let labels = 0;
+    scene?.traverse(o => {
+      if (o.isMesh && o.material?.type === "MeshLambertMaterial") coreMeshes++;
+      if (o.isMesh && o.material?.type === "MeshBasicMaterial") glowMeshes++;
+      if (o.userData?.role === "label" || (o.type === "Sprite" && typeof o.text === "string")) labels++;
+    });
+    return {
+      hasThree: !!window.__cpnTHREE?.__bundled,
+      coreMeshes,
+      glowMeshes,
+      labelSprites: labels,
+    };
+  });
+
+  console.log(JSON.stringify({ ...result, graphNodes, visuals, errors: errors.slice(0, 4) }, null, 2));
 
   const fails = [];
   if (result.viewMode !== "spatial") fails.push(`viewMode=${result.viewMode}`);
@@ -66,6 +87,8 @@ try {
   if (!result.svgHidden) fails.push("2D svg still visible");
   if (result.canvasCount < 1) fails.push("no WebGL canvas");
   if (graphNodes < 9) fails.push(`graph has ${graphNodes} nodes, expected family + products`);
+  if (!visuals.hasThree) fails.push("bundled Three.js not captured for spatial orbs");
+  if (visuals.coreMeshes < 14) fails.push(`expected polished orbs, got ${visuals.coreMeshes} shaded meshes`);
   if (!/Room Systems/i.test(result.hud)) fails.push("HUD missing family name");
   if (errors.length) fails.push(`page errors: ${errors[0]}`);
 
