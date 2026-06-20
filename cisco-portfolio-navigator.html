@@ -4480,18 +4480,19 @@ function updateOverviewDeck(){
 
   const connG = g.append("g").attr("class", "ov-conn").style("pointer-events", "none");
   const span = D.resW / 2;
+  const connLabel = ONE_CISCO.connectivityLabel;
+  const labelW = connLabel.length * 7.2 + 16;
+  const gapHalf = labelW / 2 + 10;
   connG.append("line")
     .attr("x1", -span).attr("y1", D.connY)
+    .attr("x2", -gapHalf).attr("y2", D.connY)
+    .attr("stroke", "#fff").attr("stroke-width", 1)
+    .attr("marker-start", "url(#ov-arrow-l)");
+  connG.append("line")
+    .attr("x1", gapHalf).attr("y1", D.connY)
     .attr("x2", span).attr("y2", D.connY)
     .attr("stroke", "#fff").attr("stroke-width", 1)
-    .attr("marker-start", "url(#ov-arrow-l)")
     .attr("marker-end", "url(#ov-arrow-r)");
-  const connLabel = ONE_CISCO.connectivityLabel;
-  const labelW = connLabel.length * 7.2 + 20;
-  connG.append("rect")
-    .attr("x", -labelW / 2).attr("y", D.connY - 11)
-    .attr("width", labelW).attr("height", 22)
-    .attr("fill", "#07182d");
   connG.append("text")
     .attr("x", 0).attr("y", D.connY + 5)
     .attr("text-anchor", "middle")
@@ -4570,7 +4571,7 @@ function updateOverviewDeck(){
         .attr("opacity", 0.25 + i * 0.22)
         .style("font-size", "16px")
         .style("font-weight", "600")
-        .text(dir < 0 ? "›" : "‹");
+        .text(dir < 0 ? "‹" : "›");
     });
   });
   aiG.append("text")
