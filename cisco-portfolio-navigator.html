@@ -251,27 +251,27 @@
       background:#00d4ff;padding:6px 11px;border-radius:6px;letter-spacing:.01em}
     .la-dcloud:hover .la-dcloud-meta{background:#fff;color:#003648!important}
     .p-matrix-card{
-      padding:14px 14px 12px;border-radius:10px;margin-bottom:14px;
-      border:1px solid rgba(168,85,247,.55);
-      background:linear-gradient(145deg,rgba(168,85,247,.18) 0%,rgba(88,28,135,.14) 55%,rgba(40,16,70,.2) 100%);
-      box-shadow:0 0 0 1px rgba(168,85,247,.12),0 6px 24px rgba(124,58,237,.22)}
-    .p-matrix-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
-    .matrix-brand{font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#e9d5ff}
+      padding:10px 11px;border-radius:8px;margin-bottom:10px;
+      border:1px solid rgba(168,85,247,.45);
+      background:linear-gradient(145deg,rgba(168,85,247,.14) 0%,rgba(88,28,135,.1) 100%);
+      box-shadow:0 0 0 1px rgba(168,85,247,.08),0 3px 14px rgba(124,58,237,.14)}
+    .p-matrix-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+    .matrix-brand{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#e9d5ff}
     .matrix-badge{
-      flex-shrink:0;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
-      padding:4px 9px;border-radius:999px;background:rgba(168,85,247,.28);color:#f3e8ff;
-      border:1px solid rgba(192,132,252,.5)}
-    .p-matrix-tagline{font-size:12px;color:#f5f3ff;margin-bottom:10px;line-height:1.45;font-weight:500}
+      flex-shrink:0;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+      padding:3px 7px;border-radius:999px;background:rgba(168,85,247,.24);color:#f3e8ff;
+      border:1px solid rgba(192,132,252,.4)}
+    .p-matrix-tagline{display:none}
     .la-matrix{
-      border-color:rgba(192,132,252,.6)!important;background:rgba(30,10,55,.45)!important;
-      padding:12px 14px!important;border-radius:8px!important;transition:all .15s}
+      border-color:rgba(192,132,252,.5)!important;background:rgba(30,10,55,.38)!important;
+      padding:9px 11px!important;border-radius:7px!important;transition:all .15s}
     .la-matrix:hover{
-      border-color:#c084fc!important;background:rgba(168,85,247,.32)!important;
-      box-shadow:0 0 18px rgba(168,85,247,.35);transform:translateY(-1px);color:#fff!important}
-    .la-matrix .la-matrix-main{font-weight:700;flex:1;min-width:0;padding-right:10px;color:#fff!important;font-size:13px}
+      border-color:#c084fc!important;background:rgba(168,85,247,.26)!important;
+      box-shadow:0 0 12px rgba(168,85,247,.28);transform:translateY(-1px);color:#fff!important}
+    .la-matrix .la-matrix-main{font-weight:600;flex:1;min-width:0;padding-right:8px;color:#fff!important;font-size:12px}
     .la-matrix .la-matrix-meta{
-      font-size:11px;font-weight:700;flex-shrink:0;color:#2e1065!important;
-      background:#c084fc;padding:6px 11px;border-radius:6px;letter-spacing:.01em}
+      font-size:10px;font-weight:700;flex-shrink:0;color:#2e1065!important;
+      background:#c084fc;padding:5px 9px;border-radius:5px;letter-spacing:.01em}
     .la-matrix:hover .la-matrix-meta{background:#fff;color:#581c87!important}
     .gw-dcloud-section{
       margin-top:14px;padding:14px;border-radius:10px;text-align:left;
@@ -2790,7 +2790,7 @@ function compositionShortName(p){
 }
 
 const MATRIX_SITE = "https://bnarcum.github.io/collaboration-device-matrix/";
-const MATRIX_NODE_FILL = "#e8eef4";
+const MATRIX_NODE_FILL = "#ffffff";
 const MATRIX_NODE_RING = "rgba(100,116,139,0.45)";
 const MATRIX_IMG_BASE = MATRIX_SITE + "devices/";
 let MATRIX_BRIDGE = {
@@ -5592,7 +5592,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.9.2";
+const APP_VERSION   = "2.9.3";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -5883,6 +5883,10 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.9.3", date:"2026-06-20", items:[
+    "Panel product hero — pure white photo backing.",
+    "Device Matrix CTA — compact purple card between the original link and the full highlight card."
+  ]},
   {ver:"2.9.2", date:"2026-06-20", items:[
     "Device Matrix CTA — purple highlight card with Launch button, matching dCloud prominence.",
     "Product photos — light backing on panel heroes and composition graph thumbnails so brochure images read clearly against the canvas."
@@ -6206,10 +6210,10 @@ STYLE.textContent = `
     border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;
     border:1px solid var(--border);overflow:hidden;position:relative}
   .p-hero{width:100%;height:200px;margin-bottom:14px;border-radius:10px;overflow:hidden;position:relative;
-    background:linear-gradient(165deg, #f1f5f9 0%, #e2e8f0 48%, #dbe4ee 100%);
-    border:1px solid rgba(148,163,184,0.45);box-shadow:0 4px 20px rgba(15,23,42,0.12),inset 0 1px 0 rgba(255,255,255,0.65)}
-  .p-hero img{width:100%;height:100%;object-fit:contain;padding:14px 18px 20px;box-sizing:border-box;
-    filter:drop-shadow(0 4px 12px rgba(15,23,42,0.18));position:relative;z-index:1}
+    background:#ffffff;
+    border:1px solid rgba(148,163,184,0.4);box-shadow:0 2px 12px rgba(15,23,42,0.08)}
+  .p-hero img{width:100%;height:100%;object-fit:contain;padding:12px 16px 18px;box-sizing:border-box;
+    filter:drop-shadow(0 2px 8px rgba(15,23,42,0.12));position:relative;z-index:1;background:#fff}
   .p-hero-fallback{display:flex;align-items:center;justify-content:center;height:100%;position:absolute;inset:0;z-index:0;
     background:linear-gradient(165deg, #1a2332 0%, #0a1018 100%)}
   .p-hero-fallback svg{width:68px;height:68px;color:var(--accent);opacity:.65}
@@ -6218,7 +6222,7 @@ STYLE.textContent = `
   .p-hero-meta{position:absolute;left:10px;right:10px;bottom:8px;display:flex;justify-content:space-between;
     align-items:center;gap:8px;z-index:3;pointer-events:none}
   .p-hero-cat{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(15,23,42,0.5)}
-  .p-matrix-link{margin:0 0 14px;padding:0;border:none;background:transparent}
+  .p-matrix-link{margin:0 0 10px;padding:0;border:none;background:transparent}
   .p-photo svg{width:60px;height:60px;color:var(--accent);opacity:.65}
   .p-photo .p-photo-cat{position:absolute;bottom:6px;left:8px;font-size:9px;color:var(--subtle);
     text-transform:uppercase;letter-spacing:.1em;font-weight:700}
@@ -8539,10 +8543,9 @@ function insertMatrixLink(id, kind){
   sec.innerHTML = `
     <div class="p-matrix-card">
       <div class="p-matrix-header">
-        <span class="matrix-brand">Collaboration Device Matrix</span>
+        <span class="matrix-brand">Device Matrix</span>
         <span class="matrix-badge">3D Showroom</span>
       </div>
-      <p class="p-matrix-tagline">Open this product in the interactive 3D showroom — specs, ports, and form factor.</p>
       <a class="la la-matrix" href="${escapeHtml(url)}" target="_blank" rel="noopener">
         <span class="la-matrix-main">View in Device Matrix</span>
         <span class="la-matrix-meta">Launch ↗</span>
