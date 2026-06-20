@@ -6,6 +6,18 @@
   },
   "entries": [
     {
+      "id": "agenticops-cloud-control",
+      "name": "AgenticOps with Cisco Cloud Control",
+      "linkLabel": "AgenticOps · Cloud Control",
+      "hint": "Instant demo — Control Hub, AI Assistant, and AI Canvas in a live lab",
+      "catalogUrl": "https://dcloud2-rtp.cisco.com/content/instantdemo/agenticops-with-cisco-cloud-control?returnPathTitleKey=content-view",
+      "instantUrl": "https://dcloud2-rtp.cisco.com/content/instantdemo/agenticops-with-cisco-cloud-control?returnPathTitleKey=content-view",
+      "datacenter": "RTP",
+      "families": ["cloud-control", "webex-app", "webex-calling", "room-systems", "thousandeyes"],
+      "useCases": ["Hybrid Work", "Network Automation", "Digital Transformation", "AI Networking"],
+      "primary": true
+    },
+    {
       "id": "workspace-advisor-room-kit-pro-g2",
       "name": "Discover Workspace Advisor with Cisco Room Kit Pro G2",
       "linkLabel": "Workspace Advisor · Room Kit Pro G2",

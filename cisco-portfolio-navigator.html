@@ -674,7 +674,7 @@
   <div class="actionbar-filters">
   <div class="vm-seg" id="vm-seg" role="group" aria-label="Visualization level">
     <button type="button" data-vm="overview"     title="Overview — 5 category bubbles">Overview</button>
-    <button type="button" data-vm="families"     class="active" title="Families — 52 product families (default)">Families</button>
+    <button type="button" data-vm="families"     class="active" title="Families — 53 product families (default)">Families</button>
     <button type="button" data-vm="composition"  disabled title="Composition — pick a family first">Composition</button>
     <button type="button" data-vm="all-products" title="All Products — every family + product (dense; power-user view)">All</button>
     <button type="button" data-vm="spatial" title="Spatial — immersive 3D map of product families">Spatial</button>
@@ -852,7 +852,7 @@ const ONE_CISCO = {
   },
   aiAccelerated: new Set([
     "ai-defense", "silicon-one", "nexus-one", "hypershield", "catalyst-center",
-    "nexus", "room-systems", "webex-app", "webex-cc"
+    "nexus", "room-systems", "webex-app", "webex-cc", "cloud-control"
   ])
 };
 
@@ -935,6 +935,7 @@ const AI_DC_SET = new Set([
 const WORKPLACES_SET = new Set([
   "webex-app", "webex-meetings", "webex-calling", "webex-cc", "webex-connect",
   "room-systems", "desk-devices", "ip-phones", "conf-phones", "cisco-headsets",
+  "cloud-control",
   "catalyst-access", "catalyst-core", "catalyst-wireless",
   "meraki-switches", "meraki-wireless", "industrial-eth",
   "sdwan", "meraki-mx", "isr-routers", "wan-routers", "secure-routers", "catalyst-center"
@@ -1246,6 +1247,12 @@ const NODES = [
    url:"https://intersight.com", docsUrl:"https://intersight.com/help/apidocs"},
 
   // OBSERVABILITY
+  {id:"cloud-control",     name:"Cisco Cloud Control",         category:"observability",
+   desc:"AI-native AgenticOps platform — Collaboration Control Hub, AI Canvas, AI Assistant, unified inventory, topology, and correlated alerts across collaboration and networking.",
+   useCases:["Hybrid Work","Network Automation","Digital Transformation","AI Networking"],
+   industries:["Healthcare","Financial Services","Education","Government","Manufacturing","Retail"],
+   url:"https://cloud.cisco.com",
+   docsUrl:"https://www.cisco.com/site/us/en/products/cloud-systems-management/cloud-control/index.html"},
   {id:"thousandeyes",      name:"Cisco ThousandEyes",          category:"observability",
    desc:"Network intelligence delivering end-to-end visibility across internet, cloud, enterprise WAN, and SaaS — identifying issues before users are impacted.",
    useCases:["SD-WAN / SASE","Hybrid Work","Cloud Migration","Network Automation","Digital Transformation"],
@@ -1394,7 +1401,16 @@ const LINKS = [
   {source:"appdynamics",      target:"thousandeyes",      type:"direct",   label:"Full-stack coverage"},
   {source:"fso",              target:"appdynamics",       type:"direct",   label:"Application layer"},
   {source:"fso",              target:"thousandeyes",      type:"direct",   label:"Network layer"},
-  {source:"fso",              target:"splunk",            type:"direct",   label:"Security & logs"}
+  {source:"fso",              target:"splunk",            type:"direct",   label:"Security & logs"},
+  // Cloud Control
+  {source:"cloud-control",    target:"webex-app",          type:"direct",   label:"Control Hub admin"},
+  {source:"cloud-control",    target:"webex-calling",     type:"direct",   label:"Calling ops"},
+  {source:"cloud-control",    target:"room-systems",      type:"direct",   label:"Workspace mgmt"},
+  {source:"cloud-control",    target:"desk-devices",       type:"direct",   label:"Device inventory"},
+  {source:"cloud-control",    target:"thousandeyes",      type:"direct",   label:"Network assurance"},
+  {source:"cloud-control",    target:"catalyst-center",   type:"adjacent", label:"Network ops"},
+  {source:"cloud-control",    target:"meraki-mx",         type:"adjacent", label:"Meraki integration"},
+  {source:"cloud-control",    target:"fso",               type:"adjacent", label:"Observability"}
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -2633,6 +2649,17 @@ const PRODUCTS = [
    desc:"Unified SOC workbench bringing ES + SOAR + Intelligence Management + Attack Analyzer into a single analyst pane.",
    url:"https://www.splunk.com/en_us/products/mission-control.html"},
 
+  // ── CLOUD CONTROL (Current)
+  {id:"control-hub",       name:"Collaboration Control Hub",   family:"cloud-control", status:"current",
+   desc:"Admin console for Webex, Cisco devices, workspaces, services, and third-party integrations — the collaboration face of Cisco Cloud Control.",
+   url:"https://admin.webex.com"},
+  {id:"ai-canvas",         name:"AI Canvas",                   family:"cloud-control", status:"current",
+   desc:"Multiplayer agentic workspace for deep troubleshooting — natural language, widgets, knowledge base, and collaborative remediation.",
+   url:"https://cloud.cisco.com"},
+  {id:"ai-assistant-cc",   name:"Cloud Control AI Assistant",  family:"cloud-control", status:"current",
+   desc:"Conversational copilot inside Cloud Control — contextual Q&A and quick actions on the page you are viewing.",
+   url:"https://cloud.cisco.com"},
+
   // ── FSO (Current)
   {id:"fso-platform",   name:"FSO Platform Subscription",     family:"fso", status:"current",
    desc:"Cisco Full-Stack Observability Platform — OpenTelemetry data layer + entity graph spanning networks, apps, infra, and security.",
@@ -3034,8 +3061,8 @@ const BUNDLES = [
    products:["duo","ise","sf-branch","secure-access"],
    desc:"Complete Zero Trust architecture: identity, device posture, network access control, and cloud-delivered security."},
   {name:"Hybrid Work Suite",
-   products:["webex-app","webex-calling","room-systems","desk-devices","thousandeyes","secure-access","duo"],
-   desc:"Full hybrid workforce: collaboration, cloud calling, room and desk devices, network assurance, and secure access."},
+   products:["webex-app","webex-calling","room-systems","desk-devices","thousandeyes","secure-access","duo","cloud-control"],
+   desc:"Full hybrid workforce: collaboration, cloud calling, room and desk devices, network assurance, secure access, and Cloud Control ops."},
   {name:"Threat Defense Platform",
    products:["sf-branch","secure-endpoint","xdr","talos","splunk"],
    desc:"Integrated threat detection and automated response across endpoint, network, and SIEM."},
@@ -3053,7 +3080,10 @@ const BUNDLES = [
    desc:"OT/IT convergence with industrial network visibility, asset inventory, and zero-trust enforcement."},
   {name:"Cloud Contact Center",
    products:["webex-cc","webex-calling","webex-connect","webex-app","duo"],
-   desc:"Cloud-native omnichannel contact center with AI-powered routing, digital channels, and secure agent access."}
+   desc:"Cloud-native omnichannel contact center with AI-powered routing, digital channels, and secure agent access."},
+  {name:"Cloud Control Platform",
+   products:["cloud-control","webex-app","webex-calling","thousandeyes","catalyst-center"],
+   desc:"AI-native AgenticOps — unified Control Hub, AI Canvas, inventory, alerts, and cross-domain troubleshooting."}
 ];
 
 const LEGACY_NODES = [
@@ -7193,7 +7223,7 @@ document.addEventListener("keydown",ev=>{
       body: `Same data, multiple lenses — pick whichever zoom level fits the question you're asking:
              <ul style="margin:8px 0 0 16px;padding:0">
                <li><b>Overview</b> — 5 category bubbles. Best for first-look conversations.</li>
-               <li><b>Families</b> — 52 product families <em>(default)</em>. The classic 2D map of how things connect.</li>
+               <li><b>Families</b> — 53 product families <em>(default)</em>. The classic 2D map of how things connect.</li>
                <li><b>Composition</b> — one family pinned in the middle, every specific SKU around it, with dashed purple <em>"replaced by"</em> arrows to successor products.</li>
                <li><b>All</b> — every family + every product (~350 nodes) in one dense graph. Power-user view.</li>
                <li><b>Spatial</b> — immersive 3D map of families with always-visible name labels; orbit and zoom freely.</li>
@@ -7679,8 +7709,8 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.28.0";
-const DATA_UPDATED  = "2026-05-30";
+const APP_VERSION   = "2.15.0";
+const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
   current:  "cpn-current-v2",
@@ -8104,6 +8134,14 @@ const CHANGELOG = [
   {ver:"2.14.3", date:"2026-06-20", items:[
     "Overview — single click opens Families with all three pillars; double-click a card to focus one pillar.",
     "Families — All pillars row in legend; labels on hover only (fixes overlap when one pillar is focused); expanded grid when filtered."
+  ]},
+  {ver:"2.15.0", date:"2026-06-20", items:[
+    "New family: cloud-control — Cisco Cloud Control (AgenticOps platform with Collaboration Control Hub, AI Canvas, and AI Assistant).",
+    "Graph links — Cloud Control connects to Webex, room/desk devices, ThousandEyes, Catalyst Center, Meraki, and FSO.",
+    "Products — Control Hub, AI Canvas, and Cloud Control AI Assistant in Composition view.",
+    "Planner — Cloud Control Platform solution package; Hybrid Work Suite includes cloud-control.",
+    "Guided Plan — cloud-control in Meetings & messaging and Observability capability domains.",
+    "dCloud — AgenticOps with Cisco Cloud Control instant demo mapped to the cloud-control family."
   ]},
   {ver:"2.14.2", date:"2026-06-20", items:[
     "Families — fixed 3-pillar layout: families now stay in their zone grids instead of collapsing to the center (static layout, simulation disabled in pillar view)."
@@ -9877,7 +9915,7 @@ const WIZARD_DOMAINS = [
   {id:"ztna", label:"Zero trust / SSE", desc:"Secure Access, ZTNA",
    families:["secure-access"], hideFor:[]},
   {id:"collab", label:"Meetings & messaging", desc:"Webex suite",
-   families:["webex-meetings","webex-app"], hideFor:[]},
+   families:["webex-meetings","webex-app","cloud-control"], hideFor:[]},
   {id:"calling", label:"Calling / UCaaS", desc:"Cloud phone system",
    families:["webex-calling"], hideFor:[]},
   {id:"contact-center", label:"Contact center", desc:"Omnichannel CC",
@@ -9889,7 +9927,7 @@ const WIZARD_DOMAINS = [
   {id:"dc-net", label:"DC networking", desc:"Nexus, ACI fabric",
    families:["nexus","aci"], hideFor:["k12","smb","saas-startup","retail-chain"]},
   {id:"obs", label:"Observability", desc:"ThousandEyes, Splunk, APM",
-   families:["thousandeyes","splunk","appdynamics","fso"], hideFor:[]},
+   families:["thousandeyes","splunk","appdynamics","fso","cloud-control"], hideFor:[]},
   {id:"ot", label:"OT / plant floor", desc:"Industrial Ethernet, Cyber Vision",
    families:["industrial-eth","cyber-vision"], hideFor:["k12","smb","saas-startup","retail-chain","bank-branch"]}
 ];
