@@ -28,6 +28,7 @@ try {
       result.allPillarLabelsOff === false && "labels visible in all-pillars mode",
       result.labelOverlaps && `${result.labelOverlaps} label overlaps when focused`,
       result.focusedLabelCoverage?.some(r => !r.allLabeled) && "missing labels in focused pillar",
+      result.filtLayoutOk === false && "category-filter layout broken",
     ].filter(Boolean).join("; "));
     process.exit(1);
   }
