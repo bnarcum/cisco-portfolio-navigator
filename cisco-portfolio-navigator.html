@@ -4979,7 +4979,7 @@ function spatialTileCacheKey(node){
   return [
     node.id,
     spatialIconKeyForNode(node),
-    "icon",
+    "icon-v2",
     profile.mode,
     accent.core,
     selected?.id === node.id ? "sel" : "",
@@ -4993,7 +4993,7 @@ function buildSpatialTileSvg(node){
   const iconColor = spatialAccentHex(accent, "core");
   const inner = spatialSymbolInner(iconKey);
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-    <g transform="translate(128,128) scale(0.72)" fill="${iconColor}" stroke="${iconColor}" color="${iconColor}">${inner}</g>
+    <g transform="translate(128,128) scale(0.62) translate(-128,-128)" fill="${iconColor}" stroke="${iconColor}" color="${iconColor}">${inner}</g>
   </svg>`;
 }
 
@@ -5030,7 +5030,7 @@ function getSpatialTileSprite(node, radius, profile){
     opacity: 0.98
   });
   const sprite = new THREE.Sprite(mat);
-  const s = radius * profile.tileScale * 0.95;
+  const s = radius * profile.tileScale * 1.05;
   sprite.scale.set(s, s, 1);
   sprite.renderOrder = 2;
   return sprite;
@@ -7409,7 +7409,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.25.2";
+const APP_VERSION   = "2.25.3";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -7700,6 +7700,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.25.3", date:"2026-06-20", items:[
+    "Spatial — fix icon tiles clipped at the corner by scaling glyphs around center (128,128) instead of the SVG origin."
+  ]},
   {ver:"2.25.2", date:"2026-06-20", items:[
     "Spatial — icon tiles show the glyph only (removed category shape plate and outline rectangle behind each icon)."
   ]},
