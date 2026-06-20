@@ -850,6 +850,9 @@ function pillarLabelMaxChars(cellW, k, cellH){
 function pillarLabelTextLen(cellW){
   return (cellW || PILLAR_MIN_CELL_W) * PILLAR_LABEL_CELL_FILL;
 }
+function pillarLabelTextWidth(text, fontPx){
+  return (text || "").length * fontPx * PILLAR_LABEL_CHAR_W;
+}
 
 /**
  * Primary family → pillar assignment (Families view). Aligned to Cisco One Cisco outcome pages.
@@ -3123,7 +3126,8 @@ function applyPillarLabelStyles(selectedNode){
     const cellW = d._pillarCellW;
     const fontPx = pillarLabelFontPx(k, d._pillarCellH);
     const yOff = pillarLabelY(d, k, zoomFade);
-    const tw = cellW ? pillarLabelTextLen(cellW) : 0;
+    const label = show ? pillarShortName(d.name, pillarLabelMaxChars(cellW, k, d._pillarCellH)) : "";
+    const tw = Math.min(pillarLabelTextLen(cellW), pillarLabelTextWidth(label, fontPx) + 6);
     const th = fontPx * 1.35;
     let bg = wrap.select("rect.nl-bg");
     if (bg.empty()) bg = wrap.insert("rect", "text.nl").attr("class", "nl-bg");
@@ -3132,20 +3136,14 @@ function applyPillarLabelStyles(selectedNode){
       .attr("rx", 3)
       .attr("fill", "rgba(8,14,26,0.92)")
       .style("opacity", show ? (pillarLabelPriority(d, selectedNode, conn) >= 3 ? 1 : zoomFade) : 0);
+    wrap.select("text.nl").text(label);
   });
   ndEl.select("text.nl")
-    .text(d => {
-      if (!pillarLabelShown(d, selectedNode, conn, zoomFade)) return "";
-      return pillarShortName(d.name, pillarLabelMaxChars(d._pillarCellW, k, d._pillarCellH));
-    })
     .attr("y", d => pillarLabelY(d, k, zoomFade))
     .style("text-anchor", "middle")
     .style("dominant-baseline", "text-before-edge")
-    .attr("textLength", d => {
-      if (!pillarLabelShown(d, selectedNode, conn, zoomFade) || !d._pillarCellW) return null;
-      return pillarLabelTextLen(d._pillarCellW);
-    })
-    .attr("lengthAdjust", d => pillarLabelShown(d, selectedNode, conn, zoomFade) && d._pillarCellW ? "spacingAndGlyphs" : null)
+    .attr("textLength", null)
+    .attr("lengthAdjust", null)
     .style("opacity", d => {
       if (!pillarLabelShown(d, selectedNode, conn, zoomFade)) return 0;
       if (pillarLabelPriority(d, selectedNode, conn) >= 3) return 1;
@@ -3154,7 +3152,7 @@ function applyPillarLabelStyles(selectedNode){
     .style("font-size", d => `${pillarLabelFontPx(k, d._pillarCellH)}px`)
     .style("font-weight", d => pillarLabelPriority(d, selectedNode, conn) >= 3 ? "600" : "500")
     .style("fill", d => pillarLabelPriority(d, selectedNode, conn) >= 3 ? "#ffffff" : "#e2e8f0")
-    .style("letter-spacing", "0.01em")
+    .style("letter-spacing", null)
     .style("paint-order", "stroke fill")
     .style("stroke", "rgba(8,14,26,0.95)")
     .style("stroke-width", d => `${Math.max(2, pillarLabelFontPx(k, d._pillarCellH) * 0.35)}px`)
@@ -6788,7 +6786,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.22.0";
+const APP_VERSION   = "2.22.1";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -7079,6 +7077,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.22.1", date:"2026-06-20", items:[
+    "Families — removed SVG textLength stretching on zoom labels; truncation only, backdrop sized to actual text width."
+  ]},
   {ver:"2.22.0", date:"2026-06-20", items:[
     "Families — zoom labels capped to cell height, dark backdrop + stroke halo; connection lines hidden while zoom labels show (hover/select links still visible).",
     "Grid layout picks column count from panel height; workplaces uses 6×4 grid for clearer label bands."
