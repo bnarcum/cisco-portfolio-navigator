@@ -828,7 +828,8 @@ const PILLAR_CELL_LAYOUT_H = 76;
 const PILLAR_LABEL_BAND = 24;
 const PILLAR_CELL_TOP_PAD = 8;
 const PILLAR_LABEL_GAP = 10;
-const PILLAR_LABEL_ICON_GAP = 9;
+const PILLAR_LABEL_ICON_GAP = 7;
+const PILLAR_CELL_BOTTOM_PAD = 3;
 const PILLAR_TITLE_BAND = 32;
 const PILLAR_LABEL_HEIGHT = 14;
 const PILLAR_LABEL_ZOOM_K = 1.15;
@@ -2702,15 +2703,25 @@ function layoutZoneForItems(zone, items){
     w, h
   };
 }
+function pillarLayoutPillH(){
+  return pillarLabelPillH(PILLAR_LABEL_ZOOM_K);
+}
 function pillarNodeInCell(content, col, row, cols, rows){
   const cellW = content.w / cols;
   const cellH = content.h / rows;
   const cellLeft = content.x + col * cellW;
   const cellTop = content.y + row * cellH;
   const cellBottom = cellTop + cellH;
-  const labelAbsTop = cellBottom - PILLAR_LABEL_BAND + 4;
-  const maxIconY = labelAbsTop - PILLAR_LABEL_ICON_GAP - PILLAR_NODE_R - PILLAR_GLOW_PAD - 2;
-  const iconY = Math.min(cellTop + PILLAR_CELL_TOP_PAD + PILLAR_NODE_R, maxIconY);
+  const pillH = pillarLayoutPillH();
+  let labelAbsTop = cellBottom - PILLAR_CELL_BOTTOM_PAD - pillH;
+  const iconFootOffset = PILLAR_NODE_R + PILLAR_GLOW_PAD + 3;
+  let iconY = labelAbsTop - PILLAR_LABEL_ICON_GAP - iconFootOffset;
+  const minIconTop = cellTop + PILLAR_CELL_TOP_PAD;
+  if (iconY - PILLAR_NODE_R < minIconTop){
+    const shift = minIconTop - (iconY - PILLAR_NODE_R);
+    iconY += shift;
+    labelAbsTop += shift;
+  }
   return {
     x: cellLeft + cellW * 0.5,
     y: iconY,
@@ -2723,13 +2734,9 @@ function pillarMinCellH(){
   return pillarGridMinCellH();
 }
 function pillarGridMinCellH(){
-  const maxLabelPx = Math.min(
-    PILLAR_LABEL_BASE_PX / PILLAR_LABEL_ZOOM_K,
-    (PILLAR_LABEL_BAND - 6) / 1.35
-  );
-  const labelBlock = maxLabelPx + PILLAR_LABEL_PILL_PAD_Y * 2;
-  return PILLAR_CELL_TOP_PAD + PILLAR_NODE_R * 2 + PILLAR_GLOW_PAD + 3
-    + PILLAR_LABEL_ICON_GAP + labelBlock;
+  const pillH = pillarLayoutPillH();
+  const iconBlock = PILLAR_NODE_R * 2 + PILLAR_GLOW_PAD + 3;
+  return PILLAR_CELL_TOP_PAD + iconBlock + PILLAR_LABEL_ICON_GAP + pillH + PILLAR_CELL_BOTTOM_PAD;
 }
 function pillarNodeVisualBottom(d){
   return PILLAR_NODE_R + PILLAR_GLOW_PAD + 3;
@@ -6853,7 +6860,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.22.4";
+const APP_VERSION   = "2.22.5";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -7144,6 +7151,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.22.5", date:"2026-06-20", items:[
+    "Families — icon and label packed as one cluster from the cell bottom with a fixed gap, eliminating the large dead space above labels."
+  ]},
   {ver:"2.22.4", date:"2026-06-20", items:[
     "Families — pillar zoom label text vertically centered inside the dark pill background."
   ]},
