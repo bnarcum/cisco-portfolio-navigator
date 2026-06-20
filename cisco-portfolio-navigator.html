@@ -175,7 +175,7 @@
     #pbody .p-desc{color:#d2dae3}
     #pbody .rt{color:#b8c6d4}
     #pbody .p-tier-note{color:#b8c6d4}
-    #pbody .la>span:not(.la-dcloud-main):not(.la-dcloud-meta){color:#b8c6d4}
+    #pbody .la>span:not(.la-dcloud-main):not(.la-dcloud-meta):not(.la-matrix-main):not(.la-matrix-meta){color:#b8c6d4}
     .tr{display:flex;flex-wrap:wrap;gap:5px}
     .tg{padding:3px 9px;background:var(--surface2);border:1px solid var(--border);
       border-radius:5px;font-size:11px;cursor:pointer;transition:all .12s;user-select:none}
@@ -250,6 +250,29 @@
       font-size:11px;font-weight:700;flex-shrink:0;color:#001824!important;
       background:#00d4ff;padding:6px 11px;border-radius:6px;letter-spacing:.01em}
     .la-dcloud:hover .la-dcloud-meta{background:#fff;color:#003648!important}
+    .p-matrix-card{
+      padding:14px 14px 12px;border-radius:10px;margin-bottom:14px;
+      border:1px solid rgba(168,85,247,.55);
+      background:linear-gradient(145deg,rgba(168,85,247,.18) 0%,rgba(88,28,135,.14) 55%,rgba(40,16,70,.2) 100%);
+      box-shadow:0 0 0 1px rgba(168,85,247,.12),0 6px 24px rgba(124,58,237,.22)}
+    .p-matrix-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+    .matrix-brand{font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#e9d5ff}
+    .matrix-badge{
+      flex-shrink:0;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+      padding:4px 9px;border-radius:999px;background:rgba(168,85,247,.28);color:#f3e8ff;
+      border:1px solid rgba(192,132,252,.5)}
+    .p-matrix-tagline{font-size:12px;color:#f5f3ff;margin-bottom:10px;line-height:1.45;font-weight:500}
+    .la-matrix{
+      border-color:rgba(192,132,252,.6)!important;background:rgba(30,10,55,.45)!important;
+      padding:12px 14px!important;border-radius:8px!important;transition:all .15s}
+    .la-matrix:hover{
+      border-color:#c084fc!important;background:rgba(168,85,247,.32)!important;
+      box-shadow:0 0 18px rgba(168,85,247,.35);transform:translateY(-1px);color:#fff!important}
+    .la-matrix .la-matrix-main{font-weight:700;flex:1;min-width:0;padding-right:10px;color:#fff!important;font-size:13px}
+    .la-matrix .la-matrix-meta{
+      font-size:11px;font-weight:700;flex-shrink:0;color:#2e1065!important;
+      background:#c084fc;padding:6px 11px;border-radius:6px;letter-spacing:.01em}
+    .la-matrix:hover .la-matrix-meta{background:#fff;color:#581c87!important}
     .gw-dcloud-section{
       margin-top:14px;padding:14px;border-radius:10px;text-align:left;
       border:1px solid rgba(0,212,255,.45);
@@ -2767,6 +2790,8 @@ function compositionShortName(p){
 }
 
 const MATRIX_SITE = "https://bnarcum.github.io/collaboration-device-matrix/";
+const MATRIX_NODE_FILL = "#e8eef4";
+const MATRIX_NODE_RING = "rgba(100,116,139,0.45)";
 const MATRIX_IMG_BASE = MATRIX_SITE + "devices/";
 let MATRIX_BRIDGE = {
   matrixBase: MATRIX_SITE,
@@ -2972,15 +2997,16 @@ function buildNodeGroup(sel){
     .attr("fill-opacity", 0).attr("filter","url(#glow)");
   sel.append("circle").attr("class","mc")
     .attr("r", d => d._r)
-    .attr("fill", d => d._hasImage ? "#0a1018" : catColor(d.category))
-    .attr("fill-opacity", d => d._hasImage ? 0.98 : 0.88)
-    .attr("stroke","transparent").attr("stroke-width", 2.5);
+    .attr("fill", d => d._hasImage ? MATRIX_NODE_FILL : catColor(d.category))
+    .attr("fill-opacity", d => d._hasImage ? 1 : 0.88)
+    .attr("stroke", d => d._hasImage ? MATRIX_NODE_RING : "transparent")
+    .attr("stroke-width", d => d._hasImage ? 1.2 : 2.5);
   sel.append("circle").attr("class","mring")
     .attr("r", d => d._r + 1.4).attr("fill", "none")
     .attr("stroke", d => {
       if (d._status === "eol") return "#ef4444";
       if (d._status === "eos") return "#FF9000";
-      if (d._hasImage) return "rgba(45,206,92,0.55)";
+      if (d._hasImage) return "rgba(45,206,92,0.65)";
       return "transparent";
     })
     .attr("stroke-width", d => d._hasImage ? 1.6 : 0)
@@ -2988,7 +3014,7 @@ function buildNodeGroup(sel){
   sel.filter(d => d._hasImage && matrixImageUrl(d.id)).each(function(d){
     const g = d3.select(this);
     const cid = ensureProductClip(d.id, d._r);
-    const pad = d._r * 0.98;
+    const pad = d._r * 0.86;
     g.append("image").attr("class", "pimg")
       .attr("href", matrixImageUrl(d.id))
       .attr("width", pad * 2).attr("height", pad * 2)
@@ -3022,22 +3048,26 @@ function compositionLabelStyle(d){
 function applyCompositionNodeStyles(){
   if (viewMode !== "composition" || !ndEl) return;
   ndEl.select(".mc")
-    .attr("fill", d => d._hasImage ? "#0a1018" : catColor(d.category))
+    .attr("fill", d => d._hasImage ? MATRIX_NODE_FILL : catColor(d.category))
     .attr("fill-opacity", d => {
-      if (d._hasImage) return d._status === "eol" ? 0.5 : d._status === "eos" ? 0.68 : 0.98;
+      if (d._hasImage) return d._status === "eol" ? 0.72 : d._status === "eos" ? 0.85 : 1;
       if (d._kind === "family") return 0.95;
       if (d._status === "eol") return 0.42;
       if (d._status === "eos") return 0.62;
       return 0.92;
     })
     .attr("stroke", d => {
-      if (d._hasImage) return "transparent";
+      if (d._hasImage) return MATRIX_NODE_RING;
       if (d._status === "eol") return "#ef4444";
       if (d._status === "eos") return "#FF9000";
       if (d._kind === "family") return "#ffffff";
       return "transparent";
     })
-    .attr("stroke-width", d => (!d._hasImage && ((d._status && d._status !== "current") || d._kind === "family")) ? 2 : 0);
+    .attr("stroke-width", d => {
+      if (d._hasImage) return 1.2;
+      if ((d._status && d._status !== "current") || d._kind === "family") return 2;
+      return 0;
+    });
   ndEl.select(".mring")
     .attr("stroke", d => {
       if (d._status === "eol") return "#ef4444";
@@ -3178,7 +3208,7 @@ function rebindGraph(opts){
   ndEl.select("image.pimg").each(function(d){
     if (!d._hasImage) return;
     ensureProductClip(d.id, d._r);
-    const pad = d._r * 0.98;
+    const pad = d._r * 0.86;
     d3.select(this)
       .attr("href", matrixImageUrl(d.id))
       .attr("width", pad * 2).attr("height", pad * 2)
@@ -5562,7 +5592,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.9.1";
+const APP_VERSION   = "2.9.2";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -5853,6 +5883,10 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.9.2", date:"2026-06-20", items:[
+    "Device Matrix CTA — purple highlight card with Launch button, matching dCloud prominence.",
+    "Product photos — light backing on panel heroes and composition graph thumbnails so brochure images read clearly against the canvas."
+  ]},
   {ver:"2.9.1", date:"2026-06-20", items:[
     "Product status filters — Current/EoL facets now apply across Composition, Families, All Products, Timeline, search, and panels; default is Current only.",
     "End-of-Sale products are permanently hidden from all views (not toggleable).",
@@ -6172,20 +6206,19 @@ STYLE.textContent = `
     border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;
     border:1px solid var(--border);overflow:hidden;position:relative}
   .p-hero{width:100%;height:200px;margin-bottom:14px;border-radius:10px;overflow:hidden;position:relative;
-    background:radial-gradient(ellipse 75% 65% at 50% 52%, rgba(45,206,92,0.1), rgba(8,14,24,0.96) 72%),
-               linear-gradient(165deg, #141c28 0%, #0a1018 100%);
-    border:1px solid rgba(45,206,92,0.2);box-shadow:0 6px 24px rgba(0,0,0,0.35)}
-  .p-hero img{width:100%;height:100%;object-fit:contain;padding:16px 20px 24px;box-sizing:border-box;
-    filter:drop-shadow(0 8px 18px rgba(0,0,0,0.5));position:relative;z-index:1}
-  .p-hero-fallback{display:flex;align-items:center;justify-content:center;height:100%;position:absolute;inset:0;z-index:0}
+    background:linear-gradient(165deg, #f1f5f9 0%, #e2e8f0 48%, #dbe4ee 100%);
+    border:1px solid rgba(148,163,184,0.45);box-shadow:0 4px 20px rgba(15,23,42,0.12),inset 0 1px 0 rgba(255,255,255,0.65)}
+  .p-hero img{width:100%;height:100%;object-fit:contain;padding:14px 18px 20px;box-sizing:border-box;
+    filter:drop-shadow(0 4px 12px rgba(15,23,42,0.18));position:relative;z-index:1}
+  .p-hero-fallback{display:flex;align-items:center;justify-content:center;height:100%;position:absolute;inset:0;z-index:0;
+    background:linear-gradient(165deg, #1a2332 0%, #0a1018 100%)}
   .p-hero-fallback svg{width:68px;height:68px;color:var(--accent);opacity:.65}
-  .p-hero-scrim{position:absolute;inset:0;background:linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.5) 100%);
+  .p-hero-scrim{position:absolute;inset:0;background:linear-gradient(180deg, transparent 58%, rgba(15,23,42,0.1) 100%);
     pointer-events:none;z-index:2}
   .p-hero-meta{position:absolute;left:10px;right:10px;bottom:8px;display:flex;justify-content:space-between;
     align-items:center;gap:8px;z-index:3;pointer-events:none}
-  .p-hero-cat{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,0.55)}
-  .p-matrix-link{margin:-2px 0 12px}
-  .p-matrix-link .la{display:flex;align-items:center;gap:6px}
+  .p-hero-cat{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(15,23,42,0.5)}
+  .p-matrix-link{margin:0 0 14px;padding:0;border:none;background:transparent}
   .p-photo svg{width:60px;height:60px;color:var(--accent);opacity:.65}
   .p-photo .p-photo-cat{position:absolute;bottom:6px;left:8px;font-size:9px;color:var(--subtle);
     text-transform:uppercase;letter-spacing:.1em;font-weight:700}
@@ -8503,9 +8536,18 @@ function insertMatrixLink(id, kind){
   if (!url) return;
   const sec = document.createElement("div");
   sec.className = "p-sec p-matrix-link";
-  sec.innerHTML = `<div class="p-sec-t">Device Matrix</div><div class="lb">
-    <a class="la" href="${escapeHtml(url)}" target="_blank" rel="noopener">View in Collaboration Device Matrix <span>3D showroom ↗</span></a>
-  </div>`;
+  sec.innerHTML = `
+    <div class="p-matrix-card">
+      <div class="p-matrix-header">
+        <span class="matrix-brand">Collaboration Device Matrix</span>
+        <span class="matrix-badge">3D Showroom</span>
+      </div>
+      <p class="p-matrix-tagline">Open this product in the interactive 3D showroom — specs, ports, and form factor.</p>
+      <a class="la la-matrix" href="${escapeHtml(url)}" target="_blank" rel="noopener">
+        <span class="la-matrix-main">View in Device Matrix</span>
+        <span class="la-matrix-meta">Launch ↗</span>
+      </a>
+    </div>`;
   const hero = pb.querySelector(".p-hero") || pb.querySelector(".p-name");
   if (hero?.nextSibling) hero.parentNode.insertBefore(sec, hero.nextSibling);
   else pb.appendChild(sec);
