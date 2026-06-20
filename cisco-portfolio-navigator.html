@@ -105,8 +105,14 @@
     .vm-seg button.active{background:var(--accent);color:#000}
     .vm-seg button:disabled{opacity:.4;cursor:not-allowed}
 
+    /* Top chip stack — filter badge + view breadcrumb (avoids overlap) */
+    #top-chips{position:fixed;top:calc(var(--topbar-h) + 6px);left:50%;transform:translateX(-50%);z-index:90;
+      display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;
+      max-width:min(92vw, 680px)}
+    #top-chips > *{pointer-events:auto}
+
     /* BREADCRUMB CHIP under topbar */
-    #vm-crumb{position:fixed;top:calc(var(--topbar-h) + 6px);left:50%;transform:translateX(-50%);z-index:90;
+    #vm-crumb{position:static;transform:none;
       display:none;align-items:center;gap:8px;
       background:var(--surface);border:1px solid var(--border);border-radius:18px;
       padding:5px 6px 5px 12px;font-size:11px;color:var(--muted);
@@ -492,9 +498,10 @@
       background:var(--surface);border:1px solid var(--border);border-radius:20px;
       padding:5px 14px;font-size:11px;color:var(--subtle);z-index:50;
       white-space:nowrap;pointer-events:none}
-    #fbadge{position:fixed;top:calc(var(--topbar-h) + 12px);left:50%;transform:translateX(-50%);
+    #fbadge{position:static;transform:none;
       background:var(--surface);border:1px solid var(--accent);border-radius:20px;
-      padding:4px 14px;font-size:11px;color:var(--accent);z-index:50;display:none;pointer-events:none}
+      padding:4px 14px;font-size:11px;color:var(--accent);display:none;pointer-events:none;
+      text-align:center;white-space:nowrap;max-width:min(92vw, 680px);overflow:hidden;text-overflow:ellipsis}
 
     .nd{cursor:pointer}
     ::-webkit-scrollbar{width:5px}
@@ -657,8 +664,11 @@
 </div>
 </div>
 
+<div id="top-chips">
+  <div id="fbadge"></div>
+  <div id="vm-crumb" aria-live="polite"></div>
+</div>
 <div id="gw"><svg id="gs"></svg></div>
-<div id="vm-crumb" aria-live="polite"></div>
 <div id="tip"><div id="tn"></div><div id="tc"></div></div>
 
 <div id="panel">
@@ -718,7 +728,6 @@
 
 <div id="tools" role="toolbar" aria-label="Graph tools"></div>
 <div id="hint">Scroll to zoom · Drag to pan · Click node for details</div>
-<div id="fbadge"></div>
 <div id="pillar-legend" aria-hidden="true"></div>
 <div id="toast"></div>
 
@@ -7259,7 +7268,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.24.2";
+const APP_VERSION   = "2.24.3";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -7550,6 +7559,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.24.3", date:"2026-06-20", items:[
+    "UI — filter badge and Spatial/Composition breadcrumb stack vertically instead of overlapping when both are visible."
+  ]},
   {ver:"2.24.2", date:"2026-06-20", items:[
     "Spatial — product labels always visible in family orbit (small families show full names; dense families use shortened labels instead of hiding until hover)."
   ]},
