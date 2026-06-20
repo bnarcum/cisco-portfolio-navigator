@@ -3594,6 +3594,10 @@ function refreshMatrixVisuals(){
     if (typeof rebindGraph === "function") rebindGraph({ restart: false });
     applyCompositionNodeStyles();
   }
+  if (viewMode === "spatial" && spatialState.active && spatialState.focusFamily){
+    clearSpatialLabelCache();
+    refreshSpatialGraph();
+  }
   const pb = document.getElementById("pbody");
   if (pb?.dataset.lastKind === "product" && pb.dataset.lastId && typeof window.insertProductHero === "function"){
     window.insertProductHero(pb.dataset.lastId, "product");
@@ -4846,7 +4850,7 @@ function buildCompositionView(familyId){
 // SPATIAL — optional 3D portfolio map
 // ══════════════════════════════════════
 const SPATIAL_LIB = "vendor/3d-force-graph.min.js";
-const spatialState = { graph: null, active: false, libPromise: null, spritePromise: null, resizeObs: null, labelCache: new Map(), tileCache: new Map(), focusFamily: null, lastNodeClick: null, hoveredId: null, lightsAdded: false, threeCaptured: false, nodeRendererReady: false, meshTemplate: null };
+const spatialState = { graph: null, active: false, libPromise: null, spritePromise: null, resizeObs: null, labelCache: new Map(), tileCache: new Map(), tileLoadGen: 0, focusFamily: null, lastNodeClick: null, hoveredId: null, lightsAdded: false, threeCaptured: false, nodeRendererReady: false, meshTemplate: null };
 
 function spatialResolveName(id){
   return nodeById[id]?.name || prodById[id]?.name || id;
@@ -4854,6 +4858,7 @@ function spatialResolveName(id){
 
 function clearSpatialLabelCache(){
   spatialState.labelCache.clear();
+  spatialState.tileLoadGen += 1;
   spatialState.tileCache.forEach(t => t.material?.map?.dispose?.());
   spatialState.tileCache.clear();
 }
@@ -5027,13 +5032,20 @@ function spatialAccentHex(accent, channel){
   return "#" + n.toString(16).padStart(6, "0");
 }
 
+function spatialProductPhotoUrl(node){
+  if (!spatialState.focusFamily) return null;
+  if (node.kind !== "product" && !prodById[node.id]) return null;
+  return matrixImageUrl(node.id);
+}
+
 function spatialTileCacheKey(node){
   const accent = spatialNodeAccent(node);
   const profile = spatialNodeVisualProfile(node);
+  const photoUrl = spatialProductPhotoUrl(node);
   return [
     node.id,
-    spatialIconKeyForNode(node),
-    "icon-v2",
+    photoUrl ? "matrix:" + photoUrl : "icon:" + spatialIconKeyForNode(node),
+    "tile-v3",
     profile.mode,
     accent.core,
     selected?.id === node.id ? "sel" : "",
@@ -5051,21 +5063,40 @@ function buildSpatialTileSvg(node){
   </svg>`;
 }
 
+function finishSpatialTileLoad(key, gen, img){
+  const entry = spatialState.tileCache.get(key);
+  if (!entry || entry.gen !== gen) return;
+  entry.image = img;
+  entry.ready = true;
+  if (spatialState.active) refreshSpatialNodeVisuals();
+}
+
+function preloadSpatialIconTile(node, key, gen){
+  spatialState.tileCache.set(key, { ready: false, gen });
+  const svg = buildSpatialTileSvg(node);
+  const img = new Image();
+  img.onload = () => finishSpatialTileLoad(key, gen, img);
+  img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+}
+
 function preloadSpatialTiles(nodes){
+  const gen = spatialState.tileLoadGen;
   nodes.forEach(n => {
     const key = spatialTileCacheKey(n);
-    if (spatialState.tileCache.has(key)) return;
-    spatialState.tileCache.set(key, { ready: false });
-    const svg = buildSpatialTileSvg(n);
-    const img = new Image();
-    img.onload = () => {
-      const entry = spatialState.tileCache.get(key);
-      if (!entry) return;
-      entry.image = img;
-      entry.ready = true;
-      if (spatialState.active) refreshSpatialNodeVisuals();
-    };
-    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+    const existing = spatialState.tileCache.get(key);
+    if (existing?.ready) return;
+    if (existing && !existing.ready) return;
+    const photoUrl = spatialProductPhotoUrl(n);
+    if (photoUrl){
+      spatialState.tileCache.set(key, { ready: false, gen });
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => finishSpatialTileLoad(key, gen, img);
+      img.onerror = () => preloadSpatialIconTile(n, key, gen);
+      img.src = photoUrl;
+    } else {
+      preloadSpatialIconTile(n, key, gen);
+    }
   });
 }
 
@@ -5090,12 +5121,26 @@ function getSpatialTileSprite(node, radius, profile){
   return sprite;
 }
 
-function createSpatialTilePlaceholder(){
-  return null;
-}
-
 function spatialNodeBaseScale(node, profile){
   return spatialNodeRadius(node) * (profile.ringScale / 4.2);
+}
+
+function ensureSpatialTileOnGroup(group, node, radius, profile){
+  const rs = spatialNodeBaseScale(node, profile);
+  const fresh = getSpatialTileSprite(node, radius, profile);
+  if (!fresh) return;
+  fresh.userData.role = "tile";
+  let tile = null;
+  group.traverse(obj => { if (obj.userData?.role === "tile") tile = obj; });
+  if (tile){
+    fresh.position.copy(tile.position);
+    tile.parent.add(fresh);
+    tile.parent.remove(tile);
+    tile.material?.map?.dispose?.();
+  } else {
+    fresh.position.y = rs * 0.08;
+    group.add(fresh);
+  }
 }
 
 function updateSpatialNodeGroup(group, node){
@@ -5120,16 +5165,6 @@ function updateSpatialNodeGroup(group, node){
       obj.material.color.setHex(accent.core);
       obj.material.opacity = stack.has(node.id) ? 0.92 : 0.62;
     }
-    if (obj.userData?.role === "tile"){
-      const fresh = getSpatialTileSprite(node, radius, profile);
-      if (fresh && obj.parent){
-        fresh.userData.role = "tile";
-        fresh.position.copy(obj.position);
-        obj.parent.add(fresh);
-        obj.parent.remove(obj);
-        obj.material?.map?.dispose?.();
-      }
-    }
     if (obj.userData?.role === "label"){
       styleSpatialLabelSprite(obj, node);
       if (obj.text !== spatialDisplayName(node)) obj.text = spatialDisplayName(node);
@@ -5137,6 +5172,7 @@ function updateSpatialNodeGroup(group, node){
       obj.position.y = radius * 0.42 + profile.labelLift;
     }
   });
+  ensureSpatialTileOnGroup(group, node, radius, profile);
 }
 
 function buildSpatialNodeObject(node){
@@ -5200,12 +5236,7 @@ function buildSpatialNodeObject(node){
   rim.position.y = -rs * 0.13;
   group.add(rim);
 
-  const tile = getSpatialTileSprite(node, radius, profile) || createSpatialTilePlaceholder(node, radius, profile);
-  if (tile){
-    tile.userData.role = "tile";
-    tile.position.y = rs * 0.08;
-    group.add(tile);
-  }
+  ensureSpatialTileOnGroup(group, node, radius, profile);
 
   const label = getSpatialLabelSprite(node);
   label.userData.role = "label";
@@ -5922,6 +5953,25 @@ window.getViewMode    = () => viewMode;
 window.getViewFocus   = () => viewFocus;
 window.getSpatialFocus = () => spatialState.focusFamily;
 window.__cpnSpatialGraph = () => spatialState.graph;
+window.__cpnSpatialTileStats = () => {
+  let ready = 0, matrix = 0, pending = 0;
+  spatialState.tileCache.forEach((entry, key) => {
+    if (entry.ready) ready++;
+    else pending++;
+    if (key.includes("matrix:")) matrix++;
+  });
+  const g = spatialState.graph;
+  const scene = g?.scene?.();
+  let groups = 0, withTile = 0;
+  scene?.traverse(o => {
+    if (!o.userData?.nodeId) return;
+    groups++;
+    let hasTile = false;
+    o.traverse(c => { if (c.userData?.role === "tile") hasTile = true; });
+    if (hasTile) withTile++;
+  });
+  return { cacheReady: ready, cachePending: pending, cacheMatrix: matrix, groups, withTile };
+};
 window.__cpnSpatialVisibleLabels = () => {
   let visible = 0;
   spatialState.labelCache.forEach(sprite => {
@@ -7555,7 +7605,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.27.1";
+const APP_VERSION   = "2.27.2";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -7846,6 +7896,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.27.2", date:"2026-06-20", items:[
+    "Spatial — restore Device Matrix product photos in family orbit; fix blank tiles after filtered breadcrumb drill-in by attaching billboards when async loads finish (including after cache clears)."
+  ]},
   {ver:"2.27.1", date:"2026-06-20", items:[
     "Account Planner — fix Analyze / Refresh footer button: unified scroll area, sticky footer z-index, toast + scroll to results on re-analyze, and 'Refresh analysis' label when results exist."
   ]},
