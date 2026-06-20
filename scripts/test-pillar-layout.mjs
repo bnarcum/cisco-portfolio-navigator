@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Layout regression: collisions, icons inside zones, triple pillar overlap. */
+/** Layout regression: collisions, icons inside zones, non-overlapping panels. */
 import { chromium } from "playwright";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -24,14 +24,14 @@ try {
       result.crossCollisions && `${result.crossCollisions} cross-pillar collisions`,
       result.withinCollisions && `${result.withinCollisions} within-pillar collisions`,
       result.outsideZone && `${result.outsideZone} icons outside zone`,
-      !result.tripleZoneOverlap && "zones do not triple-overlap",
+      result.zonesNoOverlap === false && "pillar zones overlap",
       result.allPillarLabelsOff === false && "labels visible in all-pillars mode",
       result.labelOverlaps && `${result.labelOverlaps} label overlaps when focused`,
       result.focusedLabelCoverage?.some(r => !r.allLabeled) && "missing labels in focused pillar",
     ].filter(Boolean).join("; "));
     process.exit(1);
   }
-  console.log("PASS: 3-pillar layout + labels OK");
+  console.log("PASS: separated panels + labels OK");
 } finally {
   await browser.close();
 }
