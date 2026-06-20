@@ -432,6 +432,9 @@
     .rc-btn.prim{background:var(--accent);color:#000;border-color:var(--accent)}
     .rc-btn.prim:hover{opacity:.85}
     .rc-score{display:flex;align-items:center;gap:2px;flex-shrink:0}
+    .rc-score-lbl{font-size:9px;color:var(--subtle);font-weight:600;margin-right:4px;white-space:nowrap}
+    .recs-legend{font-size:11px;color:var(--subtle);line-height:1.45;margin-bottom:12px;padding:8px 10px;
+      background:var(--surface2);border-radius:7px;border:1px solid var(--border)}
     .rc-s{font-size:11px;color:var(--accent)}
     .rc-so{font-size:11px;color:var(--border)}
 
@@ -462,9 +465,8 @@
       color:var(--muted);transition:all .15s}
     .bun-add:hover{border-color:var(--accent);color:var(--accent)}
 
-    /* Coverage */
-    .cov-t{font-size:10px;font-weight:700;text-transform:uppercase;
-      letter-spacing:.08em;color:var(--subtle);margin-bottom:8px}
+    /* Coverage tab */
+    .cov-t{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px}
     .cov-i{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:12px}
     .cov-d{width:8px;height:8px;border-radius:50%;flex-shrink:0}
     .cov-d.y{background:var(--green)}.cov-d.n{background:var(--border)}
@@ -716,13 +718,13 @@
     <div id="planner-summary" hidden>
       <button type="button" id="pln-edit-stack" class="pln-summary-btn">
         <span id="pln-summary-text">Untitled account</span>
-        <span class="pln-summary-sub">Edit stack</span>
+        <span class="pln-summary-sub">Edit products</span>
       </button>
     </div>
     <div id="planner-setup">
       <div id="an-wrap"><input id="acct-name" type="text" placeholder="Account name (e.g. Acme Corp)…"/></div>
       <div id="ss">
-        <div class="sh"><span class="st">Account stack</span><span class="sc" id="stack-cnt">0 products</span></div>
+        <div class="sh"><span class="st">Their products</span><span class="sc" id="stack-cnt">0 products</span></div>
         <div class="psw">
           <svg class="psi" viewBox="0 0 16 16" fill="none">
             <circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.5"/>
@@ -749,10 +751,10 @@
       <div id="no-analysis" class="empty" style="display:none" aria-hidden="true"></div>
       <div id="analysis-results" style="display:none">
         <div class="ptabs">
-          <button class="ptab active" data-tab="recs">Augment <span class="ptab-b" id="rec-cnt">0</span></button>
-          <button class="ptab" data-tab="replace">Replace <span class="ptab-r" id="rep-cnt">0</span></button>
-          <button class="ptab" data-tab="bundles">Bundles</button>
-          <button class="ptab" data-tab="coverage">Coverage</button>
+          <button class="ptab active" data-tab="recs">Suggestions <span class="ptab-b" id="rec-cnt">0</span></button>
+          <button class="ptab" data-tab="replace">Upgrades <span class="ptab-r" id="rep-cnt">0</span></button>
+          <button class="ptab" data-tab="bundles">Solution packages</button>
+          <button class="ptab" data-tab="coverage">Gaps &amp; strengths</button>
         </div>
         <div id="tab-recs" class="tc active"></div>
         <div id="tab-replace" class="tc"></div>
@@ -6143,8 +6145,8 @@ function showDetailPanel(d) {
 
   const addBtn = document.createElement("button");
   addBtn.className = "add-stack-btn" + (inStk?" added":"");
-  addBtn.textContent = inStk ? "✓ In Account Stack" : "+ Add Family to Account Stack";
-  addBtn.addEventListener("click", ()=>{ if(!inStk){ addToStack(d.id,"node"); addBtn.textContent="✓ In Account Stack"; addBtn.classList.add("added"); } });
+  addBtn.textContent = inStk ? "✓ Already listed" : "+ Add to their products";
+  addBtn.addEventListener("click", ()=>{ if(!inStk){ addToStack(d.id,"node"); addBtn.textContent="✓ Already listed"; addBtn.classList.add("added"); } });
   document.getElementById("pbody").appendChild(addBtn);
   document.getElementById("panel").classList.add("open");
 }
@@ -6188,9 +6190,9 @@ window.showProductDetail = function(id) {
 
   const addBtn = document.createElement("button");
   addBtn.className = "add-stack-btn" + (inStk?" added":"");
-  addBtn.textContent = inStk ? "✓ In Account Stack" : `+ Add ${p.name} to Stack`;
+  addBtn.textContent = inStk ? "✓ Already listed" : "+ Add to their products";
   addBtn.addEventListener("click",()=>{
-    if(!inStk){ addToStack(id,"product"); addBtn.textContent="✓ In Account Stack"; addBtn.classList.add("added"); }
+    if(!inStk){ addToStack(id,"product"); addBtn.textContent="✓ Already listed"; addBtn.classList.add("added"); }
   });
   document.getElementById("pbody").appendChild(addBtn);
   document.getElementById("panel").classList.add("open");
@@ -6678,7 +6680,7 @@ function renderPillarCoverage(){
   const hit = stackPillarCoverage();
   const rows = ONE_CISCO.pillars;
   el.style.display = "block";
-  el.innerHTML = `<div class="pillar-cov-t">One Cisco coverage</div>
+  el.innerHTML = `<div class="pillar-cov-t">One Cisco pillars represented</div>
     <div class="pillar-cov-row">${rows.map(r =>
       `<span class="pillar-pill ${hit[r.id] ? "on" : "off"}" style="--pc:${r.color}">${r.shortLabel}</span>`
     ).join("")}</div>`;
@@ -6797,7 +6799,8 @@ function renderRecs(recs, missCats, stackCats) {
 
   let html="";
   if(recs.length){
-    html+=`<div style="font-size:10px;color:var(--subtle);margin-bottom:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em">${recs.length} augmentation${recs.length!==1?"s":""} recommended for your stack</div>`;
+    html+=`<div class="recs-legend">Stars show <strong>connection strength</strong> — more stars means more links to products already listed.</div>`;
+    html+=`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:600">${recs.length} suggestion${recs.length!==1?"s":""} that pair well with what they have</div>`;
     recs.forEach(r=>{
       const cat=CATS[r.node.category];
       const sc=Math.min(5,r.direct*2+r.adjacent);
@@ -6806,19 +6809,19 @@ function renderRecs(recs, missCats, stackCats) {
         <div class="rc-top">
           <div><div class="rc-badge" style="background:${cat.color}22;color:${cat.color}">${cat.label}</div>
           <div class="rc-name">${r.node.name}</div></div>
-          <div class="rc-score">${stars(sc)}</div>
+          <div class="rc-score" title="Connection strength — links to products already listed"><span class="rc-score-lbl">Fit</span>${stars(sc)}</div>
         </div>
-        <div class="rc-reason">${r.direct>0?`<strong>${r.direct} direct integration${r.direct!==1?"s":""}</strong> with your stack. `:""}${r.adjacent>0?`${r.adjacent} adjacent connection${r.adjacent!==1?"s":""}.`:""} ${r.connTo.length?`Pairs with ${conn.join(", ")}${r.connTo.length>3?` +${r.connTo.length-3} more`:""}`:""}
+        <div class="rc-reason">${r.direct>0?`<strong>${r.direct} direct connection${r.direct!==1?"s":""}</strong> to what they already have. `:""}${r.adjacent>0?`${r.adjacent} related connection${r.adjacent!==1?"s":""}.`:""} ${r.connTo.length?`Works with ${conn.join(", ")}${r.connTo.length>3?` +${r.connTo.length-3} more`:""}`:""}
         </div>
         <div class="rc-connects">${r.connTo.slice(0,4).map(c=>`<span class="rc-ctag">${(nodeById[c.id]||{}).name||c.id}: ${c.label}</span>`).join("")}</div>
         <div class="rc-actions">
-          <button class="rc-btn prim" onclick="addToStack('${r.id}','node')">+ Add to Stack</button>
+          <button class="rc-btn prim" onclick="addToStack('${r.id}','node')">+ Add to list</button>
           <button class="rc-btn" onclick="jumpTo('${r.id}')">View in Graph</button>
         </div></div>`;
     });
   }
   if(missCats.length){
-    html+=`<div style="font-size:10px;color:var(--subtle);margin:16px 0 10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em">Missing Portfolio Categories</div>`;
+    html+=`<div style="font-size:12px;color:var(--muted);margin:16px 0 10px;font-weight:600">Missing portfolio areas</div>`;
     missCats.forEach(cat=>{
       const c=CATS[cat];
       const top=NODES.filter(n=>n.category===cat).sort((a,b)=>(degree[b.id]||0)-(degree[a.id]||0))[0];
@@ -6826,22 +6829,22 @@ function renderRecs(recs, missCats, stackCats) {
         <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
           <div style="width:9px;height:9px;border-radius:50%;background:${c.color}"></div>
           <div style="font-size:12px;font-weight:700">${c.label}</div></div>
-        <div style="font-size:11px;color:var(--muted)">No ${c.label.toLowerCase()} technology in this account.${top?` Consider starting with <strong>${top.name}</strong>.`:""}</div>
+        <div style="font-size:11px;color:var(--muted)">No ${c.label.toLowerCase()} products listed yet.${top?` Consider starting with <strong>${top.name}</strong>.`:""}</div>
         ${top?`<button class="rc-btn" style="margin-top:8px;width:100%" onclick="jumpTo('${top.id}')">Explore ${top.name}</button>`:""}
       </div>`;
     });
   }
-  if(!recs.length&&!missCats.length) html=`<div class="empty"><h3>Full coverage!</h3><p>Your stack covers all product categories. Check Bundles for solution-level gaps.</p></div>`;
+  if(!recs.length&&!missCats.length) html=`<div class="empty"><h3>Looking good!</h3><p>They have products across all major portfolio areas. Check <strong>Solution packages</strong> for complete solution-set gaps.</p></div>`;
   el.innerHTML=html;
 }
 
 function renderReps(reps) {
   const el=document.getElementById("tab-replace");
   if(!reps.length){
-    el.innerHTML=`<div class="empty"><h3>No replacements identified</h3><p>Select legacy/outgoing tech above, or add EOL/EOS products to your stack to see migration recommendations.</p></div>`;
+    el.innerHTML=`<div class="empty"><h3>No upgrades suggested yet</h3><p>Select legacy or outgoing tech above, or add end-of-life products to their list, to see recommended replacements.</p></div>`;
     return;
   }
-  el.innerHTML=`<div style="font-size:10px;color:var(--subtle);margin-bottom:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em">${reps.length} modernization path${reps.length!==1?"s":""} identified</div>`+
+  el.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;font-weight:600">${reps.length} upgrade path${reps.length!==1?"s":""}</div>`+
   reps.map(r=>{
     const rNode=r.toNode; if(!rNode) return "";
     const isProd=!!prodById[r.toId];
@@ -6856,7 +6859,7 @@ function renderReps(reps) {
       ${r.eosDate||r.eolDate?`<div style="font-size:10px;color:var(--muted);margin-bottom:6px">${r.eosDate?"EOS: "+r.eosDate:""}${r.eolDate?" · Last Support: "+r.eolDate:""}</div>`:""}
       <div class="rep-reason">${r.reason}</div>
       <div style="display:flex;gap:6px">
-        <button class="rc-btn prim" onclick="addToStack('${r.toId}','${isProd?"product":"node"}');this.textContent='✓ Added'" style="flex:1">+ Add to Stack</button>
+        <button class="rc-btn prim" onclick="addToStack('${r.toId}','${isProd?"product":"node"}');this.textContent='✓ Added'" style="flex:1">+ Add to list</button>
         ${isProd?`<button class="rc-btn" onclick="showProductDetail('${r.toId}')">View Details</button>`:
         `<button class="rc-btn" onclick="jumpTo('${r.toId}')">View in Graph</button>`}
       </div></div>`;
@@ -6864,34 +6867,36 @@ function renderReps(reps) {
 }
 
 function renderBundles(bundles) {
-  document.getElementById("tab-bundles").innerHTML=bundles.map(b=>`
+  const intro = bundles.length ? `<div style="font-size:12px;color:var(--muted);margin-bottom:12px;font-weight:600;line-height:1.45">How complete each Cisco solution package is based on what they already have.</div>` : "";
+  document.getElementById("tab-bundles").innerHTML=intro+bundles.map(b=>`
     <div class="bun-card">
       <div class="bun-top"><div class="bun-name">${b.name}</div><div class="bun-pct">${b.pct}%</div></div>
       <div class="bun-desc">${b.desc}</div>
       <div class="bun-bar-bg"><div class="bun-bar" style="width:${b.pct}%"></div></div>
-      <div style="font-size:10px;color:var(--muted);margin-bottom:6px">${b.owned.length}/${b.products.length} products already in stack</div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:6px">${b.owned.length} of ${b.products.length} products in this package</div>
       <div class="bun-chips">${b.products.map(p=>{const n=nodeById[p];const own=b.owned.includes(p);
         return `<span class="bch ${own?"own":"mis"}">${n?.name||p}${own?" ✓":""}</span>`;}).join("")}</div>
       ${b.missing.length?`<button class="bun-add" onclick="addBundleMissing(${JSON.stringify(b.missing)})">+ Add ${b.missing.length} missing product${b.missing.length!==1?"s":""}</button>`:
-      `<div style="font-size:11px;color:var(--green);text-align:center;padding:4px">✓ Bundle fully covered</div>`}
+      `<div style="font-size:11px;color:var(--green);text-align:center;padding:4px">✓ Complete solution package</div>`}
     </div>`).join("");
 }
 
-window.addBundleMissing = ids => { ids.forEach(id=>addToStack(id,"node")); showToast(`Added ${ids.length} products to stack`); };
+window.addBundleMissing = ids => { ids.forEach(id=>addToStack(id,"node")); showToast(`Added ${ids.length} product${ids.length!==1?"s":""} to their list`); };
 
 function renderCov(covUCs, gapUCs, stackCats, missCats) {
   document.getElementById("tab-coverage").innerHTML=`
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.45">Which customer needs are addressed vs. still open.</div>
     <div style="margin-bottom:16px">
-      <div class="cov-t">Use Case Coverage</div>
+      <div class="cov-t">Needs they address</div>
       ${covUCs.map(u=>`<div class="cov-i"><div class="cov-d y"></div><div class="cov-l">${u}</div><div class="cov-badge y">Covered</div></div>`).join("")}
-      ${gapUCs.map(u=>`<div class="cov-i"><div class="cov-d n"></div><div class="cov-l" style="color:var(--muted)">${u}</div><div class="cov-badge n">Gap</div></div>`).join("")}
+      ${gapUCs.map(u=>`<div class="cov-i"><div class="cov-d n"></div><div class="cov-l" style="color:var(--muted)">${u}</div><div class="cov-badge n">Missing</div></div>`).join("")}
     </div>
     <div>
-      <div class="cov-t">Category Coverage</div>
+      <div class="cov-t">Portfolio areas</div>
       ${Object.entries(CATS).map(([k,c])=>`<div class="cov-i">
         <div class="ld" style="background:${c.color};width:9px;height:9px;border-radius:50%;flex-shrink:0"></div>
         <div class="cov-l">${c.label}</div>
-        <div class="cov-badge ${stackCats.has(k)?"y":"n"}">${stackCats.has(k)?"Covered":"Gap"}</div>
+        <div class="cov-badge ${stackCats.has(k)?"y":"n"}">${stackCats.has(k)?"Covered":"Missing"}</div>
       </div>`).join("")}
     </div>`;
 }
@@ -6930,7 +6935,7 @@ document.getElementById("exp-btn").addEventListener("click",()=>{
   const acct=document.getElementById("acct-name").value.trim()||"Unnamed Account";
   const date=new Date().toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"});
   let out=`CISCO ACCOUNT PLAN\n${"─".repeat(52)}\nAccount:   ${acct}\nGenerated: ${date}\n\n`;
-  out+=`CURRENT ACCOUNT STACK (${stack.size} items)\n${"─".repeat(40)}\n`;
+  out+=`THEIR PRODUCTS (${stack.size} items)\n${"─".repeat(40)}\n`;
   [...stack].forEach(id=>{
     const isProd=stackItems.get(id)==="product";
     const item=isProd?prodById[id]:nodeById[id];
@@ -6951,13 +6956,13 @@ document.getElementById("exp-btn").addEventListener("click",()=>{
     const top=Object.entries(sc).filter(([,s])=>s.d>0)
       .map(([id,s])=>({id,n:nodeById[id],score:s.d*3+s.a}))
       .sort((a,b)=>b.score-a.score).slice(0,5);
-    out+=`\nTOP AUGMENTATION RECOMMENDATIONS\n${"─".repeat(40)}\n`;
+    out+=`\nTOP SUGGESTIONS\n${"─".repeat(40)}\n`;
     top.forEach((r,i)=>out+=`  ${i+1}. ${r.n?.name} (${CATS[r.n?.category]?.label}) — score: ${r.score}\n`);
     const sUCs=new Set([...effNodes].flatMap(id=>nodeById[id]?.useCases||[]));
     const aUCs=[...new Set(NODES.flatMap(n=>n.useCases))].sort();
-    out+=`\nUSE CASE COVERAGE\n${"─".repeat(40)}\n`;
+    out+=`\nNEEDS ADDRESSED\n${"─".repeat(40)}\n`;
     aUCs.forEach(u=>out+=`  ${sUCs.has(u)?"✓":"✗"} ${u}\n`);
-    out+=`\nSOLUTION BUNDLE ALIGNMENT\n${"─".repeat(40)}\n`;
+    out+=`\nSOLUTION PACKAGES\n${"─".repeat(40)}\n`;
     BUNDLES.forEach(b=>{const own=b.products.filter(p=>effNodes.has(p)).length;const pct=Math.round(own/b.products.length*100);
       const bar="█".repeat(Math.round(pct/10))+"░".repeat(10-Math.round(pct/10));
       out+=`  ${b.name.padEnd(30)} ${bar} ${pct}% (${own}/${b.products.length})\n`;});
@@ -7114,7 +7119,7 @@ document.addEventListener("keydown",ev=>{
     {
       target: "#plans-btn", place: "bottom",
       title: "Save, name & share account plans",
-      body: `Every change to your stack <strong>auto-saves</strong>. Click here to
+      body: `Every change to their product list <strong>auto-saves</strong>. Click here to
              rename the current plan, save a new one, switch between plans, or
              copy a <strong>shareable URL</strong> that encodes the entire stack
              and filters in the link.`,
@@ -7153,7 +7158,7 @@ document.addEventListener("keydown",ev=>{
       title: "Account Planner — expert mode",
       body: `For hands-on control, open the planner to search and add products manually,
              tweak industry templates, and fine-tune recommendations.<br><br>
-             If you used <strong>Guided Plan</strong>, your stack lands here automatically —
+             If you used <strong>Guided Plan</strong>, their products land here automatically —
              edit anything and re-run analysis.`,
       ctaText: "Open Planner →",
       before: () => {
@@ -7181,7 +7186,7 @@ document.addEventListener("keydown",ev=>{
       title: "Mark outgoing legacy tech",
       body: `Expand to flag <strong>Cisco legacy technology</strong> the customer
              is moving away from — AnyConnect VPN, Prime, CUCM, classic ASA, MPLS WAN,
-             standalone WLC, and more. The Replace tab maps each to the modern Cisco
+             standalone WLC, and more. The <strong>Upgrades</strong> tab maps each to the modern Cisco
              successor with a migration rationale.`,
     },
     {
@@ -7197,12 +7202,12 @@ document.addEventListener("keydown",ev=>{
       target: null, place: "center",
       title: "Six views of the analysis",
       body: `After running, you get six tabs:<br><br>
-             <strong style="color:#02C8FF">Augment</strong> — complementary products to expand the footprint<br>
-             <strong style="color:#f87171">Replace</strong> — EOL/EOS items with their official successors<br>
-             <strong>Bundles</strong> — pre-defined solution bundles the stack partially covers<br>
-             <strong>Coverage</strong> — use cases & industries the current stack addresses<br>
-             <strong style="color:#FF9000">Migrate</strong> — actionable migration plan with dates &amp; successors<br>
-             <strong style="color:#ef4444">Warnings</strong> — compatibility &amp; dependency gaps in your stack`,
+             <strong style="color:#02C8FF">Suggestions</strong> — products that pair well with what they already have<br>
+             <strong style="color:#f87171">Upgrades</strong> — replace old or end-of-life technology<br>
+             <strong>Solution packages</strong> — progress toward complete Cisco solution sets<br>
+             <strong>Gaps &amp; strengths</strong> — which needs are covered vs. still open<br>
+             <strong style="color:#FF9000">Migration plan</strong> — step-by-step migration with dates &amp; successors<br>
+             <strong style="color:#ef4444">Issues to fix</strong> — compatibility &amp; dependency gaps`,
     },
 
     // ── Detail panel goodies ─────────────────────────────────────────────────
@@ -7533,7 +7538,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.26.1";
+const APP_VERSION   = "2.27.0";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -7824,6 +7829,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.27.0", date:"2026-06-20", items:[
+    "Account Planner — plain-language labels: Suggestions, Upgrades, Solution packages, Gaps & strengths; 'Their products' instead of stack; star legend for connection strength."
+  ]},
   {ver:"2.26.1", date:"2026-06-20", items:[
     "Account Planner — fix Start Guided Plan banner link; export menu and planner actions covered by Playwright QA."
   ]},
@@ -9191,19 +9199,19 @@ function buildExportMenu(){
 function exportText(){
   const s = planSummary();
   let out = `CISCO ACCOUNT PLAN\n${"─".repeat(52)}\nAccount:   ${s.acct}\nGenerated: ${s.date}\n\n`;
-  out += `CURRENT STACK (${s.items.length})\n${"─".repeat(40)}\n`;
+  out += `THEIR PRODUCTS (${s.items.length})\n${"─".repeat(40)}\n`;
   s.items.forEach(it => { out += `  • ${it.name}${it.status!=="current"?" ["+it.status.toUpperCase()+"]":""} (${it.category||"-"})\n`; });
   if (s.legacy.length){
     out += `\nLEGACY / OUTGOING\n${"─".repeat(40)}\n`;
     s.legacy.forEach(l => { out += `  • ${l.name} → ${l.replaces.map(r => nameOf(r)).join(", ")}\n`; });
   }
   if (s.recs.length){
-    out += `\nTOP AUGMENTATION\n${"─".repeat(40)}\n`;
+    out += `\nTOP SUGGESTIONS\n${"─".repeat(40)}\n`;
     s.recs.forEach((r,i) => out += `  ${i+1}. ${r.name} (${r.category}) — score ${r.score}\n`);
   }
-  out += `\nUSE CASE COVERAGE\n${"─".repeat(40)}\n`;
+  out += `\nNEEDS ADDRESSED\n${"─".repeat(40)}\n`;
   s.allUC.forEach(u => out += `  ${s.stackUCs.has(u)?"✓":"✗"} ${u}\n`);
-  out += `\nBUNDLE ALIGNMENT\n${"─".repeat(40)}\n`;
+  out += `\nSOLUTION PACKAGES\n${"─".repeat(40)}\n`;
   s.bundles.forEach(b => out += `  ${b.name.padEnd(32)} ${b.pct}% (${b.owned}/${b.total})\n`);
   out += `\n${"─".repeat(52)}\nCisco Portfolio Navigator v${APP_VERSION}\n`;
   navigator.clipboard.writeText(out).then(() => showToast("Plan copied to clipboard"))
@@ -9268,12 +9276,12 @@ function exportMarkdown(){
     });
   }
   if (s.recs.length){
-    md += `\n## Top Augmentation Recommendations\n\n`;
-    s.recs.forEach((r,i) => { md += `${i+1}. **${r.name}** _(${r.category})_ — ${r.direct} direct + ${r.adjacent} adjacent integrations (score ${r.score})\n`; });
+    md += `\n## Top Suggestions\n\n`;
+    s.recs.forEach((r,i) => { md += `${i+1}. **${r.name}** _(${r.category})_ — ${r.direct} direct + ${r.adjacent} related connections (fit score ${r.score})\n`; });
   }
-  md += `\n## Bundle Alignment\n\n`;
+  md += `\n## Solution Packages\n\n`;
   s.bundles.forEach(b => { md += `- **${b.name}** — ${b.pct}% (${b.owned}/${b.total})${b.missing.length?"; missing "+b.missing.slice(0,3).join(", "):""}\n`; });
-  md += `\n## Use Case Coverage\n\n`;
+  md += `\n## Gaps & Strengths\n\n`;
   s.allUC.forEach(u => md += `- ${s.stackUCs.has(u)?"☒":"☐"} ${u}\n`);
   downloadBlob(`Cisco_Plan_${s.acct.replace(/\s+/g,"-")}.md`, "text/markdown", md);
   showToast("Markdown downloaded");
@@ -9321,14 +9329,14 @@ function exportPDF(){
   area.innerHTML = `
     <h1>Cisco Account Plan — ${escapeHtml(s.acct)}</h1>
     <p>${s.date}${s.profile.vertical?` · ${escapeHtml(s.profile.vertical)}`:""}${s.profile.size?` · ${escapeHtml(s.profile.size)}`:""}${s.profile.mode?` · ${escapeHtml(s.profile.mode)}`:""}</p>
-    <h2>Current Stack</h2>
+    <h2>Their Products</h2>
     <table><thead><tr><th>Product</th><th>Type</th><th>Category</th><th>Status</th><th>Tier</th></tr></thead>
     <tbody>${s.items.map(it => `<tr><td>${escapeHtml(it.name)}</td><td>${it.kind}</td><td>${escapeHtml(it.category||"-")}</td><td>${it.status.toUpperCase()}</td><td>${escapeHtml(it.tier||"-")}</td></tr>`).join("")}</tbody></table>
     ${s.legacy.length?`<h2>Legacy / Outgoing</h2><ul>${s.legacy.map(l => `<li><strong>${escapeHtml(l.name)}</strong> → ${l.replaces.map(r => escapeHtml(nameOf(r))).join(", ")}<br><em>${escapeHtml(l.reason)}</em></li>`).join("")}</ul>`:""}
-    ${s.recs.length?`<h2>Top Augmentation Recommendations</h2><ol>${s.recs.map(r => `<li><strong>${escapeHtml(r.name)}</strong> — ${escapeHtml(r.category)} (score ${r.score})</li>`).join("")}</ol>`:""}
-    <h2>Bundle Alignment</h2><table><thead><tr><th>Bundle</th><th>Coverage</th><th>Owned/Total</th></tr></thead>
+    ${s.recs.length?`<h2>Top Suggestions</h2><ol>${s.recs.map(r => `<li><strong>${escapeHtml(r.name)}</strong> — ${escapeHtml(r.category)} (fit score ${r.score})</li>`).join("")}</ol>`:""}
+    <h2>Solution Packages</h2><table><thead><tr><th>Package</th><th>Complete</th><th>Owned/Total</th></tr></thead>
     <tbody>${s.bundles.map(b => `<tr><td>${escapeHtml(b.name)}</td><td>${b.pct}%</td><td>${b.owned}/${b.total}</td></tr>`).join("")}</tbody></table>
-    <h2>Use Case Coverage</h2>
+    <h2>Gaps &amp; Strengths</h2>
     <p>${s.allUC.map(u => `${s.stackUCs.has(u)?"✓":"✗"} ${escapeHtml(u)}`).join(" &nbsp;·&nbsp; ")}</p>
     <div class="pf">Generated by Cisco Portfolio Navigator v${APP_VERSION}</div>
   `;
@@ -9440,10 +9448,10 @@ function exportPPTX(){
   if (sm.recs.length){
     sl = pp.addSlide();
     sl.background = { color: "0D1117" };
-    sl.addText("Top Augmentation Recommendations", { x:0.5, y:0.4, w:12, h:0.5, fontSize:24, bold:true, color:"00BCEB" });
+    sl.addText("Top Suggestions", { x:0.5, y:0.4, w:12, h:0.5, fontSize:24, bold:true, color:"00BCEB" });
     sm.recs.slice(0, 6).forEach((r, i) => {
       sl.addText(`${i+1}. ${r.name}`, { x:0.6, y:1.0+i*0.65, w:12, h:0.35, fontSize:15, bold:true, color:"FFFFFF" });
-      sl.addText(`${r.category} · score ${r.score} (${r.direct} direct + ${r.adjacent} adjacent)`,
+      sl.addText(`${r.category} · fit score ${r.score} (${r.direct} direct + ${r.adjacent} related)`,
         { x:0.7, y:1.32+i*0.65, w:12, h:0.3, fontSize:12, color:"8B949E" });
     });
   }
@@ -9451,7 +9459,7 @@ function exportPPTX(){
   // Slide 4: Bundle coverage
   sl = pp.addSlide();
   sl.background = { color: "0D1117" };
-  sl.addText("Solution Bundle Coverage", { x:0.5, y:0.4, w:12, h:0.5, fontSize:24, bold:true, color:"00BCEB" });
+  sl.addText("Solution Packages", { x:0.5, y:0.4, w:12, h:0.5, fontSize:24, bold:true, color:"00BCEB" });
   sm.bundles.slice(0,8).forEach((b, i) => {
     sl.addText(b.name, { x:0.6, y:1.0+i*0.55, w:6.8, h:0.35, fontSize:14, color:"FFFFFF", bold:true });
     sl.addShape(pp.ShapeType.rect, { x:7.4, y:1.05+i*0.55, w:4.5, h:0.25, fill:{color:"21262D"} });
@@ -9482,11 +9490,11 @@ function addPlannerTabs(){
   const bundlesTab = tabBar.querySelector('[data-tab="bundles"]');
   const tplBtn = document.createElement("button");
   tplBtn.className = "ptab"; tplBtn.dataset.tab = "migrate";
-  tplBtn.innerHTML = `Migrate <span class="ptab-b" id="mig-cnt">0</span>`;
+  tplBtn.innerHTML = `Migration plan <span class="ptab-b" id="mig-cnt">0</span>`;
   tabBar.insertBefore(tplBtn, bundlesTab);
   const warnBtn = document.createElement("button");
   warnBtn.className = "ptab"; warnBtn.dataset.tab = "warn";
-  warnBtn.innerHTML = `Warnings <span class="ptab-b" id="warn-cnt">0</span>`;
+  warnBtn.innerHTML = `Issues to fix <span class="ptab-b" id="warn-cnt">0</span>`;
   tabBar.insertBefore(warnBtn, bundlesTab);
 
   // Add tab content panels
@@ -9532,7 +9540,7 @@ function renderMigratePlan(){
   });
   $("#mig-cnt").textContent = items.length;
   if (!items.length){
-    el.innerHTML = `<div class="empty"><h3>Nothing to migrate</h3><p>Add EOL/EOS products to your stack, or select legacy/competitor entries above, to generate a phased migration plan.</p></div>`;
+    el.innerHTML = `<div class="empty"><h3>Nothing to migrate</h3><p>Add end-of-life products to their list, or select legacy or competitor tech above, to build a step-by-step migration plan.</p></div>`;
     return;
   }
   const phase = (it) => {
@@ -9544,7 +9552,7 @@ function renderMigratePlan(){
     if (eos && eos < now) return {label:"Within 18-24 months", color:"#FF9000"};
     return {label:"Plan within fiscal year", color:"var(--accent)"};
   };
-  el.innerHTML = `<div style="font-size:10px;color:var(--subtle);margin-bottom:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em">${items.length} migration path${items.length!==1?"s":""}</div>` +
+  el.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:12px;font-weight:600">${items.length} migration step${items.length!==1?"s":""}</div>` +
     items.map((it,i) => {
       const ph = phase(it);
       return `<div class="mig-card">
@@ -9574,10 +9582,10 @@ function renderCompatWarnings(){
   const matches = COMPAT_RULES.filter(r => r.has.every(h => effNodes.has(h)) && r.anyMissing.every(m => !effNodes.has(m)));
   $("#warn-cnt").textContent = matches.length;
   if (!matches.length){
-    el.innerHTML = `<div class="empty"><h3>No compatibility issues detected</h3><p>Your stack composition has no known dependency gaps or licensing-tier conflicts based on the current rule set.</p></div>`;
+    el.innerHTML = `<div class="empty"><h3>No issues found</h3><p>Based on what they have listed, there are no known compatibility or dependency gaps in our rule set.</p></div>`;
     return;
   }
-  el.innerHTML = `<div style="font-size:10px;color:var(--subtle);margin-bottom:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em">${matches.length} issue${matches.length!==1?"s":""} to review</div>` +
+  el.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:12px;font-weight:600">${matches.length} issue${matches.length!==1?"s":""} to review</div>` +
     matches.map(r => {
       const adds = r.anyMissing.filter(m => nodeById[m]).map(m => `<button class="rc-btn" onclick="window.addToStack('${m}','node');runAnalysis()" style="margin-right:5px;margin-top:5px">+ Add ${escapeHtml(nodeById[m].name)}</button>`).join("");
       return `<div class="warn-card ${r.level}">
@@ -9666,7 +9674,7 @@ function buildQuickStartSection(){
   body.querySelectorAll(".tpl-chip").forEach(c => c.addEventListener("click", () => {
     const t = INDUSTRY_TEMPLATES.find(x => x.id === c.dataset.id);
     if (!t) return;
-    if (stack.size > 0 && !confirm(`Replace current stack with the "${t.name}" starter (${t.products.length} products)?`)) return;
+    if (stack.size > 0 && !confirm(`Replace their current product list with the "${t.name}" starter (${t.products.length} products)?`)) return;
     stack.clear(); stackItems.clear();
     t.products.forEach(p => { if (nodeById[p]) { stack.add(p); stackItems.set(p, "node"); } });
     renderChips(); updateAB(); highlightStack();
@@ -10147,7 +10155,7 @@ function wizardRenderStep() {
             <div class="gw-td">${escapeHtml(d.desc)}</div>
           </button>`).join("")}
       </div>
-      <div class="gw-preview"><strong>${previewCount}</strong> capabilities in your stack so far${wizardState.domains.size ? ` (${wizardState.domains.size} domain${wizardState.domains.size !== 1 ? "s" : ""} selected)` : " — industry baseline only"}.</div>`;
+      <div class="gw-preview"><strong>${previewCount}</strong> products in their list so far${wizardState.domains.size ? ` (${wizardState.domains.size} area${wizardState.domains.size !== 1 ? "s" : ""} selected)` : " — industry baseline only"}.</div>`;
     body.querySelectorAll(".gw-tile").forEach(tile => {
       tile.addEventListener("click", () => {
         const id = tile.dataset.id;
@@ -10157,14 +10165,14 @@ function wizardRenderStep() {
         tile.classList.toggle("sel", wizardState.domains.has(id));
         const cnt = wizardBuildStackIds().size;
         const prev = body.querySelector(".gw-preview");
-        if (prev) prev.innerHTML = `<strong>${cnt}</strong> capabilities in your stack so far (${wizardState.domains.size} domain${wizardState.domains.size !== 1 ? "s" : ""} selected).`;
+        if (prev) prev.innerHTML = `<strong>${cnt}</strong> products in their list so far (${wizardState.domains.size} area${wizardState.domains.size !== 1 ? "s" : ""} selected).`;
       });
     });
     btnNext.disabled = false;
   } else if (wizardState.step === 4) {
     body.innerHTML = `
       <div class="gw-q">Anything they're moving away from?</div>
-      <div class="gw-hint">Select legacy or refresh triggers — we'll surface migration paths in Replace recommendations.</div>
+      <div class="gw-hint">Select legacy or refresh triggers — we'll surface upgrade paths in the Upgrades tab.</div>
       <div class="gw-tiles" id="gw-leg-tiles">
         ${WIZARD_LEGACY_TILES.map(l => `
           <button type="button" class="gw-tile${wizardState.legacy.has(l.id) ? " sel" : ""}" data-id="${l.id}">
@@ -10232,7 +10240,7 @@ function wizardShowReveal(opts = {}) {
           <div class="gw-stat"><div class="gw-sv">${best.pct}%</div><div class="gw-sl">${escapeHtml(best.name.split(" ")[0])} bundle</div></div>
           <div class="gw-stat"><div class="gw-sv">${repCnt}</div><div class="gw-sl">Replacements</div></div>
         </div>
-        ${recs.length ? `<div class="gw-toprecs"><strong style="color:var(--text);font-size:11px">Top augmentations</strong><ul>${recs.map(r => `<li>${escapeHtml(r)}</li>`).join("")}</ul></div>` : ""}
+        ${recs.length ? `<div class="gw-toprecs"><strong style="color:var(--text);font-size:11px">Top suggestions</strong><ul>${recs.map(r => `<li>${escapeHtml(r)}</li>`).join("")}</ul></div>` : ""}
         ${dcloudGuidedRecommendationsHtml()}
         ${weak.pct < 50 ? `<div style="margin-top:10px;font-size:11px;color:var(--orange)">Gap alert: ${escapeHtml(weak.name)} at ${weak.pct}% coverage</div>` : ""}
         <div class="gw-ai-section">
@@ -12062,8 +12070,8 @@ function buildPlanContext(){
   } else if (s.profile.vertical || s.profile.size || s.profile.mode) {
     lines.push(`Profile: ${[s.profile.vertical, s.profile.size, s.profile.mode].filter(Boolean).join(" · ")}`);
   }
-  lines.push(`Current stack (${s.items.length}): ${s.items.map(i => i.name).join(", ")}`);
-  if (s.recs.length) lines.push(`Top augmentations: ${s.recs.slice(0, 6).map(r => r.name).join(", ")}`);
+  lines.push(`Their products (${s.items.length}): ${s.items.map(i => i.name).join(", ")}`);
+  if (s.recs.length) lines.push(`Top suggestions: ${s.recs.slice(0, 6).map(r => r.name).join(", ")}`);
   if (s.legacy.length) {
     lines.push(`Legacy / refresh triggers: ${s.legacy.map(l => l.name).join(", ")}`);
     s.legacy.forEach(l => {
