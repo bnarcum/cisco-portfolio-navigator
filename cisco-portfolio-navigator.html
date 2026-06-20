@@ -201,6 +201,15 @@
       cursor:pointer;border:1px solid var(--accent);background:rgba(2,200,255,.10);
       color:var(--accent);transition:all .15s;margin-top:14px;font-family:inherit}
     .explore-btn:hover{background:var(--accent);color:#000}
+    .la-dcloud{border-color:rgba(2,200,255,.35);background:rgba(2,200,255,.08)}
+    .la-dcloud:hover{border-color:var(--accent);background:rgba(2,200,255,.14);color:var(--text)}
+    .la-dcloud .la-dcloud-main{font-weight:600;flex:1;min-width:0;padding-right:8px}
+    .la-dcloud .la-dcloud-meta{font-size:11px;color:var(--accent);font-weight:600;flex-shrink:0}
+    .p-dcloud-hint{font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.45}
+    .p-dcloud-entry-hint{font-size:10px;color:var(--subtle);margin:-2px 0 6px 2px;line-height:1.4}
+    .p-dcloud-note{font-size:10px;color:var(--subtle);margin-top:8px}
+    .gw-dcloud-section{margin-top:14px;padding-top:12px;border-top:1px solid var(--border);text-align:left}
+    .gw-dcloud-title{display:block;font-size:11px;color:var(--text);margin-bottom:8px}
 
     /* PLANNER */
     #planner{position:fixed;top:var(--topbar-h);right:0;bottom:0;width:490px;
@@ -5052,7 +5061,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.7.6";
+const APP_VERSION   = "2.7.7";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -5343,6 +5352,11 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.7.7", date:"2026-06-17", items:[
+    "dCloud — Explore on dCloud section in product and family panels with primary CTA styling, short link labels, and schedule/login hints from dcloud-links.json.",
+    "dCloud manifest — defaults (sectionTitle, sectionHint, loginNote) plus per-entry linkLabel and hint fields.",
+    "Guided Plan finale — Recommended on dCloud surfaces top matching labs from your stack and wizard capability domains."
+  ]},
   {ver:"2.7.6", date:"2026-05-31", items:[
     "Spatial view — optional 3D map of product families with always-visible labels, orbit/zoom navigation, filters, and stack highlights. Double-click a family (or Explore N products) to drill into a 3D composition; Esc or the breadcrumb steps back. Bundled offline (no CDN); 2D hint bar hidden while Spatial is active.",
     "Guided tour updated (v2.5) — new Spatial step, Guided Plan AI deliverables, and export/AI context coverage.",
@@ -7516,6 +7530,7 @@ function wizardShowReveal(opts = {}) {
           <div class="gw-stat"><div class="gw-sv">${repCnt}</div><div class="gw-sl">Replacements</div></div>
         </div>
         ${recs.length ? `<div class="gw-toprecs"><strong style="color:var(--text);font-size:11px">Top augmentations</strong><ul>${recs.map(r => `<li>${escapeHtml(r)}</li>`).join("")}</ul></div>` : ""}
+        ${dcloudGuidedRecommendationsHtml()}
         ${weak.pct < 50 ? `<div style="margin-top:10px;font-size:11px;color:var(--orange)">Gap alert: ${escapeHtml(weak.name)} at ${weak.pct}% coverage</div>` : ""}
         <div class="gw-ai-section">
           <div class="gw-ai-lbl">Ask AI — select deliverables to generate</div>
@@ -7698,25 +7713,131 @@ function renderBreadcrumbs(){
 /* ════════════════════════════════════════════════════════════════════════
    dCloud demo links (dcloud-links.json)
    ════════════════════════════════════════════════════════════════════════*/
-let DCLOUD_LINKS = [];
+let DCLOUD_ENTRIES = [];
+const DCLOUD_DEFAULTS = {
+  sectionTitle: "Explore on dCloud",
+  sectionHint: "Schedule or launch the live demo environment for this solution.",
+  loginNote: "Cisco.com login required"
+};
+const WIZARD_DOMAIN_USECASES = {
+  rooms: ["Hybrid Work"],
+  collab: ["Hybrid Work", "Digital Transformation"],
+  calling: ["Hybrid Work", "Contact Center"],
+  "contact-center": ["Contact Center"],
+  identity: ["Zero Trust Security"],
+  ztna: ["Zero Trust Security", "SD-WAN / SASE"],
+  "branch-fw": ["Zero Trust Security"],
+  "dc-fw": ["Zero Trust Security"],
+  obs: ["Digital Transformation"]
+};
 
 async function loadDcloudLinks(){
   try {
     const res = await fetch("dcloud-links.json", { cache: "no-cache" });
-    if (res.ok) DCLOUD_LINKS = await res.json();
+    if (!res.ok) return;
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      DCLOUD_ENTRIES = data;
+    } else {
+      DCLOUD_ENTRIES = data.entries || [];
+      Object.assign(DCLOUD_DEFAULTS, data.defaults || {});
+    }
   } catch (_) { /* file:// or offline */ }
 }
 
-function dcloudLinksFor({ familyId, productId } = {}){
+function dcloudRankEntries({ familyIds = [], productIds = [], useCases = [], limit = 5 } = {}){
+  if (!DCLOUD_ENTRIES.length) return [];
+  const scored = DCLOUD_ENTRIES.map(e => {
+    let score = 0;
+    if (e.primary) score += 1;
+    familyIds.forEach(f => { if (e.families?.includes(f)) score += 3; });
+    productIds.forEach(p => { if (e.products?.includes(p)) score += 5; });
+    useCases.forEach(u => { if (e.useCases?.includes(u)) score += 2; });
+    return { entry: e, score };
+  }).filter(x => x.score > 0);
+  scored.sort((a, b) => b.score - a.score || (b.entry.primary ? 1 : 0) - (a.entry.primary ? 1 : 0));
   const seen = new Set();
-  return DCLOUD_LINKS.filter(e => {
-    const productMatch = productId && e.products?.includes(productId);
-    const familyMatch = familyId && e.families?.includes(familyId);
-    if (!productMatch && !familyMatch) return false;
-    if (seen.has(e.id)) return false;
-    seen.add(e.id);
-    return true;
-  }).sort((a, b) => (b.primary ? 1 : 0) - (a.primary ? 1 : 0));
+  const out = [];
+  for (const { entry } of scored) {
+    if (seen.has(entry.id)) continue;
+    seen.add(entry.id);
+    out.push(entry);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+function dcloudLinksFor({ familyId, productId } = {}){
+  return dcloudRankEntries({
+    familyIds: familyId ? [familyId] : [],
+    productIds: productId ? [productId] : [],
+    limit: 5
+  });
+}
+
+function dcloudStackContext(){
+  const familyIds = new Set();
+  const productIds = [];
+  stack.forEach(id => {
+    const p = prodById[id];
+    if (p) {
+      productIds.push(id);
+      if (p.family) familyIds.add(p.family);
+    } else if (nodeById[id]) familyIds.add(id);
+  });
+  return { familyIds: [...familyIds], productIds };
+}
+
+function dcloudWizardFamilies(){
+  const families = new Set();
+  wizardState.domains.forEach(domId => {
+    WIZARD_DOMAINS.find(d => d.id === domId)?.families?.forEach(f => families.add(f));
+  });
+  return [...families];
+}
+
+function dcloudWizardUseCases(){
+  const ucs = new Set();
+  wizardState.domains.forEach(id => (WIZARD_DOMAIN_USECASES[id] || []).forEach(u => ucs.add(u)));
+  return [...ucs];
+}
+
+function dcloudGuidedRecommendations(limit = 2){
+  const stackCtx = dcloudStackContext();
+  const familyIds = [...new Set([...stackCtx.familyIds, ...dcloudWizardFamilies()])];
+  return dcloudRankEntries({
+    familyIds,
+    productIds: stackCtx.productIds,
+    useCases: dcloudWizardUseCases(),
+    limit
+  });
+}
+
+function renderDcloudSectionBody(entries, opts = {}){
+  if (!entries.length) return "";
+  const hint = opts.sectionHint ?? DCLOUD_DEFAULTS.sectionHint;
+  const loginNote = opts.loginNote ?? DCLOUD_DEFAULTS.loginNote;
+  const compact = !!opts.compact;
+  const links = entries.map(e => {
+    const label = e.linkLabel || e.name;
+    const entryHint = e.hint ? `<div class="p-dcloud-entry-hint">${escapeHtml(e.hint)}</div>` : "";
+    return `<a class="la la-dcloud" href="${escapeHtml(e.catalogUrl)}" target="_blank" rel="noopener">
+      <span class="la-dcloud-main">${escapeHtml(label)}</span>
+      <span class="la-dcloud-meta">Open in dCloud ↗</span>
+    </a>${entryHint}`;
+  }).join("");
+  return `${compact ? "" : `<div class="p-dcloud-hint">${escapeHtml(hint)}</div>`}
+    <div class="lb la-dcloud-list">${links}</div>
+    ${loginNote ? `<div class="p-dcloud-note">${escapeHtml(loginNote)}</div>` : ""}`;
+}
+
+function dcloudGuidedRecommendationsHtml(){
+  const entries = dcloudGuidedRecommendations(2);
+  if (!entries.length) return "";
+  return `<div class="gw-dcloud-section">
+    <strong class="gw-dcloud-title">Recommended on dCloud</strong>
+    ${renderDcloudSectionBody(entries, { compact: true })}
+  </div>`;
 }
 
 function insertDcloudLinks(id, kind){
@@ -7732,11 +7853,8 @@ function insertDcloudLinks(id, kind){
   const sec = document.createElement("div");
   sec.className = "p-sec p-dcloud";
   sec.innerHTML = `
-    <div class="p-sec-t">dCloud proof</div>
-    <div class="lb">${entries.map(e => {
-      const dc = e.datacenter ? ` <span style="font-size:10px;color:var(--subtle)">(${escapeHtml(e.datacenter)})</span>` : "";
-      return `<a class="la" href="${escapeHtml(e.catalogUrl)}" target="_blank" rel="noopener">${escapeHtml(e.name)}${dc} <span>dCloud ↗</span></a>`;
-    }).join("")}</div>`;
+    <div class="p-sec-t">${escapeHtml(DCLOUD_DEFAULTS.sectionTitle)}</div>
+    ${renderDcloudSectionBody(entries)}`;
 
   const anchor = pb.querySelector(".add-stack-btn");
   if (anchor) pb.insertBefore(sec, anchor);

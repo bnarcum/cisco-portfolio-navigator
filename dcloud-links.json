@@ -1,12 +1,21 @@
-[
-  {
-    "id": "workspace-advisor-room-kit-pro-g2",
-    "name": "Discover Workspace Advisor with Cisco Room Kit Pro G2",
-    "catalogUrl": "https://dcloud2-rtp.cisco.com/content/profile/discover-cisco-room-kit-pro-g2",
-    "datacenter": "RTP",
-    "families": ["room-systems"],
-    "products": ["room-kit-pro"],
-    "useCases": ["Hybrid Work"],
-    "primary": true
-  }
-]
+{
+  "defaults": {
+    "sectionTitle": "Explore on dCloud",
+    "sectionHint": "Schedule or launch the live demo environment for this solution.",
+    "loginNote": "RTP datacenter · Cisco.com login required"
+  },
+  "entries": [
+    {
+      "id": "workspace-advisor-room-kit-pro-g2",
+      "name": "Discover Workspace Advisor with Cisco Room Kit Pro G2",
+      "linkLabel": "Workspace Advisor · Room Kit Pro G2",
+      "hint": "Hybrid work room refresh — guided workspace design with Room Kit Pro G2",
+      "catalogUrl": "https://dcloud2-rtp.cisco.com/content/profile/discover-cisco-room-kit-pro-g2",
+      "datacenter": "RTP",
+      "families": ["room-systems"],
+      "products": ["room-kit-pro"],
+      "useCases": ["Hybrid Work"],
+      "primary": true
+    }
+  ]
+}
