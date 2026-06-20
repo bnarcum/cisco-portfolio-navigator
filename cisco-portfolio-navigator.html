@@ -4783,7 +4783,7 @@ function buildCompositionView(familyId){
 // SPATIAL — optional 3D portfolio map
 // ══════════════════════════════════════
 const SPATIAL_LIB = "vendor/3d-force-graph.min.js";
-const spatialState = { graph: null, active: false, libPromise: null, spritePromise: null, resizeObs: null, labelCache: new Map(), textureCache: new Map(), focusFamily: null, lastNodeClick: null, hoveredId: null, lightsAdded: false, threeCaptured: false, meshTemplate: null };
+const spatialState = { graph: null, active: false, libPromise: null, spritePromise: null, resizeObs: null, labelCache: new Map(), textureCache: new Map(), focusFamily: null, lastNodeClick: null, hoveredId: null, lightsAdded: false, threeCaptured: false, nodeRendererReady: false, meshTemplate: null };
 
 function spatialResolveName(id){
   return nodeById[id]?.name || prodById[id]?.name || id;
@@ -4804,12 +4804,13 @@ function captureBundledTHREE(){
   if (!refMesh) return null;
   spatialState.meshTemplate = refMesh;
   const matCtor = refMesh.material.constructor;
+  const nodesHolder = scene.children.find(c => c.type === "Group" && c !== scene);
   const THREE = {
     __bundled: true,
     Mesh: refMesh.constructor,
     MeshBasicMaterial: matCtor,
     MeshLambertMaterial: matCtor,
-    Group: refMesh.parent?.constructor || refMesh.constructor,
+    Group: nodesHolder?.constructor || null,
     AmbientLight: scene.children.find(c => c.type === "AmbientLight")?.constructor,
     DirectionalLight: scene.children.find(c => c.type === "DirectionalLight")?.constructor
   };
@@ -4820,22 +4821,43 @@ function captureBundledTHREE(){
     if (o.material?.type === "SpriteMaterial" && !THREE.SpriteMaterial){
       THREE.SpriteMaterial = o.material.constructor;
     }
+    if (o.type === "Group" && o !== scene && !THREE.Group) THREE.Group = o.constructor;
   });
+  if (!THREE.Group || THREE.Group === scene.constructor) THREE.Group = nodesHolder?.constructor || null;
   window.__cpnTHREE = THREE;
   spatialState.threeCaptured = true;
   return THREE;
 }
 
-function finishSpatialGraphSetup(){
-  if (spatialState.threeCaptured) return true;
-  if (!captureBundledTHREE()) return false;
-  spatialState.graph
-    .nodeColor(() => "rgba(0,0,0,0)")
-    .nodeOpacity(0)
-    .nodeThreeObject(node => buildSpatialNodeObject(node))
-    .nodeThreeObjectExtend(false)
-    .nodeThreeObjectUpdate((obj, node) => updateSpatialNodeGroup(obj, node));
+function resolveSpatialGroupCtor(){
+  const THREE = ensureSpatialTHREE();
+  if (!THREE) return null;
+  const scene = spatialState.graph?.scene();
+  const holder = scene?.children?.find(c => c.type === "Group" && c !== scene);
+  if (holder && holder.constructor !== scene?.constructor) THREE.Group = holder.constructor;
+  return THREE.Group;
+}
+
+function ensureSpatialNodeRenderer(attempt){
+  if (!spatialState.graph) return false;
+  if (!spatialState.meshTemplate && !captureBundledTHREE()) return false;
+  if (!resolveSpatialGroupCtor()) return false;
+  if (!spatialState.nodeRendererReady){
+    const g = spatialState.graph;
+    g.nodeColor(() => "rgba(0,0,0,0)");
+    g.nodeOpacity(0);
+    g.nodeThreeObject(node => buildSpatialNodeObject(node));
+    g.nodeThreeObjectExtend(false);
+    if (typeof g.nodeThreeObjectUpdate === "function"){
+      g.nodeThreeObjectUpdate((obj, node) => updateSpatialNodeGroup(obj, node));
+    }
+    spatialState.nodeRendererReady = true;
+  }
   return true;
+}
+
+function finishSpatialGraphSetup(){
+  return ensureSpatialNodeRenderer(0);
 }
 
 function ensureSpatialTHREE(){
@@ -4871,18 +4893,23 @@ function spatialNodeAccent(node){
   return { core: spatialHexToNum(p.base), emissive: spatialHexToNum(p.emissive), glow: spatialHexToNum(p.glow), emissiveInt: 0.32, glowOp: 0.24 };
 }
 
+function spatialFocusProductCount(){
+  if (!spatialState.focusFamily) return 0;
+  return PRODUCTS.filter(p => p.family === spatialState.focusFamily).length;
+}
+
 function spatialDisplayName(node){
-  const name = node.name || spatialResolveName(node.id);
-  if (node.kind === "product" && spatialState.focusFamily && name.length > 24){
-    return name.slice(0, 22) + "…";
-  }
+  let name = node.name || spatialResolveName(node.id);
+  if (node.kind !== "product" || !spatialState.focusFamily) return name;
+  const count = spatialFocusProductCount();
+  if (count > 8 && name.startsWith("Cisco ")) name = name.slice(6);
+  const maxLen = count <= 12 ? 34 : count <= 18 ? 24 : 18;
+  if (name.length > maxLen) return name.slice(0, maxLen - 1) + "…";
   return name;
 }
 
-function spatialLabelVisible(node){
-  if (node.kind === "family" || !spatialState.focusFamily) return true;
-  const id = node.id;
-  return (selected && selected.id === id) || stack.has(id) || spatialState.hoveredId === id;
+function spatialLabelVisible(){
+  return true;
 }
 
 function spatialThumbScale(radius){
@@ -4944,9 +4971,10 @@ function updateSpatialNodeGroup(group, node){
 
 function buildSpatialNodeObject(node){
   const THREE = ensureSpatialTHREE();
+  const GroupCtor = resolveSpatialGroupCtor();
   const template = spatialState.meshTemplate;
-  if (!THREE?.Group || !template) return getSpatialLabelSprite(node);
-  const group = new THREE.Group();
+  if (!GroupCtor || !template) return getSpatialLabelSprite(node);
+  const group = new GroupCtor();
   group.userData.nodeId = node.id;
   const scale = spatialNodeRadius(node) / spatialNodeRadius({ val: 1 });
   const accent = spatialNodeAccent(node);
@@ -5142,9 +5170,9 @@ function styleSpatialLabelSprite(sprite, node){
     sprite.backgroundColor = "rgba(2,200,255,0.26)";
     sprite.textHeight = isProduct ? 3 : 3.4;
   } else {
-    sprite.color = "#e8eef5";
-    sprite.backgroundColor = "rgba(7,24,45,0.88)";
-    sprite.textHeight = isProduct ? 2.6 : 3.2;
+    sprite.color = "#f4f8fc";
+    sprite.backgroundColor = "rgba(7,24,45,0.94)";
+    sprite.textHeight = isProduct ? 2.85 : 3.25;
   }
   sprite.strokeWidth = 0.35;
   sprite.strokeColor = "rgba(2,200,255,0.35)";
@@ -5333,19 +5361,18 @@ function refreshSpatialGraph(){
     : buildSpatialGraphData();
   if (!spatialState.graph) initSpatialGraph();
   if (!spatialState.graph) return;
-  const applyData = () => {
-    if (!finishSpatialGraphSetup()) return;
+  const applyData = (attempt = 0) => {
+    if (!ensureSpatialNodeRenderer(attempt)){
+      if (attempt < 40) requestAnimationFrame(() => applyData(attempt + 1));
+      return;
+    }
     preloadSpatialTextures(data.nodes);
     spatialState.graph.graphData(data);
     configureSpatialForces();
     ensureSpatialLights();
     refreshSpatialNodeVisuals();
   };
-  if (!spatialState.threeCaptured){
-    requestAnimationFrame(() => requestAnimationFrame(applyData));
-  } else {
-    applyData();
-  }
+  requestAnimationFrame(() => requestAnimationFrame(() => applyData(0)));
 }
 
 function focusSpatialNode(id, ms){
@@ -5691,6 +5718,13 @@ window.getViewMode    = () => viewMode;
 window.getViewFocus   = () => viewFocus;
 window.getSpatialFocus = () => spatialState.focusFamily;
 window.__cpnSpatialGraph = () => spatialState.graph;
+window.__cpnSpatialVisibleLabels = () => {
+  let visible = 0;
+  spatialState.labelCache.forEach(sprite => {
+    if (sprite.visible !== false) visible++;
+  });
+  return { total: spatialState.labelCache.size, visible };
+};
 
 // ── Initial mount: read persisted preferences and render the right view.
 (function bootViewLevel(){
@@ -7225,7 +7259,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.24.1";
+const APP_VERSION   = "2.24.2";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -7516,6 +7550,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.24.2", date:"2026-06-20", items:[
+    "Spatial — product labels always visible in family orbit (small families show full names; dense families use shortened labels instead of hiding until hover)."
+  ]},
   {ver:"2.24.1", date:"2026-06-20", items:[
     "Side drawer — product hero fallback uses a light stage background and category-colored icons (fixes black-on-black icons for products without Device Matrix images)."
   ]},
