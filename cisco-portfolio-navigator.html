@@ -171,6 +171,11 @@
     .p-sec{margin-bottom:16px}
     .p-sec-t{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
       color:var(--subtle);margin-bottom:7px}
+    #pbody .p-sec-t{color:#b4c4d4}
+    #pbody .p-desc{color:#d2dae3}
+    #pbody .rt{color:#b8c6d4}
+    #pbody .p-tier-note{color:#b8c6d4}
+    #pbody .la>span:not(.la-dcloud-main):not(.la-dcloud-meta){color:#b8c6d4}
     .tr{display:flex;flex-wrap:wrap;gap:5px}
     .tg{padding:3px 9px;background:var(--surface2);border:1px solid var(--border);
       border-radius:5px;font-size:11px;cursor:pointer;transition:all .12s;user-select:none}
@@ -217,11 +222,11 @@
       flex-shrink:0;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
       padding:4px 9px;border-radius:999px;background:rgba(0,212,255,.22);color:#b8f0ff;
       border:1px solid rgba(0,212,255,.45)}
-    .p-dcloud-tagline{font-size:12px;font-weight:700;color:#e8f8ff;margin-bottom:6px;letter-spacing:.01em}
-    .p-dcloud-hint{font-size:12px;color:#c8e8f5;margin-bottom:12px;line-height:1.5}
-    .p-dcloud-entry-hint{font-size:11px;color:#9fd4ea;margin:8px 0 0;line-height:1.45;padding-left:2px}
+    .p-dcloud-tagline{font-size:13px;font-weight:700;color:#fff;margin-bottom:6px;letter-spacing:.01em}
+    .p-dcloud-hint{font-size:12px;color:#f0f8ff;margin-bottom:12px;line-height:1.5;font-weight:500}
+    .p-dcloud-entry-hint{font-size:11px;color:#e3f2fb;margin:8px 0 0;line-height:1.45;padding-left:2px;font-weight:500}
     .p-dcloud-note{
-      font-size:11px;color:#8ecae6;margin-top:10px;line-height:1.45;
+      font-size:11px;color:#d8ecfa;margin-top:10px;line-height:1.45;font-weight:500;
       display:flex;align-items:flex-start;gap:6px}
     .p-dcloud-note::before{content:"ℹ";font-size:10px;font-weight:700;color:#00d4ff;flex-shrink:0;margin-top:1px}
     .la-dcloud{
@@ -5672,7 +5677,7 @@ STYLE.textContent = `
   .p-tier{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:5px;
     font-size:10px;font-weight:600;background:var(--surface3);color:var(--muted);margin-right:5px}
   .p-tier .dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
-  .p-tier-note{font-size:11px;color:var(--subtle);line-height:1.5;margin-top:5px}
+  .p-tier-note{font-size:11px;color:#b8c6d4;line-height:1.5;margin-top:5px}
   .p-photo{width:100%;height:120px;background:linear-gradient(135deg,var(--surface2),var(--surface3));
     border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;
     border:1px solid var(--border);overflow:hidden;position:relative}
