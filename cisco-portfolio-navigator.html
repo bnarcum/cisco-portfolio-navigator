@@ -9,13 +9,37 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    @font-face{
+      font-family:"CiscoSansTT";
+      src:local("Cisco Sans TT"),local("CiscoSansTT"),local("Cisco Sans"),
+           url("fonts/CiscoSansTT-Regular.woff2") format("woff2");
+      font-weight:400;font-style:normal;font-display:swap}
+    @font-face{
+      font-family:"CiscoSansTT";
+      src:local("Cisco Sans TT Bold"),local("CiscoSansTT Bold"),
+           url("fonts/CiscoSansTT-Bold.woff2") format("woff2");
+      font-weight:700;font-style:normal;font-display:swap}
     :root{
       --bg:#07182d;--surface:#0a2240;--surface2:#0d2847;--surface3:#102f54;
       --border:rgba(214,214,214,.14);--text:#ffffff;--muted:#b4b9c0;--subtle:#525e6c;
       --accent:#02c8ff;--green:#02c8ff;--orange:#ff9000;--red:#ff007f;
       --net:#02c8ff;--sec:#ff9000;--col:#02c8ff;--com:#0a60ff;--obs:#ff9000;
       --topbar-h:102px;
+      --glass-bg:rgba(10,34,64,.72);--glass-bg2:rgba(13,40,71,.68);
+      --glass-blur:14px;--glass-edge:rgba(2,200,255,.22);
+      --chrome-shadow:0 8px 32px rgba(0,0,0,.38);
     }
+    [data-theme="light"]{
+      --bg:#f4f7fb;--surface:rgba(255,255,255,.88);--surface2:rgba(255,255,255,.72);
+      --surface3:#e8eef5;--border:rgba(7,24,45,.12);--text:#07182d;
+      --muted:#525e6c;--subtle:#94a3b8;
+      --glass-bg:rgba(255,255,255,.78);--glass-bg2:rgba(255,255,255,.65);
+      --glass-edge:rgba(10,96,255,.18);--chrome-shadow:0 8px 28px rgba(7,24,45,.08);
+      color-scheme:light}
+    [data-theme="light"] #bg-ambient{background:linear-gradient(165deg,#e8f0fa 0%,#f4f7fb 42%,#eef4fc 100%)}
+    [data-theme="light"] .bg-glow{opacity:.35}
+    [data-theme="light"] .bg-grid{opacity:.45}
+    [data-theme="light"] #gs,#spatial-wrap{filter:none}
     /* topbar-h is synced from #app-chrome via ResizeObserver (main bar + action bar) */
     html,body{height:100%;width:100%;overflow:hidden;
       font-family:"CiscoSansTT","Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
@@ -25,6 +49,13 @@
     #gw{position:fixed;top:var(--topbar-h);left:0;right:0;bottom:0;z-index:1}
     #bg-ambient{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;
       background:linear-gradient(165deg,#04101f 0%,#07182d 42%,#0b2a4a 100%)}
+    .bg-pillar-tint{position:absolute;inset:-20%;opacity:0;transition:opacity 2.2s ease;pointer-events:none}
+    .bg-pillar-tint--ai{background:radial-gradient(ellipse 55% 50% at 22% 38%, rgba(10,96,255,.32), transparent 68%)}
+    .bg-pillar-tint--wp{background:radial-gradient(ellipse 50% 45% at 78% 38%, rgba(45,206,92,.22), transparent 65%)}
+    .bg-pillar-tint--res{background:radial-gradient(ellipse 48% 42% at 50% 82%, rgba(255,144,0,.18), transparent 62%)}
+    #bg-ambient[data-pillar="ai-dc"] .bg-pillar-tint--ai{opacity:1}
+    #bg-ambient[data-pillar="workplaces"] .bg-pillar-tint--wp{opacity:1}
+    #bg-ambient[data-pillar="resilience"] .bg-pillar-tint--res{opacity:1}
     .bg-vignette{position:absolute;inset:0;
       background:radial-gradient(ellipse 85% 75% at 50% 48%, transparent 35%, rgba(0,0,0,.45) 100%)}
     .bg-glow{position:absolute;inset:-25%;opacity:1;
@@ -69,11 +100,15 @@
     /* TOP BAR + ACTION BAR */
     #app-chrome{position:fixed;top:0;left:0;right:0;z-index:100}
     #topbar{position:relative;min-height:52px;height:auto;
-      background:var(--surface);border-bottom:1px solid var(--border);
+      background:var(--glass-bg);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));
+      border-bottom:1px solid var(--border);box-shadow:var(--chrome-shadow);
       display:flex;align-items:center;flex-wrap:wrap;
       gap:12px;padding:10px 16px}
+    #topbar::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;
+      background:linear-gradient(90deg, transparent, var(--glass-edge), transparent);pointer-events:none}
     #actionbar{display:flex;align-items:center;justify-content:space-between;gap:10px;
-      padding:7px 14px;background:var(--surface2);border-bottom:1px solid var(--border);
+      padding:7px 14px;background:var(--glass-bg2);backdrop-filter:blur(var(--glass-blur));
+      -webkit-backdrop-filter:blur(var(--glass-blur));border-bottom:1px solid var(--border);
       flex-wrap:wrap}
     .actionbar-filters{display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap;min-width:0}
     .actionbar-end{display:flex;align-items:center;gap:8px;margin-left:auto;flex-shrink:0}
@@ -85,10 +120,12 @@
     @media (max-width: 720px){
       .sw{flex:1 1 100%;min-width:0;order:99}
     }
-    #search{width:100%;background:var(--surface2);border:1px solid var(--border);
+    #search{width:100%;background:rgba(13,40,71,.55);border:1px solid var(--border);
       border-radius:8px;color:var(--text);font-size:14px;
-      padding:9px 14px 9px 36px;outline:none;transition:border-color .15s}
-    #search:focus{border-color:var(--accent)}
+      padding:9px 14px 9px 36px;outline:none;transition:border-color .15s,box-shadow .15s,background .15s}
+    #search:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(2,200,255,.12);background:rgba(13,40,71,.78)}
+    [data-theme="light"] #search{background:rgba(255,255,255,.85)}
+    [data-theme="light"] #search:focus{background:#fff}
     #search::placeholder{color:var(--subtle)}
     .si{position:absolute;left:9px;top:50%;transform:translateY(-50%);
       width:13px;height:13px;color:var(--muted);pointer-events:none}
@@ -99,12 +136,18 @@
        stay on one line instead of stacking onto two or three. */
     #sr{position:absolute;top:calc(100% + 4px);left:0;
       min-width:100%;width:max(100%, 380px);max-width:min(560px, 90vw);
-      background:var(--surface);border:1px solid var(--border);border-radius:8px;
-      max-height:340px;overflow-y:auto;display:none;z-index:300}
-    .sr-group{padding:6px 12px 2px;font-size:10px;font-weight:700;
+      background:var(--glass-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+      border:1px solid var(--glass-edge);border-radius:10px;
+      max-height:340px;overflow-y:auto;display:none;z-index:300;
+      box-shadow:0 16px 48px rgba(0,0,0,.45);padding:4px 0}
+    .sr-group{padding:8px 14px 4px;font-size:10px;font-weight:700;
       text-transform:uppercase;letter-spacing:.08em;color:var(--subtle)}
-    .sri{display:flex;align-items:center;gap:9px;padding:8px 12px;cursor:pointer;transition:background .1s}
-    .sri:hover{background:var(--surface2)}
+    .sri{display:flex;align-items:center;gap:9px;padding:8px 12px 8px 10px;cursor:pointer;
+      transition:background .1s,border-color .1s;border-left:3px solid transparent;margin:0 4px;border-radius:6px}
+    .sri:hover,.sri.active{background:rgba(2,200,255,.08);border-left-color:var(--accent)}
+    .sri-kbd{margin-left:auto;font-size:9px;color:var(--subtle);opacity:.7;flex-shrink:0}
+    .sri-pillar{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;flex-shrink:0;
+      background:rgba(2,200,255,.12);color:var(--accent);letter-spacing:.03em}
     .sri-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
     /* The text column is the flex child that has to truncate. Without min-width:0
        a flex child refuses to shrink below its intrinsic content width, which
@@ -126,6 +169,10 @@
     .tbs{background:var(--surface2);border:1px solid var(--border);border-radius:6px;
       color:var(--text);font-size:12px;padding:5px 7px;outline:none;cursor:pointer}
     .tbs option{background:var(--surface)}
+    #theme-toggle{flex-shrink:0;background:transparent;border:1px solid var(--border);border-radius:6px;
+      color:var(--muted);font-size:12px;padding:5px 9px;cursor:pointer;
+      transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+    #theme-toggle:hover{border-color:var(--accent);color:var(--accent)}
     #rst{background:transparent;border:1px solid var(--border);border-radius:6px;
       color:var(--muted);font-size:12px;padding:5px 9px;cursor:pointer;
       transition:all .15s;white-space:nowrap;flex-shrink:0}
@@ -180,7 +227,13 @@
     #vm-crumb .vm-cb-x:hover{color:var(--text)}
 
     /* GRAPH */
-    #gs{position:relative;z-index:1;width:100%;height:100%;display:block;background:transparent}
+    #gs{position:relative;z-index:1;width:100%;height:100%;display:block;background:transparent;
+      transition:opacity .28s ease,transform .28s ease}
+    #gs.view-exit,#spatial-wrap.view-exit{opacity:0;transform:scale(.985)}
+    #gs.view-enter,#spatial-wrap.view-enter{opacity:1;transform:scale(1)}
+    body.canvas-focus #gw::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+      background:rgba(0,0,0,.42);transition:opacity .35s ease}
+    body.canvas-focus.pillar-focus #gw::after{background:rgba(0,0,0,.28)}
     #spatial-wrap{position:absolute;inset:0;display:none;z-index:2;background:transparent}
     #spatial-graph{width:100%;height:100%;background:transparent}
     #spatial-graph canvas{display:block;background:transparent!important}
@@ -202,9 +255,13 @@
 
     /* DETAIL PANEL */
     #panel{position:fixed;top:var(--topbar-h);right:0;bottom:0;width:390px;
-      background:var(--surface);border-left:1px solid var(--border);
+      background:var(--glass-bg);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+      border-left:1px solid var(--glass-edge);
       overflow-y:auto;transform:translateX(100%);
-      transition:transform .25s cubic-bezier(.4,0,.2,1);z-index:60;padding:20px 20px 40px}
+      transition:transform .25s cubic-bezier(.4,0,.2,1);z-index:60;padding:20px 20px 40px;
+      box-shadow:-12px 0 40px rgba(0,0,0,.35)}
+    #panel::before{content:"";position:absolute;top:0;bottom:0;left:0;width:2px;
+      background:linear-gradient(180deg, var(--accent), rgba(10,96,255,.35));opacity:.65;pointer-events:none}
     #panel.open{transform:translateX(0)}
     #pcl{position:absolute;top:14px;right:14px;width:32px;height:32px;
       background:var(--surface2);border:1px solid var(--border);border-radius:6px;
@@ -224,12 +281,27 @@
     .pillar-guides .zone-rect{stroke-width:1.5}
     .pillar-guides .zone-header image{pointer-events:none}
     .pillar-guides .zone-title{font-size:15px;font-weight:600;fill:#02C8FF;letter-spacing:.01em}
-    .pillar-guides .zone-dim .zone-header{opacity:.42}
+    .pillar-guides .zone-dim .zone-header{opacity:.28}
     .pillar-guides .zone-count{font-size:10px;font-weight:500;fill:#94a3b8;text-anchor:middle}
     .pillar-guides .zone-spine{stroke-dasharray:6 5;opacity:.55}
     .pillar-guides .zone-hit{cursor:pointer}
-    .pillar-guides .zone-dim .zone-fill{fill-opacity:.02}
-    .pillar-guides .zone-dim .zone-border{stroke-opacity:.16}
+    .pillar-guides .zone-dim .zone-fill{fill-opacity:.008}
+    .pillar-guides .zone-dim .zone-border{stroke-opacity:.08}
+    .pillar-guides .zone-dim .zone-stats{opacity:.25}
+    .pillar-guides .zone-hot .zone-fill{fill-opacity:.09}
+    .pillar-guides .zone-stats{font-size:10px;font-weight:500;fill:#64748b}
+    .pillar-guides .zone-spine-label{font-size:11px;font-weight:500;fill:#94a3b8;text-anchor:middle}
+    .overview-deck .ov-card{transition:transform .22s ease,filter .22s ease}
+    .overview-deck .ov-card:hover{transform:translateY(-3px);filter:drop-shadow(0 8px 20px rgba(2,200,255,.18))}
+    .overview-deck .ov-card rect{transition:stroke-width .15s, stroke-opacity .15s}
+    .overview-deck .ov-card:hover rect{stroke-opacity:1}
+    @keyframes nodeRingPulse{
+      0%,100%{stroke-opacity:.7}
+      50%{stroke-opacity:1}}
+    .nd.nd-hover .node-scaler{transform:scale(1.06);transition:transform .18s ease}
+    .nd.nd-selected .gr{filter:url(#glow)}
+    .nd.nd-selected .mc{stroke:#fff!important;stroke-width:2.5!important}
+    .nd.nd-stack .mc{stroke:#FFD700!important;stroke-width:2.2!important}
     #pillar-legend{position:fixed;top:calc(var(--topbar-h) + 12px);left:16px;z-index:50;display:none;max-width:300px;
       padding:9px 11px;background:rgba(7,24,45,.94);border:1px solid rgba(2,200,255,.28);
       border-radius:10px;backdrop-filter:blur(10px);box-shadow:0 10px 36px rgba(0,0,0,.4)}
@@ -384,9 +456,13 @@
 
     /* PLANNER */
     #planner{position:fixed;top:var(--topbar-h);right:0;bottom:0;width:490px;
-      background:var(--surface);border-left:1px solid var(--border);
+      background:var(--glass-bg);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+      border-left:1px solid var(--glass-edge);
       display:flex;flex-direction:column;
-      transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:70}
+      transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:70;
+      box-shadow:-12px 0 40px rgba(0,0,0,.35)}
+    #planner::before{content:"";position:absolute;top:0;bottom:0;left:0;width:2px;
+      background:linear-gradient(180deg, var(--accent), rgba(10,96,255,.35));opacity:.65;pointer-events:none}
     #planner.open{transform:translateX(0)}
     #ph{padding:12px 18px;border-bottom:1px solid var(--border);flex-shrink:0}
     .ph-t{font-size:14px;font-weight:700}
@@ -581,7 +657,8 @@
     /* Compact bottom-left toolbar (replaced the old legend panel). */
     #tools{position:fixed;bottom:20px;left:20px;display:flex;gap:6px;z-index:50}
     body.planner-open #tools{} /* still visible — planner is on the right */
-    .tools-btn{background:var(--surface);border:1px solid var(--border);border-radius:7px;
+    .tools-btn{background:var(--glass-bg);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+      border:1px solid var(--border);border-radius:7px;
       color:var(--muted);font-size:11px;font-weight:600;padding:6px 11px;cursor:pointer;
       display:inline-flex;align-items:center;gap:6px;line-height:1;
       transition:border-color .15s,color .15s,background .15s,transform .12s}
@@ -740,6 +817,7 @@
   <select class="tbs" id="inds"><option value="">All Industries</option></select>
   </div>
   <button id="rst">Reset</button>
+  <button id="theme-toggle" type="button" title="Toggle light / dark presentation theme" aria-label="Toggle theme">☀ Light</button>
   <div class="actionbar-end">
   <button id="guided-btn" type="button" title="Step-by-step guided account plan">
     <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -776,6 +854,9 @@
     <div class="bg-vignette"></div>
     <div class="bg-beams"></div>
     <div class="bg-glow"></div>
+    <div class="bg-pillar-tint bg-pillar-tint--ai" aria-hidden="true"></div>
+    <div class="bg-pillar-tint bg-pillar-tint--wp" aria-hidden="true"></div>
+    <div class="bg-pillar-tint bg-pillar-tint--res" aria-hidden="true"></div>
     <canvas id="bg-mesh"></canvas>
     <div class="bg-grid"></div>
   </div>
@@ -3277,7 +3358,9 @@ function togglePillarFilter(pillarId){
   else if (activePillars.has(pillarId)) activePillars.delete(pillarId);
   else activePillars.add(pillarId);
   if (activePillars.size >= PILLAR_IDS.length) clearPillarFilter();
+  setAmbientPillarTint(singlePillarFocused() ? focusedPillarId() : null);
   applyFilters();
+  updateCanvasFocusState();
   if (viewMode === "families") scheduleGraphFit("families");
 }
 function pinPillarNodes(nodes, visibleIds){
@@ -3410,8 +3493,8 @@ function pillarLinkOpacity(l, k){
     if (sp !== tp || sp !== pid) return 0;
     return l.type === "direct" ? 0.32 : 0.16;
   }
-  if (sp !== tp) return l.type === "direct" ? 0.28 : 0.14;
-  return l.type === "direct" ? 0.06 : 0.03;
+  if (sp !== tp) return l.type === "direct" ? 0.12 : 0.05;
+  return l.type === "direct" ? 0.04 : 0.02;
 }
 function applyPillarLinkStyles(k){
   if (!lviz || !usePillarLayout()) return;
@@ -4169,6 +4252,70 @@ function updateCompositionLabelVisibility(_k){
   ndEl.select("text.nl").style("opacity", 1);
 }
 
+function pillarZoneStats(items){
+  const families = items.length;
+  const cur = items.reduce((n, id) =>
+    n + PRODUCTS.filter(p => p.family === id && productMatchesFilters(p) && p.status === "current").length, 0);
+  return `${families} families · ${cur} current`;
+}
+
+function setAmbientPillarTint(pillarId){
+  const el = document.getElementById("bg-ambient");
+  if (!el) return;
+  if (pillarId) el.dataset.pillar = pillarId;
+  else delete el.dataset.pillar;
+}
+
+function updateCanvasFocusState(){
+  const focus = usePillarLayout() && (selected || singlePillarFocused());
+  document.body.classList.toggle("canvas-focus", !!focus);
+  document.body.classList.toggle("pillar-focus", singlePillarFocused());
+  if (viewMode === "families" && singlePillarFocused()) setAmbientPillarTint(focusedPillarId());
+  else if (viewMode === "families" && selected && usePillarLayout()) setAmbientPillarTint(familyPillar(selected.id));
+  else setAmbientPillarTint(null);
+}
+
+function applyPillarNodeVisualState(selectedNode){
+  if (!ndEl || !usePillarLayout()) return;
+  const conn = selectedNode ? connectionNodeSet(selectedNode.id, connectionHighlightDepth) : null;
+  ndEl.each(function(nd){
+    const g = d3.select(this);
+    const isSel = selectedNode && nd.id === selectedNode.id;
+    const isHov = nd.id === pillarHoverId;
+    const inStk = stack.has(nd.id);
+    const isConn = selectedNode && conn?.has(nd.id);
+    const hot = isSel || isHov || isConn;
+    g.classed("nd-selected", isSel)
+      .classed("nd-hover", isHov && !isSel)
+      .classed("nd-stack", inStk && !isSel);
+    const fill = pillarColorForFamily(nd.id);
+    g.select(".gr").attr("fill-opacity", hot ? 0.38 : (inStk ? 0.28 : 0.22));
+    g.select(".mc")
+      .attr("fill-opacity", hot ? 1 : (inStk ? 1 : 0.72))
+      .attr("stroke", isSel ? "#ffffff" : (inStk ? "#FFD700" : fill))
+      .attr("stroke-width", isSel ? 2.6 : (inStk ? 2.2 : 2))
+      .attr("stroke-opacity", hot || inStk ? 1 : 0.78);
+    g.select(".node-scaler").attr("transform", (isSel || isHov) ? "scale(1.06)" : null);
+  });
+  updateCanvasFocusState();
+}
+
+function runViewTransition(callback){
+  const gs = document.getElementById("gs");
+  const sw = document.getElementById("spatial-wrap");
+  const els = [gs, sw].filter(el => el && el.offsetParent !== null || el === gs);
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduced || els.length === 0){ callback(); return; }
+  els.forEach(el => el.classList.add("view-exit"));
+  setTimeout(() => {
+    callback();
+    requestAnimationFrame(() => {
+      els.forEach(el => { el.classList.remove("view-exit"); el.classList.add("view-enter"); });
+      setTimeout(() => els.forEach(el => el.classList.remove("view-enter")), 320);
+    });
+  }, 160);
+}
+
 function updateCompositionOrbitGuide(){
   let g = lyr.select("g.comp-orbit");
   if (viewMode !== "composition" || !compositionOrbitR){
@@ -4176,12 +4323,13 @@ function updateCompositionOrbitGuide(){
     return;
   }
   if (g.empty()) g = lyr.insert("g", ":first-child").attr("class", "comp-orbit").style("pointer-events", "none");
-  g.selectAll("circle").data([compositionOrbitR]).join("circle")
+  const radii = [compositionOrbitR * 0.55, compositionOrbitR, compositionOrbitR * 1.35].filter(r => r > 20);
+  g.selectAll("circle").data(radii).join("circle")
     .attr("cx", 0).attr("cy", 0).attr("r", d => d)
     .attr("fill", "none")
-    .attr("stroke", "rgba(148,163,184,0.22)")
-    .attr("stroke-width", 1)
-    .attr("stroke-dasharray", "5 7");
+    .attr("stroke", (d, i) => i === 1 ? "rgba(148,163,184,0.28)" : "rgba(148,163,184,0.14)")
+    .attr("stroke-width", (d, i) => i === 1 ? 1.2 : 0.8)
+    .attr("stroke-dasharray", (d, i) => i === 1 ? "5 7" : "3 9");
 }
 
 function showCompositionNodeTip(ev, d){
@@ -4377,12 +4525,26 @@ function updatePillarGuides(){
     const resTop = { x: res.cx, y: res.cy - res.h / 2 };
     [ [aiBot.x, aiBot.y, hubX, hubY], [wpBot.x, wpBot.y, hubX, hubY], [hubX, hubY, resTop.x, resTop.y] ]
       .forEach(([x1, y1, x2, y2]) => {
-        connG.append("line").attr("x1", x1).attr("y1", y1).attr("x2", x2).attr("y2", y2)
-          .attr("stroke", "#02C8FF").attr("stroke-opacity", 0.32).attr("stroke-width", 1.2)
-          .attr("stroke-dasharray", "6 5");
+        connG.append("line").attr("class", "zone-spine").attr("x1", x1).attr("y1", y1).attr("x2", x2).attr("y2", y2)
+          .attr("stroke", "#02C8FF").attr("stroke-opacity", 0.32).attr("stroke-width", 1.2);
       });
     connG.append("circle").attr("cx", hubX).attr("cy", hubY).attr("r", 3)
       .attr("fill", "#02C8FF").attr("fill-opacity", 0.45);
+    const spineY = hubY - 18;
+    const leftX = ai.cx + ai.w / 2;
+    const rightX = wp.cx - wp.w / 2;
+    const connLabel = ONE_CISCO.connectivityLabel;
+    const labelW = connLabel.length * 6.8 + 14;
+    const gapHalf = labelW / 2 + 8;
+    const midX = (leftX + rightX) / 2;
+    connG.append("line").attr("class", "zone-spine")
+      .attr("x1", leftX).attr("y1", spineY).attr("x2", midX - gapHalf).attr("y2", spineY)
+      .attr("stroke", "#94a3b8").attr("stroke-opacity", 0.45).attr("stroke-width", 1);
+    connG.append("line").attr("class", "zone-spine")
+      .attr("x1", midX + gapHalf).attr("y1", spineY).attr("x2", rightX).attr("y2", spineY)
+      .attr("stroke", "#94a3b8").attr("stroke-opacity", 0.45).attr("stroke-width", 1);
+    connG.append("text").attr("class", "zone-spine-label")
+      .attr("x", midX).attr("y", spineY + 4).text(connLabel);
   }
   PILLAR_LAYOUT.zones.forEach(z => {
     if (!pillarIsVisible(z.id)) return;
@@ -4409,6 +4571,11 @@ function updatePillarGuides(){
       .attr("stroke-opacity", hot ? (z.gradient ? 1 : 0.95) : (z.gradient ? 0.88 : 0.78))
       .style("pointer-events", "none");
     appendPillarZoneHeader(zg, z, x, y, lz.w, headerOp);
+    const statsPad = 16;
+    zg.append("text").attr("class", "zone-stats")
+      .attr("x", x + lz.w - statsPad).attr("y", y + lz.h - statsPad)
+      .attr("text-anchor", "end").attr("fill-opacity", dim ? 0.35 : 0.75)
+      .text(pillarZoneStats(items));
     zg.append("rect").attr("class", "zone-hit")
       .attr("x", x).attr("y", y).attr("width", lz.w).attr("height", lz.h)
       .attr("rx", z.gradient ? 8 : 6)
@@ -4691,6 +4858,7 @@ function rebindGraph(opts){
               if (usePillarLayout()){
                 pillarHoverId = d.id;
                 applyPillarLabelStyles(selected);
+                applyPillarNodeVisualState(selected);
                 const zk = d3.zoomTransform(svgEl).k;
                 const zf = singlePillarFocused() ? 0 : pillarZoomLabelFade(zk);
                 if (zf === 0 && d !== selected) showNodeTip(ev, d);
@@ -4707,6 +4875,7 @@ function rebindGraph(opts){
             } else if (usePillarLayout()){
               pillarHoverId = null;
               applyPillarLabelStyles(selected);
+              applyPillarNodeVisualState(selected);
             } else if (viewMode === "all-products"){
               pillarHoverId = null;
               applyAllProductsLabelStyles(selected);
@@ -4765,7 +4934,7 @@ function rebindGraph(opts){
     });
   }
   if (viewMode === "composition") applyCompositionNodeStyles();
-  else if (usePillarLayout()) applyPillarLabelStyles(selected);
+  else if (usePillarLayout()){ applyPillarLabelStyles(selected); applyPillarNodeVisualState(selected); }
   else resetStandardLabelStyles();
   updateCompositionHint();
   updatePillarGuides();
@@ -5925,6 +6094,7 @@ function applyViewLevel(mode, opts){
   opts = opts || {};
   const prev = viewMode;
 
+  const applySwitch = () => {
   if (prev === "spatial" && mode !== "spatial"){
     if (mode === "composition" && !opts.focusFamily && spatialState.focusFamily){
       opts.focusFamily = spatialState.focusFamily;
@@ -5950,6 +6120,11 @@ function applyViewLevel(mode, opts){
       applyFilters();
       updateSpatialHud();
       updateBreadcrumb();
+      const echoPillar = opts.focusPillar || (familyFocus ? familyPillar(familyFocus) : (singlePillarFocused() ? focusedPillarId() : null));
+      if (echoPillar){
+        setAmbientPillarTint(echoPillar);
+        setTimeout(() => setAmbientPillarTint(null), 2400);
+      }
       if (familyFocus) setTimeout(() => focusSpatialNode(familyFocus, 900), 350);
     });
     return;
@@ -6035,6 +6210,13 @@ function applyViewLevel(mode, opts){
 
   // Recenter view after mode change so the user always sees the new content.
   scheduleGraphFit(mode);
+  updateCanvasFocusState();
+  if (opts.focusPillar) setAmbientPillarTint(opts.focusPillar);
+  else if (mode === "overview" || mode === "all-products" || mode === "composition") setAmbientPillarTint(null);
+  };
+
+  if (opts.initial || prev === mode) applySwitch();
+  else runViewTransition(applySwitch);
 }
 
 // ── Force-tuning per mode so each view feels right.
@@ -6250,6 +6432,18 @@ function applyConnectionHighlight(d, depth = connectionHighlightDepth){
     applyCompositionNodeStyles();
     return;
   }
+  if (usePillarLayout()){
+    applyPillarNodeVisualState(d);
+    applyPillarLabelStyles(d);
+    const conn = connectionNodeSet(d.id, depth);
+    if (lviz) lviz.attr("stroke-opacity", l => {
+      const s = sid(l), t = tid(l);
+      const lit = conn.has(s) && conn.has(t);
+      if (!lit) return pillarLinkOpacity(l) * 0.35;
+      return l.type === "direct" ? 0.62 : 0.38;
+    });
+    return;
+  }
   const conn = connectionNodeSet(d.id, depth);
   ndEl.each(function(nd){
     const isSel = nd.id === d.id, isC = conn.has(nd.id);
@@ -6272,7 +6466,7 @@ function selectNode(d, opts = {}) {
   if (opts.connectionDepth) connectionHighlightDepth = opts.connectionDepth;
   selected = d; hideTip();
   applyConnectionHighlight(d, connectionHighlightDepth);
-  if (usePillarLayout()) applyPillarLabelStyles(d);
+  if (usePillarLayout()) applyPillarNodeVisualState(d);
   showDetailPanel(d);
   if (viewMode === "spatial"){
     focusSpatialNode(d.id, 700);
@@ -6306,13 +6500,17 @@ function resetHL() {
   if (usePillarLayout()){
     ndEl.each(function(nd){
       const inStk=stack.has(nd.id);
-      d3.select(this).select(".gr").attr("fill-opacity",inStk?.25:0);
-      d3.select(this).select(".mc").attr("fill-opacity",inStk?1:.88)
-        .attr("stroke", pillarColorForFamily(nd.id)).attr("stroke-opacity", 0.92);
+      d3.select(this).classed("nd-selected", false).classed("nd-hover", false).classed("nd-stack", inStk);
+      d3.select(this).select(".gr").attr("fill-opacity",inStk?.28:0.22);
+      d3.select(this).select(".mc").attr("fill-opacity",inStk?1:.72)
+        .attr("stroke", inStk ? "#FFD700" : pillarColorForFamily(nd.id)).attr("stroke-opacity", inStk ? 1 : 0.78);
       d3.select(this).select(".icn").attr("opacity",1);
+      d3.select(this).select(".node-scaler").attr("transform", null);
     });
     if (lviz && singlePillarFocused()) lviz.attr("stroke-opacity", pillarLinkOpacity);
+    else if (lviz) lviz.attr("stroke-opacity", l => pillarLinkOpacity(l));
     applyPillarLabelStyles(null);
+    updateCanvasFocusState();
     return;
   }
   ndEl.each(function(nd){
@@ -6707,9 +6905,19 @@ function hideTip(){ tipEl.style.display="none"; }
 // SEARCH — nodes + specific products
 // ══════════════════════════════════════
 const searchEl=document.getElementById("search"), srEl=document.getElementById("sr");
+let srActiveIdx = -1;
+
+function updateSearchHighlight(){
+  if (!srEl) return;
+  const items = srEl.querySelectorAll(".sri");
+  items.forEach((el, i) => el.classList.toggle("active", i === srActiveIdx));
+  const active = items[srActiveIdx];
+  if (active) active.scrollIntoView({ block: "nearest" });
+}
 
 searchEl.addEventListener("input",()=>{
   const q=searchEl.value.trim().toLowerCase();
+  srActiveIdx = -1;
   if(!q){srEl.style.display="none";return;}
 
   const nMatch=NODES.filter(n=>
@@ -6726,7 +6934,8 @@ searchEl.addEventListener("input",()=>{
 
   srEl.innerHTML="";
 
-  function makeSearchItem(label, sublabel, color, eolStatus, onSelect) {
+  function makeSearchItem(label, sublabel, color, eolStatus, onSelect, extras) {
+    extras = extras || {};
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "sri";
@@ -6737,6 +6946,7 @@ searchEl.addEventListener("input",()=>{
         <div style="font-size:12px;font-weight:500">${label}</div>
         <div style="font-size:10px;color:var(--muted)">${sublabel}</div>
       </div>
+      ${extras.pillar ? `<span class="sri-pillar">${extras.pillar}</span>` : ""}
       ${eolStatus ? `<div class="${eolStatus==='eol'?'sri-eol':'sri-eos'}" style="pointer-events:none;flex-shrink:0">${eolStatus.toUpperCase()}</div>` : ""}
     `;
     btn.addEventListener("click", ev => {
@@ -6745,6 +6955,7 @@ searchEl.addEventListener("input",()=>{
       searchEl.value = "";
       srEl.style.display = "none";
       srEl.innerHTML = "";
+      srActiveIdx = -1;
       onSelect();
     });
     return btn;
@@ -6754,22 +6965,22 @@ searchEl.addEventListener("input",()=>{
     const hdr=document.createElement("div"); hdr.className="sr-group"; hdr.textContent="Specific Products";
     srEl.appendChild(hdr);
     pMatch.forEach(p=>{
+      const fam = nodeById[p.family];
+      const pm = pillarMeta(familyPillar(p.family));
       srEl.appendChild(makeSearchItem(
         p.name,
-        `${CATS[p.category].label} · ${(nodeById[p.family]||{}).name||""}`,
+        `${CATS[p.category].label} · ${fam?.name||""}`,
         catColor(p.category),
         p.status!=="current" ? p.status : null,
         () => {
-          // Auto-promote to Composition for this product's family so the
-          // graph reflects what the user just searched for.
           if (viewMode !== "composition" || viewFocus !== p.family){
             applyViewLevel("composition", { focusFamily: p.family });
-            // Give the rebind/transition a moment, then open the panel.
             setTimeout(() => window.showProductDetail(p.id), 380);
           } else {
             window.showProductDetail(p.id);
           }
-        }
+        },
+        { pillar: pm ? pm.label.split(" ").slice(0, 2).join(" ") : null }
       ));
     });
   }
@@ -6777,21 +6988,44 @@ searchEl.addEventListener("input",()=>{
     const hdr=document.createElement("div"); hdr.className="sr-group"; hdr.textContent="Portfolio Families";
     srEl.appendChild(hdr);
     nMatch.forEach(n=>{
+      const pm = pillarMeta(familyPillar(n.id));
       srEl.appendChild(makeSearchItem(
         n.name, CATS[n.category].label, catColor(n.category), null,
-        () => window.jumpTo(n.id)
+        () => window.jumpTo(n.id),
+        { pillar: pm ? pm.label.split(" ").slice(0, 2).join(" ") : null }
       ));
     });
   }
   srEl.style.display="block";
+  srActiveIdx = 0;
+  updateSearchHighlight();
 });
 
 document.addEventListener("click", ev => {
   if (srEl.style.display === "block" && !srEl.contains(ev.target) && ev.target !== searchEl) {
     srEl.style.display = "none";
+    srActiveIdx = -1;
   }
 });
-searchEl.addEventListener("keydown",ev=>{if(ev.key==="Escape"){searchEl.value="";srEl.style.display="none";}});
+searchEl.addEventListener("keydown",ev=>{
+  const items = srEl.querySelectorAll(".sri");
+  if (ev.key === "ArrowDown" && items.length){
+    ev.preventDefault();
+    srActiveIdx = Math.min(srActiveIdx + 1, items.length - 1);
+    updateSearchHighlight();
+  } else if (ev.key === "ArrowUp" && items.length){
+    ev.preventDefault();
+    srActiveIdx = Math.max(srActiveIdx - 1, 0);
+    updateSearchHighlight();
+  } else if (ev.key === "Enter" && srActiveIdx >= 0 && items[srActiveIdx]){
+    ev.preventDefault();
+    items[srActiveIdx].click();
+  } else if (ev.key === "Escape"){
+    searchEl.value="";
+    srEl.style.display="none";
+    srActiveIdx = -1;
+  }
+});
 
 // ══════════════════════════════════════
 // ACCOUNT PLANNER
@@ -7874,7 +8108,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.29.3";
+const APP_VERSION   = "2.30.0";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -8165,6 +8399,16 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.30.0", date:"2026-06-20", items:[
+    "Visual polish — frosted-glass top bar, action bar, detail panel, and Account Planner; light presentation theme toggle.",
+    "Families — dimmed cross-pillar links, focus-mode canvas dimming, node glow hierarchy (hover/select/stack), connectivity spine + family stats on pillar panels.",
+    "Motion — staged view transitions; ambient pillar-color echo when entering Spatial or filtering a pillar; triple-ring composition orbit.",
+    "Search — command-surface dropdown with pillar badges and keyboard ↑↓/Enter navigation.",
+    "Refresh timeline — glass header with ambient backdrop matching the main canvas."
+  ]},
+  {ver:"2.29.4", date:"2026-06-20", items:[
+    "Overview — Secure global connectivity uses a line gap instead of a dark label box; Accelerated by Cisco AI chevrons point outward like the deck slide."
+  ]},
   {ver:"2.29.3", date:"2026-06-20", items:[
     "Families — fixed overlapping pillar panel outlines: lock panel size in all-pillars view, add gap between zones, and nudge Digital resilience below the top row."
   ]},
@@ -8842,8 +9086,14 @@ STYLE.textContent = `
   .nd.pulse circle.mc{animation:searchPulse 1.05s ease-in-out infinite}
 
   /* Timeline view */
-  #tl-wrap{position:fixed;top:var(--topbar-h);left:0;right:0;bottom:0;background:var(--bg);
+  #tl-wrap{position:fixed;top:var(--topbar-h);left:0;right:0;bottom:0;background:transparent;
     display:none;overflow:hidden;z-index:40;flex-direction:column}
+  #tl-ambient{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+    background:linear-gradient(165deg,#04101f 0%,#07182d 42%,#0b2a4a 100%);opacity:.92}
+  [data-theme="light"] #tl-ambient{background:linear-gradient(165deg,#e8f0fa 0%,#f4f7fb 100%)}
+  #tl-head{position:relative;z-index:2;padding:12px 22px;border-bottom:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;flex-wrap:nowrap;
+    background:var(--glass-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
   /* Lift the timeline so the horizontal scrollbar at the bottom of #tl-canvas
      isn't covered by other fixed chrome (#v2-footer, #tools, #hint), which
      all paint above #tl-wrap (z-index 45–50 vs. tl-wrap's 40). The
@@ -8860,12 +9110,10 @@ STYLE.textContent = `
   body.tl-open #hint{display:none !important}
   body:has(#tl-wrap.show) #tools,
   body.tl-open #tools{bottom:18px !important}
-  #tl-head{padding:12px 22px;border-bottom:1px solid var(--border);
-    display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;flex-wrap:nowrap}
   #tl-head > div:last-child{display:flex;gap:6px;align-items:center;flex-shrink:0;flex-wrap:nowrap}
   #tl-head .tl-title{font-size:14px;font-weight:700}
   #tl-head .tl-sub{font-size:11px;color:var(--muted);margin-top:2px}
-  #tl-canvas{flex:1;
+  #tl-canvas{flex:1;position:relative;z-index:1;
     /* overflow-x:scroll (vs auto) permanently reserves a track at the bottom.
        We deliberately do NOT set scrollbar-color/scrollbar-width here: in
        Chrome 113+ those properties opt the element into the new "Fluent"
@@ -11575,6 +11823,7 @@ function buildTimelineView(){
   const tl = document.createElement("div");
   tl.id = "tl-wrap";
   tl.innerHTML = `
+    <div id="tl-ambient" aria-hidden="true"></div>
     <div id="tl-head">
       <div>
         <div class="tl-title">Refresh timeline</div>
@@ -12768,8 +13017,29 @@ function initAmbientBackground(){
 /* ════════════════════════════════════════════════════════════════════════
    BOOT — assemble everything
    ════════════════════════════════════════════════════════════════════════*/
+function wireThemeToggle(){
+  const btn = document.getElementById("theme-toggle");
+  if (!btn) return;
+  const KEY = "cpn-theme-v1";
+  const apply = (theme) => {
+    if (theme === "light") document.documentElement.setAttribute("data-theme", "light");
+    else document.documentElement.removeAttribute("data-theme");
+    btn.textContent = theme === "light" ? "🌙 Dark" : "☀ Light";
+    btn.title = theme === "light" ? "Switch to dark theme" : "Switch to light theme (presentations)";
+  };
+  let theme = "dark";
+  try { theme = localStorage.getItem(KEY) || "dark"; } catch (e){}
+  apply(theme);
+  btn.addEventListener("click", () => {
+    theme = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+    apply(theme);
+    try { localStorage.setItem(KEY, theme); } catch (e){}
+  });
+}
+
 function boot(){
   initAmbientBackground();
+  wireThemeToggle();
   loadDcloudLinks().then(refreshDcloudPanelIfOpen);
   loadMatrixBridge();
   buildPlansMenu();
