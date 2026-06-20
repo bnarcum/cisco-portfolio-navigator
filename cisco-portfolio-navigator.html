@@ -325,23 +325,34 @@
       display:flex;flex-direction:column;
       transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:70}
     #planner.open{transform:translateX(0)}
-    #ph{padding:14px 18px 10px;border-bottom:1px solid var(--border);flex-shrink:0;
-      display:flex;align-items:center;justify-content:space-between}
+    #ph{padding:12px 18px;border-bottom:1px solid var(--border);flex-shrink:0}
     .ph-t{font-size:14px;font-weight:700}
-    .ph-s{font-size:11px;color:var(--muted);margin-top:1px}
-    #plan-x{background:var(--surface2);border:1px solid var(--border);border-radius:6px;
-      color:var(--muted);width:28px;height:28px;font-size:16px;cursor:pointer;
-      display:flex;align-items:center;justify-content:center;transition:all .15s}
-    #plan-x:hover{border-color:var(--accent);color:var(--accent)}
-    #an-wrap{padding:10px 18px 0}
+    #planner-scroll{flex:1;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;min-height:0}
+    #planner-guided{margin:10px 18px 0;padding:10px 12px;border-radius:8px;
+      background:var(--surface2);border:1px solid var(--border);
+      display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:11.5px;color:var(--muted)}
+    .pln-banner-t{font-weight:600;color:var(--text)}
+    .pln-link{background:none;border:none;padding:0;color:var(--accent);font-size:11.5px;font-weight:700;
+      cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+    .pln-link:hover{opacity:.85}
+    .pln-banner-s{color:var(--subtle);font-size:11px}
+    #planner-summary{margin:10px 18px 0}
+    .pln-summary-btn{width:100%;text-align:left;padding:10px 12px;border-radius:8px;
+      background:var(--surface2);border:1px solid var(--border);color:var(--text);
+      font-size:12px;font-weight:600;cursor:pointer;transition:border-color .15s,background .15s}
+    .pln-summary-btn:hover{border-color:var(--accent);background:rgba(2,200,255,.06)}
+    .pln-summary-sub{display:block;font-size:10.5px;font-weight:500;color:var(--subtle);margin-top:3px}
+    #planner-setup{padding:0 18px 8px}
+    #planner-setup.is-collapsed{display:none}
+    #an-wrap{padding:10px 0 0}
     #acct-name{width:100%;background:var(--surface2);border:1px solid var(--border);
       border-radius:7px;color:var(--text);font-size:13px;font-weight:600;
       padding:7px 12px;outline:none;transition:border-color .15s}
     #acct-name:focus{border-color:var(--accent)}
     #acct-name::placeholder{color:var(--subtle);font-weight:400}
-    #ss{padding:12px 18px 0;flex-shrink:0}
+    #ss{padding:12px 0 0;flex-shrink:0}
     .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-    .st{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--subtle)}
+    .st{font-size:12px;font-weight:600;color:var(--muted)}
     .sc{font-size:11px;color:var(--accent);font-weight:600}
     .psw{position:relative;margin-bottom:8px}
     #pi{width:100%;background:var(--surface2);border:1px solid var(--border);
@@ -371,18 +382,23 @@
     .chip-x{background:none;border:none;cursor:pointer;color:inherit;
       font-size:13px;line-height:1;opacity:.6;padding:0}
     .chip-x:hover{opacity:1}
-    #ls{padding:12px 18px 0;flex-shrink:0}
-    .legacy-grid{display:flex;flex-wrap:wrap;gap:5px}
+    .pln-acc{border:1px solid var(--border);border-radius:8px;background:var(--surface2);
+      margin-top:10px;overflow:hidden}
+    .pln-acc>summary{padding:9px 12px;font-size:12px;font-weight:600;color:var(--text);
+      cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .pln-acc>summary::-webkit-details-marker{display:none}
+    .pln-acc>summary::after{content:"▸";color:var(--subtle);font-size:11px;flex-shrink:0;transition:transform .15s}
+    .pln-acc[open]>summary::after{transform:rotate(90deg)}
+    .pln-acc-meta{font-size:10.5px;font-weight:500;color:var(--subtle)}
+    .pln-acc-body{padding:0 12px 12px}
+    #ls{padding:0}
+    .legacy-grid{display:flex;flex-wrap:wrap;gap:5px;max-height:168px;overflow-y:auto;padding-top:2px}
     .lc{padding:3px 9px;border-radius:20px;background:var(--surface3);
       border:1px solid var(--border);font-size:11px;cursor:pointer;transition:all .12s;color:var(--muted)}
     .lc:hover{border-color:#FF9000;color:#FF9000}
     .lc.sel{background:rgba(245,158,11,.12);border-color:#FF9000;color:#FF9000}
-    #aw{padding:10px 18px;flex-shrink:0}
-    #ab{width:100%;background:var(--accent);color:#000;border:none;border-radius:8px;
-      font-size:13px;font-weight:700;padding:10px;cursor:pointer;transition:opacity .15s}
-    #ab:hover{opacity:.85}
-    #ab:disabled{opacity:.35;cursor:not-allowed}
-    #pb{flex:1;overflow-y:auto;overflow-x:hidden}
+    #stack-hint{padding:14px 18px 6px;font-size:11.5px;color:var(--subtle);text-align:center;line-height:1.45}
+    #pb{flex:1;overflow-y:auto;overflow-x:hidden;min-height:80px}
     .ptabs{display:flex;border-bottom:1px solid var(--border);padding:0 18px;flex-shrink:0}
     .ptab{background:none;border:none;border-bottom:2px solid transparent;
       color:var(--muted);font-size:12px;font-weight:600;padding:9px 10px 8px;
@@ -460,20 +476,33 @@
       border-radius:8px;padding:10px 12px;margin-bottom:8px}
 
     /* Empty state */
-    .empty{padding:36px 20px;text-align:center}
+    .empty{padding:20px 16px;text-align:center}
     .empty h3{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:5px}
     .empty p{font-size:11px;color:var(--subtle);line-height:1.6}
 
     /* Footer */
-    #pf{padding:10px 18px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+    #pf{padding:10px 18px 12px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;
+      flex-shrink:0;background:var(--surface);box-shadow:0 -6px 16px rgba(0,0,0,.12)}
+    #ab{width:100%;background:var(--accent);color:#000;border:none;border-radius:8px;
+      font-size:13px;font-weight:700;padding:10px;cursor:pointer;transition:opacity .15s}
+    #ab:hover{opacity:.85}
+    #ab:disabled{opacity:.35;cursor:not-allowed}
+    .pf-row{display:flex;gap:6px;align-items:center}
     #exp-btn{flex:1;padding:8px;border-radius:7px;font-size:12px;font-weight:600;
       cursor:pointer;border:1px solid var(--border);background:transparent;
       color:var(--muted);transition:all .15s}
     #exp-btn:hover{border-color:var(--accent);color:var(--accent)}
-    #clr-btn{padding:8px 12px;border-radius:7px;font-size:12px;font-weight:600;
-      cursor:pointer;border:1px solid var(--border);background:transparent;
-      color:var(--muted);transition:all .15s}
-    #clr-btn:hover{border-color:var(--red);color:var(--red)}
+    #pf-menu-wrap{position:relative;flex-shrink:0}
+    #pf-menu-btn{width:34px;height:34px;padding:0;border-radius:7px;font-size:16px;line-height:1;
+      cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .15s}
+    #pf-menu-btn:hover{border-color:var(--accent);color:var(--accent)}
+    .pf-menu{position:absolute;bottom:calc(100% + 4px);right:0;min-width:140px;
+      background:var(--surface);border:1px solid var(--border);border-radius:8px;
+      box-shadow:0 8px 24px rgba(0,0,0,.35);padding:4px;z-index:80}
+    .pf-menu[hidden]{display:none}
+    .pf-menu button{display:block;width:100%;text-align:left;padding:8px 10px;border:none;border-radius:5px;
+      background:transparent;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+    .pf-menu button:hover{background:var(--surface2);color:var(--red)}
 
     /* Toast */
     #toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);
@@ -677,52 +706,72 @@
 </div>
 
 <div id="planner">
-  <div id="ph">
-    <div><div class="ph-t">Account Planner</div><div class="ph-s">Build stack · get augmentation &amp; replacement recommendations</div></div>
-    <button id="plan-x">&#xd7;</button>
-  </div>
-  <div id="an-wrap"><input id="acct-name" type="text" placeholder="Account name (e.g. Acme Corp)…"/></div>
-  <div id="ss">
-    <div class="sh"><span class="st">Current Account Stack</span><span class="sc" id="stack-cnt">0 products</span></div>
-    <div class="psw">
-      <svg class="psi" viewBox="0 0 16 16" fill="none">
-        <circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.5"/>
-        <path d="M10.5 10.5L13.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      </svg>
-      <input id="pi" type="text" placeholder="Add Cisco products (models, series, families)…" autocomplete="off"/>
-      <div id="pd"></div>
+  <div id="ph"><div class="ph-t">Account Planner</div></div>
+  <div id="planner-scroll">
+    <div id="planner-guided">
+      <span class="pln-banner-t">New account?</span>
+      <button type="button" id="pln-guided-link" class="pln-link">Start Guided Plan</button>
+      <span class="pln-banner-s">or add products below</span>
     </div>
-    <div id="chips"></div>
-  </div>
-  <div id="ls">
-    <div class="sh" style="margin-bottom:8px">
-      <span class="st">Legacy / Outgoing Tech</span>
-      <span style="font-size:10px;color:var(--subtle)">click to select</span>
+    <div id="planner-summary" hidden>
+      <button type="button" id="pln-edit-stack" class="pln-summary-btn">
+        <span id="pln-summary-text">Untitled account</span>
+        <span class="pln-summary-sub">Edit stack</span>
+      </button>
     </div>
-    <div class="legacy-grid" id="legacy-grid"></div>
-  </div>
-  <div id="aw"><button id="ab" disabled>Analyze Account →</button></div>
-  <div id="pb">
-    <div id="no-analysis" class="empty">
-      <h3>Add products to get started</h3>
-      <p>Enter the Cisco products and models in this account, select any outgoing legacy tech, then click Analyze for personalized recommendations.</p>
-    </div>
-    <div id="analysis-results" style="display:none">
-      <div class="ptabs">
-        <button class="ptab active" data-tab="recs">Augment <span class="ptab-b" id="rec-cnt">0</span></button>
-        <button class="ptab" data-tab="replace">Replace <span class="ptab-r" id="rep-cnt">0</span></button>
-        <button class="ptab" data-tab="bundles">Bundles</button>
-        <button class="ptab" data-tab="coverage">Coverage</button>
+    <div id="planner-setup">
+      <div id="an-wrap"><input id="acct-name" type="text" placeholder="Account name (e.g. Acme Corp)…"/></div>
+      <div id="ss">
+        <div class="sh"><span class="st">Account stack</span><span class="sc" id="stack-cnt">0 products</span></div>
+        <div class="psw">
+          <svg class="psi" viewBox="0 0 16 16" fill="none">
+            <circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M10.5 10.5L13.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <input id="pi" type="text" placeholder="Add Cisco products (models, series, families)…" autocomplete="off"/>
+          <div id="pd"></div>
+        </div>
+        <div id="chips"></div>
       </div>
-      <div id="tab-recs" class="tc active"></div>
-      <div id="tab-replace" class="tc"></div>
-      <div id="tab-bundles" class="tc"></div>
-      <div id="tab-coverage" class="tc"></div>
+      <details id="pln-legacy-acc" class="pln-acc">
+        <summary>Legacy / outgoing tech <span class="pln-acc-meta" id="legacy-cnt">Optional</span></summary>
+        <div class="pln-acc-body">
+          <div id="ls"><div class="legacy-grid" id="legacy-grid"></div></div>
+        </div>
+      </details>
+      <details id="pln-quick-acc" class="pln-acc">
+        <summary>Quick start <span class="pln-acc-meta">Templates &amp; profile</span></summary>
+        <div class="pln-acc-body" id="quick-start-body"></div>
+      </details>
+    </div>
+    <div id="pb">
+      <div id="stack-hint">Add products, then analyze.</div>
+      <div id="no-analysis" class="empty" style="display:none" aria-hidden="true"></div>
+      <div id="analysis-results" style="display:none">
+        <div class="ptabs">
+          <button class="ptab active" data-tab="recs">Augment <span class="ptab-b" id="rec-cnt">0</span></button>
+          <button class="ptab" data-tab="replace">Replace <span class="ptab-r" id="rep-cnt">0</span></button>
+          <button class="ptab" data-tab="bundles">Bundles</button>
+          <button class="ptab" data-tab="coverage">Coverage</button>
+        </div>
+        <div id="tab-recs" class="tc active"></div>
+        <div id="tab-replace" class="tc"></div>
+        <div id="tab-bundles" class="tc"></div>
+        <div id="tab-coverage" class="tc"></div>
+      </div>
     </div>
   </div>
   <div id="pf">
-    <button id="exp-btn">&#x2913; Export Plan</button>
-    <button id="clr-btn">Clear</button>
+    <button id="ab" disabled>Analyze Account →</button>
+    <div class="pf-row">
+      <button id="exp-btn">&#x2913; Export Plan</button>
+      <div id="pf-menu-wrap">
+        <button type="button" id="pf-menu-btn" title="More actions" aria-label="More actions">⋯</button>
+        <div id="pf-menu" class="pf-menu" hidden>
+          <button type="button" id="clr-btn">Clear plan</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -3038,6 +3087,7 @@ let facetState = { status: new Set(["current"]), tier: new Set() };
 let selected    = null;
 let connectionHighlightDepth = 1;
 let plannerOpen = false;
+let plannerSetupExpanded = false;
 let stack       = new Set();   // family node IDs or product IDs
 let legacySel   = new Set();
 let analyzed    = false;
@@ -6436,6 +6486,7 @@ function openPlanner(){
   plannerBtn.classList.add("active");
   plannerBtn.innerHTML=`<span style="font-size:14px">&#xd7;</span> Close Planner`;
   closePanel(); highlightStack();
+  updatePlannerUI();
 }
 function closePlanner(){
   plannerOpen=false; plannerEl.classList.remove("open");
@@ -6443,7 +6494,75 @@ function closePlanner(){
   plannerBtn.innerHTML=`<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" fill="currentColor"/><rect x="9" y="2" width="5" height="5" rx="1" fill="currentColor" opacity=".6"/><rect x="2" y="9" width="5" height="5" rx="1" fill="currentColor" opacity=".6"/><rect x="9" y="9" width="5" height="5" rx="1" fill="currentColor"/></svg> Account Planner`;
   selected=null; resetHL();
 }
-document.getElementById("plan-x").addEventListener("click",closePlanner);
+document.getElementById("pln-guided-link")?.addEventListener("click", () => {
+  if (typeof openGuidedWizard === "function") openGuidedWizard();
+});
+document.getElementById("pln-edit-stack")?.addEventListener("click", () => {
+  plannerSetupExpanded = true;
+  updatePlannerUI();
+});
+document.getElementById("pf-menu-btn")?.addEventListener("click", e => {
+  e.stopPropagation();
+  const menu = document.getElementById("pf-menu");
+  if (menu) menu.hidden = !menu.hidden;
+});
+document.addEventListener("click", e => {
+  const menu = document.getElementById("pf-menu");
+  if (menu && !menu.hidden && !e.target.closest("#pf-menu-wrap")) menu.hidden = true;
+});
+
+function updateLegacySummary(){
+  const el = document.getElementById("legacy-cnt");
+  if (!el) return;
+  const n = legacySel.size;
+  el.textContent = n ? `${n} selected` : "Optional";
+}
+
+function stackHasEol(){
+  return [...stack].some(id => {
+    if (stackItems.get(id) !== "product") return false;
+    const p = prodById[id];
+    return p && p.status !== "current";
+  });
+}
+
+function updatePlannerUI(){
+  const setup = document.getElementById("planner-setup");
+  const summary = document.getElementById("planner-summary");
+  const guided = document.getElementById("planner-guided");
+  const hint = document.getElementById("stack-hint");
+  const legacyAcc = document.getElementById("pln-legacy-acc");
+  const quickAcc = document.getElementById("pln-quick-acc");
+  const summaryText = document.getElementById("pln-summary-text");
+  const hasInput = stack.size > 0 || legacySel.size > 0;
+  const acct = (document.getElementById("acct-name")?.value || "").trim() || "Untitled account";
+
+  updateLegacySummary();
+
+  if (analyzed && hasInput && !plannerSetupExpanded){
+    setup?.classList.add("is-collapsed");
+    if (summary) summary.hidden = false;
+    if (guided) guided.style.display = "none";
+    if (summaryText){
+      let line = `${acct} · ${stack.size} product${stack.size !== 1 ? "s" : ""}`;
+      if (legacySel.size) line += ` · ${legacySel.size} legacy`;
+      summaryText.textContent = line;
+    }
+  } else {
+    setup?.classList.remove("is-collapsed");
+    if (summary) summary.hidden = true;
+    if (guided) guided.style.display = analyzed ? "none" : "flex";
+  }
+
+  if (hint) hint.style.display = analyzed || hasInput ? "none" : "block";
+
+  if (legacyAcc && !analyzed && (legacySel.size || stackHasEol())) legacyAcc.open = true;
+  if (quickAcc && !analyzed){
+    quickAcc.open = stack.size === 0 && legacySel.size === 0;
+  }
+
+  updateAB();
+}
 
 // Planner search
 const piEl=document.getElementById("pi"), pdEl=document.getElementById("pd");
@@ -6512,7 +6631,7 @@ LEGACY_NODES.forEach(leg=>{
   c.addEventListener("click",()=>{
     if(legacySel.has(leg.id)){legacySel.delete(leg.id);c.classList.remove("sel");}
     else{legacySel.add(leg.id);c.classList.add("sel");}
-    updateAB();
+    updatePlannerUI();
   });
   lgEl.appendChild(c);
 });
@@ -6569,7 +6688,7 @@ function renderPillarCoverage(){
 }
 
 function renderChips() {
-  stackCntEl.textContent=`${stack.size} item${stack.size!==1?"s":""}`;
+  stackCntEl.textContent=`${stack.size} product${stack.size!==1?"s":""}`;
   renderPillarCoverage();
   chipsEl.innerHTML="";
   [...stack].forEach(id=>{
@@ -6583,9 +6702,15 @@ function renderChips() {
     chip.innerHTML=`${item.name}${isEol?" ⚠":isEos?" ▲":""} <button class="chip-x" onclick="removeFromStack('${id}')">&#xd7;</button>`;
     chipsEl.appendChild(chip);
   });
+  updatePlannerUI();
 }
 
-ab.addEventListener("click",()=>{analyzed=true;runAnalysis();});
+ab.addEventListener("click",()=>{
+  analyzed=true;
+  plannerSetupExpanded=false;
+  runAnalysis();
+  updatePlannerUI();
+});
 
 function runAnalysis() {
   // Build effective node set for graph analysis (map products to family nodes)
@@ -6657,6 +6782,7 @@ function runAnalysis() {
   const gapUCs=[...allUCSet].filter(u=>!stackUCs.has(u)).sort();
 
   document.getElementById("no-analysis").style.display="none";
+  document.getElementById("stack-hint").style.display="none";
   document.getElementById("analysis-results").style.display="block";
   document.getElementById("rec-cnt").textContent=recs.length+missCats.length;
   document.getElementById("rep-cnt").textContent=replacements.length;
@@ -6785,13 +6911,21 @@ document.querySelectorAll(".ptab").forEach(btn=>{
 
 // Clear
 document.getElementById("clr-btn").addEventListener("click",()=>{
+  document.getElementById("pf-menu").hidden = true;
   stack.clear(); stackItems.clear(); legacySel.clear(); analyzed=false;
+  plannerSetupExpanded=false;
   renderChips(); updateAB();
-  document.getElementById("no-analysis").style.display="block";
+  document.getElementById("no-analysis").style.display="none";
+  document.getElementById("stack-hint").style.display="block";
   document.getElementById("analysis-results").style.display="none";
   document.querySelectorAll(".lc").forEach(c=>c.classList.remove("sel"));
   document.getElementById("acct-name").value="";
   resetHL();
+  updatePlannerUI();
+});
+document.getElementById("acct-name")?.addEventListener("input", () => {
+  refreshPlansBtn?.();
+  updatePlannerUI();
 });
 
 // Export
@@ -7031,19 +7165,11 @@ document.addEventListener("keydown",ev=>{
       }
     },
     {
-      target: "#profile-box", place: "left",
-      title: "Customer profile",
-      body: `Set the customer's <strong>industry, size, and operating mode</strong>
-             (cloud vs hybrid vs on-prem). The analyzer uses this to bias
-             recommendations toward fit — e.g. Hypershield for cloud-first, ISE +
-             Catalyst for regulated on-prem.`,
-    },
-    {
-      target: "#tpl-strip", place: "left",
-      title: "Industry templates",
-      body: `One-click <strong>starter stacks</strong> for common verticals (Hospital,
-             K-12, Manufacturing, Retail, Bank …). Pick one to pre-fill the stack
-             with a sensible baseline, then tweak from there.`,
+      target: "#pln-quick-acc", place: "left",
+      title: "Quick start",
+      body: `Expand <strong>Quick start</strong> for one-click industry starter stacks
+             and optional customer profile fields (vertical, size, work mode) to
+             refine recommendations.`,
     },
     {
       target: ".psw", place: "left",
@@ -7054,18 +7180,19 @@ document.addEventListener("keydown",ev=>{
       tip: `<b>Try it later:</b> type "<em>desk pro</em>" or "<em>8821</em>" to see EOL handling.`
     },
     {
-      target: "#ls", place: "left",
+      target: "#pln-legacy-acc", place: "left",
       title: "Mark outgoing legacy tech",
-      body: `Click any tile to flag <strong>Cisco legacy technology</strong> the customer
+      body: `Expand to flag <strong>Cisco legacy technology</strong> the customer
              is moving away from — AnyConnect VPN, Prime, CUCM, classic ASA, MPLS WAN,
              standalone WLC, and more. The Replace tab maps each to the modern Cisco
              successor with a migration rationale.`,
     },
     {
-      target: "#aw", place: "left",
+      target: "#pf", place: "left",
       title: "Run the analysis",
-      body: `Once you've added at least one product or legacy item, this button
-             enables. Click it to generate scored recommendations across 6 tabs.`,
+      body: `Once you've added at least one product or legacy item, the sticky
+             <strong>Analyze Account</strong> button enables. Click it to generate
+             scored recommendations across the result tabs.`,
     },
 
     // ── Analysis output ──────────────────────────────────────────────────────
@@ -7409,7 +7536,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.25.3";
+const APP_VERSION   = "2.26.0";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -7700,6 +7827,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.26.0", date:"2026-06-20", items:[
+    "Account Planner — cleaner layout: collapsible Legacy and Quick start sections, Guided Plan banner, sticky Analyze footer, compact post-analyze summary bar, and Clear moved to overflow menu."
+  ]},
   {ver:"2.25.3", date:"2026-06-20", items:[
     "Spatial — fix icon tiles clipped at the corner by scaling glyphs around center (128,128) instead of the SVG origin."
   ]},
@@ -8079,24 +8209,26 @@ STYLE.textContent = `
   .warn-t{font-size:12px;font-weight:700;color:#FF9000;margin-bottom:4px;display:flex;align-items:center;gap:6px}
   .warn-b{font-size:11px;color:var(--muted);line-height:1.5}
 
-  /* Customer profile prefilter */
-  #profile-box{padding:10px 18px 0}
-  .profile-row{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+  /* Customer profile + quick start (inside planner accordion) */
+  #profile-box{padding:10px 0 0}
+  .pln-section-lbl{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:8px}
+  .pln-nested{border:1px solid var(--border);border-radius:7px;background:var(--surface3);margin-top:12px;overflow:hidden}
+  .pln-nested>summary{padding:8px 10px;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;list-style:none}
+  .pln-nested>summary::-webkit-details-marker{display:none}
+  .pln-nested-body{padding:0 10px 10px}
+  .profile-row{display:flex;gap:6px;margin-bottom:0;flex-wrap:wrap}
   .profile-row select,.profile-row input{flex:1;min-width:120px;
     background:var(--surface2);border:1px solid var(--border);border-radius:6px;
     color:var(--text);font-size:11.5px;padding:5px 8px;outline:none}
   .profile-row select:focus,.profile-row input:focus{border-color:var(--accent)}
   .profile-row option{background:var(--surface)}
-  .profile-row .lbl{font-size:9.5px;color:var(--subtle);font-weight:700;text-transform:uppercase;
-    letter-spacing:.08em;margin-bottom:2px;display:block}
+  .profile-row .lbl{font-size:10px;color:var(--subtle);font-weight:600;margin-bottom:3px;display:block}
 
   /* Industry templates */
-  #tpl-strip{display:flex;gap:6px;padding:8px 18px 4px;overflow-x:auto;flex-shrink:0;
-    scrollbar-width:thin}
-  #tpl-strip::-webkit-scrollbar{height:4px}
+  #tpl-strip{display:flex;flex-wrap:wrap;gap:6px;padding:0;overflow:visible}
   .tpl-chip{background:var(--surface3);border:1px solid var(--border);border-radius:14px;
     padding:4px 10px;font-size:10.5px;font-weight:600;color:var(--muted);
-    cursor:pointer;white-space:nowrap;transition:all .15s;flex-shrink:0}
+    cursor:pointer;white-space:nowrap;transition:all .15s;flex-shrink:0;font-family:inherit}
   .tpl-chip:hover{border-color:var(--accent);color:var(--accent)}
 
   /* Guided Plan wizard */
@@ -8677,8 +8809,10 @@ function applyState(s){
   applyFilters();
   highlightStack();
   analyzed = false;
-  $("#no-analysis").style.display = "block";
+  plannerSetupExpanded = false;
+  $("#no-analysis").style.display = "none";
   $("#analysis-results").style.display = "none";
+  if (typeof updatePlannerUI === "function") updatePlannerUI();
 }
 
 let currentPlanId = lsGet(STORAGE_KEYS.current, null);
@@ -9469,43 +9603,53 @@ const _origRunAnalysis = window.runAnalysis;
 window.runAnalysis = function(){ if (_origRunAnalysis) _origRunAnalysis(); renderMigratePlan(); renderCompatWarnings(); };
 
 /* ════════════════════════════════════════════════════════════════════════
-   [06] CUSTOMER PROFILE prefilter
+   Quick start — templates + profile (planner accordion)
    ════════════════════════════════════════════════════════════════════════*/
-function buildProfileBox(){
-  const ssEl = $("#ss"); if (!ssEl) return;
-  const box = document.createElement("div");
-  box.id = "profile-box";
-  box.innerHTML = `
-    <div class="profile-row">
-      <div style="flex:1">
-        <span class="lbl">Vertical</span>
-        <select id="prof-vert">
-          <option value="">— Any —</option>
-          ${[...new Set(NODES.flatMap(n => n.industries))].sort().map(i => `<option>${escapeHtml(i)}</option>`).join("")}
-        </select>
+function buildQuickStartSection(){
+  const body = $("#quick-start-body");
+  if (!body || body.dataset.ready) return;
+  body.dataset.ready = "1";
+  body.innerHTML = `
+    <div class="pln-section-lbl">Starter templates</div>
+    <div id="tpl-strip">${INDUSTRY_TEMPLATES.map(t =>
+      `<button type="button" class="tpl-chip" data-id="${t.id}" title="${escapeHtml(t.desc)}">${escapeHtml(t.name)}</button>`
+    ).join("")}</div>
+    <details class="pln-nested" id="pln-profile-nest">
+      <summary>Refine recommendations</summary>
+      <div class="pln-nested-body">
+        <div id="profile-box">
+          <div class="profile-row">
+            <div style="flex:1">
+              <span class="lbl">Vertical</span>
+              <select id="prof-vert">
+                <option value="">— Any —</option>
+                ${[...new Set(NODES.flatMap(n => n.industries))].sort().map(i => `<option>${escapeHtml(i)}</option>`).join("")}
+              </select>
+            </div>
+            <div style="flex:1">
+              <span class="lbl">Size</span>
+              <select id="prof-size">
+                <option value="">— Any —</option>
+                <option>SMB (&lt;500)</option>
+                <option>Mid-Market (500-5K)</option>
+                <option>Enterprise (5K-50K)</option>
+                <option>Global Enterprise (50K+)</option>
+              </select>
+            </div>
+            <div style="flex:1">
+              <span class="lbl">Work mode</span>
+              <select id="prof-mode">
+                <option value="">— Any —</option>
+                <option>Hybrid</option>
+                <option>Remote-first</option>
+                <option>Onsite</option>
+              </select>
+            </div>
+          </div>
+        </div>
       </div>
-      <div style="flex:1">
-        <span class="lbl">Size</span>
-        <select id="prof-size">
-          <option value="">— Any —</option>
-          <option>SMB (&lt;500)</option>
-          <option>Mid-Market (500-5K)</option>
-          <option>Enterprise (5K-50K)</option>
-          <option>Global Enterprise (50K+)</option>
-        </select>
-      </div>
-      <div style="flex:1">
-        <span class="lbl">Work mode</span>
-        <select id="prof-mode">
-          <option value="">— Any —</option>
-          <option>Hybrid</option>
-          <option>Remote-first</option>
-          <option>Onsite</option>
-        </select>
-      </div>
-    </div>
+    </details>
   `;
-  $("#an-wrap").after(box);
   const saved = lsGet(STORAGE_KEYS.profile, {});
   if (saved.vertical) $("#prof-vert").value = saved.vertical;
   if (saved.size)     $("#prof-size").value = saved.size;
@@ -9519,20 +9663,7 @@ function buildProfileBox(){
       if (analyzed) window.runAnalysis();
     });
   });
-}
-
-/* ════════════════════════════════════════════════════════════════════════
-   [08] INDUSTRY templates picker
-   ════════════════════════════════════════════════════════════════════════*/
-function buildTemplatesStrip(){
-  const strip = document.createElement("div");
-  strip.id = "tpl-strip";
-  strip.title = "One-click starter stacks";
-  strip.innerHTML = `<span style="font-size:9.5px;color:var(--subtle);font-weight:700;letter-spacing:.08em;align-self:center;margin-right:5px;text-transform:uppercase">Starter</span>` +
-    INDUSTRY_TEMPLATES.map(t => `<button class="tpl-chip" data-id="${t.id}" title="${escapeHtml(t.desc)}">${escapeHtml(t.name)}</button>`).join("");
-  // Insert after #profile-box (or after #an-wrap)
-  ($("#profile-box") || $("#an-wrap")).after(strip);
-  strip.querySelectorAll(".tpl-chip").forEach(c => c.addEventListener("click", () => {
+  body.querySelectorAll(".tpl-chip").forEach(c => c.addEventListener("click", () => {
     const t = INDUSTRY_TEMPLATES.find(x => x.id === c.dataset.id);
     if (!t) return;
     if (stack.size > 0 && !confirm(`Replace current stack with the "${t.name}" starter (${t.products.length} products)?`)) return;
@@ -9544,6 +9675,9 @@ function buildTemplatesStrip(){
     showToast(`Loaded ${t.name} starter`);
   }));
 }
+
+function buildProfileBox(){ buildQuickStartSection(); }
+function buildTemplatesStrip(){ buildQuickStartSection(); }
 
 /* ════════════════════════════════════════════════════════════════════════
    Guided Plan wizard
@@ -9896,8 +10030,10 @@ function wizardApplyPlan() {
   $$(".lc").forEach(c => c.classList.toggle("sel", legacySel.has(c.dataset.id)));
   highlightStack();
   analyzed = true;
+  plannerSetupExpanded = false;
   scheduleAutoSave();
   window.runAnalysis();
+  if (typeof updatePlannerUI === "function") updatePlannerUI();
   wizardState.appliedFp = wizardFingerprint();
   wizardState.completed = true;
   wizardState.needsReapply = false;
@@ -12102,6 +12238,7 @@ function boot(){
 
   // Restore prior state (URL hash > current plan > autosave)
   bootRestore();
+  if (typeof updatePlannerUI === "function") updatePlannerUI();
 
   // Changelog is available from the footer — never auto-open on load.
 }
@@ -12118,7 +12255,7 @@ window.__cpnV2 = {
     exportMarkdown, exportCSV, exportJSON, exportPDF, exportPPTX, exportText,
     addToCompare, closeCompare, clearCompareList, renderCompare, enhanceDetailPanel, renderMigratePlan, renderCompatWarnings,
     pushBreadcrumb, navHistory, bootRestore, buildPlansMenu, buildExportMenu,
-    buildProfileBox, buildTemplatesStrip, buildComparePanel, buildRecentPinned,
+    buildProfileBox, buildTemplatesStrip, buildQuickStartSection, buildComparePanel, buildRecentPinned,
     addPlannerTabs, refreshPlansBtn, applyRefArch, clearRefArch, renderTimeline,
     openTimelineView, closeTimelineView, setTimelineZoom,
     showStackDiff, sendAi, openAiWithPrompt, buildPlanContext, openChangelog, boot, savePlan, loadPlan, deletePlan,
