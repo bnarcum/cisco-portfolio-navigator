@@ -3765,6 +3765,7 @@ function applyGraphTransform(cx, cy, k, immediate){
 
 function fitCompositionView(){
   const {w, h} = getDims();
+  if (w < 40 || h < 40) return;
   const pw = panelOffsetW();
   const r = (compositionOrbitR || 160) + 40;
   const diameter = (r + 32) * 2;
@@ -3844,14 +3845,16 @@ function fitPillarLayoutView(){
 let graphFitTimer = null;
 function scheduleGraphFit(mode){
   clearTimeout(graphFitTimer);
-  const delay = mode === "composition" ? 60 : 280;
-  graphFitTimer = setTimeout(() => {
+  const delay = mode === "composition" ? 0 : 280;
+  const run = () => {
     if (viewMode === "composition") fitCompositionView();
     else if (viewMode === "overview") fitOverviewDeckView();
     else if (viewMode === "families" && usePillarLayout()) fitPillarLayoutView();
     else if (viewMode === "all-products") fitVisibleGraphView(0.50);
     else if (viewMode === "families") fitVisibleGraphView(0.78);
-  }, delay);
+  };
+  if (delay === 0) requestAnimationFrame(() => requestAnimationFrame(run));
+  else graphFitTimer = setTimeout(run, delay);
 }
 
 function compositionInteractionSet(selectedNode){
@@ -4468,7 +4471,7 @@ sim.on("tick",() => {
   if (ndEl) ndEl.attr("transform",d=>`translate(${d.x},${d.y})`);
 });
 sim.on("end",() => {
-  if (usePillarLayout()) return;
+  if (usePillarLayout() || viewMode === "composition" || viewMode === "overview") return;
   const {w,h}=getDims();
   svg.call(zoom.transform, d3.zoomIdentity.translate(w/2,h/2).scale(0.78));
 });
@@ -5433,6 +5436,14 @@ function selectNode(d, opts = {}) {
     refreshSpatialLabelStyles();
     return;
   }
+  if (viewMode === "composition"){
+    if (d._kind === "family") fitCompositionView();
+    else {
+      const t = d3.zoomTransform(svgEl);
+      applyGraphTransform(d.x, d.y, Math.max(t.k, 0.85), true);
+    }
+    return;
+  }
   const {w,h}=getDims(), t=d3.zoomTransform(svgEl);
   const pw=plannerOpen?490:390;
   svg.transition().duration(500).call(zoom.transform,
@@ -5704,8 +5715,13 @@ function applyFilters() {
     viewNodes = v.nodes;
     viewLinks = v.links;
     rebindGraph();
+    if (ndEl) ndEl.style("display", null);
+    if (lviz) lviz.style("display", null);
+    if (lhit) lhit.style("display", null);
+    applyCompositionNodeStyles();
     updateCompositionHint();
     refreshTimelineIfOpen();
+    fitCompositionView();
     scheduleGraphFit("composition");
     return;
   }
@@ -6889,7 +6905,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.22.7";
+const APP_VERSION   = "2.22.8";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -7180,6 +7196,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.22.8", date:"2026-06-20", items:[
+    "Composition — stop sim end handler from resetting zoom after drill-in; fit orbit synchronously on filter pass and on family click."
+  ]},
   {ver:"2.22.7", date:"2026-06-20", items:[
     "Composition — cancel pillar click-to-pan before drill-in; remove nl-bg pills; snap orbit fit instantly so family centers on entry."
   ]},
