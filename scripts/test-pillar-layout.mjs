@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Runs in-browser pillar layout collision check via Playwright. */
+/** Layout regression: collisions, icons inside zones, triple pillar overlap. */
 import { chromium } from "playwright";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -15,17 +15,20 @@ try {
     () => window.__cpnV2?.phases?.pillarLayoutSelfTest,
     { timeout: 60000 }
   );
-  await page.evaluate(() => {
-    document.querySelector('[data-vm="families"]')?.click();
-  });
+  await page.evaluate(() => document.querySelector('[data-vm="families"]')?.click());
   await page.waitForTimeout(800);
   const result = await page.evaluate(() => window.__cpnV2.phases.pillarLayoutSelfTest());
-  console.log("Pillar layout self-test:", JSON.stringify(result, null, 2));
+  console.log(JSON.stringify(result, null, 2));
   if (!result.ok) {
-    console.error("FAIL: cross-pillar collisions detected");
+    console.error("FAIL:", [
+      result.crossCollisions && `${result.crossCollisions} cross-pillar collisions`,
+      result.withinCollisions && `${result.withinCollisions} within-pillar collisions`,
+      result.outsideZone && `${result.outsideZone} icons outside zone`,
+      !result.tripleZoneOverlap && "zones do not triple-overlap",
+    ].filter(Boolean).join("; "));
     process.exit(1);
   }
-  console.log("PASS: no cross-pillar collisions");
+  console.log("PASS: unified pillar layout OK");
 } finally {
   await browser.close();
 }
