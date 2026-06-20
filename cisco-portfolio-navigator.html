@@ -140,7 +140,7 @@
       border:1px solid var(--border);border-radius:8px;padding:8px 12px;
       font-size:13px;display:none;z-index:400;max-width:220px}
     #tn{font-weight:600;margin-bottom:2px}
-    #tc{font-size:11px;color:var(--muted)}
+    #tc{font-size:11px;color:#cbd5e1;line-height:1.45}
 
     /* DETAIL PANEL */
     #panel{position:fixed;top:var(--topbar-h);right:0;bottom:0;width:390px;
@@ -3079,13 +3079,32 @@ function buildNodeGroup(sel){
     .style("pointer-events", "none")
     .style("display", d => d._nodeBadge ? null : "none");
   const lwrap = inner.append("g").attr("class", "nl-wrap").style("pointer-events", "none");
-  lwrap.append("rect").attr("class", "nl-bg").attr("rx", 4).style("display", "none");
   lwrap.append("text").attr("class","nl")
     .attr("y", d => d._r + 14).text(d => d._shortName || d.name)
-    .style("font-size","10px").style("fill","#525E6C")
+    .style("font-size","11px").style("font-weight","500").style("fill", GRAPH_LABEL.default)
     .style("text-anchor","middle").style("pointer-events","none");
 }
 
+const GRAPH_LABEL = { default: "#e2e8f0", muted: "#94a3b8", connected: "#f1f5f9", active: "#ffffff" };
+
+function compositionLabelY(d){
+  return d._r + (d._kind === "family" ? 28 : 24);
+}
+
+function applyCompositionLabelTextStyle(textSel){
+  textSel.each(function(d){
+    const s = compositionLabelStyle(d);
+    d3.select(this)
+      .style("font-size", s.size)
+      .style("font-weight", s.weight)
+      .style("fill", s.fill)
+      .style("letter-spacing", "0.01em")
+      .style("paint-order", "stroke fill")
+      .style("stroke", "rgba(8,12,22,0.9)")
+      .style("stroke-width", "3px")
+      .style("stroke-linejoin", "round");
+  });
+}
 function compositionLabelStyle(d){
   if (d._kind === "family") return { fill: "#ffffff", weight: "700", size: "13px" };
   if (d._status === "eol") return { fill: "#fecaca", weight: "600", size: "12px" };
@@ -3093,32 +3112,15 @@ function compositionLabelStyle(d){
   return { fill: "#f8fafc", weight: "600", size: "12px" };
 }
 
-function layoutCompositionLabelPill(textSel, padX, padY){
-  textSel.each(function(){
-    const text = d3.select(this);
-    const node = this;
-    if (!node || !node.parentNode) return;
-    const bbox = node.getBBox();
-    if (!bbox.width && !bbox.height) return;
-    d3.select(node.parentNode).select("rect.nl-bg")
-      .attr("x", bbox.x - padX)
-      .attr("y", bbox.y - padY)
-      .attr("width", bbox.width + padX * 2)
-      .attr("height", bbox.height + padY * 2)
-      .attr("fill", "rgba(8,12,22,0.88)")
-      .style("display", null);
-  });
-}
-
 function resetStandardLabelStyles(){
   if (!ndEl) return;
-  ndEl.selectAll("rect.nl-bg").style("display", "none").style("opacity", null);
   ndEl.selectAll("text.nl")
+    .attr("y", d => d._r + 14)
     .attr("transform", null)
     .style("opacity", null)
-    .style("font-size", "10px")
-    .style("font-weight", null)
-    .style("fill", "#525E6C")
+    .style("font-size", "11px")
+    .style("font-weight", "500")
+    .style("fill", GRAPH_LABEL.default)
     .style("letter-spacing", null)
     .style("stroke", null)
     .style("stroke-width", null)
@@ -3276,7 +3278,6 @@ function applyCompositionInteractionStyles(selectedNode){
     const labelStyle = compositionLabelStyle(nd);
     g.select("text.nl").style("opacity", dim ? 0.4 : 1)
       .style("fill", isSel ? "#ffffff" : (isHov ? "#ffffff" : labelStyle.fill));
-    g.select("rect.nl-bg").style("opacity", dim ? 0.35 : 1);
   });
   if (lviz){
     lviz.attr("stroke-opacity", l => {
@@ -3319,23 +3320,11 @@ function applyCompositionNodeStyles(){
     .style("display", d => d._nodeBadge ? null : "none");
   const labelText = ndEl.select("text.nl")
     .text(d => d._shortName || d.name)
-    .attr("y", d => d._r + (d._kind === "family" ? 18 : 14))
+    .attr("y", d => compositionLabelY(d))
     .attr("transform", null)
     .attr("text-anchor", "middle")
-    .style("opacity", null)
-    .each(function(d){
-      const s = compositionLabelStyle(d);
-      d3.select(this)
-        .style("font-size", s.size)
-        .style("font-weight", s.weight)
-        .style("fill", s.fill)
-        .style("letter-spacing", "0.01em")
-        .style("stroke", null)
-        .style("stroke-width", null)
-        .style("stroke-linejoin", null)
-        .style("paint-order", null);
-    });
-  layoutCompositionLabelPill(labelText, 6, 3);
+    .style("opacity", null);
+  applyCompositionLabelTextStyle(labelText);
   if (lviz){
     lviz.attr("stroke", d => d.type === "succession" ? "#c084fc" : "#64748b")
       .attr("stroke-opacity", d => d.type === "succession" ? 0.62 : 0.28)
@@ -4437,7 +4426,7 @@ function applyConnectionHighlight(d, depth = connectionHighlightDepth){
     d3.select(this).select(".gr").attr("fill-opacity", isSel ? .3 : 0);
     d3.select(this).select(".mc").attr("fill-opacity", isC ? .95 : .1).attr("stroke", isSel ? "#fff" : "transparent");
     d3.select(this).select(".icn").attr("opacity", isC ? 1 : .12);
-    d3.select(this).select(".nl").style("fill", isC ? (isSel ? "#FFFFFF" : "#B4B9C0") : "#2d3748");
+    d3.select(this).select(".nl").style("fill", isC ? (isSel ? GRAPH_LABEL.active : GRAPH_LABEL.connected) : GRAPH_LABEL.muted);
   });
   lviz.each(function(l){
     const s = sid(l), t = tid(l);
@@ -4482,7 +4471,7 @@ function resetHL() {
     d3.select(this).select(".gr").attr("fill-opacity",inStk?.25:0);
     d3.select(this).select(".mc").attr("fill-opacity",inStk?1:.88).attr("stroke",inStk?"#fff":"transparent");
     d3.select(this).select(".icn").attr("opacity",1);
-    d3.select(this).select(".nl").style("fill","#525E6C");
+    d3.select(this).select(".nl").style("fill", GRAPH_LABEL.default);
   });
   lviz.attr("stroke",d=>d.type==="direct"?"#4a5568":"#2d3748")
     .attr("stroke-opacity",d=>d.type==="direct"?.75:.45)
@@ -4506,7 +4495,7 @@ function highlightStack() {
     d3.select(this).select(".gr").attr("fill-opacity",inStk?.3:0);
     d3.select(this).select(".mc").attr("fill-opacity",inStk?1:.2).attr("stroke",inStk?"#fff":"transparent");
     d3.select(this).select(".icn").attr("opacity",inStk?1:.18);
-    d3.select(this).select(".nl").style("fill",inStk?"#FFFFFF":"#2d3748");
+    d3.select(this).select(".nl").style("fill", inStk ? GRAPH_LABEL.active : GRAPH_LABEL.default);
   });
   lviz.each(function(l){
     const s=sid(l),t=tid(l),both=stack.has(s)&&stack.has(t);
@@ -5832,7 +5821,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.9.7";
+const APP_VERSION   = "2.9.8";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -6123,6 +6112,10 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.9.8", date:"2026-06-20", items:[
+    "Composition labels — removed pill backdrops that overlapped nodes; labels sit clear below circles with text-only halo.",
+    "Graph labels — brighter default text under category icons; tooltip body copy lightened for readability."
+  ]},
   {ver:"2.9.7", date:"2026-06-20", items:[
     "Composition labels — dark pill backdrop behind each name, brighter white text, fixed hover reset that was washing labels to gray."
   ]},
@@ -9044,7 +9037,7 @@ function applyRefArch(ucName){
     d3.select(this).select(".gr").attr("fill-opacity", inA ? 0.35 : 0);
     d3.select(this).select(".mc").attr("fill-opacity", inA ? 1 : 0.08).attr("stroke", inA ? "#fff" : "transparent").attr("stroke-width", inA ? 2 : 0);
     d3.select(this).select(".icn").attr("opacity", inA ? 1 : 0.1);
-    d3.select(this).select(".nl").style("fill", inA ? "#FFFFFF" : "#2d3748");
+    d3.select(this).select(".nl").style("fill", inA ? GRAPH_LABEL.active : GRAPH_LABEL.default);
   });
   lviz.each(function(l){
     const s = sid(l), t = tid(l);
