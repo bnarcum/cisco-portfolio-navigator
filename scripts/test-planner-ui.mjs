@@ -67,6 +67,18 @@ try {
   });
   if (!resultsVisible) errors.push("analysis-results not visible after Analyze");
 
+  const refreshLabel = await page.evaluate(() => document.getElementById("ab").textContent);
+  if (!refreshLabel.includes("Refresh")) errors.push(`expected Refresh label after analyze, got "${refreshLabel}"`);
+
+  // Re-analyze: toast + scroll feedback
+  await page.click("#ab");
+  await page.waitForFunction(
+    () => document.getElementById("toast").classList.contains("show"),
+    { timeout: 3000 }
+  ).catch(() => errors.push("toast did not show on re-analyze"));
+  const toastText = await page.evaluate(() => document.getElementById("toast").textContent);
+  if (!toastText.includes("refreshed")) errors.push(`re-analyze toast expected 'refreshed', got "${toastText}"`);
+
   const plainLabels = await page.evaluate(() => ({
     suggestionsTab: document.querySelector('.ptab[data-tab="recs"]')?.textContent?.includes("Suggestions"),
     upgradesTab: document.querySelector('.ptab[data-tab="replace"]')?.textContent?.includes("Upgrades"),

@@ -327,7 +327,8 @@
     #planner.open{transform:translateX(0)}
     #ph{padding:12px 18px;border-bottom:1px solid var(--border);flex-shrink:0}
     .ph-t{font-size:14px;font-weight:700}
-    #planner-scroll{flex:1;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;min-height:0}
+    #planner-scroll{flex:1;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;min-height:0;
+      padding-bottom:4px}
     #planner-guided{margin:10px 18px 0;padding:10px 12px;border-radius:8px;
       background:var(--surface2);border:1px solid var(--border);
       display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:11.5px;color:var(--muted)}
@@ -398,7 +399,7 @@
     .lc:hover{border-color:#FF9000;color:#FF9000}
     .lc.sel{background:rgba(245,158,11,.12);border-color:#FF9000;color:#FF9000}
     #stack-hint{padding:14px 18px 6px;font-size:11.5px;color:var(--subtle);text-align:center;line-height:1.45}
-    #pb{flex:1;overflow-y:auto;overflow-x:hidden;min-height:80px}
+    #pb{flex:1;overflow-x:hidden;min-height:0;padding-bottom:12px}
     .ptabs{display:flex;border-bottom:1px solid var(--border);padding:0 18px;flex-shrink:0}
     .ptab{background:none;border:none;border-bottom:2px solid transparent;
       color:var(--muted);font-size:12px;font-weight:600;padding:9px 10px 8px;
@@ -483,8 +484,9 @@
     .empty p{font-size:11px;color:var(--subtle);line-height:1.6}
 
     /* Footer */
-    #pf{padding:10px 18px 12px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;
-      flex-shrink:0;background:var(--surface);box-shadow:0 -6px 16px rgba(0,0,0,.12)}
+    #pf{position:relative;z-index:3;padding:10px 18px 12px;border-top:1px solid var(--border);
+      display:flex;flex-direction:column;gap:8px;flex-shrink:0;background:var(--surface);
+      box-shadow:0 -6px 16px rgba(0,0,0,.22)}
     #ab{width:100%;background:var(--accent);color:#000;border:none;border-radius:8px;
       font-size:13px;font-weight:700;padding:10px;cursor:pointer;transition:opacity .15s}
     #ab:hover{opacity:.85}
@@ -6635,7 +6637,19 @@ LEGACY_NODES.forEach(leg=>{
   lgEl.appendChild(c);
 });
 
-function updateAB(){ ab.disabled=stack.size===0&&legacySel.size===0; }
+function scrollPlannerToAnalysis(){
+  const scrollEl=document.getElementById("planner-scroll");
+  const target=document.getElementById("analysis-results");
+  if(!scrollEl||!target||target.style.display==="none") return;
+  const y=target.getBoundingClientRect().top-scrollEl.getBoundingClientRect().top+scrollEl.scrollTop;
+  scrollEl.scrollTo({top:Math.max(0,y-6),behavior:"smooth"});
+}
+
+function updateAB(){
+  const hasInput=stack.size>0||legacySel.size>0;
+  ab.disabled=!hasInput;
+  ab.textContent=analyzed&&hasInput?"Refresh analysis →":"Analyze Account →";
+}
 
 // Stack items: {id, type: "node"|"product"}
 const stackItems = new Map(); // id -> type
@@ -6705,10 +6719,13 @@ function renderChips() {
 }
 
 ab.addEventListener("click",()=>{
+  const wasAnalyzed=analyzed;
   analyzed=true;
   plannerSetupExpanded=false;
-  runAnalysis();
+  window.runAnalysis();
   updatePlannerUI();
+  scrollPlannerToAnalysis();
+  showToast(wasAnalyzed?"Analysis refreshed":"Analysis complete");
 });
 
 function runAnalysis() {
@@ -7538,7 +7555,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.27.0";
+const APP_VERSION   = "2.27.1";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -7829,6 +7846,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.27.1", date:"2026-06-20", items:[
+    "Account Planner — fix Analyze / Refresh footer button: unified scroll area, sticky footer z-index, toast + scroll to results on re-analyze, and 'Refresh analysis' label when results exist."
+  ]},
   {ver:"2.27.0", date:"2026-06-20", items:[
     "Account Planner — plain-language labels: Suggestions, Upgrades, Solution packages, Gaps & strengths; 'Their products' instead of stack; star legend for connection strength."
   ]},
@@ -9606,9 +9626,13 @@ function watchAnalysisResults(){
   });
   obs.observe(rec, { childList: true, subtree: true, characterData: true });
 }
-// Also expose wrapped runAnalysis on window for tests / inline handlers.
-const _origRunAnalysis = window.runAnalysis;
-window.runAnalysis = function(){ if (_origRunAnalysis) _origRunAnalysis(); renderMigratePlan(); renderCompatWarnings(); };
+// Wrap runAnalysis on window for inline handlers / migrate tabs (keep local function reference).
+const _origRunAnalysis = typeof runAnalysis === "function" ? runAnalysis : window.runAnalysis;
+window.runAnalysis = function(){
+  if (_origRunAnalysis) _origRunAnalysis();
+  renderMigratePlan();
+  renderCompatWarnings();
+};
 
 /* ════════════════════════════════════════════════════════════════════════
    Quick start — templates + profile (planner accordion)
