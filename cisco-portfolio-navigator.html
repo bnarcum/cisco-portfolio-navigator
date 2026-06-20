@@ -5202,7 +5202,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.7.8";
+const APP_VERSION   = "2.7.9";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -7890,16 +7890,23 @@ async function loadDcloudLinks(){
   } catch (_) { /* file:// or offline */ }
 }
 
-function dcloudRankEntries({ familyIds = [], productIds = [], useCases = [], limit = 5 } = {}){
+function dcloudRankEntries({ familyIds = [], productIds = [], useCases = [], limit = 5, requireProductOrFamily = false } = {}){
   if (!DCLOUD_ENTRIES.length) return [];
   const scored = DCLOUD_ENTRIES.map(e => {
     let score = 0;
+    const familyHit = familyIds.some(f => e.families?.includes(f));
+    const productHit = productIds.some(p => e.products?.includes(p));
+    const useCaseHit = useCases.some(u => e.useCases?.includes(u));
     if (e.primary) score += 1;
-    familyIds.forEach(f => { if (e.families?.includes(f)) score += 3; });
-    productIds.forEach(p => { if (e.products?.includes(p)) score += 5; });
-    useCases.forEach(u => { if (e.useCases?.includes(u)) score += 2; });
+    if (familyHit) score += 3;
+    if (productHit) score += 5;
+    if (useCaseHit) score += 2;
+    const relevant = requireProductOrFamily
+      ? (familyHit || productHit)
+      : (familyHit || productHit || useCaseHit);
+    if (!relevant) return null;
     return { entry: e, score };
-  }).filter(x => x.score > 0);
+  }).filter(Boolean);
   scored.sort((a, b) => b.score - a.score || (b.entry.primary ? 1 : 0) - (a.entry.primary ? 1 : 0));
   const seen = new Set();
   const out = [];
@@ -7916,7 +7923,8 @@ function dcloudLinksFor({ familyId, productId } = {}){
   return dcloudRankEntries({
     familyIds: familyId ? [familyId] : [],
     productIds: productId ? [productId] : [],
-    limit: 5
+    limit: 5,
+    requireProductOrFamily: true
   });
 }
 
