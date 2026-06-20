@@ -201,15 +201,45 @@
       cursor:pointer;border:1px solid var(--accent);background:rgba(2,200,255,.10);
       color:var(--accent);transition:all .15s;margin-top:14px;font-family:inherit}
     .explore-btn:hover{background:var(--accent);color:#000}
-    .la-dcloud{border-color:rgba(2,200,255,.35);background:rgba(2,200,255,.08)}
-    .la-dcloud:hover{border-color:var(--accent);background:rgba(2,200,255,.14);color:var(--text)}
-    .la-dcloud .la-dcloud-main{font-weight:600;flex:1;min-width:0;padding-right:8px}
-    .la-dcloud .la-dcloud-meta{font-size:11px;color:var(--accent);font-weight:600;flex-shrink:0}
-    .p-dcloud-hint{font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.45}
-    .p-dcloud-entry-hint{font-size:10px;color:var(--subtle);margin:-2px 0 6px 2px;line-height:1.4}
-    .p-dcloud-note{font-size:10px;color:var(--subtle);margin-top:8px}
-    .gw-dcloud-section{margin-top:14px;padding-top:12px;border-top:1px solid var(--border);text-align:left}
-    .gw-dcloud-title{display:block;font-size:11px;color:var(--text);margin-bottom:8px}
+    .p-dcloud-card{
+      padding:14px 14px 12px;border-radius:10px;
+      border:1px solid rgba(0,212,255,.5);
+      background:linear-gradient(145deg,rgba(0,200,255,.16) 0%,rgba(0,80,120,.12) 55%,rgba(0,40,70,.18) 100%);
+      box-shadow:0 0 0 1px rgba(0,212,255,.1),0 6px 24px rgba(0,180,255,.15)}
+    .p-dcloud-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+    .p-dcloud-header-compact{margin-bottom:6px}
+    .dcloud-brand{display:inline-flex;align-items:center;gap:8px;min-width:0}
+    .dcloud-icon{width:30px;height:30px;flex-shrink:0;filter:drop-shadow(0 0 6px rgba(0,212,255,.45))}
+    .dcloud-word{font-size:19px;font-weight:800;letter-spacing:-.02em;line-height:1;white-space:nowrap}
+    .dcloud-d{color:#5ceaff;text-transform:lowercase}
+    .dcloud-cloud{color:#fff}
+    .dcloud-badge{
+      flex-shrink:0;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+      padding:4px 9px;border-radius:999px;background:rgba(0,212,255,.22);color:#b8f0ff;
+      border:1px solid rgba(0,212,255,.45)}
+    .p-dcloud-tagline{font-size:12px;font-weight:700;color:#e8f8ff;margin-bottom:6px;letter-spacing:.01em}
+    .p-dcloud-hint{font-size:12px;color:#c8e8f5;margin-bottom:12px;line-height:1.5}
+    .p-dcloud-entry-hint{font-size:11px;color:#9fd4ea;margin:8px 0 0;line-height:1.45;padding-left:2px}
+    .p-dcloud-note{
+      font-size:11px;color:#8ecae6;margin-top:10px;line-height:1.45;
+      display:flex;align-items:flex-start;gap:6px}
+    .p-dcloud-note::before{content:"ℹ";font-size:10px;font-weight:700;color:#00d4ff;flex-shrink:0;margin-top:1px}
+    .la-dcloud{
+      border-color:rgba(0,212,255,.55);background:rgba(0,30,50,.55);
+      padding:12px 14px;border-radius:8px;transition:all .15s}
+    .la-dcloud:hover{
+      border-color:#00d4ff;background:rgba(0,200,255,.24);
+      box-shadow:0 0 18px rgba(0,212,255,.28);transform:translateY(-1px);color:#fff}
+    .la-dcloud .la-dcloud-main{font-weight:700;flex:1;min-width:0;padding-right:10px;color:#fff;font-size:13px}
+    .la-dcloud .la-dcloud-meta{
+      font-size:11px;font-weight:700;flex-shrink:0;color:#001824!important;
+      background:#00d4ff;padding:6px 11px;border-radius:6px;letter-spacing:.01em}
+    .la-dcloud:hover .la-dcloud-meta{background:#fff;color:#003648!important}
+    .gw-dcloud-section{
+      margin-top:14px;padding:14px;border-radius:10px;text-align:left;
+      border:1px solid rgba(0,212,255,.45);
+      background:linear-gradient(145deg,rgba(0,200,255,.14) 0%,rgba(0,60,90,.12) 100%)}
+    .gw-dcloud-title{display:none}
 
     /* PLANNER */
     #planner{position:fixed;top:var(--topbar-h);right:0;bottom:0;width:490px;
@@ -7813,6 +7843,22 @@ function dcloudGuidedRecommendations(limit = 2){
   });
 }
 
+function dcloudLogoHtml(){
+  return `<span class="dcloud-brand" aria-label="Cisco dCloud">
+    <svg class="dcloud-icon" viewBox="0 0 32 32" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+      <path d="M24.5 17.5c1.2 0 2.2-1 2.2-2.3 0-1.1-.7-2-1.7-2.3.3-2.4-2-4.4-4.7-4.4-1.8 0-3.4.8-4.5 2.1-1-1.2-2.5-1.9-4.1-1.9-3.1 0-5.7 2.2-5.7 5.1 0 .3 0 .6.1.9C2.8 16.6 1.5 18.2 1.5 20.2c0 2.4 2 4.3 4.4 4.3h16.6c2.7 0 4.8-2.1 4.8-4.7 0-2.6-2.1-4.8-4.8-4.8-.3 0-.6 0-.9.1-.4-1.2-1.5-2.1-2.8-2.1z" fill="#00D4FF"/>
+    </svg>
+    <span class="dcloud-word"><span class="dcloud-d">d</span><span class="dcloud-cloud">Cloud</span></span>
+  </span>`;
+}
+
+function dcloudHeaderHtml(compact){
+  return `<div class="p-dcloud-header${compact ? " p-dcloud-header-compact" : ""}">
+    ${dcloudLogoHtml()}
+    <span class="dcloud-badge">Live demo</span>
+  </div>`;
+}
+
 function renderDcloudSectionBody(entries, opts = {}){
   if (!entries.length) return "";
   const hint = opts.sectionHint ?? DCLOUD_DEFAULTS.sectionHint;
@@ -7826,7 +7872,9 @@ function renderDcloudSectionBody(entries, opts = {}){
       <span class="la-dcloud-meta">Open in dCloud ↗</span>
     </a>${entryHint}`;
   }).join("");
-  return `${compact ? "" : `<div class="p-dcloud-hint">${escapeHtml(hint)}</div>`}
+  return `${dcloudHeaderHtml(compact)}
+    ${compact ? "" : `<div class="p-dcloud-tagline">${escapeHtml(DCLOUD_DEFAULTS.sectionTitle)}</div>`}
+    ${compact ? "" : `<div class="p-dcloud-hint">${escapeHtml(hint)}</div>`}
     <div class="lb la-dcloud-list">${links}</div>
     ${loginNote ? `<div class="p-dcloud-note">${escapeHtml(loginNote)}</div>` : ""}`;
 }
@@ -7834,10 +7882,7 @@ function renderDcloudSectionBody(entries, opts = {}){
 function dcloudGuidedRecommendationsHtml(){
   const entries = dcloudGuidedRecommendations(2);
   if (!entries.length) return "";
-  return `<div class="gw-dcloud-section">
-    <strong class="gw-dcloud-title">Recommended on dCloud</strong>
-    ${renderDcloudSectionBody(entries, { compact: true })}
-  </div>`;
+  return `<div class="gw-dcloud-section">${renderDcloudSectionBody(entries, { compact: true })}</div>`;
 }
 
 function insertDcloudLinks(id, kind){
@@ -7852,9 +7897,7 @@ function insertDcloudLinks(id, kind){
 
   const sec = document.createElement("div");
   sec.className = "p-sec p-dcloud";
-  sec.innerHTML = `
-    <div class="p-sec-t">${escapeHtml(DCLOUD_DEFAULTS.sectionTitle)}</div>
-    ${renderDcloudSectionBody(entries)}`;
+  sec.innerHTML = `<div class="p-dcloud-card">${renderDcloudSectionBody(entries)}</div>`;
 
   const anchor = pb.querySelector(".add-stack-btn");
   if (anchor) pb.insertBefore(sec, anchor);
