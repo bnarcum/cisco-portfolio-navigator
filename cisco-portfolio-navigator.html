@@ -21,32 +21,49 @@
       font-family:"CiscoSansTT","Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
       background:var(--bg);color:var(--text)}
 
-    /* AMBIENT BACKGROUND */
-    #bg-ambient{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
-    .bg-glow{position:absolute;inset:-20%;opacity:1;
+    /* AMBIENT BACKGROUND — graph canvas backdrop */
+    #gw{position:fixed;top:var(--topbar-h);left:0;right:0;bottom:0;z-index:1}
+    #bg-ambient{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+      background:linear-gradient(165deg,#04101f 0%,#07182d 42%,#0b2a4a 100%)}
+    .bg-vignette{position:absolute;inset:0;
+      background:radial-gradient(ellipse 85% 75% at 50% 48%, transparent 35%, rgba(0,0,0,.45) 100%)}
+    .bg-glow{position:absolute;inset:-25%;opacity:1;
       background:
-        radial-gradient(ellipse 55% 45% at 20% 30%, rgba(10,96,255,.10) 0%, transparent 70%),
-        radial-gradient(ellipse 50% 40% at 75% 60%, rgba(2,200,255,.08) 0%, transparent 65%),
-        radial-gradient(ellipse 45% 35% at 50% 85%, rgba(255,144,0,.05) 0%, transparent 60%);
-      animation:bg-glow-drift 32s ease-in-out infinite alternate}
+        radial-gradient(ellipse 58% 48% at 22% 32%, rgba(10,96,255,.28) 0%, transparent 68%),
+        radial-gradient(ellipse 52% 44% at 78% 68%, rgba(2,200,255,.22) 0%, transparent 65%),
+        radial-gradient(ellipse 46% 38% at 50% 88%, rgba(255,144,0,.12) 0%, transparent 62%),
+        radial-gradient(ellipse 40% 35% at 50% 42%, rgba(2,200,255,.10) 0%, transparent 70%);
+      animation:bg-glow-drift 24s ease-in-out infinite alternate}
+    .bg-beams{position:absolute;inset:-50%;opacity:.14;
+      background:conic-gradient(from 210deg at 50% 50%,
+        transparent 0deg, rgba(2,200,255,.55) 32deg, transparent 64deg,
+        rgba(10,96,255,.45) 128deg, transparent 168deg,
+        rgba(2,200,255,.35) 248deg, transparent 300deg);
+      animation:bg-beams-spin 120s linear infinite}
+    .bg-grid{position:absolute;inset:0;opacity:1;
+      background-image:
+        linear-gradient(rgba(2,200,255,.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(2,200,255,.06) 1px, transparent 1px),
+        radial-gradient(circle, rgba(2,200,255,.22) 1px, transparent 1px);
+      background-size:72px 72px, 72px 72px, 36px 36px;
+      background-position:0 0, 0 0, 18px 18px;
+      animation:bg-grid-pan 70s linear infinite}
+    #bg-mesh{position:absolute;inset:0;width:100%;height:100%;display:block}
     @keyframes bg-glow-drift{
-      0%{transform:translate(0,0) scale(1)}
-      33%{transform:translate(2%,-1.5%) scale(1.02)}
-      66%{transform:translate(-1.5%,2%) scale(.98)}
-      100%{transform:translate(1%,1.5%) scale(1.01)}
+      0%{transform:translate(0,0) scale(1);opacity:.92}
+      50%{transform:translate(2.5%,-2%) scale(1.04);opacity:1}
+      100%{transform:translate(-2%,2.5%) scale(1.02);opacity:.95}
     }
-    .bg-grid{position:absolute;inset:0;opacity:.35;
-      background-image:radial-gradient(circle, rgba(214,214,214,.08) 1px, transparent 1px);
-      background-size:28px 28px;
-      animation:bg-grid-pan 90s linear infinite}
+    @keyframes bg-beams-spin{
+      0%{transform:rotate(0deg)}
+      100%{transform:rotate(360deg)}
+    }
     @keyframes bg-grid-pan{
-      0%{background-position:0 0}
-      100%{background-position:28px 28px}
+      0%{background-position:0 0, 0 0, 18px 18px}
+      100%{background-position:72px 72px, 72px 72px, 54px 54px}
     }
-    #bg-mesh{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:.55}
     @media (prefers-reduced-motion: reduce){
-      .bg-glow,.bg-grid{animation:none}
-      #bg-mesh{display:none}
+      .bg-glow,.bg-grid,.bg-beams{animation:none}
     }
 
     /* TOP BAR + ACTION BAR */
@@ -163,8 +180,7 @@
     #vm-crumb .vm-cb-x:hover{color:var(--text)}
 
     /* GRAPH */
-    #gw{position:fixed;top:var(--topbar-h);left:0;right:0;bottom:0;z-index:1}
-    #gs{width:100%;height:100%;display:block}
+    #gs{position:relative;z-index:1;width:100%;height:100%;display:block;background:transparent}
     #spatial-wrap{position:absolute;inset:0;display:none;z-index:2}
     #spatial-graph{width:100%;height:100%}
     #spatial-hud{position:absolute;left:50%;bottom:52px;transform:translateX(-50%);
@@ -678,11 +694,6 @@
   </style>
 </head>
 <body>
-<div id="bg-ambient" aria-hidden="true">
-  <div class="bg-glow"></div>
-  <canvas id="bg-mesh"></canvas>
-  <div class="bg-grid"></div>
-</div>
 
 <div id="app-chrome">
 <div id="topbar">
@@ -757,7 +768,16 @@
   <div id="fbadge"></div>
   <div id="vm-crumb" aria-live="polite"></div>
 </div>
-<div id="gw"><svg id="gs"></svg></div>
+<div id="gw">
+  <div id="bg-ambient" aria-hidden="true">
+    <div class="bg-vignette"></div>
+    <div class="bg-beams"></div>
+    <div class="bg-glow"></div>
+    <canvas id="bg-mesh"></canvas>
+    <div class="bg-grid"></div>
+  </div>
+  <svg id="gs"></svg>
+</div>
 <div id="tip"><div id="tn"></div><div id="tc"></div></div>
 
 <div id="panel">
@@ -7762,7 +7782,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.23.0";
+const APP_VERSION   = "2.29.0";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -8053,6 +8073,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.29.0", date:"2026-06-20", items:[
+    "Ambient background — stronger Cisco-blue glow, grid, and network mesh; moved inside graph canvas so it is visible behind Overview and Families (still respects prefers-reduced-motion)."
+  ]},
   {ver:"2.23.0", date:"2026-06-20", items:[
     "Ambient background — subtle drifting Cisco-blue glow, faint dot grid, and low-opacity network mesh behind the graph (respects prefers-reduced-motion)."
   ]},
@@ -12544,21 +12567,22 @@ function openShortcuts(){
 }
 
 function initAmbientBackground(){
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const canvas = document.getElementById("bg-mesh");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const NODE_COUNT = 20;
-  const LINK_DIST = 150;
+  const NODE_COUNT = 28;
+  const LINK_DIST = 190;
   let w = 0, h = 0;
   let nodes = [];
   let rafId = null;
 
   function resize(){
-    w = window.innerWidth;
-    h = window.innerHeight;
+    const host = document.getElementById("gw");
+    w = host?.clientWidth || window.innerWidth;
+    h = host?.clientHeight || window.innerHeight;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = Math.floor(w * dpr);
     canvas.height = Math.floor(h * dpr);
@@ -12571,21 +12595,23 @@ function initAmbientBackground(){
     nodes = Array.from({length: NODE_COUNT}, () => ({
       x: Math.random() * w,
       y: Math.random() * h,
-      vx: (Math.random() - 0.5) * 0.15,
-      vy: (Math.random() - 0.5) * 0.15
+      vx: (Math.random() - 0.5) * (reducedMotion ? 0 : 0.18),
+      vy: (Math.random() - 0.5) * (reducedMotion ? 0 : 0.18)
     }));
   }
 
-  function tick(){
+  function drawMesh(){
     ctx.clearRect(0, 0, w, h);
 
-    for (const n of nodes){
-      n.x += n.vx;
-      n.y += n.vy;
-      if (n.x < 0 || n.x > w) n.vx *= -1;
-      if (n.y < 0 || n.y > h) n.vy *= -1;
-      n.x = Math.max(0, Math.min(w, n.x));
-      n.y = Math.max(0, Math.min(h, n.y));
+    if (!reducedMotion){
+      for (const n of nodes){
+        n.x += n.vx;
+        n.y += n.vy;
+        if (n.x < 0 || n.x > w) n.vx *= -1;
+        if (n.y < 0 || n.y > h) n.vy *= -1;
+        n.x = Math.max(0, Math.min(w, n.x));
+        n.y = Math.max(0, Math.min(h, n.y));
+      }
     }
 
     for (let i = 0; i < nodes.length; i++){
@@ -12594,9 +12620,9 @@ function initAmbientBackground(){
         const dx = a.x - b.x, dy = a.y - b.y;
         const dist = Math.hypot(dx, dy);
         if (dist < LINK_DIST){
-          const alpha = (1 - dist / LINK_DIST) * 0.08;
+          const alpha = (1 - dist / LINK_DIST) * 0.22;
           ctx.strokeStyle = `rgba(2,200,255,${alpha})`;
-          ctx.lineWidth = 0.5;
+          ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.moveTo(a.x, a.y);
           ctx.lineTo(b.x, b.y);
@@ -12606,17 +12632,21 @@ function initAmbientBackground(){
     }
 
     for (const n of nodes){
-      ctx.fillStyle = "rgba(2,200,255,0.12)";
+      ctx.fillStyle = "rgba(2,200,255,0.38)";
       ctx.beginPath();
-      ctx.arc(n.x, n.y, 1.2, 0, Math.PI * 2);
+      ctx.arc(n.x, n.y, 1.8, 0, Math.PI * 2);
       ctx.fill();
     }
+  }
 
-    rafId = requestAnimationFrame(tick);
+  function tick(){
+    drawMesh();
+    if (!reducedMotion) rafId = requestAnimationFrame(tick);
   }
 
   function start(){
-    if (rafId == null) rafId = requestAnimationFrame(tick);
+    drawMesh();
+    if (!reducedMotion && rafId == null) rafId = requestAnimationFrame(tick);
   }
 
   function stop(){
@@ -12627,7 +12657,7 @@ function initAmbientBackground(){
   initNodes();
   start();
 
-  window.addEventListener("resize", resize);
+  window.addEventListener("resize", () => { resize(); initNodes(); start(); });
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) stop();
     else start();
