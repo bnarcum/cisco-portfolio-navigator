@@ -21,6 +21,34 @@
       font-family:"CiscoSansTT","Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
       background:var(--bg);color:var(--text)}
 
+    /* AMBIENT BACKGROUND */
+    #bg-ambient{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+    .bg-glow{position:absolute;inset:-20%;opacity:1;
+      background:
+        radial-gradient(ellipse 55% 45% at 20% 30%, rgba(10,96,255,.10) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 75% 60%, rgba(2,200,255,.08) 0%, transparent 65%),
+        radial-gradient(ellipse 45% 35% at 50% 85%, rgba(255,144,0,.05) 0%, transparent 60%);
+      animation:bg-glow-drift 32s ease-in-out infinite alternate}
+    @keyframes bg-glow-drift{
+      0%{transform:translate(0,0) scale(1)}
+      33%{transform:translate(2%,-1.5%) scale(1.02)}
+      66%{transform:translate(-1.5%,2%) scale(.98)}
+      100%{transform:translate(1%,1.5%) scale(1.01)}
+    }
+    .bg-grid{position:absolute;inset:0;opacity:.35;
+      background-image:radial-gradient(circle, rgba(214,214,214,.08) 1px, transparent 1px);
+      background-size:28px 28px;
+      animation:bg-grid-pan 90s linear infinite}
+    @keyframes bg-grid-pan{
+      0%{background-position:0 0}
+      100%{background-position:28px 28px}
+    }
+    #bg-mesh{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:.55}
+    @media (prefers-reduced-motion: reduce){
+      .bg-glow,.bg-grid{animation:none}
+      #bg-mesh{display:none}
+    }
+
     /* TOP BAR + ACTION BAR */
     #app-chrome{position:fixed;top:0;left:0;right:0;z-index:100}
     #topbar{position:relative;min-height:52px;height:auto;
@@ -135,7 +163,7 @@
     #vm-crumb .vm-cb-x:hover{color:var(--text)}
 
     /* GRAPH */
-    #gw{position:fixed;top:var(--topbar-h);left:0;right:0;bottom:0}
+    #gw{position:fixed;top:var(--topbar-h);left:0;right:0;bottom:0;z-index:1}
     #gs{width:100%;height:100%;display:block}
     #spatial-wrap{position:absolute;inset:0;display:none;z-index:2}
     #spatial-graph{width:100%;height:100%}
@@ -650,6 +678,11 @@
   </style>
 </head>
 <body>
+<div id="bg-ambient" aria-hidden="true">
+  <div class="bg-glow"></div>
+  <canvas id="bg-mesh"></canvas>
+  <div class="bg-grid"></div>
+</div>
 
 <div id="app-chrome">
 <div id="topbar">
@@ -7729,7 +7762,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.22.8";
+const APP_VERSION   = "2.23.0";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -8020,6 +8053,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.23.0", date:"2026-06-20", items:[
+    "Ambient background — subtle drifting Cisco-blue glow, faint dot grid, and low-opacity network mesh behind the graph (respects prefers-reduced-motion)."
+  ]},
   {ver:"2.22.8", date:"2026-06-20", items:[
     "Refresh timeline — renamed from Timeline view (toolbar, panel title, tour, keyboard help); still shows EOS/EOL Gantt by family."
   ]},
@@ -12507,10 +12543,102 @@ function openShortcuts(){
   alert("Keyboard shortcuts:\n\n" + lines.map(l => l[0].padEnd(18) + l[1]).join("\n"));
 }
 
+function initAmbientBackground(){
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const canvas = document.getElementById("bg-mesh");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const NODE_COUNT = 20;
+  const LINK_DIST = 150;
+  let w = 0, h = 0;
+  let nodes = [];
+  let rafId = null;
+
+  function resize(){
+    w = window.innerWidth;
+    h = window.innerHeight;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.floor(w * dpr);
+    canvas.height = Math.floor(h * dpr);
+    canvas.style.width = w + "px";
+    canvas.style.height = h + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function initNodes(){
+    nodes = Array.from({length: NODE_COUNT}, () => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      vx: (Math.random() - 0.5) * 0.15,
+      vy: (Math.random() - 0.5) * 0.15
+    }));
+  }
+
+  function tick(){
+    ctx.clearRect(0, 0, w, h);
+
+    for (const n of nodes){
+      n.x += n.vx;
+      n.y += n.vy;
+      if (n.x < 0 || n.x > w) n.vx *= -1;
+      if (n.y < 0 || n.y > h) n.vy *= -1;
+      n.x = Math.max(0, Math.min(w, n.x));
+      n.y = Math.max(0, Math.min(h, n.y));
+    }
+
+    for (let i = 0; i < nodes.length; i++){
+      for (let j = i + 1; j < nodes.length; j++){
+        const a = nodes[i], b = nodes[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < LINK_DIST){
+          const alpha = (1 - dist / LINK_DIST) * 0.08;
+          ctx.strokeStyle = `rgba(2,200,255,${alpha})`;
+          ctx.lineWidth = 0.5;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    for (const n of nodes){
+      ctx.fillStyle = "rgba(2,200,255,0.12)";
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function start(){
+    if (rafId == null) rafId = requestAnimationFrame(tick);
+  }
+
+  function stop(){
+    if (rafId != null){ cancelAnimationFrame(rafId); rafId = null; }
+  }
+
+  resize();
+  initNodes();
+  start();
+
+  window.addEventListener("resize", resize);
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stop();
+    else start();
+  });
+}
+
 /* ════════════════════════════════════════════════════════════════════════
    BOOT — assemble everything
    ════════════════════════════════════════════════════════════════════════*/
 function boot(){
+  initAmbientBackground();
   loadDcloudLinks().then(refreshDcloudPanelIfOpen);
   loadMatrixBridge();
   buildPlansMenu();
