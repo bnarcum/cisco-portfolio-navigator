@@ -27,6 +27,7 @@ try {
       result.zonesNoOverlap === false && "pillar zones overlap",
       result.allPillarLabelsOff === false && "labels visible in all-pillars mode",
       result.labelOverlaps && `${result.labelOverlaps} label overlaps when focused`,
+      result.zoomLabelOverlaps && `${result.zoomLabelOverlaps} zoom label overlaps`,
       result.focusedLabelCoverage?.some(r => !r.allLabeled) && "missing labels in focused pillar",
       result.filtLayoutOk === false && "category-filter layout broken",
     ].filter(Boolean).join("; "));
