@@ -185,6 +185,16 @@
       background:var(--surface2);border:1px solid var(--border);border-radius:7px;
       cursor:pointer;transition:border-color .12s}
     .ri:hover{border-color:var(--accent)}
+    .ri-ext{border-style:dashed;opacity:.95}
+    .conn-depth-btn{
+      width:100%;margin-bottom:10px;padding:7px 10px;border-radius:7px;font-size:11px;font-weight:600;
+      cursor:pointer;border:1px solid rgba(0,212,255,.45);background:rgba(0,212,255,.1);color:#9fe8ff;
+      font-family:inherit;transition:all .15s}
+    .conn-depth-btn:hover{border-color:#00d4ff;background:rgba(0,212,255,.2);color:#fff}
+    .conn-sub-t{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+      color:#9db0c4;margin:8px 0 6px}
+    .conn-hop{font-size:9px;font-weight:700;padding:1px 6px;border-radius:999px;
+      background:rgba(0,212,255,.15);color:#7ee8ff;margin-left:6px;vertical-align:1px}
     .rd{width:9px;height:9px;border-radius:50%;flex-shrink:0}
     .rif{flex:1;min-width:0}
     .rn{font-size:12px;font-weight:500}
@@ -2434,6 +2444,7 @@ const allInds  = [...new Set(NODES.flatMap(n => n.industries))].sort();
 let activeCats  = new Set(Object.keys(CATS));
 let activeUC    = "", activeInd = "";
 let selected    = null;
+let connectionHighlightDepth = 1;
 let plannerOpen = false;
 let stack       = new Set();   // family node IDs or product IDs
 let legacySel   = new Set();
@@ -2943,6 +2954,106 @@ svg.call(zoom.transform, d3.zoomIdentity.translate(iw/2,ih/2).scale(0.78));
 // ── Helpers
 const sid = l => (typeof l.source==="object" ? l.source.id : l.source);
 const tid = l => (typeof l.target==="object" ? l.target.id : l.target);
+
+function connectionNeighborhood(startId, maxDepth = 2, links = LINKS){
+  const seen = new Map([[startId, { depth: 0 }]]);
+  let frontier = [startId];
+  for (let d = 1; d <= maxDepth; d++){
+    const next = [];
+    for (const id of frontier){
+      links.forEach(l => {
+        const s = sid(l), t = tid(l);
+        const other = id === s ? t : id === t ? s : null;
+        if (!other || seen.has(other)) return;
+        seen.set(other, { depth: d, viaId: id, type: l.type, label: l.label });
+        next.push(other);
+      });
+    }
+    frontier = next;
+  }
+  seen.delete(startId);
+  return seen;
+}
+
+function connectionNodeSet(startId, depth = connectionHighlightDepth){
+  const conn = new Set([startId]);
+  if (depth <= 1){
+    LINKS.forEach(l => {
+      const s = sid(l), t = tid(l);
+      if (s === startId || t === startId){ conn.add(s); conn.add(t); }
+    });
+  } else {
+    connectionNeighborhood(startId, depth).forEach((_, id) => conn.add(id));
+  }
+  return conn;
+}
+
+function buildConnectionRels(startId, maxDepth = connectionHighlightDepth){
+  const direct = LINKS.map(l => {
+    const s = sid(l), t = tid(l);
+    if (s !== startId && t !== startId) return null;
+    const oid = s === startId ? t : s;
+    return { node: nodeById[oid], depth: 1, type: l.type, label: l.label, via: null };
+  }).filter(Boolean).sort((a, b) => a.type === b.type ? 0 : a.type === "direct" ? -1 : 1);
+
+  if (maxDepth <= 1){
+    const hood = connectionNeighborhood(startId, 2);
+    const directIds = new Set(direct.map(r => r.node.id));
+    const extTotal = [...hood.entries()].filter(([id, info]) => info.depth === 2 && !directIds.has(id)).length;
+    return { direct, extended: [], extTotal };
+  }
+
+  const hood = connectionNeighborhood(startId, 2);
+  const directIds = new Set(direct.map(r => r.node.id));
+  const extended = [...hood.entries()]
+    .filter(([id, info]) => info.depth === 2 && !directIds.has(id))
+    .map(([id, info]) => ({
+      node: nodeById[id],
+      depth: 2,
+      type: info.type,
+      label: info.label,
+      via: nodeById[info.viaId]
+    }))
+    .sort((a, b) => a.node.name.localeCompare(b.node.name));
+  return { direct, extended, extTotal: extended.length };
+}
+
+function renderConnectionRow(r){
+  const sub = r.depth === 1
+    ? `${r.type === "direct" ? "Direct integration" : "Adjacent / complementary"} · ${escapeHtml(r.label)}`
+    : `Via ${escapeHtml(r.via?.name || "?")} · ${escapeHtml(r.label)}`;
+  const hop = r.depth > 1 ? `<span class="conn-hop">${r.depth} hops</span>` : "";
+  return `<div class="ri${r.depth > 1 ? " ri-ext" : ""}" onclick="jumpTo('${r.node.id}')">
+    <div class="rd" style="background:${catColor(r.node.category)}"></div>
+    <div class="rif"><div class="rn">${escapeHtml(r.node.name)}${hop}</div>
+    <div class="rt">${sub}</div></div>
+    <div class="ra">›</div></div>`;
+}
+
+function renderConnectionsSection(d){
+  const depth = connectionHighlightDepth;
+  const { direct, extended, extTotal } = buildConnectionRels(d.id, depth);
+  const total = direct.length + extended.length;
+  const toggleLabel = depth >= 2
+    ? "Show direct connections only"
+    : `Show extended ecosystem${extTotal ? ` (+${extTotal} at 2 hops)` : ""}`;
+  let body = `<button type="button" class="conn-depth-btn" onclick="toggleConnectionDepth('${d.id}')">${toggleLabel}</button>`;
+  body += `<div class="conn-sub-t">Direct (${direct.length})</div><div class="rl">${direct.map(renderConnectionRow).join("") || `<div class="rt" style="padding:4px 2px">None mapped.</div>`}</div>`;
+  if (depth >= 2 && extended.length){
+    body += `<div class="conn-sub-t">Extended — 2 hops (${extended.length})</div><div class="rl">${extended.map(renderConnectionRow).join("")}</div>`;
+  }
+  return `<div class="p-sec"><div class="p-sec-t">Connected Technologies (${total})</div>${body}</div>`;
+}
+
+window.toggleConnectionDepth = function(nodeId){
+  connectionHighlightDepth = connectionHighlightDepth >= 2 ? 1 : 2;
+  const d = nodeById[nodeId];
+  if (!d) return;
+  if (selected?.id === nodeId){
+    applyConnectionHighlight(d, connectionHighlightDepth);
+    showDetailPanel(d);
+  } else selectNode(d, { connectionDepth: connectionHighlightDepth });
+};
 
 // ═══════════════════════════════════════════════════════════════
 // VIEW LEVELS — Overview / Families / Composition
@@ -3719,24 +3830,29 @@ window.getViewFocus   = () => viewFocus;
   applyViewLevel("families", { initial: true });
 })();
 
-function selectNode(d) {
-  selected=d; hideTip();
-  const conn=new Set([d.id]); const cl=new Set();
-  viewLinks.forEach((l,i)=>{ const s=sid(l),t=tid(l);
-    if(s===d.id||t===d.id){ conn.add(s); conn.add(t); cl.add(i); } });
+function applyConnectionHighlight(d, depth = connectionHighlightDepth){
+  const conn = connectionNodeSet(d.id, depth);
   ndEl.each(function(nd){
-    const isSel=nd.id===d.id, isC=conn.has(nd.id);
-    d3.select(this).select(".gr").attr("fill-opacity",isSel?.3:0);
-    d3.select(this).select(".mc").attr("fill-opacity",isC?.95:.1).attr("stroke",isSel?"#fff":"transparent");
-    d3.select(this).select(".icn").attr("opacity",isC?1:.12);
-    d3.select(this).select(".nl").style("fill",isC?(isSel?"#FFFFFF":"#B4B9C0"):"#2d3748");
+    const isSel = nd.id === d.id, isC = conn.has(nd.id);
+    d3.select(this).select(".gr").attr("fill-opacity", isSel ? .3 : 0);
+    d3.select(this).select(".mc").attr("fill-opacity", isC ? .95 : .1).attr("stroke", isSel ? "#fff" : "transparent");
+    d3.select(this).select(".icn").attr("opacity", isC ? 1 : .12);
+    d3.select(this).select(".nl").style("fill", isC ? (isSel ? "#FFFFFF" : "#B4B9C0") : "#2d3748");
   });
-  lviz.each(function(l,i){
-    const s=sid(l),t=tid(l),mine=s===d.id||t===d.id;
-    d3.select(this).attr("stroke",mine?catColor(d.category):"#0d2847")
-      .attr("stroke-opacity",mine?1:.08)
-      .attr("stroke-width",mine?(l.type==="direct"?2.5:1.5):(l.type==="direct"?1.8:1));
+  lviz.each(function(l){
+    const s = sid(l), t = tid(l);
+    const inSet = conn.has(s) && conn.has(t);
+    const mine = s === d.id || t === d.id;
+    d3.select(this).attr("stroke", inSet ? catColor(d.category) : "#0d2847")
+      .attr("stroke-opacity", inSet ? (mine ? 1 : .55) : .08)
+      .attr("stroke-width", inSet ? (mine ? (l.type === "direct" ? 2.5 : 1.5) : 1.2) : (l.type === "direct" ? 1.8 : 1));
   });
+}
+
+function selectNode(d, opts = {}) {
+  if (opts.connectionDepth) connectionHighlightDepth = opts.connectionDepth;
+  selected = d; hideTip();
+  applyConnectionHighlight(d, connectionHighlightDepth);
   showDetailPanel(d);
   if (viewMode === "spatial"){
     focusSpatialNode(d.id, 700);
@@ -3791,13 +3907,6 @@ function highlightStack() {
 
 // ── Detail Panel
 function showDetailPanel(d) {
-  const rels=LINKS.map(l=>{
-    const s=sid(l),t=tid(l);
-    if(s!==d.id&&t!==d.id) return null;
-    const oid=s===d.id?t:s;
-    return {node:nodeById[oid],type:l.type,label:l.label};
-  }).filter(Boolean).sort((a,b)=>a.type===b.type?0:a.type==="direct"?-1:1);
-
   const cat=CATS[d.category];
   const inStk=stack.has(d.id);
 
@@ -3827,12 +3936,7 @@ function showDetailPanel(d) {
     ${prodsHtml}
     <div class="p-sec"><div class="p-sec-t">Use Cases</div><div class="tr">${d.useCases.map(u=>`<span class="tg" onclick="filterTagUC('${u}')">${u}</span>`).join("")}</div></div>
     <div class="p-sec"><div class="p-sec-t">Industries</div><div class="tr">${d.industries.map(i=>`<span class="tg" onclick="filterTagInd('${i}')">${i}</span>`).join("")}</div></div>
-    <div class="p-sec"><div class="p-sec-t">Connected Technologies (${rels.length})</div>
-      <div class="rl">${rels.map(r=>`<div class="ri" onclick="jumpTo('${r.node.id}')">
-        <div class="rd" style="background:${catColor(r.node.category)}"></div>
-        <div class="rif"><div class="rn">${r.node.name}</div>
-        <div class="rt">${r.type==="direct"?"Direct integration":"Adjacent / complementary"} · ${r.label}</div></div>
-        <div class="ra">›</div></div>`).join("")}</div></div>
+    ${renderConnectionsSection(d)}
     <div class="p-sec"><div class="p-sec-t">Learn More</div><div class="lb">
       <a class="la" href="${d.url}" target="_blank" rel="noopener">Product Page <span>cisco.com ↗</span></a>
       <a class="la" href="${d.docsUrl}" target="_blank" rel="noopener">Documentation <span>docs ↗</span></a>
@@ -3891,9 +3995,9 @@ window.showProductDetail = function(id) {
     <div class="p-name">${p.name}</div>
     <p class="p-desc">${p.desc}</p>
     ${node?`<div class="p-sec"><div class="p-sec-t">Part of Portfolio Family</div>
-      <div class="ri" onclick="jumpTo('${node.id}');closePanel()">
+      <div class="ri" onclick="jumpTo('${node.id}', {connectionDepth: 2}); closePanel()">
         <div class="rd" style="background:${catColor(node.category)}"></div>
-        <div class="rif"><div class="rn">${node.name}</div><div class="rt">View connected technologies in graph</div></div>
+        <div class="rif"><div class="rn">${node.name}</div><div class="rt">View extended ecosystem in graph (2 hops)</div></div>
         <div class="ra">›</div></div></div>`:""}
     <div class="p-sec"><div class="p-sec-t">Product Resources</div><div class="lb">
       <a class="la" href="${p.url}" target="_blank" rel="noopener">Product Page / EOL Notice <span>cisco.com ↗</span></a>
@@ -3912,8 +4016,10 @@ window.showProductDetail = function(id) {
 function closePanel() { document.getElementById("panel").classList.remove("open"); }
 document.getElementById("pcl").addEventListener("click",()=>{ selected=null; resetHL(); closePanel(); });
 
-window.jumpTo = id => {
+window.jumpTo = (id, opts = {}) => {
   const d=nodeById[id]; if(!d) return;
+  if (opts.connectionDepth) connectionHighlightDepth = opts.connectionDepth;
+  if (opts.closePanel) closePanel();
   activeCats=new Set(Object.keys(CATS)); activeUC=""; activeInd="";
   ucEl.value=""; indEl.value="";
   document.querySelectorAll(".cp").forEach(b=>b.classList.remove("off"));
@@ -3926,10 +4032,10 @@ window.jumpTo = id => {
   // user always lands on the family graph when they pick a family from search.
   if (viewMode !== "families"){
     applyViewLevel("families");
-    setTimeout(() => { applyFilters(); selectNode(d); }, 360);
+    setTimeout(() => { applyFilters(); selectNode(d, opts); }, 360);
     return;
   }
-  applyFilters(); setTimeout(()=>selectNode(d),60);
+  applyFilters(); setTimeout(()=>selectNode(d, opts),60);
 };
 window.closePanel = closePanel;
 window.filterTagUC  = uc  => { activeUC=uc;   ucEl.value=uc;   applyFilters(); };
@@ -5096,7 +5202,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.7.7";
+const APP_VERSION   = "2.7.8";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -5387,6 +5493,10 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.7.8", date:"2026-06-17", items:[
+    "Connected Technologies — toggle extended ecosystem (2-hop) in family detail panels; graph highlight and product-panel jump show the wider neighborhood.",
+    "Context menu Connections filter now includes families within 2 hops."
+  ]},
   {ver:"2.7.7", date:"2026-06-17", items:[
     "dCloud — Explore on dCloud section in product and family panels with primary CTA styling, short link labels, and schedule/login hints from dcloud-links.json.",
     "dCloud manifest — defaults (sectionTitle, sectionHint, loginNote) plus per-entry linkLabel and hint fields.",
@@ -6440,8 +6550,8 @@ window.showProductDetail = function(id){
   pushRecent(id); pushBreadcrumb({type:"product", id}); enhancePanelAuto();
 };
 const _origJump = window.jumpTo;
-window.jumpTo = function(id){
-  _origJump(id);
+window.jumpTo = function(id, opts){
+  _origJump(id, opts);
   setTimeout(() => {
     const pb = $("#pbody"); if (pb){ pb.dataset.lastId = id; pb.dataset.lastKind = "node"; }
     pushRecent(id); pushBreadcrumb({type:"node", id}); enhancePanelAuto();
@@ -8318,11 +8428,11 @@ function buildContextMenu(){
       else if (a === "cmp")    addToCompare(d.id, "node");
       else if (a === "pin")    togglePin(d.id);
       else if (a === "connections"){
-        const cons = new Set([d.id]);
-        LINKS.forEach(l => { const s = sid(l), t = tid(l); if (s===d.id) cons.add(t); if (t===d.id) cons.add(s); });
+        const depth = 2;
+        const cons = connectionNodeSet(d.id, depth);
         ndEl.style("display", n => cons.has(n.id) ? null : "none");
         [lviz,lhit].forEach(s => s.style("display", l => cons.has(sid(l)) && cons.has(tid(l)) ? null : "none"));
-        $("#fbadge").textContent = `Showing only ${cons.size} nodes connected to ${d.name}`;
+        $("#fbadge").textContent = `Showing ${cons.size} families within ${depth} hops of ${d.name}`;
         $("#fbadge").style.display = "block";
       }
       else if (a === "cat"){
