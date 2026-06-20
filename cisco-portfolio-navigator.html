@@ -163,8 +163,23 @@
     .p-pillar{display:inline-flex;align-items:center;padding:2px 10px;border-radius:20px;
       font-size:10px;font-weight:700;letter-spacing:.02em;margin-left:6px;border:1px solid var(--pc, var(--border));
       background:color-mix(in srgb, var(--pc, #888) 18%, transparent);color:var(--text)}
-    .pillar-guides .pillar-zone{stroke-width:1.2}
-    .pillar-guides .pillar-label{font-size:11px;font-weight:600;fill:var(--subtle);text-anchor:middle;letter-spacing:.04em;text-transform:uppercase;opacity:.85}
+    .pillar-guides .zone-rect{stroke-width:1.5}
+    .pillar-guides .zone-label{font-size:12px;font-weight:600;fill:#e2e8f0;text-anchor:middle;letter-spacing:.02em}
+    .pillar-guides .zone-count{font-size:10px;font-weight:500;fill:#94a3b8;text-anchor:middle}
+    .pillar-guides .zone-spine{stroke-dasharray:6 5;opacity:.55}
+    #pillar-legend{position:fixed;top:70px;left:16px;z-index:50;display:none;max-width:340px;
+      padding:11px 13px;background:rgba(7,24,45,.94);border:1px solid rgba(2,200,255,.28);
+      border-radius:10px;backdrop-filter:blur(10px);box-shadow:0 10px 36px rgba(0,0,0,.4)}
+    #pillar-legend.show{display:block}
+    #pillar-legend .pl-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#02C8FF;margin-bottom:8px}
+    #pillar-legend .pl-row{display:flex;flex-direction:column;gap:7px}
+    #pillar-legend .pl-item{display:grid;grid-template-columns:12px 1fr auto;gap:8px;align-items:start;font-size:11px;line-height:1.35}
+    #pillar-legend .pl-dot{width:10px;height:10px;border-radius:2px;margin-top:3px}
+    #pillar-legend .pl-name{color:#f1f5f9;font-weight:600}
+    #pillar-legend .pl-desc{color:#94a3b8;font-size:10px;margin-top:1px}
+    #pillar-legend .pl-count{color:#64748b;font-size:10px;font-weight:600;white-space:nowrap;padding-top:1px}
+    #pillar-legend .pl-hint{margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08);
+      font-size:10px;color:#64748b;line-height:1.45}
     .pillar-cov{margin:10px 0 6px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px}
     .pillar-cov-t{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--subtle);margin-bottom:6px}
     .pillar-cov-row{display:flex;flex-wrap:wrap;gap:6px}
@@ -692,6 +707,7 @@
 <div id="tools" role="toolbar" aria-label="Graph tools"></div>
 <div id="hint">Scroll to zoom · Drag to pan · Click node for details</div>
 <div id="fbadge"></div>
+<div id="pillar-legend" aria-hidden="true"></div>
 <div id="toast"></div>
 
 <script>
@@ -770,7 +786,22 @@ const OVERVIEW_DECK = {
   get rightCx(){ return (this.topW + this.gap) / 2; }
 };
 
+// Families-view zone map — mirrors Overview deck geometry (non-overlapping rects)
+const PILLAR_LAYOUT = {
+  zones: [
+    { id: "ai-dc", label: "AI-ready data centers", shortLabel: "AI-ready DC",
+      color: "#0A60FF", cx: -188, cy: -88, w: 360, h: 148 },
+    { id: "workplaces", label: "Future-proofed workplaces", shortLabel: "Workplaces",
+      color: "#2dce5c", cx: 188, cy: -88, w: 360, h: 148 },
+    { id: "connectivity", label: "Secure global connectivity", shortLabel: "Connectivity",
+      color: "#02C8FF", cx: 0, cy: 12, w: 736, h: 52, spine: true },
+    { id: "resilience", label: "Digital resilience", shortLabel: "Resilience",
+      color: "#FF9000", cx: 0, cy: 128, w: 736, h: 148, gradient: true }
+  ]
+};
+const PILLAR_ZONE_BY_ID = Object.fromEntries(PILLAR_LAYOUT.zones.map(z => [z.id, z]));
 const PILLAR_BY_ID = Object.fromEntries(ONE_CISCO.pillars.map(p => [p.id, p]));
+
 const CONNECTIVITY_SET = new Set(ONE_CISCO.connectivity.families);
 const AI_DC_SET = new Set([
   "nexus", "aci", "nexus-one", "silicon-one", "ucs", "hyperflex", "intersight"
@@ -779,7 +810,7 @@ const WORKPLACES_SET = new Set([
   "webex-app", "webex-meetings", "webex-calling", "webex-cc", "webex-connect",
   "room-systems", "desk-devices", "ip-phones", "conf-phones", "cisco-headsets",
   "catalyst-access", "catalyst-core", "catalyst-wireless",
-  "meraki-switches", "meraki-wireless", "industrial-eth", "thousandeyes"
+  "meraki-switches", "meraki-wireless", "industrial-eth"
 ]);
 
 const NODES = [
@@ -2511,19 +2542,30 @@ function pillarColorForFamily(familyId){
 }
 function pillarAnchorForFamily(familyId){
   const pid = familyPillar(familyId);
-  const meta = pillarMeta(pid);
-  if (!meta) return { x: 0, y: 0 };
-  const a = meta.anchor;
-  if (pid === "connectivity"){
-    const idx = ONE_CISCO.connectivity.families.indexOf(familyId);
-    const spread = (idx >= 0 ? idx - 4.5 : 0) * 28;
-    return { x: a.x + spread, y: a.y + (idx % 2 ? 12 : -8) };
-  }
+  const zone = PILLAR_ZONE_BY_ID[pid];
+  if (!zone) return { x: 0, y: 0 };
   const bucket = NODES.filter(n => familyPillar(n.id) === pid);
-  const idx = bucket.findIndex(n => n.id === familyId);
-  const ring = 55 + Math.min(40, bucket.length * 2);
-  const angle = idx >= 0 ? (idx / Math.max(bucket.length, 1)) * Math.PI * 1.35 - Math.PI * 0.675 : 0;
-  return { x: a.x + Math.cos(angle) * ring, y: a.y + Math.sin(angle) * ring * 0.72 };
+  const idx = Math.max(0, bucket.findIndex(n => n.id === familyId));
+  const n = bucket.length || 1;
+  if (zone.spine){
+    const cols = Math.max(n, 1);
+    const step = Math.min(64, (zone.w - 48) / Math.max(cols - 1, 1));
+    const startX = zone.cx - ((cols - 1) * step) / 2;
+    return { x: startX + idx * step, y: zone.cy + (idx % 2 ? 6 : -6) };
+  }
+  const cols = Math.ceil(Math.sqrt(n * (zone.w / Math.max(zone.h, 1))));
+  const rows = Math.ceil(n / cols);
+  const col = idx % cols;
+  const row = Math.floor(idx / cols);
+  const padX = 36, padY = 32;
+  const innerW = zone.w - padX * 2;
+  const innerH = zone.h - padY * 2;
+  const cellW = innerW / Math.max(cols, 1);
+  const cellH = innerH / Math.max(rows, 1);
+  return {
+    x: zone.cx - zone.w / 2 + padX + cellW * (col + 0.5),
+    y: zone.cy - zone.h / 2 + padY + cellH * (row + 0.5)
+  };
 }
 function familiesInPillar(pillarId){
   return NODES.filter(n => familyPillar(n.id) === pillarId).length;
@@ -2797,36 +2839,35 @@ const ICON_DEFS = `
   <path d="M223.68,66.15,135.68,18a15.88,15.88,0,0,0-15.36,0l-88,48.17a16,16,0,0,0-8.32,14v95.64a16,16,0,0,0,8.32,14l88,48.17a15.88,15.88,0,0,0,15.36,0l88-48.17a16,16,0,0,0,8.32-14V80.18A16,16,0,0,0,223.68,66.15ZM128,32l80.34,44-29.77,16.3-80.35-44ZM128,120,47.66,76l33.9-18.56,80.34,44ZM40,90l80,43.78v85.79L40,175.82Zm176,85.78h0l-80,43.79V133.82l32-17.51V152a8,8,0,0,0,16,0V107.55L216,90v85.77Z"/>
 </symbol>
 <symbol id="icon-deck-dc" viewBox="0 0 256 256">
-  <path fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" d="M68 68 v120 M188 68 v120"/>
-  <line x1="92" y1="98" x2="164" y2="98" stroke="currentColor" stroke-width="10" stroke-linecap="round"/>
-  <circle cx="82" cy="98" r="7" fill="currentColor"/>
-  <circle cx="174" cy="98" r="7" fill="currentColor"/>
-  <line x1="92" y1="128" x2="164" y2="128" stroke="currentColor" stroke-width="10" stroke-linecap="round"/>
-  <circle cx="82" cy="128" r="7" fill="currentColor"/>
-  <circle cx="174" cy="128" r="7" fill="currentColor"/>
-  <line x1="92" y1="158" x2="164" y2="158" stroke="currentColor" stroke-width="10" stroke-linecap="round"/>
-  <circle cx="82" cy="158" r="7" fill="currentColor"/>
-  <circle cx="174" cy="158" r="7" fill="currentColor"/>
+  <path fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"
+    d="M74 66 L58 66 L58 190 L74 190 M182 66 L198 66 L198 190 L182 190"/>
+  <line x1="92" y1="102" x2="164" y2="102" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="84" cy="102" r="5" fill="currentColor"/>
+  <line x1="92" y1="128" x2="164" y2="128" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="84" cy="128" r="5" fill="currentColor"/>
+  <line x1="92" y1="154" x2="164" y2="154" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="84" cy="154" r="5" fill="currentColor"/>
 </symbol>
 <symbol id="icon-deck-workplaces" viewBox="0 0 256 256">
-  <circle cx="128" cy="48" r="12" fill="currentColor"/>
-  <circle cx="198" cy="78" r="12" fill="currentColor"/>
-  <circle cx="198" cy="178" r="12" fill="currentColor"/>
-  <circle cx="128" cy="208" r="12" fill="currentColor"/>
-  <circle cx="58" cy="178" r="12" fill="currentColor"/>
-  <circle cx="58" cy="78" r="12" fill="currentColor"/>
-  <path fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" d="M128 60 Q 170 62 186 78 Q 200 128 186 178 Q 170 194 128 196 Q 86 194 70 178 Q 56 128 70 78 Q 86 62 128 60"/>
-  <path fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" d="M128 60 Q 128 100 128 128 Q 128 156 128 196"/>
-  <path fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" d="M70 78 Q 100 100 128 128 Q 156 156 186 178"/>
-  <path fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" d="M186 78 Q 156 100 128 128 Q 100 156 70 178"/>
+  <circle cx="128" cy="44" r="10" fill="currentColor"/>
+  <circle cx="196" cy="74" r="10" fill="currentColor"/>
+  <circle cx="196" cy="182" r="10" fill="currentColor"/>
+  <circle cx="128" cy="212" r="10" fill="currentColor"/>
+  <circle cx="60" cy="182" r="10" fill="currentColor"/>
+  <circle cx="60" cy="74" r="10" fill="currentColor"/>
+  <circle cx="128" cy="128" r="8" fill="currentColor"/>
+  <path fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"
+    d="M128 54 Q 168 58 186 74 Q 204 128 186 182 Q 168 202 128 202 Q 88 202 70 182 Q 52 128 70 74 Q 88 58 128 54"/>
+  <path fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"
+    d="M128 54 L128 120 M186 74 Q 150 96 128 120 Q 106 96 70 74 M186 182 Q 150 160 128 136 Q 106 160 70 182"/>
 </symbol>
 <symbol id="icon-deck-resilience" viewBox="0 0 256 256">
-  <path fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" d="M128 56 v52"/>
-  <path fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" d="M112 72 L128 56 L144 72"/>
-  <path fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" d="M112 92 L128 108 L144 92"/>
-  <path fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" d="M76 148 Q128 124 180 148"/>
-  <path fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" d="M76 172 Q128 148 180 172"/>
-  <path fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" d="M76 196 Q128 172 180 196"/>
+  <path fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" d="M128 48 v56"/>
+  <path fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" d="M110 64 L128 48 L146 64"/>
+  <path fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" d="M110 88 L128 104 L146 88"/>
+  <path fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" d="M68 152 Q128 132 188 152"/>
+  <path fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" d="M68 176 Q128 156 188 176"/>
+  <path fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" d="M68 200 Q128 180 188 200"/>
 </symbol>
 
 `;
@@ -3219,6 +3260,22 @@ function fitOverviewDeckView(){
   applyGraphTransform(0, (minY + maxY) / 2, k);
 }
 
+function fitPillarLayoutView(){
+  const pad = 52;
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  PILLAR_LAYOUT.zones.forEach(z => {
+    minX = Math.min(minX, z.cx - z.w / 2 - pad);
+    maxX = Math.max(maxX, z.cx + z.w / 2 + pad);
+    minY = Math.min(minY, z.cy - z.h / 2 - pad);
+    maxY = Math.max(maxY, z.cy + z.h / 2 + pad);
+  });
+  const { w, h } = getDims();
+  const pw = panelOffsetW();
+  const bw = maxX - minX, bh = maxY - minY;
+  const k = Math.min(1.05, Math.max(0.45, Math.min((w - pw - 56) / bw, (h - 108) / bh)));
+  applyGraphTransform(0, (minY + maxY) / 2, k);
+}
+
 let graphFitTimer = null;
 function scheduleGraphFit(mode){
   clearTimeout(graphFitTimer);
@@ -3226,6 +3283,7 @@ function scheduleGraphFit(mode){
   graphFitTimer = setTimeout(() => {
     if (viewMode === "composition") fitCompositionView();
     else if (viewMode === "overview") fitOverviewDeckView();
+    else if (viewMode === "families" && usePillarLayout()) fitPillarLayoutView();
     else if (viewMode === "all-products") fitVisibleGraphView(0.50);
     else if (viewMode === "families") fitVisibleGraphView(0.78);
   }, delay);
@@ -3383,24 +3441,63 @@ function updateCompositionHint(){
 function updatePillarGuides(){
   const show = usePillarLayout();
   lyr.select("g.pillar-guides").remove();
+  updatePillarLegend(show);
   if (!show) return;
+  if (!defs.select("#pillar-resilience-grad").size()){
+    const lg = defs.append("linearGradient").attr("id", "pillar-resilience-grad")
+      .attr("x1", "0%").attr("y1", "0%").attr("x2", "100%").attr("y2", "0%");
+    lg.append("stop").attr("offset", "0%").attr("stop-color", "#02C8FF");
+    lg.append("stop").attr("offset", "50%").attr("stop-color", "#d946ef");
+    lg.append("stop").attr("offset", "100%").attr("stop-color", "#FF9000");
+  }
   const g = lyr.insert("g", ":first-child").attr("class", "pillar-guides").style("pointer-events", "none");
-  const zones = [
-    ...ONE_CISCO.pillars.map(p => ({ id: p.id, label: p.shortLabel, color: p.color, anchor: p.anchor, rx: 210, ry: 125 })),
-    { id: "connectivity", label: ONE_CISCO.connectivity.shortLabel, color: ONE_CISCO.connectivity.color,
-      anchor: ONE_CISCO.connectivity.anchor, rx: 300, ry: 48 }
-  ];
-  zones.forEach(z => {
-    const zg = g.append("g").attr("class", "zone");
-    zg.append("ellipse").attr("class", "pillar-zone")
-      .attr("cx", z.anchor.x).attr("cy", z.anchor.y)
-      .attr("rx", z.rx).attr("ry", z.ry)
-      .attr("fill", z.color).attr("fill-opacity", 0.05)
-      .attr("stroke", z.color).attr("stroke-opacity", 0.2);
-    zg.append("text").attr("class", "pillar-label")
-      .attr("x", z.anchor.x).attr("y", z.anchor.y - z.ry + 14)
+  PILLAR_LAYOUT.zones.forEach(z => {
+    const zg = g.append("g").attr("class", "zone zone-" + z.id);
+    const x = z.cx - z.w / 2, y = z.cy - z.h / 2;
+    zg.append("rect").attr("class", "zone-rect zone-fill")
+      .attr("x", x).attr("y", y).attr("width", z.w).attr("height", z.h)
+      .attr("rx", z.gradient ? 8 : 6)
+      .attr("fill", z.color).attr("fill-opacity", z.spine ? 0.04 : 0.06)
+      .attr("stroke", "none");
+    zg.append("rect").attr("class", "zone-rect zone-border" + (z.spine ? " zone-spine" : ""))
+      .attr("x", x).attr("y", y).attr("width", z.w).attr("height", z.h)
+      .attr("rx", z.gradient ? 8 : 6)
+      .attr("fill", "none")
+      .attr("stroke", z.gradient ? "url(#pillar-resilience-grad)" : z.color)
+      .attr("stroke-opacity", z.spine ? 0.45 : 0.55);
+    const count = familiesInPillar(z.id);
+    zg.append("text").attr("class", "zone-label")
+      .attr("x", z.cx).attr("y", y + (z.spine ? 22 : 20))
       .text(z.label);
+    zg.append("text").attr("class", "zone-count")
+      .attr("x", z.cx).attr("y", y + (z.spine ? 38 : 36))
+      .text(`${count} famil${count === 1 ? "y" : "ies"}`);
   });
+}
+
+function updatePillarLegend(show){
+  const el = document.getElementById("pillar-legend");
+  if (!el) return;
+  if (!show){ el.classList.remove("show"); el.setAttribute("aria-hidden", "true"); return; }
+  const rows = [...PILLAR_LAYOUT.zones].map(z => {
+    const cnt = familiesInPillar(z.id);
+    const desc = z.id === "connectivity"
+      ? "SD-WAN, SASE, identity, DNS — the spine between pillars"
+      : z.id === "ai-dc"
+        ? "Data center networking, compute, and AI-ready infrastructure"
+        : z.id === "workplaces"
+          ? "Campus, collaboration, wireless, and hybrid work"
+          : "Security, observability, and operational resilience";
+    return `<div class="pl-item">
+      <span class="pl-dot" style="background:${z.color}"></span>
+      <div><div class="pl-name">${z.label}</div><div class="pl-desc">${desc}</div></div>
+      <span class="pl-count">${cnt}</span>
+    </div>`;
+  }).join("");
+  el.innerHTML = `<div class="pl-title">One Cisco layout</div><div class="pl-row">${rows}</div>
+    <div class="pl-hint">Families are grouped by outcome pillar — not category. Cross-links show how portfolios connect. Toggle category pills to filter.</div>`;
+  el.classList.add("show");
+  el.setAttribute("aria-hidden", "false");
 }
 
 function ensureOverviewDefs(){
@@ -3643,6 +3740,33 @@ function rebindGraph(opts){
       .attr("clip-path", `url(#clip-prod-${String(d.id).replace(/[^a-z0-9_-]/gi, "_")})`);
   });
   ndEl.select("text.nl").text(d => d._shortName || d.name);
+  const pillarMode = viewMode === "families" && usePillarLayout();
+  ndEl.select("circle.mc").each(function(d){
+    if (!nodeById[d.id]) return;
+    const el = d3.select(this);
+    if (pillarMode){
+      el.attr("stroke", pillarColorForFamily(d.id))
+        .attr("stroke-width", 2.2).attr("stroke-opacity", 0.92);
+    } else {
+      el.attr("stroke", d._hasImage ? MATRIX_NODE_RING : "transparent")
+        .attr("stroke-width", d._hasImage ? 1.4 : 2.5).attr("stroke-opacity", 1);
+    }
+  });
+  if (lviz){
+    lviz.attr("stroke", l => {
+      if (!pillarMode) return l.type === "direct" ? "#4a5568" : "#2d3748";
+      const sp = familyPillar(sid(l)), tp = familyPillar(tid(l));
+      return sp !== tp ? "#cbd5e1" : (l.type === "direct" ? "#4a5568" : "#2d3748");
+    }).attr("stroke-width", l => {
+      if (!pillarMode) return l.type === "direct" ? 1.8 : 1;
+      const sp = familyPillar(sid(l)), tp = familyPillar(tid(l));
+      return sp !== tp ? 2.4 : (l.type === "direct" ? 1.8 : 1);
+    }).attr("stroke-opacity", l => {
+      if (!pillarMode) return l.type === "direct" ? 0.75 : 0.45;
+      const sp = familyPillar(sid(l)), tp = familyPillar(tid(l));
+      return sp !== tp ? 0.9 : (l.type === "direct" ? 0.75 : 0.45);
+    });
+  }
   if (viewMode === "composition") applyCompositionNodeStyles();
   else resetStandardLabelStyles();
   updateCompositionHint();
@@ -5995,26 +6119,14 @@ document.addEventListener("keydown",ev=>{
   // FAB launches the tour
   fab.addEventListener("click", () => start());
 
-  // Auto-launch on first visit. For returning v1 users, surface a "new" badge
-  // on the help FAB so they know there's an updated tour without auto-spamming.
-  let seen = false;
+  // Tour available via ? FAB or keyboard — never auto-launch on page load.
   let latestSeen = "";
-  try {
-    seen = localStorage.getItem(STORAGE_KEY) === "1";
-    latestSeen = localStorage.getItem(STORAGE_KEY_LATEST) || "";
-  } catch(e){}
-  if (!seen) {
-    // brief delay so the graph has time to render
-    setTimeout(start, 700);
-  } else if (latestSeen !== TOUR_VERSION) {
-    // Returning user — show a persistent "new" badge until they re-take it
-    fab.classList.add("pulse", "new-badge");
-    fab.title = "Take the updated tour (Spatial view & Guided Plan AI)";
-    setTimeout(() => fab.classList.remove("pulse"), 8000);
+  try { latestSeen = localStorage.getItem(STORAGE_KEY_LATEST) || ""; } catch(e){}
+  if (latestSeen !== TOUR_VERSION) {
+    fab.classList.add("new-badge");
+    fab.title = "Take the tour (Spatial view & Guided Plan AI)";
   } else {
-    // Already seen the latest tour — just a brief pulse on load
-    fab.classList.add("pulse");
-    setTimeout(() => fab.classList.remove("pulse"), 4000);
+    fab.title = "Take the tour";
   }
 
   // Expose for testing
@@ -6052,7 +6164,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.11.2";
+const APP_VERSION   = "2.12.0";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -6343,6 +6455,11 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.12.0", date:"2026-06-20", items:[
+    "Overview icons — closer match to deck line art (bracketed rack, collaboration ring, resilience spring).",
+    "Families layout — replaced overlapping venn ellipses with deck-aligned zone panels, legend, and corrected ThousandEyes → Digital resilience mapping.",
+    "No auto-prompts — guided tour and What's New changelog only open when you choose them (? button or footer link)."
+  ]},
   {ver:"2.11.2", date:"2026-06-20", items:[
     "Overview deck — custom slide icons (bracketed server rack, collaboration ring, resilience spring) and centered Digital resilience label."
   ]},
@@ -10592,17 +10709,7 @@ function boot(){
   // Restore prior state (URL hash > current plan > autosave)
   bootRestore();
 
-  // Show changelog only for returning users who have prior state (not on first
-  // load and not in test runs that don't seed any state).
-  setTimeout(() => {
-    const seen = lsGet(STORAGE_KEYS.changelogSeen, null);
-    const haveHistory = (lsGet(STORAGE_KEYS.plans, []).length > 0)
-                     || lsGet("cpn-autosave-v2", null)
-                     || (lsGet(STORAGE_KEYS.recent, []).length > 0);
-    if (seen !== APP_VERSION && haveHistory && lsGet("cisco-portfolio-tour-completed-v1", null)){
-      openChangelog();
-    }
-  }, 2500);
+  // Changelog is available from the footer — never auto-open on load.
 }
 
 // Wait a beat to ensure existing graph is ready
