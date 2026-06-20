@@ -30,16 +30,28 @@
       --chrome-shadow:0 8px 32px rgba(0,0,0,.38);
     }
     [data-theme="light"]{
-      --bg:#f4f7fb;--surface:rgba(255,255,255,.88);--surface2:rgba(255,255,255,.72);
-      --surface3:#e8eef5;--border:rgba(7,24,45,.12);--text:#07182d;
-      --muted:#525e6c;--subtle:#94a3b8;
-      --glass-bg:rgba(255,255,255,.78);--glass-bg2:rgba(255,255,255,.65);
-      --glass-edge:rgba(10,96,255,.18);--chrome-shadow:0 8px 28px rgba(7,24,45,.08);
+      --bg:#eef2f7;--surface:#ffffff;--surface2:#f8fafc;--surface3:#e2e8f0;
+      --border:rgba(7,24,45,.2);--text:#07182d;--muted:#334155;--subtle:#64748b;
+      --accent:#006e8f;
+      --glass-bg:rgba(255,255,255,.94);--glass-bg2:rgba(255,255,255,.88);
+      --glass-edge:rgba(0,110,143,.32);--chrome-shadow:0 4px 24px rgba(7,24,45,.12);
       color-scheme:light}
-    [data-theme="light"] #bg-ambient{background:linear-gradient(165deg,#e8f0fa 0%,#f4f7fb 42%,#eef4fc 100%)}
-    [data-theme="light"] .bg-glow{opacity:.35}
-    [data-theme="light"] .bg-grid{opacity:.45}
+    [data-theme="light"] #bg-ambient{background:linear-gradient(165deg,#dce8f4 0%,#eef2f7 42%,#e4edf8 100%)}
+    [data-theme="light"] .bg-glow{opacity:.28}
+    [data-theme="light"] .bg-grid{opacity:.55;stroke:rgba(7,24,45,.08)}
     [data-theme="light"] #gs,#spatial-wrap{filter:none}
+    [data-theme="light"] .pillar-guides .zone-title{fill:#006e8f}
+    [data-theme="light"] .pillar-guides .zone-spine-label{fill:#475569}
+    [data-theme="light"] .pillar-guides .zone-stats{fill:#64748b}
+    [data-theme="light"] #pillar-legend{background:rgba(255,255,255,.96);border-color:rgba(7,24,45,.15);
+      box-shadow:0 10px 36px rgba(7,24,45,.12)}
+    [data-theme="light"] #pillar-legend .pl-title{color:#006e8f}
+    [data-theme="light"] #pillar-legend .pl-name{color:#07182d}
+    [data-theme="light"] #pillar-legend .pl-desc,[data-theme="light"] #pillar-legend .pl-count{color:#64748b}
+    [data-theme="light"] #pillar-legend .pl-item:hover{background:rgba(7,24,45,.05)}
+    [data-theme="light"] #pillar-legend .pl-item.active{background:rgba(0,110,143,.1);outline-color:rgba(0,110,143,.35)}
+    [data-theme="light"] #pillar-legend .pl-item.active .pl-name{color:#07182d}
+    [data-theme="light"] #pillar-legend .pl-hint{border-top-color:rgba(7,24,45,.1);color:#64748b}
     /* topbar-h is synced from #app-chrome via ResizeObserver (main bar + action bar) */
     html,body{height:100%;width:100%;overflow:hidden;
       font-family:"CiscoSansTT","Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
@@ -291,10 +303,7 @@
     .pillar-guides .zone-hot .zone-fill{fill-opacity:.09}
     .pillar-guides .zone-stats{font-size:10px;font-weight:500;fill:#64748b}
     .pillar-guides .zone-spine-label{font-size:11px;font-weight:500;fill:#94a3b8;text-anchor:middle}
-    .overview-deck .ov-card{transition:transform .22s ease,filter .22s ease}
-    .overview-deck .ov-card:hover{transform:translateY(-3px);filter:drop-shadow(0 8px 20px rgba(2,200,255,.18))}
-    .overview-deck .ov-card rect{transition:stroke-width .15s, stroke-opacity .15s}
-    .overview-deck .ov-card:hover rect{stroke-opacity:1}
+    .overview-deck .ov-card rect{transition:stroke-opacity .15s ease, filter .15s ease}
     @keyframes nodeRingPulse{
       0%,100%{stroke-opacity:.7}
       50%{stroke-opacity:1}}
@@ -325,8 +334,6 @@
     .pillar-pill{font-size:10px;font-weight:600;padding:3px 8px;border-radius:12px;border:1px solid color-mix(in srgb, var(--pc) 35%, var(--border));
       color:var(--subtle);opacity:.55}
     .pillar-pill.on{background:color-mix(in srgb, var(--pc) 22%, transparent);color:var(--text);opacity:1;border-color:color-mix(in srgb, var(--pc) 55%, var(--border))}
-    .overview-deck .ov-card rect{transition:stroke-width .15s, stroke-opacity .15s}
-    .overview-deck .ov-card:hover rect{stroke-opacity:1}
     .p-eol-banner{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);
       border-radius:8px;padding:10px 12px;margin-bottom:14px}
     .p-eos-banner{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);
@@ -4656,19 +4663,63 @@ function updatePillarLegend(show){
   el.setAttribute("aria-hidden", "false");
 }
 
+function isLightTheme(){
+  return document.documentElement.getAttribute("data-theme") === "light";
+}
+
+function overviewDeckTheme(){
+  if (isLightTheme()){
+    return {
+      accent: "#006e8f",
+      cardBorder: "#006e8f",
+      connStroke: "#334155",
+      connLabel: "#07182d",
+      aiText: "#334155",
+      chevron: "#64748b",
+      chevronOpacity: [0.35, 0.55, 0.75],
+      cardFill: "rgba(255,255,255,0.55)"
+    };
+  }
+  return {
+    accent: OVERVIEW_DECK.accent,
+    cardBorder: "#5eb8d4",
+    connStroke: "#fff",
+    connLabel: "#fff",
+    aiText: "#fff",
+    chevron: "#fff",
+    chevronOpacity: [0.25, 0.47, 0.69],
+    cardFill: "transparent"
+  };
+}
+
 function ensureOverviewDefs(){
-  if (defs.select("#overview-resilience-grad").size()) return;
-  const lg = defs.append("linearGradient").attr("id", "overview-resilience-grad")
-    .attr("x1", "0%").attr("y1", "0%").attr("x2", "100%").attr("y2", "0%");
-  lg.append("stop").attr("offset", "0%").attr("stop-color", "#02C8FF");
-  lg.append("stop").attr("offset", "50%").attr("stop-color", "#d946ef");
-  lg.append("stop").attr("offset", "100%").attr("stop-color", "#FF9000");
+  const T = overviewDeckTheme();
+  if (!defs.select("#overview-resilience-grad").size()){
+    const lg = defs.append("linearGradient").attr("id", "overview-resilience-grad")
+      .attr("x1", "0%").attr("y1", "0%").attr("x2", "100%").attr("y2", "0%");
+    lg.append("stop").attr("offset", "0%").attr("stop-color", "#02C8FF");
+    lg.append("stop").attr("offset", "50%").attr("stop-color", "#d946ef");
+    lg.append("stop").attr("offset", "100%").attr("stop-color", "#FF9000");
+  }
+  if (!defs.select("#ov-card-glow").size()){
+    const f = defs.append("filter").attr("id", "ov-card-glow").attr("x", "-20%").attr("y", "-20%").attr("width", "140%").attr("height", "140%");
+    f.append("feDropShadow").attr("dx", 0).attr("dy", 4).attr("stdDeviation", 6)
+      .attr("flood-color", isLightTheme() ? "#07182d" : "#02C8FF").attr("flood-opacity", isLightTheme() ? 0.12 : 0.22);
+  } else {
+    defs.select("#ov-card-glow feDropShadow")
+      .attr("flood-color", isLightTheme() ? "#07182d" : "#02C8FF")
+      .attr("flood-opacity", isLightTheme() ? 0.12 : 0.22);
+  }
   const mk = (id, orient) => {
-    defs.append("marker").attr("id", id).attr("viewBox", "0 0 10 10")
-      .attr("refX", orient === "r" ? 9 : 1).attr("refY", 5)
-      .attr("markerWidth", 6).attr("markerHeight", 6)
-      .attr("orient", orient === "r" ? "auto" : "auto-start-reverse")
-      .append("path").attr("d", "M 0 0 L 10 5 L 0 10 z").attr("fill", "#fff");
+    let m = defs.select(`#${id}`);
+    if (!m.size()){
+      m = defs.append("marker").attr("id", id).attr("viewBox", "0 0 10 10")
+        .attr("refX", orient === "r" ? 9 : 1).attr("refY", 5)
+        .attr("markerWidth", 6).attr("markerHeight", 6)
+        .attr("orient", orient === "r" ? "auto" : "auto-start-reverse");
+      m.append("path").attr("d", "M 0 0 L 10 5 L 0 10 z");
+    }
+    m.select("path").attr("fill", T.connStroke);
   };
   mk("ov-arrow-r", "r");
   mk("ov-arrow-l", "l");
@@ -4679,6 +4730,7 @@ function updateOverviewDeck(){
   if (viewMode !== "overview") return;
   ensureOverviewDefs();
   const D = OVERVIEW_DECK;
+  const T = overviewDeckTheme();
   const g = lyr.append("g").attr("class", "overview-deck");
 
   const connG = g.append("g").attr("class", "ov-conn").style("pointer-events", "none");
@@ -4689,31 +4741,34 @@ function updateOverviewDeck(){
   connG.append("line")
     .attr("x1", -span).attr("y1", D.connY)
     .attr("x2", -gapHalf).attr("y2", D.connY)
-    .attr("stroke", "#fff").attr("stroke-width", 1)
+    .attr("stroke", T.connStroke).attr("stroke-width", 1)
     .attr("marker-start", "url(#ov-arrow-l)");
   connG.append("line")
     .attr("x1", gapHalf).attr("y1", D.connY)
     .attr("x2", span).attr("y2", D.connY)
-    .attr("stroke", "#fff").attr("stroke-width", 1)
+    .attr("stroke", T.connStroke).attr("stroke-width", 1)
     .attr("marker-end", "url(#ov-arrow-r)");
   connG.append("text")
     .attr("x", 0).attr("y", D.connY + 5)
     .attr("text-anchor", "middle")
-    .attr("fill", "#fff")
+    .attr("fill", T.connLabel)
     .style("font-size", "13px")
     .style("font-weight", "500")
     .text(connLabel);
 
   function drawCard(spec){
     const { cx, cy, w, h, pillarId, label, gradient, centered } = spec;
+    const tx = cx - w / 2;
+    const ty = cy - h / 2;
+    const baseTransform = `translate(${tx},${ty})`;
     const card = g.append("g").attr("class", "ov-card")
-      .attr("transform", `translate(${cx - w / 2},${cy - h / 2})`)
+      .attr("transform", baseTransform)
       .style("cursor", "pointer");
     const border = card.append("rect").attr("class", "ov-border")
       .attr("width", w).attr("height", h)
       .attr("rx", gradient ? 6 : 4)
-      .attr("fill", "transparent")
-      .attr("stroke", gradient ? "url(#overview-resilience-grad)" : "#5eb8d4")
+      .attr("fill", T.cardFill)
+      .attr("stroke", gradient ? "url(#overview-resilience-grad)" : T.cardBorder)
       .attr("stroke-width", gradient ? 2 : 1.5)
       .attr("stroke-opacity", gradient ? 1 : 0.85);
     const iconSize = 40;
@@ -4728,7 +4783,7 @@ function updateOverviewDeck(){
       .attr("preserveAspectRatio", "xMidYMid meet");
     const textEl = content.append("text")
       .attr("x", contentX + iconSize + gap).attr("y", h / 2 + 6)
-      .attr("fill", D.accent)
+      .attr("fill", T.accent)
       .style("font-size", `${textSize}px`)
       .style("font-weight", "600")
       .text(label);
@@ -4749,14 +4804,19 @@ function updateOverviewDeck(){
       applyViewLevel("families", { focusPillar: pillarId });
     });
     card.on("mouseover", ev => {
-      border.attr("stroke-width", gradient ? 2.5 : 2).attr("stroke-opacity", 1);
+      card.attr("transform", `translate(${tx},${ty - 3})`).attr("filter", "url(#ov-card-glow)");
+      border.attr("stroke-opacity", 1);
       document.getElementById("tn").textContent = label;
       document.getElementById("tc").textContent = `${p.promise} · ${familiesInPillar(pillarId)} families · Click for all pillars · Double-click to focus`;
       tipEl.style.display = "block";
       moveTip(ev);
     });
     card.on("mousemove", moveTip);
-    card.on("mouseout", () => { border.attr("stroke-width", gradient ? 2 : 1.5).attr("stroke-opacity", gradient ? 1 : 0.85); hideTip(); });
+    card.on("mouseout", () => {
+      card.attr("transform", baseTransform).attr("filter", null);
+      border.attr("stroke-opacity", gradient ? 1 : 0.85);
+      hideTip();
+    });
   }
 
   drawCard({ cx: D.leftCx, cy: D.topY, w: D.topW, h: D.topH, pillarId: "ai-dc", label: "AI-ready data centers" });
@@ -4770,8 +4830,8 @@ function updateOverviewDeck(){
         .attr("x", dir * (108 + i * 16))
         .attr("y", D.aiY + 5)
         .attr("text-anchor", dir < 0 ? "end" : "start")
-        .attr("fill", "#fff")
-        .attr("opacity", 0.25 + i * 0.22)
+        .attr("fill", T.chevron)
+        .attr("opacity", T.chevronOpacity[i])
         .style("font-size", "16px")
         .style("font-weight", "600")
         .text(dir < 0 ? "‹" : "›");
@@ -4780,7 +4840,7 @@ function updateOverviewDeck(){
   aiG.append("text")
     .attr("x", 0).attr("y", D.aiY + 5)
     .attr("text-anchor", "middle")
-    .attr("fill", "#fff")
+    .attr("fill", T.aiText)
     .style("font-size", "14px")
     .style("font-weight", "500")
     .text(ONE_CISCO.aiLabel);
@@ -8185,7 +8245,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.30.1";
+const APP_VERSION   = "2.30.2";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -8476,6 +8536,10 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.30.2", date:"2026-06-20", items:[
+    "Light theme — stronger text/surface contrast, theme-aware Overview deck (connectors, labels, pillar cards), and pillar legend styling.",
+    "Overview — fix pillar cards shaking on hover (CSS transform was overriding SVG positioning; hover lift now uses SVG transform + glow filter)."
+  ]},
   {ver:"2.30.1", date:"2026-06-20", items:[
     "All Products — fix Room Systems (and other) product nodes showing as white icon rings; product nodes now get proper category-colored fills and icons instead of inheriting Composition matrix styling."
   ]},
@@ -13097,6 +13161,11 @@ function initAmbientBackground(){
 /* ════════════════════════════════════════════════════════════════════════
    BOOT — assemble everything
    ════════════════════════════════════════════════════════════════════════*/
+function refreshThemeVisuals(){
+  ensureOverviewDefs();
+  if (viewMode === "overview") updateOverviewDeck();
+}
+
 function wireThemeToggle(){
   const btn = document.getElementById("theme-toggle");
   if (!btn) return;
@@ -13106,6 +13175,7 @@ function wireThemeToggle(){
     else document.documentElement.removeAttribute("data-theme");
     btn.textContent = theme === "light" ? "🌙 Dark" : "☀ Light";
     btn.title = theme === "light" ? "Switch to dark theme" : "Switch to light theme (presentations)";
+    refreshThemeVisuals();
   };
   let theme = "dark";
   try { theme = localStorage.getItem(KEY) || "dark"; } catch (e){}
