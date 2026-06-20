@@ -10880,6 +10880,11 @@ function insertDcloudLinks(id, kind){
   sec.className = "p-sec p-dcloud";
   sec.innerHTML = `<div class="p-dcloud-card">${renderDcloudSectionBody(entries)}</div>`;
 
+  // Prefer directly under Device Matrix (3D showroom); else under description on family panels.
+  const matrix = pb.querySelector(".p-matrix-link");
+  if (matrix){ matrix.insertAdjacentElement("afterend", sec); return; }
+  const desc = pb.querySelector(".p-desc");
+  if (desc){ desc.insertAdjacentElement("afterend", sec); return; }
   const anchor = pb.querySelector(".add-stack-btn");
   if (anchor) pb.insertBefore(sec, anchor);
   else pb.appendChild(sec);
@@ -10912,10 +10917,10 @@ function enhanceProductPanel(id){
     renderBreadcrumbs();
     insertProductHero(id, "product");
     insertMatrixLink(id, "product");
+    insertDcloudLinks(id, "product");
     const p = prodById[id];
     if (p) insertTierBadge(p.family);
     insertFieldNotice(id);
-    insertDcloudLinks(id, "product");
     insertPinAndCompareBtns(id, "product");
   }, 0);
 }
