@@ -4833,13 +4833,7 @@ function captureBundledTHREE(){
     if (o.type === "Group" && o !== scene && !THREE.Group) THREE.Group = o.constructor;
   });
   if (!THREE.Group || THREE.Group === scene.constructor) THREE.Group = nodesHolder?.constructor || null;
-  if (!THREE.Sprite && window.SpriteText){
-    try {
-      const probe = new window.SpriteText(".");
-      THREE.Sprite = probe.constructor;
-      if (probe.material) THREE.SpriteMaterial = probe.material.constructor;
-    } catch (e){ /* sprite probe optional */ }
-  }
+  mergeSpatialThreeExtras(THREE);
   window.__cpnTHREE = THREE;
   spatialState.threeCaptured = true;
   return THREE;
@@ -4872,22 +4866,33 @@ function ensureSpatialNodeRenderer(attempt){
   return true;
 }
 
+function mergeSpatialThreeExtras(THREE){
+  const extras = window.__cpnThreeExtras;
+  if (!extras || !THREE) return THREE;
+  if (extras.Sprite) THREE.Sprite = extras.Sprite;
+  if (extras.SpriteMaterial) THREE.SpriteMaterial = extras.SpriteMaterial;
+  if (extras.CanvasTexture) THREE.CanvasTexture = extras.CanvasTexture;
+  return THREE;
+}
+
 function finishSpatialGraphSetup(){
   return ensureSpatialNodeRenderer(0);
 }
 
 function ensureSpatialTHREE(){
   if (window.__cpnTHREE?.__bundled){
-    if (!window.__cpnTHREE.Sprite && window.SpriteText){
-      try {
-        const probe = new window.SpriteText(".");
-        window.__cpnTHREE.Sprite = probe.constructor;
-        if (probe.material) window.__cpnTHREE.SpriteMaterial = probe.material.constructor;
-      } catch (e){ /* optional */ }
-    }
+    mergeSpatialThreeExtras(window.__cpnTHREE);
     return window.__cpnTHREE;
   }
   return captureBundledTHREE();
+}
+
+function spatialMakeTexture(source){
+  const THREE = ensureSpatialTHREE();
+  if (!THREE?.CanvasTexture || !source) return null;
+  const tex = new THREE.CanvasTexture(source);
+  tex.needsUpdate = true;
+  return tex;
 }
 
 const SPATIAL_NODE_REL = 4.2;
@@ -5055,12 +5060,14 @@ function preloadSpatialTiles(nodes){
 
 function getSpatialTileSprite(node, radius, profile){
   const THREE = ensureSpatialTHREE();
-  if (!THREE?.Sprite || !THREE?.SpriteMaterial) return null;
+  if (!THREE?.Sprite || !THREE?.SpriteMaterial || !THREE?.CanvasTexture) return null;
   const key = spatialTileCacheKey(node);
   const entry = spatialState.tileCache.get(key);
   if (!entry?.ready || !entry.image) return null;
+  const map = spatialMakeTexture(entry.image);
+  if (!map) return null;
   const mat = new THREE.SpriteMaterial({
-    map: { image: entry.image, needsUpdate: true },
+    map,
     transparent: true,
     depthWrite: false,
     opacity: 0.98
@@ -5074,7 +5081,7 @@ function getSpatialTileSprite(node, radius, profile){
 
 function createSpatialTilePlaceholder(node, radius, profile){
   const THREE = ensureSpatialTHREE();
-  if (!THREE?.Sprite || !THREE?.SpriteMaterial) return null;
+  if (!THREE?.Sprite || !THREE?.SpriteMaterial || !THREE?.CanvasTexture) return null;
   const accent = spatialNodeAccent(node);
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 128;
@@ -5093,8 +5100,10 @@ function createSpatialTilePlaceholder(node, radius, profile){
       ctx.strokeRect(16, 20, 96, 88);
     }
   }
+  const map = spatialMakeTexture(canvas);
+  if (!map) return null;
   const mat = new THREE.SpriteMaterial({
-    map: { image: canvas, needsUpdate: true },
+    map,
     transparent: true,
     depthWrite: false,
     opacity: 0.82
@@ -5350,18 +5359,20 @@ function exitSpatialComposition(){
 }
 
 function loadSpriteTextLib(){
-  if (window.SpriteText) return Promise.resolve();
+  if (window.SpriteText && window.__cpnThreeExtras) return Promise.resolve();
   if (spatialState.spritePromise) return spatialState.spritePromise;
   spatialState.spritePromise = new Promise((resolve, reject) => {
     const onReady = () => {
-      if (window.SpriteText) resolve();
+      if (window.SpriteText && window.__cpnThreeExtras) resolve();
       else { spatialState.spritePromise = null; reject(new Error("sprite-export")); }
     };
     window.addEventListener("spatial-spritetext-ready", onReady, { once: true });
     const s = document.createElement("script");
     s.type = "module";
     s.textContent = `import SpriteText from "./vendor/three-spritetext.mjs";
+import { CanvasTexture, Sprite, SpriteMaterial } from "./vendor/three.module.min.js";
 window.SpriteText = SpriteText.default || SpriteText;
+window.__cpnThreeExtras = { CanvasTexture, Sprite, SpriteMaterial };
 window.dispatchEvent(new Event("spatial-spritetext-ready"));`;
     s.onerror = () => {
       window.removeEventListener("spatial-spritetext-ready", onReady);
@@ -7473,7 +7484,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.25.0";
+const APP_VERSION   = "2.25.1";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -7764,6 +7775,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.25.1", date:"2026-06-20", items:[
+    "Spatial — fix icon tiles rendering as [object Object] by using native Three.js Sprite/CanvasTexture instead of SpriteText for tile billboards."
+  ]},
   {ver:"2.25.0", date:"2026-06-20", items:[
     "Spatial — icon tiles on glass pedestals replace colored spheres: category shapes (hex, shield, screen, blade, gauge), wireframe rings, constellation family map vs product-orbit layouts; icons only (no mixed photos)."
   ]},
