@@ -2497,6 +2497,14 @@ document.getElementById("rst").addEventListener("click", resetAll);
 
 // Legend removed in v2.1 — category colors are evident in the top filter pills.
 
+// View state — must exist before zoom init (svg.call(zoom) fires synchronously).
+const VIEW_MODE_KEY  = "cpn-view-mode-v2";
+const VIEW_FOCUS_KEY = "cpn-view-focus-v2";
+let viewMode  = "families";   // "overview" | "families" | "composition" | "spatial"
+let viewFocus = null;         // family id when in composition mode
+let viewNodes = NODES.slice();
+let viewLinks = LINKS.slice();
+
 // D3 Graph
 const svgEl = document.getElementById("gs");
 const svg = d3.select(svgEl);
@@ -2973,7 +2981,7 @@ function iconKey(n) {
 const root = svg.append("g");
 const zoom = d3.zoom().scaleExtent([0.2,4]).on("zoom", ev => {
   root.attr("transform", ev.transform);
-  if (viewMode === "composition") updateCompositionLabelVisibility(ev.transform.k);
+  updateCompositionLabelVisibility(ev.transform.k);
 });
 svg.call(zoom);
 
@@ -3505,14 +3513,6 @@ window.toggleConnectionDepth = function(nodeId){
 // ═══════════════════════════════════════════════════════════════
 // VIEW LEVELS — Overview / Families / Composition
 // ═══════════════════════════════════════════════════════════════
-// Persistence keys for the user's preferred view mode and last focused family.
-const VIEW_MODE_KEY  = "cpn-view-mode-v2";
-const VIEW_FOCUS_KEY = "cpn-view-focus-v2";
-
-let viewMode  = "families";   // "overview" | "families" | "composition" | "spatial"
-let viewFocus = null;         // family id when in composition mode
-let viewNodes = NODES.slice();
-let viewLinks = LINKS.slice();
 
 // ── Synthesize Overview-mode nodes/links: one bubble per category.
 function buildOverviewView(){
@@ -5740,7 +5740,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.9.4";
+const APP_VERSION   = "2.9.5";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -6031,6 +6031,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.9.5", date:"2026-06-20", items:[
+    "Hotfix — restored page boot after Composition zoom handler referenced viewMode before initialization."
+  ]},
   {ver:"2.9.4", date:"2026-06-20", items:[
     "Composition polish — wider orbit for large families, dashed ring guide, softer spokes, stronger succession links.",
     "Photo nodes — inset thumbnails, neutral rings, green/purple glow on hover/select only, variant badges for shared matrix images.",
