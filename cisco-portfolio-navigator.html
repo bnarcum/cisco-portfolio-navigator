@@ -3429,6 +3429,7 @@ function compositionMatrixKey(p){
 const MATRIX_IMG_INSET = 0.72;
 let compositionHoverId = null;
 let compositionOrbitR = 0;
+let nodeClickTimer = null;
 
 const MATRIX_SITE = "https://bnarcum.github.io/collaboration-device-matrix/";
 const MATRIX_NODE_FILL = "#ffffff";
@@ -3750,11 +3751,16 @@ function nodeVisibleForFit(n){
   return true;
 }
 
-function applyGraphTransform(cx, cy, k){
+function applyGraphTransform(cx, cy, k, immediate){
   const {w, h} = getDims();
   const pw = panelOffsetW();
-  svg.transition().duration(480)
-    .call(zoom.transform, d3.zoomIdentity.translate((w - pw) / 2, h / 2).scale(k).translate(-cx, -cy));
+  const t = d3.zoomIdentity.translate((w - pw) / 2, h / 2).scale(k).translate(-cx, -cy);
+  if (immediate){
+    svg.interrupt();
+    svg.call(zoom.transform, t);
+  } else {
+    svg.transition().duration(480).call(zoom.transform, t);
+  }
 }
 
 function fitCompositionView(){
@@ -3763,7 +3769,7 @@ function fitCompositionView(){
   const r = (compositionOrbitR || 160) + 40;
   const diameter = (r + 32) * 2;
   const k = Math.min(1.05, Math.max(0.55, Math.min(w - pw - 48, h - 90) / diameter));
-  applyGraphTransform(0, 0, k);
+  applyGraphTransform(0, 0, k, true);
 }
 
 function fitVisibleGraphView(fallbackScale){
@@ -3973,10 +3979,8 @@ function applyCompositionNodeStyles(){
     .attr("text-anchor", "middle")
     .style("opacity", null);
   applyCompositionLabelTextStyle(labelText);
-  ndEl.selectAll("rect.nl-bg")
-    .style("opacity", 0)
-    .attr("width", null)
-    .attr("height", null);
+  ndEl.selectAll("rect.nl-bg").remove();
+  labelText.style("dominant-baseline", null);
   if (lviz){
     lviz.attr("stroke", d => d.type === "succession" ? "#c084fc" : "#64748b")
       .attr("stroke-opacity", d => d.type === "succession" ? 0.62 : 0.28)
@@ -4317,15 +4321,22 @@ function rebindGraph(opts){
             } else if (d._kind === "product"){
               window.showProductDetail(d.id);
             } else {
-              selectNode(d);
+              clearTimeout(nodeClickTimer);
+              nodeClickTimer = setTimeout(() => {
+                nodeClickTimer = null;
+                selectNode(d);
+              }, 220);
             }
           })
           .on("dblclick",(ev,d)=>{
             ev.stopPropagation();
+            clearTimeout(nodeClickTimer);
+            nodeClickTimer = null;
             if (d._kind === "category" || d._kind === "pillar") return;
             if (d._kind === "product")  return;
             // Family node — drill in.
             if (PRODUCTS.some(p => p.family === d.id)){
+              svg.interrupt();
               applyViewLevel("composition", { focusFamily: d.id });
             }
           })
@@ -4644,7 +4655,14 @@ function buildCompositionView(familyId){
     _pinned: true,
     fx: 0, fy: 0, x: 0, y: 0,
     _badge: String(products.length),
-    _shortName: fam.name.replace(/^Cisco\s+/i, "")
+    _shortName: fam.name.replace(/^Cisco\s+/i, ""),
+    _pillarLabelRelY: undefined,
+    _pillarShowLabel: undefined,
+    _pillarCellW: undefined,
+    _pillarCellH: undefined,
+    _pillarCellTop: undefined,
+    _pillarCellBottom: undefined,
+    _pillarPinned: undefined
   });
 
   const nodes = [center];
@@ -5142,6 +5160,11 @@ function applyViewLevel(mode, opts){
     const v = buildOverviewView();
     viewNodes = v.nodes; viewLinks = v.links;
   } else if (mode === "composition"){
+    svg.interrupt();
+    clearTimeout(nodeClickTimer);
+    nodeClickTimer = null;
+    closePanel();
+    hideTip();
     const v = buildCompositionView(viewFocus);
     viewNodes = v.nodes; viewLinks = v.links;
   } else if (mode === "all-products"){
@@ -6866,7 +6889,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.22.6";
+const APP_VERSION   = "2.22.7";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -7157,6 +7180,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.22.7", date:"2026-06-20", items:[
+    "Composition — cancel pillar click-to-pan before drill-in; remove nl-bg pills; snap orbit fit instantly so family centers on entry."
+  ]},
   {ver:"2.22.6", date:"2026-06-20", items:[
     "Composition — hide stale Families zoom label pills (nl-bg) on entry; fit orbit view immediately so labels no longer jumble at center."
   ]},
