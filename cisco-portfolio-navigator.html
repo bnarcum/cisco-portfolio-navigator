@@ -3566,6 +3566,42 @@ function applyAllProductsLabelStyles(selectedNode){
     });
 }
 
+function applyAllProductsNodeStyles(selectedNode){
+  if (!ndEl || viewMode !== "all-products") return;
+  const conn = selectedNode ? connectionNodeSet(selectedNode.id, connectionHighlightDepth) : null;
+  ndEl.each(function(d){
+    const g = d3.select(this);
+    const isFamily = d._kind === "family";
+    const p = d._productRef || prodById[d.id];
+    const color = catColor(d.category);
+    const isSel = selectedNode && d.id === selectedNode.id;
+    const isConn = selectedNode && conn?.has(d.id);
+    const isHov = d.id === pillarHoverId;
+    const hot = isSel || isHov || isConn;
+    const inStk = stack.has(d.id);
+    g.select(".gr")
+      .attr("r", d._r + (isFamily ? 9 : 4))
+      .attr("fill", color)
+      .attr("fill-opacity", hot ? 0.32 : (inStk ? 0.26 : (isFamily ? 0.14 : 0.1)))
+      .attr("filter", "url(#glow)");
+    g.select(".mc")
+      .attr("r", d._r)
+      .attr("fill", color)
+      .attr("fill-opacity", hot || inStk ? 1 : 0.88)
+      .attr("stroke", isSel ? "#ffffff" : (inStk ? "#FFD700" : (p?.status === "eol" ? "#ef4444" : p?.status === "eos" ? "#FF9000" : "transparent")))
+      .attr("stroke-width", isSel ? 2.2 : (inStk || (p?.status && p.status !== "current") ? 1.4 : 0))
+      .attr("stroke-opacity", 1);
+    g.select("image.pimg").remove();
+    g.select("circle.mring").attr("stroke", "transparent").attr("stroke-width", 0);
+    g.select("use.icn")
+      .attr("href", "#icon-" + iconKey(d))
+      .style("display", null)
+      .attr("opacity", hot || inStk ? 1 : 0.9);
+    g.select(".node-scaler").attr("transform", hot ? "scale(1.08)" : null);
+  });
+  applyAllProductsLabelStyles(selectedNode);
+}
+
 // D3 Graph
 const svgEl = document.getElementById("gs");
 const svg = d3.select(svgEl);
@@ -4068,7 +4104,7 @@ function compositionLabelStyle(d){
 
 function resetStandardLabelStyles(){
   if (!ndEl) return;
-  if (viewMode === "all-products"){ applyAllProductsLabelStyles(selected); return; }
+  if (viewMode === "all-products"){ applyAllProductsNodeStyles(selected); return; }
   if (usePillarLayout()){ applyPillarLabelStyles(selected); return; }
   ndEl.selectAll("text.nl")
     .attr("y", d => d._r + 14)
@@ -4863,7 +4899,7 @@ function rebindGraph(opts){
                 const zf = singlePillarFocused() ? 0 : pillarZoomLabelFade(zk);
                 if (zf === 0 && d !== selected) showNodeTip(ev, d);
               }
-              else if (viewMode === "all-products"){ pillarHoverId = d.id; applyAllProductsLabelStyles(selected); }
+              else if (viewMode === "all-products"){ pillarHoverId = d.id; applyAllProductsNodeStyles(selected); }
               if (d !== selected) showNodeTip(ev, d);
             }
           })
@@ -4878,7 +4914,7 @@ function rebindGraph(opts){
               applyPillarNodeVisualState(selected);
             } else if (viewMode === "all-products"){
               pillarHoverId = null;
-              applyAllProductsLabelStyles(selected);
+              applyAllProductsNodeStyles(selected);
             }
             hideTip();
           });
@@ -4906,19 +4942,24 @@ function rebindGraph(opts){
   if (viewMode === "families" && !pillarMode){
     viewNodes.forEach(n => { if (nodeById[n.id]) n._r = rscale(degree[n.id] || 0); });
   }
-  ndEl.select("circle.mc").each(function(d){
-    if (!nodeById[d.id]) return;
-    const el = d3.select(this);
-    if (pillarMode){
-      const fill = pillarColorForFamily(d.id);
-      el.attr("fill", fill).attr("fill-opacity", 0.88)
-        .attr("stroke", fill)
-        .attr("stroke-width", 2.2).attr("stroke-opacity", 0.95);
-    } else {
-      el.attr("stroke", d._hasImage ? MATRIX_NODE_RING : "transparent")
-        .attr("stroke-width", d._hasImage ? 1.4 : 2.5).attr("stroke-opacity", 1);
-    }
-  });
+  if (viewMode === "all-products"){
+    applyAllProductsNodeStyles(selected);
+  } else {
+    ndEl.select("circle.mc").each(function(d){
+      if (!nodeById[d.id]) return;
+      const el = d3.select(this);
+      if (pillarMode){
+        const fill = pillarColorForFamily(d.id);
+        el.attr("fill", fill).attr("fill-opacity", 0.88)
+          .attr("stroke", fill)
+          .attr("stroke-width", 2.2).attr("stroke-opacity", 0.95);
+      } else {
+        el.attr("fill", d._hasImage ? MATRIX_NODE_FILL : catColor(d.category))
+          .attr("stroke", d._hasImage ? MATRIX_NODE_RING : "transparent")
+          .attr("stroke-width", d._hasImage ? 1.4 : 2.5).attr("stroke-opacity", 1);
+      }
+    });
+  }
   if (lviz){
     lviz.attr("stroke", l => {
       if (!pillarMode) return l.type === "direct" ? "#4a5568" : "#2d3748";
@@ -4935,6 +4976,7 @@ function rebindGraph(opts){
   }
   if (viewMode === "composition") applyCompositionNodeStyles();
   else if (usePillarLayout()){ applyPillarLabelStyles(selected); applyPillarNodeVisualState(selected); }
+  else if (viewMode === "all-products") applyAllProductsNodeStyles(selected);
   else resetStandardLabelStyles();
   updateCompositionHint();
   updatePillarGuides();
@@ -5114,7 +5156,9 @@ function buildAllProductsView(){
     id: p.id, name: p.name, category: p.category,
     _kind: "product", _r: 7,
     _productRef: p, _family: p.family,
-    _iconKey: productIconKey(p)
+    _iconKey: productIconKey(p),
+    _hasImage: false,
+    _status: p.status
   }));
   // Family-to-family edges (preserve the original adjacency map).
   // IMPORTANT: D3's link force mutates LINKS in place, replacing string IDs
@@ -6432,6 +6476,19 @@ function applyConnectionHighlight(d, depth = connectionHighlightDepth){
     applyCompositionNodeStyles();
     return;
   }
+  if (viewMode === "all-products"){
+    applyAllProductsNodeStyles(d);
+    const conn = connectionNodeSet(d.id, depth);
+    if (lviz) lviz.each(function(l){
+      const s = sid(l), t = tid(l);
+      const inSet = conn.has(s) && conn.has(t);
+      const mine = s === d.id || t === d.id;
+      d3.select(this).attr("stroke", inSet ? catColor(d.category) : "#0d2847")
+        .attr("stroke-opacity", inSet ? (mine ? 1 : .55) : .06)
+        .attr("stroke-width", inSet ? (mine ? (l.type === "direct" ? 2.5 : 1.5) : 1.2) : (l.type === "direct" ? 1.8 : 1));
+    });
+    return;
+  }
   if (usePillarLayout()){
     applyPillarNodeVisualState(d);
     applyPillarLabelStyles(d);
@@ -6492,6 +6549,10 @@ function resetHL() {
     if (spatialState.graph) refreshSpatialNodeVisuals();
     return;
   }
+  if (viewMode === "all-products"){
+    applyAllProductsNodeStyles(null);
+    return;
+  }
   if (viewMode === "composition"){
     compositionHoverId = null;
     applyCompositionNodeStyles();
@@ -6533,6 +6594,22 @@ function highlightStack() {
   if (viewMode === "composition"){
     if (selected) return;
     resetHL();
+    return;
+  }
+  if (viewMode === "all-products"){
+    if (selected) return;
+    if (!stack.size){ resetHL(); return; }
+    applyAllProductsNodeStyles(null);
+    ndEl.each(function(nd){
+      if (stack.has(nd.id)) return;
+      d3.select(this).select(".mc").attr("fill-opacity", 0.22);
+      d3.select(this).select(".icn").attr("opacity", 0.2);
+    });
+    lviz.each(function(l){
+      const s=sid(l),t=tid(l),both=stack.has(s)&&stack.has(t);
+      d3.select(this).attr("stroke",both?"#525E6C":"#0d2847")
+        .attr("stroke-opacity",both?.6:.04).attr("stroke-width",both?2:1);
+    });
     return;
   }
   if(selected) return; if(!stack.size){ resetHL(); return; }
@@ -8108,7 +8185,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.30.0";
+const APP_VERSION   = "2.30.1";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -8399,6 +8476,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.30.1", date:"2026-06-20", items:[
+    "All Products — fix Room Systems (and other) product nodes showing as white icon rings; product nodes now get proper category-colored fills and icons instead of inheriting Composition matrix styling."
+  ]},
   {ver:"2.30.0", date:"2026-06-20", items:[
     "Visual polish — frosted-glass top bar, action bar, detail panel, and Account Planner; light presentation theme toggle.",
     "Families — dimmed cross-pillar links, focus-mode canvas dimming, node glow hierarchy (hover/select/stack), connectivity spine + family stats on pillar panels.",
