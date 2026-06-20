@@ -826,7 +826,7 @@ const PILLAR_MIN_CELL_W = 72;
 const PILLAR_MIN_CELL_H = 94;
 const PILLAR_ICON_ONLY_CELL_H = 58;
 const PILLAR_CELL_TOP_PAD = 8;
-const PILLAR_LABEL_GAP = 8;
+const PILLAR_LABEL_GAP = 10;
 const PILLAR_TITLE_BAND = 32;
 const PILLAR_LABEL_HEIGHT = 14;
 const PILLAR_LABEL_ZOOM_K = 1.15;
@@ -2667,6 +2667,10 @@ function pillarZoomLabelFade(k){
 function pillarZoomLabelMaxLen(cellW, k){
   return Math.max(12, Math.min(22, Math.floor((cellW || PILLAR_MIN_CELL_W) * k / 4.2)));
 }
+function pillarLabelY(d, k){
+  const fontPx = PILLAR_LABEL_BASE_PX / k;
+  return d._r + PILLAR_GLOW_PAD / k + PILLAR_LABEL_GAP / k + fontPx * 0.08;
+}
 function pillarLabelMaxLen(cellW){
   if (singlePillarFocused())
     return Math.max(12, Math.min(22, Math.floor(cellW / 3.8)));
@@ -3003,8 +3007,9 @@ function applyPillarLabelStyles(selectedNode){
       if (zoomFade > 0) return pillarShortName(d.name, pillarZoomLabelMaxLen(d._pillarCellW, k));
       return d._shortName || d.name;
     })
-    .attr("y", d => d._r + PILLAR_LABEL_GAP / k)
-    .style("dominant-baseline", "hanging")
+    .attr("y", d => pillarLabelY(d, k))
+    .style("text-anchor", "middle")
+    .style("dominant-baseline", "text-before-edge")
     .style("opacity", d => {
       if (selectedNode && (d.id === selectedNode.id || conn?.has(d.id))) return 1;
       if (d.id === pillarHoverId) return 1;
@@ -3476,7 +3481,7 @@ function buildNodeGroup(sel){
     .style("color", "#ffffff")
     .style("pointer-events", "none")
     .style("display", d => d._hasImage ? "none" : null);
-  const lwrap = inner.append("g").attr("class", "nl-wrap").style("pointer-events", "none");
+  const lwrap = sel.append("g").attr("class", "nl-wrap").style("pointer-events", "none");
   lwrap.append("text").attr("class","nl")
     .attr("y", d => d._r + 14).text(d => d._shortName || d.name)
     .style("font-size","11px").style("font-weight","500").style("fill", GRAPH_LABEL.default)
@@ -6623,7 +6628,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.16.2";
+const APP_VERSION   = "2.16.3";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -6914,6 +6919,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.16.3", date:"2026-06-17", items:[
+    "Families — fixed zoom labels overlapping icons: labels sit outside the node-scaler, use text-before-edge baseline, and a clearer offset below the glow ring."
+  ]},
   {ver:"2.16.2", date:"2026-06-17", items:[
     "Families — zoom in on the all-pillars view to progressively reveal family labels (counter-scaled text so spacing grows faster than label width); single-pillar focus still shows all labels immediately."
   ]},
