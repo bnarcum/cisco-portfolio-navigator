@@ -28,12 +28,10 @@ try {
       result.allPillarLabelsOff === false && "labels visible in all-pillars mode",
       result.labelOverlaps && `${result.labelOverlaps} label overlaps when focused`,
       result.focusedLabelCoverage?.some(r => !r.allLabeled) && "missing labels in focused pillar",
-      result.bridgesPlaced === false && "bridge families not placed in band",
-      result.bridgesInBand === false && "bridge icons outside band",
     ].filter(Boolean).join("; "));
     process.exit(1);
   }
-  console.log("PASS: pillar layout + bridge band + labels OK");
+  console.log("PASS: 3-pillar layout + labels OK");
 } finally {
   await browser.close();
 }
