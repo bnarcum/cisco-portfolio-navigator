@@ -834,6 +834,31 @@ const PILLAR_LABEL_ZOOM_FADE = 0.28;
 const PILLAR_LABEL_BASE_PX = 10;
 
 const CONNECTIVITY_SET = new Set(ONE_CISCO.connectivity.families);
+/** Dual-membership bridge map — families rendered once in the overlap band (Option C). */
+const FAMILY_BRIDGE_PILLARS = {
+  "sdwan": ["workplaces", "resilience"],
+  "meraki-mx": ["workplaces", "resilience"],
+  "isr-routers": ["workplaces", "resilience"],
+  "wan-routers": ["workplaces", "resilience"],
+  "secure-routers": ["workplaces", "resilience"],
+  "secure-access": ["workplaces", "resilience"],
+  "duo": ["workplaces", "resilience"],
+  "umbrella": ["workplaces", "resilience"],
+  "ise": ["workplaces", "resilience"],
+  "catalyst-center": ["ai-dc", "workplaces", "resilience"]
+};
+const BRIDGE_BAND = {
+  id: "connectivity",
+  label: ONE_CISCO.connectivity.label,
+  shortLabel: ONE_CISCO.connectivity.shortLabel,
+  color: ONE_CISCO.connectivity.color,
+  cx: 0, cy: 24, w: 700, h: 100
+};
+const BRIDGE_ZONE_INSETS = {
+  "ai-dc": { left: 0.05, top: 0.15, right: 0.48, bottom: 0.30 },
+  "workplaces": { left: 0.50, top: 0.15, right: 0.05, bottom: 0.40 },
+  "resilience": { left: 0.08, top: 0.44, right: 0.08, bottom: 0.06 }
+};
 const AI_DC_SET = new Set([
   "nexus", "aci", "nexus-one", "silicon-one", "ucs", "hyperflex", "intersight"
 ]);
@@ -2565,6 +2590,49 @@ NODES.forEach(n => {
   else FAMILY_PILLAR[n.id] = "resilience";
 });
 function familyPillar(familyId){ return FAMILY_PILLAR[familyId] || "resilience"; }
+function isBridgeFamily(id){ return CONNECTIVITY_SET.has(id); }
+function bridgePillarsFor(id){ return FAMILY_BRIDGE_PILLARS[id] || ["workplaces", "resilience"]; }
+function activePillarSet(){
+  return allPillarsSelected() ? new Set(PILLAR_IDS) : activePillars;
+}
+function shouldShowBridgeBand(){
+  if (singlePillarFocused()) return false;
+  return allPillarsSelected() || activePillars.size >= 2;
+}
+function bridgeConnectsActive(id){
+  const bp = bridgePillarsFor(id);
+  const active = activePillarSet();
+  const hits = bp.filter(p => active.has(p) && pillarIsVisible(p));
+  return allPillarsSelected() ? hits.length >= 2 : hits.length >= 2;
+}
+function visibleBridgeFamilies(visibleIds){
+  return NODES.filter(n => visibleIds.has(n.id) && isBridgeFamily(n.id) && bridgeConnectsActive(n.id))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+function familyInPillarView(n, pillarId){
+  if (familyPillar(n.id) === pillarId) return true;
+  return isBridgeFamily(n.id) && bridgePillarsFor(n.id).includes(pillarId);
+}
+function bridgeRingStroke(node){
+  const bp = node._bridgePillars || bridgePillarsFor(node.id);
+  if (bp.length >= 3 || (bp.includes("ai-dc") && bp.includes("workplaces") && bp.includes("resilience")))
+    return "url(#pillar-bridge-triple-grad)";
+  return "url(#pillar-bridge-wp-res-grad)";
+}
+function ensureBridgeGradients(){
+  if (defs.select("#pillar-bridge-wp-res-grad").size()) return;
+  const g1 = defs.append("linearGradient").attr("id", "pillar-bridge-wp-res-grad")
+    .attr("x1", "0%").attr("y1", "0%").attr("x2", "100%").attr("y2", "0%");
+  g1.append("stop").attr("offset", "0%").attr("stop-color", "#2dce5c");
+  g1.append("stop").attr("offset", "50%").attr("stop-color", "#02C8FF");
+  g1.append("stop").attr("offset", "100%").attr("stop-color", "#FF9000");
+  const g2 = defs.append("linearGradient").attr("id", "pillar-bridge-triple-grad")
+    .attr("x1", "0%").attr("y1", "0%").attr("x2", "100%").attr("y2", "0%");
+  g2.append("stop").attr("offset", "0%").attr("stop-color", "#0A60FF");
+  g2.append("stop").attr("offset", "40%").attr("stop-color", "#2dce5c");
+  g2.append("stop").attr("offset", "70%").attr("stop-color", "#02C8FF");
+  g2.append("stop").attr("offset", "100%").attr("stop-color", "#FF9000");
+}
 function pillarMeta(pillarId){
   if (pillarId === "connectivity") return ONE_CISCO.connectivity;
   return PILLAR_BY_ID[pillarId] || null;
@@ -2596,6 +2664,8 @@ function bboxesOverlap(a, b, gap){
 function zoneContentInset(zone){
   if (singlePillarFocused() && focusedPillarId() === zone.id)
     return { left: 0.06, top: 0.11, right: 0.06, bottom: 0.07 };
+  if (shouldShowBridgeBand() && BRIDGE_ZONE_INSETS[zone.id])
+    return BRIDGE_ZONE_INSETS[zone.id];
   return zone.contentInset || { left: 0.08, top: 0.14, right: 0.08, bottom: 0.08 };
 }
 function pillarContentArea(zoneRect){
@@ -2690,10 +2760,15 @@ function pillarLabelTextBBox(n){
   };
 }
 function pillarAnchorForFamily(familyId, visibleIds){
+  if (isBridgeFamily(familyId) && shouldShowBridgeBand() && bridgeConnectsActive(familyId)){
+    const items = visibleBridgeFamilies(visibleIds || new Set(NODES.map(n => n.id)));
+    const idx = Math.max(0, items.findIndex(n => n.id === familyId));
+    if (idx >= 0) return bridgeNodePosition(BRIDGE_BAND, items.length, idx);
+  }
   const pid = familyPillar(familyId);
   const zone = PILLAR_ZONE_BY_ID[pid];
   if (!zone) return { x: 0, y: 0 };
-  const bucket = NODES.filter(n => familyPillar(n.id) === pid && (!visibleIds || visibleIds.has(n.id)));
+  const bucket = NODES.filter(n => familyInPillarView(n, pid) && (!visibleIds || visibleIds.has(n.id)));
   bucket.sort((a, b) => a.name.localeCompare(b.name));
   const idx = Math.max(0, bucket.findIndex(n => n.id === familyId));
   const n = bucket.length || 1;
@@ -2706,10 +2781,29 @@ function pillarAnchorForFamily(familyId, visibleIds){
   const row = Math.floor(idx / cols);
   return pillarNodeInCell(content, col, row, cols, rows);
 }
+function bridgeNodePosition(band, total, idx){
+  const cols = Math.min(5, Math.max(1, Math.ceil(total / 2)));
+  const rows = Math.ceil(total / cols);
+  const cellW = band.w / cols;
+  const cellH = band.h / rows;
+  const col = idx % cols;
+  const row = Math.floor(idx / cols);
+  const x0 = band.cx - band.w / 2;
+  const y0 = band.cy - band.h / 2;
+  return {
+    x: x0 + col * cellW + cellW * 0.5,
+    y: y0 + row * cellH + PILLAR_CELL_TOP_PAD + PILLAR_NODE_R,
+    cellW, cellH
+  };
+}
 function pillarNodeBBox(n){
-  const r = PILLAR_NODE_R + PILLAR_GLOW_PAD + 2;
+  const r = PILLAR_NODE_R + PILLAR_GLOW_PAD + 2 + (n._isBridge ? 2 : 0);
   const labelH = n._pillarShowLabel ? PILLAR_LABEL_GAP + PILLAR_LABEL_HEIGHT + 2 : 0;
-  return { minX: n.x - r, maxX: n.x + r, minY: n.y - r, maxY: n.y + r + labelH, pillar: familyPillar(n.id) };
+  return { minX: n.x - r, maxX: n.x + r, minY: n.y - r, maxY: n.y + r + labelH, pillar: familyPillar(n.id), bridge: !!n._isBridge };
+}
+function bboxInsideBridgeBand(box, slack){
+  if (!bridgeBandLayout) return false;
+  return bboxInsideZone(box, bridgeBandLayout, slack ?? 6);
 }
 function bboxInsideZone(box, zoneRect, slack){
   slack = slack ?? 6;
@@ -2735,15 +2829,27 @@ function __cpnPillarLayoutSelfTest(){
   const boxes = placed.map(pillarNodeBBox);
   const cross = [], within = [], outside = [];
   for (let i = 0; i < boxes.length; i++){
+    const n = placed[i];
+    if (n._isBridge){
+      if (!bboxInsideBridgeBand(boxes[i])) outside.push(n.id);
+      continue;
+    }
     const z = pillarZoneLayout?.[boxes[i].pillar];
-    if (z && !bboxInsideZone(boxes[i], z)) outside.push(placed[i].id);
+    if (z && !bboxInsideZone(boxes[i], z)) outside.push(n.id);
     for (let j = i + 1; j < boxes.length; j++){
       if (!bboxesOverlap(boxes[i], boxes[j], 4)) continue;
-      const pair = { a: placed[i].id, b: placed[j].id, pa: boxes[i].pillar, pb: boxes[j].pillar };
+      const na = placed[i], nb = placed[j];
+      if (na._isBridge && nb._isBridge) continue;
+      if (na._isBridge || nb._isBridge) continue;
+      const pair = { a: na.id, b: nb.id, pa: boxes[i].pillar, pb: boxes[j].pillar };
       if (boxes[i].pillar !== boxes[j].pillar) cross.push(pair);
       else within.push(pair);
     }
   }
+  const bridgeNodes = placed.filter(n => n._isBridge);
+  const bridgesInBand = bridgeNodes.length === 0 || bridgeNodes.every(n => bboxInsideBridgeBand(pillarNodeBBox(n)));
+  const expectedBridges = shouldShowBridgeBand() ? visibleBridgeFamilies(vis).length : 0;
+  const bridgesPlaced = bridgeNodes.length === expectedBridges;
   const allPillarLabelsOff = placed.every(n => !n._pillarShowLabel);
   const zs = PILLAR_LAYOUT.zones.map(z => pillarZoneLayout?.[z.id] || layoutZoneForItems(z, NODES.filter(n => familyPillar(n.id) === z.id)));
   const overlapPairs = [];
@@ -2756,7 +2862,7 @@ function __cpnPillarLayoutSelfTest(){
   for (const pid of PILLAR_IDS){
     focusPillarOnly(pid);
     pinPillarNodes(viewNodes, vis);
-    const inPillar = NODES.filter(n => familyPillar(n.id) === pid);
+    const inPillar = NODES.filter(n => familyInPillarView(n, pid));
     const allLabeled = inPillar.length > 0 && inPillar.every(n => n._pillarShowLabel);
     const labelBoxes = inPillar.map(pillarLabelTextBBox).filter(Boolean);
     for (let i = 0; i < labelBoxes.length; i++)
@@ -2768,13 +2874,17 @@ function __cpnPillarLayoutSelfTest(){
   return {
     ok: cross.length === 0 && within.length === 0 && outside.length === 0 && tripleOverlap
       && allPillarLabelsOff && labelOverlaps === 0
-      && focusedLabelCoverage.every(r => r.allLabeled),
+      && focusedLabelCoverage.every(r => r.allLabeled)
+      && bridgesPlaced && bridgesInBand,
     crossCollisions: cross.length,
     withinCollisions: within.length,
     outsideZone: outside.length,
     tripleZoneOverlap: tripleOverlap,
     allPillarLabelsOff,
     labelOverlaps,
+    bridgesPlaced,
+    bridgesInBand,
+    bridgeCount: bridgeNodes.length,
     focusedLabelCoverage,
     cross, within, outside, overlapPairs
   };
@@ -2849,6 +2959,7 @@ let activeUC    = "", activeInd = "";
 let activePillars = new Set();
 let pillarHoverId = null;
 let pillarZoneLayout = {};
+let bridgeBandLayout = null;
 let facetState = { status: new Set(["current"]), tier: new Set() };
 let selected    = null;
 let connectionHighlightDepth = 1;
@@ -2904,6 +3015,7 @@ function togglePillarFilter(pillarId){
   if (viewMode === "families") scheduleGraphFit("families");
 }
 function pinPillarNodes(nodes, visibleIds){
+  NODES.forEach(n => { n._isBridge = false; n._bridgePillars = null; });
   const buckets = pillarLayoutBuckets(visibleIds);
   pillarZoneLayout = {};
   PILLAR_LAYOUT.zones.forEach(z => {
@@ -2913,15 +3025,57 @@ function pinPillarNodes(nodes, visibleIds){
     pillarZoneLayout[z.id] = lz;
     layoutPillarGrid(lz, items);
   });
+  bridgeBandLayout = null;
+  if (shouldShowBridgeBand()){
+    const bridgeItems = visibleBridgeFamilies(visibleIds);
+    if (bridgeItems.length) layoutBridgeBand(bridgeItems);
+  }
 }
 function pillarLayoutBuckets(visibleIds){
   const buckets = { "ai-dc": [], workplaces: [], resilience: [] };
+  const inBridgeBand = shouldShowBridgeBand();
+  const fp = singlePillarFocused() ? focusedPillarId() : null;
+  const push = (pid, n) => { buckets[pid].push(n); };
   NODES.forEach(n => {
     if (!visibleIds.has(n.id)) return;
-    buckets[familyPillar(n.id)].push(n);
+    if (inBridgeBand && isBridgeFamily(n.id) && bridgeConnectsActive(n.id)) return;
+    if (fp){
+      if (familyInPillarView(n, fp)) push(fp, n);
+      return;
+    }
+    if (activePillars.size > 0){
+      const pid = familyPillar(n.id);
+      if (pillarIsVisible(pid)) push(pid, n);
+      return;
+    }
+    push(familyPillar(n.id), n);
   });
   Object.keys(buckets).forEach(k => buckets[k].sort((a, b) => a.name.localeCompare(b.name)));
   return buckets;
+}
+function layoutBridgeBand(items){
+  const band = { ...BRIDGE_BAND };
+  const n = items.length;
+  const cols = Math.min(5, Math.max(1, Math.ceil(n / 2)));
+  const rows = Math.ceil(n / cols);
+  band.h = Math.max(BRIDGE_BAND.h, rows * PILLAR_ICON_ONLY_CELL_H + 16);
+  band.w = Math.max(BRIDGE_BAND.w, cols * PILLAR_MIN_CELL_W + 20);
+  items.forEach((node, idx) => {
+    const pos = bridgeNodePosition(band, n, idx);
+    node.x = pos.x;
+    node.y = pos.y;
+    node.fx = pos.x;
+    node.fy = pos.y;
+    node._r = PILLAR_NODE_R;
+    node._isBridge = true;
+    node._bridgePillars = bridgePillarsFor(node.id);
+    node._shortName = pillarShortName(node.name, pillarLabelMaxLen(pos.cellW));
+    node._pillarCellW = pos.cellW;
+    node._pillarCellH = pos.cellH;
+    node._pillarShowLabel = false;
+    node._pillarPinned = true;
+  });
+  bridgeBandLayout = band;
 }
 function layoutPillarGrid(layoutZone, items){
   const n = items.length;
@@ -2947,6 +3101,10 @@ function layoutPillarGrid(layoutZone, items){
     node._pillarCellH = cellH;
     node._pillarShowLabel = showAllLabels;
     node._pillarPinned = true;
+    if (isBridgeFamily(node.id)){
+      node._isBridge = true;
+      node._bridgePillars = bridgePillarsFor(node.id);
+    }
   });
 }
 function unpinPillarNodes(nodes){
@@ -2999,7 +3157,7 @@ function forcePillar(alpha){
 function applyPillarLabelStyles(selectedNode){
   if (!ndEl || !usePillarLayout()) return;
   const k = svgEl ? d3.zoomTransform(svgEl).k : 1;
-  const zoomFade = allPillarsSelected() ? pillarZoomLabelFade(k) : 0;
+  const zoomFade = singlePillarFocused() ? 0 : pillarZoomLabelFade(k);
   const conn = selectedNode ? connectionNodeSet(selectedNode.id, connectionHighlightDepth) : null;
   ndEl.select("text.nl")
     .text(d => {
@@ -3450,6 +3608,10 @@ function buildNodeGroup(sel){
     .attr("fill-opacity", d => d._hasImage ? 1 : 0.88)
     .attr("stroke", d => d._hasImage ? MATRIX_NODE_RING : "transparent")
     .attr("stroke-width", d => d._hasImage ? 1.4 : 2.5);
+  inner.append("circle").attr("class","bridge-ring")
+    .attr("r", d => d._r + 4).attr("fill", "none")
+    .attr("stroke-width", 2.6).attr("stroke-opacity", 0)
+    .style("pointer-events", "none");
   inner.append("circle").attr("class","mring")
     .attr("r", d => d._r + 1.4).attr("fill", "none")
     .attr("stroke", d => {
@@ -3626,6 +3788,12 @@ function fitPillarLayoutView(){
     minY = Math.min(minY, z.cy - z.h / 2 - pad);
     maxY = Math.max(maxY, z.cy + z.h / 2 + pad);
   });
+  if (bridgeBandLayout){
+    minX = Math.min(minX, bridgeBandLayout.cx - bridgeBandLayout.w / 2 - pad);
+    maxX = Math.max(maxX, bridgeBandLayout.cx + bridgeBandLayout.w / 2 + pad);
+    minY = Math.min(minY, bridgeBandLayout.cy - bridgeBandLayout.h / 2 - pad);
+    maxY = Math.max(maxY, bridgeBandLayout.cy + bridgeBandLayout.h / 2 + pad);
+  }
   const { w, h } = getDims();
   const pw = panelOffsetW();
   const bw = maxX - minX, bh = maxY - minY;
@@ -3800,6 +3968,7 @@ function updatePillarGuides(){
   lyr.select("g.pillar-guides").remove();
   updatePillarLegend(show);
   if (!show) return;
+  ensureBridgeGradients();
   if (!defs.select("#pillar-resilience-grad").size()){
     const lg = defs.append("linearGradient").attr("id", "pillar-resilience-grad")
       .attr("x1", "0%").attr("y1", "0%").attr("x2", "100%").attr("y2", "0%");
@@ -3816,6 +3985,32 @@ function updatePillarGuides(){
       .attr("x2", span).attr("y2", spineY)
       .attr("stroke", "#02C8FF").attr("stroke-opacity", 0.35)
       .attr("stroke-width", 1).attr("stroke-dasharray", "6 5")
+      .style("pointer-events", "none");
+  }
+  if (bridgeBandLayout){
+    const bb = bridgeBandLayout;
+    const bx = bb.cx - bb.w / 2, by = bb.cy - bb.h / 2;
+    const bg = g.append("g").attr("class", "zone zone-connectivity");
+    bg.append("text").attr("class", "zone-title")
+      .attr("x", bx + 14).attr("y", by + 18)
+      .attr("fill", ONE_CISCO.connectivity.color)
+      .attr("fill-opacity", 0.92)
+      .style("font-size", "11px").style("font-weight", "600")
+      .style("pointer-events", "none")
+      .text(BRIDGE_BAND.label);
+    bg.append("rect").attr("class", "zone-rect zone-fill")
+      .attr("x", bx).attr("y", by).attr("width", bb.w).attr("height", bb.h)
+      .attr("rx", 8)
+      .attr("fill", ONE_CISCO.connectivity.color).attr("fill-opacity", 0.06)
+      .attr("stroke", "none").style("pointer-events", "none");
+    bg.append("rect").attr("class", "zone-rect zone-border")
+      .attr("x", bx).attr("y", by).attr("width", bb.w).attr("height", bb.h)
+      .attr("rx", 8)
+      .attr("fill", "none")
+      .attr("stroke", "url(#pillar-bridge-wp-res-grad)")
+      .attr("stroke-opacity", 0.72)
+      .attr("stroke-width", 1.5)
+      .attr("stroke-dasharray", "8 5")
       .style("pointer-events", "none");
   }
   const visIds = new Set();
@@ -3871,12 +4066,18 @@ function updatePillarLegend(show){
       <span class="pl-count">${cnt}</span>
     </div>`;
   }).join("");
+  const bridgeCnt = ONE_CISCO.connectivity.families.length;
+  const bridgeRow = shouldShowBridgeBand() ? `<div class="pl-item pl-bridge" title="Families that bridge pillars — shown in the overlap band">
+      <span class="pl-dot" style="background:linear-gradient(90deg,#2dce5c,#02C8FF,#FF9000)"></span>
+      <div class="pl-name">${ONE_CISCO.connectivity.shortLabel}</div>
+      <span class="pl-count">${visibleBridgeFamilies(new Set(NODES.map(n => n.id))).length || bridgeCnt}</span>
+    </div>` : "";
   el.innerHTML = `<div class="pl-row">
     <div class="pl-item pl-all${allActive}" data-pillar="__all__" role="button" tabindex="0" title="Show all three pillars">
       <span class="pl-dot" style="background:linear-gradient(135deg,#0A60FF 33%,#2dce5c 66%,#FF9000)"></span>
       <div class="pl-name">All pillars</div>
       <span class="pl-count">${total}</span>
-    </div>${rows}</div>`;
+    </div>${rows}${bridgeRow}</div>`;
   el.querySelectorAll(".pl-item").forEach(row => {
     const pid = row.dataset.pillar;
     const activate = () => {
@@ -4163,12 +4364,26 @@ function rebindGraph(opts){
     if (!nodeById[d.id]) return;
     const el = d3.select(this);
     if (pillarMode){
-      el.attr("stroke", pillarColorForFamily(d.id))
-        .attr("stroke-width", 2.2).attr("stroke-opacity", 0.92);
+      const fill = pillarColorForFamily(d.id);
+      el.attr("fill", fill).attr("fill-opacity", d._isBridge ? 0.92 : 0.88)
+        .attr("stroke", d._isBridge ? bridgeRingStroke(d) : fill)
+        .attr("stroke-width", d._isBridge ? 2.8 : 2.2).attr("stroke-opacity", 0.95);
     } else {
       el.attr("stroke", d._hasImage ? MATRIX_NODE_RING : "transparent")
         .attr("stroke-width", d._hasImage ? 1.4 : 2.5).attr("stroke-opacity", 1);
     }
+  });
+  ndEl.select("circle.bridge-ring").each(function(d){
+    const el = d3.select(this);
+    if (!pillarMode || !d._isBridge){ el.attr("stroke-opacity", 0); return; }
+    el.attr("r", d._r + 5)
+      .attr("stroke", bridgeRingStroke(d))
+      .attr("stroke-opacity", 0.55)
+      .attr("stroke-dasharray", "3 2");
+  });
+  ndEl.select("circle.gr").each(function(d){
+    if (!pillarMode || !d._isBridge) return;
+    d3.select(this).attr("fill", ONE_CISCO.connectivity.color).attr("fill-opacity", 0.12);
   });
   if (lviz){
     lviz.attr("stroke", l => {
@@ -4652,7 +4867,10 @@ function familyPassesTierFilter(n){
 }
 
 function familyNodeVisible(n){
-  if (activePillars.size > 0 && !activePillars.has(familyPillar(n.id))) return false;
+  if (activePillars.size > 0){
+    const visible = [...activePillars].some(pid => familyInPillarView(n, pid));
+    if (!visible) return false;
+  }
   if (!activeCats.has(n.category)) return false;
   if (activeUC && !(n.useCases || []).includes(activeUC)) return false;
   if (activeInd && !(n.industries || []).includes(activeInd)) return false;
@@ -5262,6 +5480,11 @@ function showDetailPanel(d) {
 
   const cat=CATS[d.category];
   const pm = pillarMeta(familyPillar(d.id));
+  const bridge = isBridgeFamily(d.id);
+  const bridgeTags = bridge ? bridgePillarsFor(d.id).map(pid => {
+    const m = pillarMeta(pid);
+    return m ? `<div class="p-pillar" style="--pc:${m.color}">${m.shortLabel || m.label}</div>` : "";
+  }).join("") : "";
   const inStk=stack.has(d.id);
 
   // Find specific products that belong to this family (respect status/tier facets)
@@ -5287,6 +5510,8 @@ function showDetailPanel(d) {
     <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-bottom:10px">
       <div class="p-badge" style="background:${cat.color};color:${d.category==='computing'?'#fff':'#000'}">${cat.label}</div>
       ${pm ? `<div class="p-pillar" style="--pc:${pm.color}">${pm.shortLabel || pm.label}</div>` : ""}
+      ${bridge ? `<div class="p-pillar" style="--pc:${ONE_CISCO.connectivity.color}">${ONE_CISCO.connectivity.shortLabel}</div>` : ""}
+      ${bridgeTags}
     </div>
     <div class="p-name">${d.name}</div>
     <p class="p-desc">${d.desc}</p>
@@ -6628,7 +6853,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.16.3";
+const APP_VERSION   = "2.17.0";
 const DATA_UPDATED  = "2026-05-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -6919,6 +7144,10 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.17.0", date:"2026-06-17", items:[
+    "Families — Option C bridge band: connectivity families render once in the pillar overlap with dual-pillar gradient rings and explicit bridge metadata (not random grid bleed).",
+    "Families — zoom-to-reveal labels now works for multi-pillar selection; detail panel shows bridge + connected pillar badges."
+  ]},
   {ver:"2.16.3", date:"2026-06-17", items:[
     "Families — fixed zoom labels overlapping icons: labels sit outside the node-scaler, use text-before-edge baseline, and a clearer offset below the glow ring."
   ]},
