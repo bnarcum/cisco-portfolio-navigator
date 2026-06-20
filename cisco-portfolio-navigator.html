@@ -944,16 +944,16 @@ const DECK_ICON_URI = {"ai-dc": "data:image/svg+xml,%3Csvg%20width%3D%2281%22%20
 
 // Families view — three separated deck panels (no overlap); hub connectors + links show relationships
 const PILLAR_LAYOUT = {
-  hubY: 112,
+  hubY: 118,
   zones: [
     { id: "ai-dc", label: "AI-ready data centers", shortLabel: "AI-ready DC",
-      color: "#0A60FF", cx: -260, cy: -105, w: 480, h: 400,
+      color: "#0A60FF", cx: -268, cy: -122, w: 480, h: 400,
       contentInset: { left: 0.08, top: 0.20, right: 0.08, bottom: 0.10 } },
     { id: "workplaces", label: "Future-proofed workplaces", shortLabel: "Workplaces",
-      color: "#2dce5c", cx: 260, cy: -105, w: 520, h: 430,
+      color: "#2dce5c", cx: 268, cy: -122, w: 520, h: 430,
       contentInset: { left: 0.08, top: 0.20, right: 0.08, bottom: 0.10 } },
     { id: "resilience", label: "Digital resilience", shortLabel: "Resilience",
-      color: "#FF9000", cx: 0, cy: 288, w: 980, h: 320, gradient: true,
+      color: "#FF9000", cx: 0, cy: 318, w: 980, h: 320, gradient: true,
       contentInset: { left: 0.06, top: 0.20, right: 0.06, bottom: 0.08 } }
   ]
 };
@@ -2847,6 +2847,12 @@ function layoutZoneForItems(zone, items){
     const fitsH = rows <= maxRows && cellH + 0.5 >= minCellH;
     const fitsW = cols <= maxCols;
     if (fitsH && fitsW) break;
+    if (panelFixed){
+      if (!fitsH && cols < Math.min(maxCols, n)) cols++;
+      else if (!fitsW && cols > 1) cols--;
+      else break;
+      continue;
+    }
     if (!fitsW && w < zone.w * 1.35){
       w = Math.max(w + 24, (cols * PILLAR_MIN_CELL_W + 12 + 12) / fracW);
       continue;
@@ -2860,10 +2866,15 @@ function layoutZoneForItems(zone, items){
     else if (!fitsH && rows > maxRows && cols <= 1) break;
     else break;
   }
-  const reqContentW = cols * PILLAR_MIN_CELL_W + 12;
-  const reqContentH = rows * minCellH + 10;
-  if (w * fracW - 12 < reqContentW) w = Math.max(w, (reqContentW + 12) / fracW);
-  if (h * fracH - 10 < reqContentH) h = Math.max(h, (reqContentH + 10) / fracH);
+  if (!panelFixed){
+    const reqContentW = cols * PILLAR_MIN_CELL_W + 12;
+    const reqContentH = rows * minCellH + 10;
+    if (w * fracW - 12 < reqContentW) w = Math.max(w, (reqContentW + 12) / fracW);
+    if (h * fracH - 10 < reqContentH) h = Math.max(h, (reqContentH + 10) / fracH);
+  } else {
+    w = zone.w;
+    h = zone.h;
+  }
   return {
     ...zone,
     cx: focused ? 0 : zone.cx,
@@ -2982,12 +2993,31 @@ function bboxInsideZone(box, zoneRect, slack){
   const y1 = zoneRect.cy + zoneRect.h / 2 + slack;
   return box.minX >= x0 && box.maxX <= x1 && box.minY >= y0 && box.maxY <= y1;
 }
-function zonesOverlap(a, b){
-  const ax0 = a.cx - a.w / 2, ax1 = a.cx + a.w / 2;
-  const ay0 = a.cy - a.h / 2, ay1 = a.cy + a.h / 2;
-  const bx0 = b.cx - b.w / 2, bx1 = b.cx + b.w / 2;
-  const by0 = b.cy - b.h / 2, by1 = b.cy + b.h / 2;
+function zonesOverlap(a, b, gap = 0){
+  const ax0 = a.cx - a.w / 2 - gap, ax1 = a.cx + a.w / 2 + gap;
+  const ay0 = a.cy - a.h / 2 - gap, ay1 = a.cy + a.h / 2 + gap;
+  const bx0 = b.cx - b.w / 2 - gap, bx1 = b.cx + b.w / 2 + gap;
+  const by0 = b.cy - b.h / 2 - gap, by1 = b.cy + b.h / 2 + gap;
   return ax0 < bx1 && ax1 > bx0 && ay0 < by1 && ay1 > by0;
+}
+function resolvePillarZoneNonOverlap(){
+  if (singlePillarFocused() || activePillars.size > 0) return;
+  const GAP = 28;
+  const ai = pillarZoneLayout["ai-dc"];
+  const wp = pillarZoneLayout.workplaces;
+  const res = pillarZoneLayout.resilience;
+  if (ai && wp && zonesOverlap(ai, wp, GAP)){
+    const push = ((ai.cx + ai.w / 2 + GAP) - (wp.cx - wp.w / 2)) / 2;
+    if (push > 0){ ai.cx -= push; wp.cx += push; }
+  }
+  if (res){
+    const tops = [ai, wp].filter(Boolean);
+    if (tops.length){
+      const maxBottom = Math.max(...tops.map(z => z.cy + z.h / 2));
+      const minTop = res.cy - res.h / 2;
+      if (minTop < maxBottom + GAP) res.cy += maxBottom + GAP - minTop;
+    }
+  }
 }
 function __cpnCompositionSelfTest(familyId = "room-systems"){
   applyViewLevel("families");
@@ -3257,9 +3287,13 @@ function pinPillarNodes(nodes, visibleIds){
     if (!pillarIsVisible(z.id)) return;
     const items = buckets[z.id] || [];
     if (!items.length) return;
-    const lz = layoutZoneForItems(z, items);
-    pillarZoneLayout[z.id] = lz;
-    layoutPillarGrid(lz, items);
+    pillarZoneLayout[z.id] = layoutZoneForItems(z, items);
+  });
+  resolvePillarZoneNonOverlap();
+  PILLAR_LAYOUT.zones.forEach(z => {
+    const lz = pillarZoneLayout[z.id];
+    if (!lz) return;
+    layoutPillarGrid(lz, buckets[z.id] || []);
   });
 }
 function pillarLayoutBuckets(visibleIds){
@@ -7839,7 +7873,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.29.2";
+const APP_VERSION   = "2.29.3";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -8130,6 +8164,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.29.3", date:"2026-06-20", items:[
+    "Families — fixed overlapping pillar panel outlines: lock panel size in all-pillars view, add gap between zones, and nudge Digital resilience below the top row."
+  ]},
   {ver:"2.29.2", date:"2026-06-20", items:[
     "Families — pillar panels use Overview deck logos and headers (AI-ready data centers, Future-proofed workplaces, Digital resilience) with matching cyan borders."
   ]},
