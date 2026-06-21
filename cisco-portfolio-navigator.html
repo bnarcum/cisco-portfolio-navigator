@@ -3770,8 +3770,33 @@ function matrixDeviceUrl(id){
   const base = MATRIX_BRIDGE.matrixBase || MATRIX_SITE;
   return `${base}?vendor=cisco&device=${encodeURIComponent(e.matrixId)}`;
 }
+/** Matrix photos on the graph — room + desk collaboration endpoints only. */
+const MATRIX_PHOTO_FAMILIES = new Set(["room-systems", "desk-devices"]);
+/** Representative Device Matrix product for family detail-panel heroes. */
+const FAMILY_HERO_PRODUCT = {
+  "room-systems": "room-bar-pro-g2",
+  "desk-devices": "desk-pro-g2",
+  "ip-phones": "wireless-9821",
+  "cisco-headsets": "headset-730",
+};
+function productAllowsMatrixPhoto(id){
+  const p = prodById[id];
+  return !!(p && MATRIX_PHOTO_FAMILIES.has(p.family) && matrixImageUrl(id));
+}
+function familyHeroImageUrl(familyId){
+  const heroId = FAMILY_HERO_PRODUCT[familyId];
+  if (heroId && matrixImageUrl(heroId)) return matrixImageUrl(heroId);
+  const rep = PRODUCTS.find(p =>
+    p.family === familyId && p.status === "current" && matrixImageUrl(p.id));
+  return rep ? matrixImageUrl(rep.id) : null;
+}
+function heroImageUrl(id, kind){
+  if (kind === "product") return productAllowsMatrixPhoto(id) ? matrixImageUrl(id) : null;
+  if (kind === "node" && nodeById[id]) return familyHeroImageUrl(id);
+  return null;
+}
 function nodeHasMatrixImage(d){
-  return d._kind === "product" && !!matrixImageUrl(d.id);
+  return d._kind === "product" && productAllowsMatrixPhoto(d.id);
 }
 async function loadMatrixBridge(){
   try {
@@ -3797,8 +3822,8 @@ function refreshMatrixVisuals(){
     refreshSpatialGraph();
   }
   const pb = document.getElementById("pbody");
-  if (pb?.dataset.lastKind === "product" && pb.dataset.lastId && typeof window.insertProductHero === "function"){
-    window.insertProductHero(pb.dataset.lastId, "product");
+  if (pb?.dataset.lastId && typeof window.insertProductHero === "function"){
+    window.insertProductHero(pb.dataset.lastId, pb.dataset.lastKind || "product");
   }
 }
 
@@ -3811,9 +3836,11 @@ function productIconKey(p){
   if (/room-bar|video-bar|room-kit|codec|room kit|telepresence|\bsx\d|\bmx\d|mx700|mx800/.test(s)) return "telepresence";
   if (/room-navigator|navigator/.test(s)) return "touch";
   if (/desk-pro|desk mini|\bdesk\b|desk-pro-g2|\bex\d|\bdx\d/.test(s) && !/desk phone/.test(s)) return "telepresence";
+  if (/wireless phone|wireless-\d|wireless ip phone/.test(s)) return "phone";
   if (/desk phone|deskphone|9811|8821|9841|9861|\bip-\d|video phone 8875/.test(s)) return "deskphone";
   if (/headset/.test(s)) return "headset";
-  if (/access point|wireless|917|913|912|910|916/.test(s)) return "wifi";
+  if (p?.family === "catalyst-wireless" || p?.family === "meraki-wireless") return "wifi";
+  if (/access point|\bwireless ap\b|917|913|912|910|916|c911|c916|cw917|meraki mr/.test(s)) return "wifi";
   if (/catalyst|switch|9200|9300|9400|9600|meraki.*switch|nexus/.test(s)) return "switch";
   if (/router|isr|asr|8000|c8000|secure-router/.test(s)) return "router";
   if (/firewall|ftd|asa|firepower|hypershield/.test(s)) return "shield";
@@ -5442,6 +5469,7 @@ function spatialAccentHex(accent, channel){
 function spatialProductPhotoUrl(node){
   if (!spatialState.focusFamily) return null;
   if (node.kind !== "product" && !prodById[node.id]) return null;
+  if (!productAllowsMatrixPhoto(node.id)) return null;
   return matrixImageUrl(node.id);
 }
 
@@ -8168,7 +8196,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.0";
+const APP_VERSION   = "2.31.1";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -8459,6 +8487,10 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.31.1", date:"2026-06-21", items:[
+    "Wireless IP phones use the handheld phone icon (not WiFi); matrix photos limited to room-systems and desk-devices on the graph.",
+    "Family detail panels show a representative Device Matrix hero (e.g. IP Phones, Headsets) instead of a blank icon-only strip.",
+  ]},
   {ver:"2.31.0", date:"2026-06-21", items:[
     "Icon build uses balanced SVG parsing (art-layer extraction, junk group removal) — fixes white squares from empty Splunk/Catalyst/Industrial symbols and solid export-frame rects.",
     "Remapped collaboration and observability icons: ThousandEyes→globe, XDR→secure radar, Contact Center→services desk, Webex Connect→customer journey, Webex App→hybrid work, conference phones→conference glyph.",
@@ -11449,7 +11481,7 @@ function insertProductHero(id, kind){
   if (!n) return;
   const cat = catOf(id);
   const iconFill = cat ? CATS[cat].color : "#64748b";
-  const imgUrl = (kind === "product") ? matrixImageUrl(id) : null;
+  const imgUrl = heroImageUrl(id, kind);
   const symId = "#icon-" + (kind === "node" ? iconKey(nodeById[id]) :
     iconKey({ _kind: "product", _productRef: prodById[id], id }));
   const heroSvg = `<svg viewBox="0 0 256 256"><use href="${symId}" fill="${iconFill}"/></svg>`;
