@@ -985,7 +985,7 @@ const ONE_CISCO = {
       shortLabel: "Workplaces",
       promise: "Modernize everywhere people and technology work",
       color: "#2dce5c",
-      icon: "video",
+      icon: "telepresence",
       anchor: { x: 240, y: -130 }
     },
     {
@@ -3806,13 +3806,12 @@ function productIconKey(p){
   const id = (p?.id || "").toLowerCase();
   const name = (p?.name || "").toLowerCase();
   const s = id + " " + name;
-  if (/room-bar|video-bar/.test(s)) return "videobar";
+  if (/quad-camera|ptz|desk-cam|desk camera/.test(s)) return "camera";
   if (/board-pro|board pro/.test(s)) return "board";
-  if (/quad-camera|ptz|camera/.test(s)) return "camera";
-  if (/room-kit|codec|room kit/.test(s)) return "codec";
+  if (/room-bar|video-bar|room-kit|codec|room kit|telepresence|\bsx\d|\bmx\d|mx700|mx800/.test(s)) return "telepresence";
   if (/room-navigator|navigator/.test(s)) return "touch";
-  if (/telepresence|\bsx\d|\bmx\d|mx700|mx800/.test(s)) return "video";
-  if (/desk-pro|desk mini|desk phone|deskphone|9811|8821|9841|9861|phone/.test(s)) return "deskphone";
+  if (/desk-pro|desk mini|\bdesk\b|desk-pro-g2|\bex\d|\bdx\d/.test(s) && !/desk phone/.test(s)) return "telepresence";
+  if (/desk phone|deskphone|9811|8821|9841|9861|\bip-\d|video phone 8875/.test(s)) return "deskphone";
   if (/headset/.test(s)) return "headset";
   if (/access point|wireless|917|913|912|910|916/.test(s)) return "wifi";
   if (/catalyst|switch|9200|9300|9400|9600|meraki.*switch|nexus/.test(s)) return "switch";
@@ -3823,7 +3822,7 @@ function productIconKey(p){
   if (p?.family === "intersight") return "intersight";
   if (/splunk|thousandeyes|appdynamics|fso/.test(s)) return "chart-line";
   const cat = p?.category;
-  if (cat === "collaboration") return "video";
+  if (cat === "collaboration") return "telepresence";
   if (cat === "networking") return "switch";
   if (cat === "security") return "shield";
   if (cat === "computing") return "server";
@@ -3871,8 +3870,9 @@ function iconKey(n) {
   if (id === "identity-intel")                                   return "fingerprint";
   // Collaboration
   if (/^(webex-app|webex-connect)$/.test(id))                    return "chat";
-  if (/^(webex-meetings|room-systems)$/.test(id))                return "video";
-  if (id === "desk-devices")                                     return "monitor";
+  if (id === "webex-meetings")                                   return "webinar";
+  if (id === "room-systems")                                     return "telepresence";
+  if (id === "desk-devices")                                     return "telepresence";
   if (id === "ip-phones")                                        return "deskphone";
   if (id === "conf-phones")                                      return "confphone";
   if (id === "webex-calling")                                    return "cloud-calling";
@@ -3887,7 +3887,7 @@ function iconKey(n) {
   if (id === "splunk")                                           return "chart-bars";
   if (id === "fso")                                              return "dashboard";
   // Fallback by category
-  return ({networking:"fabric", security:"shield", collaboration:"video",
+  return ({networking:"fabric", security:"shield", collaboration:"telepresence",
            computing:"chip", observability:"chart-line"})[n.category] || "product";
 }
 
@@ -8164,7 +8164,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.30.5";
+const APP_VERSION   = "2.30.8";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -8455,6 +8455,10 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.30.8", date:"2026-06-21", items:[
+    "Collaboration icons use TelePresence, webinar, tablet, and conference glyphs — no more play-button video/codec icons.",
+    "Desk Pro/Mini and room endpoints map correctly; Secure Email, Hypershield, and Stealthwatch icons improved.",
+  ]},
   {ver:"2.30.7", date:"2026-06-21", items:[
     "Graph icons now use official Cisco brand SVGs (482 assets + build script); Phosphor symbols removed.",
     "Dedicated icons for Intersight, HyperFlex, Cloud Control (dashboard), and Webex Calling (cloud-calling).",
