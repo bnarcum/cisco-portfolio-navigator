@@ -245,7 +245,7 @@
     #gs.view-enter,#spatial-wrap.view-enter{opacity:1;transform:scale(1)}
     body.canvas-focus #gw::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
       background:rgba(0,0,0,.42);transition:opacity .35s ease}
-    body.canvas-focus.pillar-focus #gw::after{background:rgba(0,0,0,.28)}
+    body.canvas-focus.pillar-focus #gw::after{background:transparent}
     #spatial-wrap{position:absolute;inset:0;display:none;z-index:2;background:transparent}
     #spatial-graph{width:100%;height:100%;background:transparent}
     #spatial-graph canvas{display:block;background:transparent!important}
@@ -1069,8 +1069,11 @@ const PILLAR_LABEL_CELL_FILL = 0.86;
 const PILLAR_LABEL_PILL_PAD_Y = 4;
 
 function pillarLabelFontPx(k){
-  const counter = PILLAR_LABEL_BASE_PX / (k || 1);
-  const maxFit = Math.max(6.5, (PILLAR_LABEL_BAND - 6) / 1.35);
+  const focused = singlePillarFocused();
+  const base = focused ? 12.5 : PILLAR_LABEL_BASE_PX;
+  const band = focused ? 30 : PILLAR_LABEL_BAND;
+  const counter = base / (k || 1);
+  const maxFit = Math.max(6.5, (band - 6) / 1.35);
   return Math.min(counter, maxFit);
 }
 function pillarLabelMaxChars(cellW, k){
@@ -2851,12 +2854,16 @@ function pillarColorForFamily(familyId){
   const m = pillarMeta(familyPillar(familyId));
   return m ? m.color : catColor(nodeById[familyId]?.category);
 }
-function pillarDisplayName(name){
+const PILLAR_FAMILY_LABEL = {
+  "meraki-mx": "Meraki MX SD-WAN"
+};
+function pillarDisplayName(name, familyId){
+  if (familyId && PILLAR_FAMILY_LABEL[familyId]) return PILLAR_FAMILY_LABEL[familyId];
   let n = (name || "").replace(/^Cisco\s+/i, "");
   return n.replace(/^Meraki\s+/i, "Meraki ");
 }
-function pillarShortName(name, maxLen){
-  let n = pillarDisplayName(name);
+function pillarShortName(name, maxLen, familyId){
+  let n = pillarDisplayName(name, familyId);
   const cap = maxLen || (singlePillarFocused() ? 18 : 22);
   if (n.length > cap) n = n.slice(0, cap - 1) + "…";
   return n;
@@ -2866,8 +2873,8 @@ function pillarMaxCharsPerLine(cellW, k){
   const usable = (cellW || PILLAR_MIN_CELL_W) * PILLAR_LABEL_CELL_FILL;
   return Math.max(6, Math.floor(usable / (fontPx * PILLAR_LABEL_CHAR_W)));
 }
-function pillarWrapLabel(name, maxPerLine, maxLines){
-  const display = pillarDisplayName(name);
+function pillarWrapLabel(name, maxPerLine, maxLines, familyId){
+  const display = pillarDisplayName(name, familyId);
   if (display.length <= maxPerLine) return [display];
   const words = display.split(/\s+/);
   const lines = [];
@@ -2889,10 +2896,10 @@ function pillarWrapLabel(name, maxPerLine, maxLines){
   if (!lines.length) return [pillarShortName(display, maxPerLine)];
   return lines.slice(0, maxLines);
 }
-function pillarLabelLines(name, cellW, k){
+function pillarLabelLines(name, cellW, k, familyId){
   const maxPerLine = pillarMaxCharsPerLine(cellW, k);
-  if (singlePillarFocused()) return pillarWrapLabel(name, maxPerLine, 2);
-  return [pillarShortName(name, maxPerLine)];
+  if (singlePillarFocused()) return pillarWrapLabel(name, maxPerLine, 2, familyId);
+  return [pillarShortName(name, maxPerLine, familyId)];
 }
 function pillarLabelLineHeight(k){
   return pillarLabelFontPx(k) * 1.18;
@@ -3090,7 +3097,7 @@ function pillarLabelTextBBox(n, k){
   const shown = n._pillarShowLabel;
   if (!shown) return null;
   const cellW = n._pillarCellW || PILLAR_MIN_CELL_W;
-  const lines = pillarLabelLines(n.name, cellW, k);
+  const lines = pillarLabelLines(n.name, cellW, k, n.id);
   const fontPx = pillarLabelFontPx(k);
   const maxLineW = Math.max(...lines.map(l => pillarLabelTextWidth(l, fontPx)), 0);
   const labelW = Math.min(pillarLabelTextLen(cellW), maxLineW + 6);
@@ -3579,8 +3586,9 @@ function applyPillarLabelStyles(selectedNode){
       textEl.text("").selectAll("tspan").remove();
       return;
     }
-    renderPillarLabelText(textEl, pillarLabelLines(d.name, cellW, k), yOff, blockH, k);
+    renderPillarLabelText(textEl, pillarLabelLines(d.name, cellW, k, d.id), yOff, blockH, k);
   });
+  const focusedPillar = singlePillarFocused();
   ndEl.select("text.nl")
     .style("text-anchor", "middle")
     .style("dominant-baseline", "auto")
@@ -3588,11 +3596,11 @@ function applyPillarLabelStyles(selectedNode){
     .attr("lengthAdjust", null)
     .style("opacity", d => pillarLabelShown(d, selectedNode, conn, zoomFade) ? 1 : 0)
     .style("font-size", d => `${pillarLabelFontPx(k)}px`)
-    .style("font-weight", "600")
-    .style("fill", "#f1f5f9")
-    .style("letter-spacing", "0.01em")
-    .style("stroke", "rgba(7,15,28,0.82)")
-    .style("stroke-width", "3px")
+    .style("font-weight", focusedPillar ? "700" : "600")
+    .style("fill", focusedPillar ? "#ffffff" : "#f1f5f9")
+    .style("letter-spacing", focusedPillar ? "0.015em" : "0.01em")
+    .style("stroke", focusedPillar ? "rgba(3,8,18,0.55)" : "rgba(7,15,28,0.82)")
+    .style("stroke-width", focusedPillar ? "2px" : "3px")
     .style("stroke-linejoin", "round")
     .style("paint-order", "stroke fill");
   applyPillarLinkStyles(k);
@@ -4375,12 +4383,13 @@ function applyPillarNodeVisualState(selectedNode){
       .classed("nd-hover", isHov && !isSel)
       .classed("nd-stack", inStk && !isSel);
     const fill = pillarColorForFamily(nd.id);
-    g.select(".gr").attr("fill-opacity", hot ? 0.38 : (inStk ? 0.28 : 0.22));
+    const boosted = singlePillarFocused();
+    g.select(".gr").attr("fill-opacity", hot ? 0.42 : (inStk ? 0.3 : (boosted ? 0.3 : 0.22)));
     g.select(".mc")
-      .attr("fill-opacity", hot ? 1 : (inStk ? 1 : 0.72))
+      .attr("fill-opacity", hot ? 1 : (inStk ? 1 : (boosted ? 0.94 : 0.72)))
       .attr("stroke", isSel ? "#ffffff" : (inStk ? "#FFD700" : fill))
       .attr("stroke-width", isSel ? 2.6 : (inStk ? 2.2 : 2))
-      .attr("stroke-opacity", hot || inStk ? 1 : 0.78);
+      .attr("stroke-opacity", hot || inStk ? 1 : (boosted ? 0.92 : 0.78));
     g.select(".node-scaler").attr("transform", (isSel || isHov) ? "scale(1.06)" : null);
   });
   updateCanvasFocusState();
@@ -8272,7 +8281,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.30.4";
+const APP_VERSION   = "2.30.5";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -8563,6 +8572,10 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.30.5", date:"2026-06-21", items:[
+    "Families — single-pillar focus no longer dims the canvas; labels use brighter white type with a lighter halo; icons run at full saturation.",
+    "Workplaces — Meraki MX family label shortened to “Meraki MX SD-WAN” so it fits without truncation."
+  ]},
   {ver:"2.30.4", date:"2026-06-21", items:[
     "Families — all-pillars view is icon-only again (no zoom-reveal label clutter); hover shows a single halo label, full name in tooltip.",
     "Families — single-pillar focus uses two-line word-wrapped labels with subtle text halo instead of truncated black pills; Workplaces grid widens to 4 columns when focused."
