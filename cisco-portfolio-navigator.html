@@ -5487,23 +5487,56 @@ function spatialDecoFade(){
 }
 
 let spatialFitTimer = null;
-function spatialConstellationCamera(ms = 450){
-  if (!spatialState.graph || spatialState.focusFamily) return;
-  const nodes = (spatialState.graph.graphData()?.nodes || []).filter(n => n.id !== "__three_probe__");
-  if (!nodes.length) return;
-  let cx = 0, cy = 0, cz = 0, n = 0;
+let spatialFitGen = 0;
+
+function spatialGraphNodes(){
+  return (spatialState.graph?.graphData()?.nodes || []).filter(n => n.id !== "__three_probe__");
+}
+
+function spatialNodeBounds(nodes){
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  let minZ = Infinity, maxZ = -Infinity, n = 0;
   nodes.forEach(node => {
     if (node.x == null) return;
-    cx += node.x; cy += node.y; cz += node.z; n++;
+    minX = Math.min(minX, node.x); maxX = Math.max(maxX, node.x);
+    minY = Math.min(minY, node.y); maxY = Math.max(maxY, node.y);
+    minZ = Math.min(minZ, node.z); maxZ = Math.max(maxZ, node.z);
+    n++;
   });
-  if (!n){ cx = cy = cz = 0; }
-  else { cx /= n; cy /= n; cz /= n; }
-  const dist = Math.min(235, Math.max(150, 125 + Math.sqrt(n) * 11));
+  if (n < Math.max(3, Math.floor(nodes.length * 0.45))) return null;
+  const span = Math.max(maxX - minX, maxY - minY, maxZ - minZ, 70);
+  return {
+    cx: (minX + maxX) / 2,
+    cy: (minY + maxY) / 2,
+    cz: (minZ + maxZ) / 2,
+    span
+  };
+}
+
+function spatialConstellationCamera(ms = 500){
+  if (!spatialState.graph || spatialState.focusFamily) return false;
+  const nodes = spatialGraphNodes();
+  if (!nodes.length) return false;
+  const bounds = spatialNodeBounds(nodes);
+  if (!bounds) return false;
+  const { cx, cy, cz, span } = bounds;
+  const dist = Math.min(410, Math.max(275, span * 1.32 + 105));
   spatialState.graph.cameraPosition(
-    { x: cx, y: cy + 26, z: cz + dist },
+    { x: cx, y: cy + span * 0.07, z: cz + dist },
     { x: cx, y: cy, z: cz },
     ms
   );
+  return true;
+}
+
+function scheduleSpatialConstellationCamera(delay = 0, attempt = 0){
+  const gen = spatialFitGen;
+  clearTimeout(spatialFitTimer);
+  spatialFitTimer = setTimeout(() => {
+    if (gen !== spatialFitGen || !spatialState.active || !spatialState.graph || spatialState.focusFamily) return;
+    if (spatialConstellationCamera(500)) return;
+    if (attempt < 10) scheduleSpatialConstellationCamera(220, attempt + 1);
+  }, delay);
 }
 
 function scheduleSpatialFit(delay = 450){
@@ -5511,10 +5544,11 @@ function scheduleSpatialFit(delay = 450){
   spatialFitTimer = setTimeout(() => {
     if (!spatialState.active || !spatialState.graph || spatialState.focusFamily) return;
     const g = spatialState.graph;
-    const nodes = (g.graphData()?.nodes || []).filter(n => n.id !== "__three_probe__");
+    const nodes = spatialGraphNodes();
     if (nodes.length < 1) return;
     if (!spatialState.filterActive){
-      spatialConstellationCamera(500);
+      spatialFitGen += 1;
+      scheduleSpatialConstellationCamera(0);
       return;
     }
     if (typeof g.zoomToFit !== "function") return;
@@ -6389,7 +6423,7 @@ function refreshSpatialGraph(){
     refreshSpatialNodeVisuals();
     refreshSpatialLinkStyles();
     updateSpatialHud();
-    scheduleSpatialFit(spatialState.filterActive ? 520 : 680);
+    scheduleSpatialFit(spatialState.filterActive ? 520 : 920);
   };
   requestAnimationFrame(() => requestAnimationFrame(() => applyData(0)));
 }
@@ -8534,7 +8568,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.16";
+const APP_VERSION   = "2.31.17";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
