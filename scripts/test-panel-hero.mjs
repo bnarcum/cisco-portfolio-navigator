@@ -104,6 +104,7 @@ async function inspectHero(page, id, kind) {
 
       const hero = document.querySelector(".p-hero");
       const fallback = hero?.querySelector(".p-hero-fallback");
+      const badge = fallback?.querySelector(".p-hero-icon-badge");
       const use = fallback?.querySelector("use");
       const img = hero?.querySelector("img");
       if (!hero || !fallback || !use) {
@@ -111,7 +112,7 @@ async function inspectHero(page, id, kind) {
       }
 
       const bgLum = fallbackBgLuminance(fallback);
-      const fillLum = useFillLuminance(use);
+      let fillLum = useFillLuminance(use);
       const fillAttr = use.getAttribute("fill") || "";
       const hasMatrixImage = !!img;
       const iconOnly = hero.classList.contains("p-hero--icon-only");
@@ -123,7 +124,18 @@ async function inspectHero(page, id, kind) {
       if (!ok) reason = `fallback bg too dark (lum=${bgLum.toFixed(3)})`;
 
       if (checkIcon) {
-        if (fillLum == null) {
+        if (badge) {
+          const badgeLum = fallbackBgLuminance(badge);
+          const iconLum = 1;
+          fillLum = iconLum;
+          if (badgeLum == null || badgeLum < 0.08) {
+            ok = false;
+            reason = reason || "badge background too dark/missing";
+          } else if (contrast(iconLum, badgeLum) < contrastMin) {
+            ok = false;
+            reason = reason || `low badge contrast (${contrast(iconLum, badgeLum).toFixed(2)})`;
+          }
+        } else if (fillLum == null) {
           ok = false;
           reason = reason || "no measurable icon fill";
         } else if (fillLum < 0.05 && bgLum < 0.2) {

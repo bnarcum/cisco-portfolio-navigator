@@ -8242,7 +8242,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.3";
+const APP_VERSION   = "2.31.4";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -8533,6 +8533,9 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.31.4", date:"2026-06-21", items:[
+    "Icon-only panel heroes use a category-colored badge with a white glyph (fixes invisible icons caused by dark-panel currentColor on white hero tiles).",
+  ]},
   {ver:"2.31.3", date:"2026-06-21", items:[
     "Family panel heroes no longer show blank white tiles: software families borrow related hardware brand/matrix photos (Webex Meetings → Room Bar, Calling → IP phones, etc.).",
     "Icon-only heroes use category-tinted gradients and larger glyphs when no photo applies.",
@@ -9158,7 +9161,9 @@ STYLE.textContent = `
   .p-hero-fallback{display:flex;align-items:center;justify-content:center;height:100%;position:absolute;inset:0;z-index:0;
     background:linear-gradient(165deg, #f8fafc 0%, #eef2f7 100%)}
   .p-hero-fallback svg{width:68px;height:68px;opacity:.88}
-  .p-hero--icon-only .p-hero-fallback svg{width:92px;height:92px;opacity:1;filter:drop-shadow(0 2px 8px rgba(15,23,42,0.14))}
+  .p-hero-icon-badge{width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 18px rgba(15,23,42,0.2);flex-shrink:0}
+  .p-hero-icon-badge svg{width:50px;height:50px;opacity:1;color:#fff;fill:#fff}
   .p-hero--icon-only .p-hero-fallback{z-index:1}
   .p-hero--icon-only .p-hero-scrim{background:linear-gradient(180deg, transparent 70%, rgba(15,23,42,0.06) 100%)}
   .p-hero-scrim{position:absolute;inset:0;background:linear-gradient(180deg, transparent 58%, rgba(15,23,42,0.1) 100%);
@@ -11539,26 +11544,33 @@ function insertProductHero(id, kind){
   const imgUrl = heroImageUrl(id, kind);
   const symId = "#icon-" + (kind === "node" ? iconKey(nodeById[id]) :
     iconKey({ _kind: "product", _productRef: prodById[id], id }));
-  const heroSvg = `<svg viewBox="0 0 256 256"><use href="${symId}" fill="${iconFill}"/></svg>`;
+  const iconBadge = heroIconBadgeHtml(symId, iconFill);
   const iconBg = heroCategoryGradient(iconFill);
   const hero = document.createElement("div");
   hero.className = "p-hero" + (imgUrl ? "" : " p-hero--icon-only");
   if (imgUrl){
     hero.innerHTML = `
-      <div class="p-hero-fallback" aria-hidden="true">${heroSvg}</div>
+      <div class="p-hero-fallback" aria-hidden="true">${iconBadge}</div>
       <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(n.name)}" loading="lazy"
         onerror="var h=this.closest('.p-hero');if(h)h.classList.add('p-hero--icon-only');this.remove()"/>
       <div class="p-hero-scrim"></div>
       <div class="p-hero-meta"><span></span><span class="p-hero-cat">${cat ? escapeHtml(CATS[cat].label) : ""}</span></div>`;
   } else {
     hero.innerHTML = `
-      <div class="p-hero-fallback" style="background:${iconBg}">${heroSvg}</div>
+      <div class="p-hero-fallback" style="background:${iconBg}">${iconBadge}</div>
       <div class="p-hero-scrim"></div>
       <div class="p-hero-meta"><span></span><span class="p-hero-cat">${cat ? escapeHtml(CATS[cat].label) : ""}</span></div>`;
   }
   const nameEl = pb.querySelector(".p-name");
   if (nameEl) pb.insertBefore(hero, nameEl);
   else pb.prepend(hero);
+}
+function heroIconBadgeHtml(symId, iconFill){
+  return `<div class="p-hero-icon-badge" style="background:${escapeHtml(iconFill)}">
+    <svg viewBox="0 0 256 256" aria-hidden="true" style="color:#ffffff;fill:#ffffff">
+      <use href="${symId}"/>
+    </svg>
+  </div>`;
 }
 function parseHexColor(hex){
   const h = String(hex || "#64748b").replace("#", "");
