@@ -61,7 +61,7 @@ try {
         open: window.__cpnMatrixOverlayOpen?.(),
         src: frame?.src || "",
         title: document.getElementById("matrix-overlay-title")?.textContent || "",
-        mode: document.getElementById("matrix-overlay-mode")?.textContent || "",
+        mode: document.getElementById("matrix-overlay-showroom-btn")?.textContent || "",
         ariaHidden: ov?.getAttribute("aria-hidden"),
       };
     });

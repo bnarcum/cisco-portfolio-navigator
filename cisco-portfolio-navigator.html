@@ -518,7 +518,9 @@
     .matrix-overlay-mode{
       flex-shrink:0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
       padding:5px 10px;border-radius:999px;background:rgba(168,85,247,.22);color:#f3e8ff;
-      border:1px solid rgba(192,132,252,.38)}
+      border:1px solid rgba(192,132,252,.38);cursor:pointer;font:inherit;
+      transition:border-color .15s,background .15s,color .15s}
+    .matrix-overlay-mode:hover{border-color:#c084fc;background:rgba(168,85,247,.38);color:#fff}
     .matrix-overlay-close{
       flex-shrink:0;width:36px;height:36px;border-radius:8px;border:1px solid rgba(192,132,252,.35);
       background:rgba(30,10,55,.55);color:#f3e8ff;font-size:22px;line-height:1;cursor:pointer;
@@ -3900,7 +3902,7 @@ let nodeClickTimer = null;
 
 const MATRIX_SITE = "https://bnarcum.github.io/collaboration-device-matrix/";
 /** Bust iframe cache when Device Matrix deploys — bump with each matrix release. */
-const MATRIX_RELEASE = "20260621o";
+const MATRIX_RELEASE = "20260621p";
 const MATRIX_NODE_FILL = "#ffffff";
 const MATRIX_NODE_RING = "#cbd5e1";
 const MATRIX_IMG_BASE = MATRIX_SITE + "devices/";
@@ -3939,7 +3941,7 @@ function matrixImageUrl(id){
   const base = MATRIX_BRIDGE.imageBase || MATRIX_IMG_BASE;
   return e.hash ? `${base}img-${e.hash}.webp` : null;
 }
-function matrixDeviceUrl(id, view){
+function matrixDeviceUrl(id, view, opts){
   const e = matrixBridgeEntry(id); if (!e?.matrixId) return null;
   const base = MATRIX_BRIDGE.matrixBase || MATRIX_SITE;
   const params = new URLSearchParams();
@@ -3948,6 +3950,7 @@ function matrixDeviceUrl(id, view){
   params.set("embed", "cpn");
   params.set("_v", MATRIX_RELEASE);
   if (view === "aisle") params.set("view", "showcase");
+  if (opts?.camera === "ring") params.set("camera", "ring");
   return `${base}?${params.toString()}`;
 }
 
@@ -4015,7 +4018,7 @@ function ensureMatrixOverlay(){
           <span class="matrix-overlay-kicker">Device Matrix</span>
           <span class="matrix-overlay-title" id="matrix-overlay-title">Collaboration device</span>
         </div>
-        <span class="matrix-overlay-mode" id="matrix-overlay-mode">Showroom</span>
+        <button type="button" class="matrix-overlay-mode" id="matrix-overlay-showroom-btn" title="View full category showroom with this device highlighted">Showroom</button>
         <button type="button" class="matrix-overlay-close" id="matrix-overlay-close" aria-label="Close Device Matrix">×</button>
       </header>
       <div class="matrix-overlay-viewport is-loading">
@@ -4030,19 +4033,33 @@ function ensureMatrixOverlay(){
     </div>`;
   document.body.appendChild(ov);
   ov.querySelector("#matrix-overlay-close")?.addEventListener("click", closeMatrixEmbed);
+  ov.querySelector("#matrix-overlay-showroom-btn")?.addEventListener("click", enterMatrixFullShowroom);
   ov.addEventListener("click", e => {
     if (e.target === ov) closeMatrixEmbed();
   });
   return ov;
 }
 
-function openMatrixEmbed(productId, view){
-  const url = matrixDeviceUrl(productId, view === "aisle" ? "aisle" : "showroom");
+function enterMatrixFullShowroom(){
+  const pid = matrixOverlayState.productId;
+  if (!pid) return;
+  if (matrixOverlayState.view === "aisle"){
+    openMatrixEmbed(pid, "showroom", { camera: "ring" });
+    return;
+  }
+  const frame = document.getElementById("matrix-overlay-frame");
+  try {
+    frame?.contentWindow?.postMessage({ type: "cpn-matrix-camera", mode: "ring" }, "*");
+  } catch (_) {}
+}
+
+function openMatrixEmbed(productId, view, opts){
+  const url = matrixDeviceUrl(productId, view === "aisle" ? "aisle" : "showroom", opts);
   if (!url) return;
   const ov = ensureMatrixOverlay();
   const frame = document.getElementById("matrix-overlay-frame");
   const titleEl = document.getElementById("matrix-overlay-title");
-  const modeEl = document.getElementById("matrix-overlay-mode");
+  const modeEl = document.getElementById("matrix-overlay-showroom-btn");
   const loadingText = document.querySelector(".matrix-overlay-loading-text");
   const product = prodById[productId];
   if (titleEl) titleEl.textContent = product?.name || spatialResolveName(productId);
@@ -8992,7 +9009,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.48";
+const APP_VERSION   = "2.31.49";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
