@@ -76,13 +76,13 @@
         radial-gradient(ellipse 52% 44% at 78% 68%, rgba(2,200,255,.22) 0%, transparent 65%),
         radial-gradient(ellipse 46% 38% at 50% 88%, rgba(255,144,0,.12) 0%, transparent 62%),
         radial-gradient(ellipse 40% 35% at 50% 42%, rgba(2,200,255,.10) 0%, transparent 70%);
-      animation:bg-glow-drift 24s ease-in-out infinite alternate}
+      animation:bg-glow-drift 20s ease-in-out infinite alternate}
     .bg-beams{position:absolute;inset:-50%;opacity:.14;
       background:conic-gradient(from 210deg at 50% 50%,
         transparent 0deg, rgba(2,200,255,.55) 32deg, transparent 64deg,
         rgba(10,96,255,.45) 128deg, transparent 168deg,
         rgba(2,200,255,.35) 248deg, transparent 300deg);
-      animation:bg-beams-spin 120s linear infinite}
+      animation:bg-beams-spin 100s linear infinite}
     .bg-grid{position:absolute;inset:0;opacity:1;
       background-image:
         linear-gradient(rgba(2,200,255,.06) 1px, transparent 1px),
@@ -90,7 +90,7 @@
         radial-gradient(circle, rgba(2,200,255,.22) 1px, transparent 1px);
       background-size:72px 72px, 72px 72px, 36px 36px;
       background-position:0 0, 0 0, 18px 18px;
-      animation:bg-grid-pan 70s linear infinite}
+      animation:bg-grid-pan 58.33s linear infinite}
     #bg-mesh{position:absolute;inset:0;width:100%;height:100%;display:block}
     @keyframes bg-glow-drift{
       0%{transform:translate(0,0) scale(1);opacity:.92}
@@ -3887,7 +3887,7 @@ let nodeClickTimer = null;
 
 const MATRIX_SITE = "https://bnarcum.github.io/collaboration-device-matrix/";
 /** Bust iframe cache when Device Matrix deploys — bump with each matrix release. */
-const MATRIX_RELEASE = "20260621i";
+const MATRIX_RELEASE = "20260621j";
 const MATRIX_NODE_FILL = "#ffffff";
 const MATRIX_NODE_RING = "#cbd5e1";
 const MATRIX_IMG_BASE = MATRIX_SITE + "devices/";
@@ -8929,7 +8929,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.41";
+const APP_VERSION   = "2.31.42";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -13847,8 +13847,8 @@ function initAmbientBackground(){
     nodes = Array.from({length: NODE_COUNT}, () => ({
       x: Math.random() * w,
       y: Math.random() * h,
-      vx: (Math.random() - 0.5) * (reducedMotion ? 0 : 0.18),
-      vy: (Math.random() - 0.5) * (reducedMotion ? 0 : 0.18)
+      vx: (Math.random() - 0.5) * (reducedMotion ? 0 : 0.216),
+      vy: (Math.random() - 0.5) * (reducedMotion ? 0 : 0.216)
     }));
   }
 
