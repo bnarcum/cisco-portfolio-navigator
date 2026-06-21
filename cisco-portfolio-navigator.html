@@ -6446,18 +6446,18 @@ function spatialLinkParticles(l){
   const tier = spatialLinkHighlightTier(l);
   if (tier === "dim") return 0;
   if (tier === "hot"){
-    if (l.type === "direct") return 9;
-    if (l.type === "adjacent") return 6;
-    return 3;
+    if (l.type === "direct") return 2;
+    if (l.type === "adjacent") return 1;
+    return 1;
   }
   if (tier === "all" || tier === "mid" || tier === "orbit"){
-    if (l.type === "direct") return 8;
-    if (l.type === "adjacent") return 5;
-    return 3;
+    if (l.type === "direct") return 2;
+    if (l.type === "adjacent") return 1;
+    return 1;
   }
-  if (l.type === "direct") return 5;
-  if (l.type === "adjacent") return 3;
-  return 2;
+  if (l.type === "direct") return 1;
+  if (l.type === "adjacent") return 1;
+  return 0;
 }
 
 function spatialLinkParticleWidth(l){
@@ -9053,7 +9053,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.51";
+const APP_VERSION   = "2.31.52";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
