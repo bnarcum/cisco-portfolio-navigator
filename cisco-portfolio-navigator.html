@@ -5494,7 +5494,7 @@ function spatialGraphNodes(){
   return (spatialState.graph?.graphData()?.nodes || []).filter(n => n.id !== "__three_probe__");
 }
 
-function spatialNodeBounds(nodes){
+function spatialNodeBounds(nodes, opts = {}){
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   let minZ = Infinity, maxZ = -Infinity, n = 0;
   nodes.forEach(node => {
@@ -5504,8 +5504,10 @@ function spatialNodeBounds(nodes){
     minZ = Math.min(minZ, node.z); maxZ = Math.max(maxZ, node.z);
     n++;
   });
-  if (n < Math.max(3, Math.floor(nodes.length * 0.45))) return null;
-  const span = Math.max(maxX - minX, maxY - minY, maxZ - minZ, 70);
+  const minNeeded = opts.minNeeded ?? Math.max(1, Math.min(3, Math.floor(nodes.length * 0.35)));
+  if (n < minNeeded) return null;
+  const minSpan = opts.minSpan ?? (nodes.length <= 3 ? 35 : nodes.length <= 10 ? 50 : 70);
+  const span = Math.max(maxX - minX, maxY - minY, maxZ - minZ, minSpan);
   return {
     cx: (minX + maxX) / 2,
     cy: (minY + maxY) / 2,
@@ -5514,14 +5516,25 @@ function spatialNodeBounds(nodes){
   };
 }
 
-function spatialConstellationCamera(ms = 500){
+function spatialCameraDistance(span, nodeCount, filtered){
+  const n = Math.max(1, nodeCount);
+  if (n <= 2) return Math.min(200, Math.max(125, span * 1.05 + 90));
+  if (n <= 5) return Math.min(240, Math.max(145, span * 1.15 + 95));
+  if (n <= 12) return Math.min(320, Math.max(175, span * 1.28 + 100));
+  if (filtered || n < NODES.length * 0.85){
+    return Math.min(400, Math.max(240, span * 1.42 + 115));
+  }
+  return Math.min(500, Math.max(340, span * 1.58 + 140));
+}
+
+function spatialFrameCamera(ms = 500){
   if (!spatialState.graph || spatialState.focusFamily) return false;
   const nodes = spatialGraphNodes();
   if (!nodes.length) return false;
   const bounds = spatialNodeBounds(nodes);
   if (!bounds) return false;
   const { cx, cy, cz, span } = bounds;
-  const dist = Math.min(500, Math.max(340, span * 1.58 + 140));
+  const dist = spatialCameraDistance(span, nodes.length, spatialState.filterActive);
   spatialState.graph.cameraPosition(
     { x: cx, y: cy + span * 0.07, z: cz + dist },
     { x: cx, y: cy, z: cz },
@@ -5530,30 +5543,44 @@ function spatialConstellationCamera(ms = 500){
   return true;
 }
 
-function scheduleSpatialConstellationCamera(delay = 0, attempt = 0){
+function spatialOrbitCamera(ms = 500){
+  if (!spatialState.graph || !spatialState.focusFamily) return false;
+  const nodes = spatialGraphNodes();
+  if (!nodes.length) return false;
+  const bounds = spatialNodeBounds(nodes, { minNeeded: 1, minSpan: 28 });
+  if (!bounds){
+    focusSpatialNode(spatialState.focusFamily, ms);
+    return true;
+  }
+  const { cx, cy, cz, span } = bounds;
+  const dist = Math.min(165, Math.max(92, span * 1.08 + 78));
+  spatialState.graph.cameraPosition(
+    { x: cx, y: cy + span * 0.1, z: cz + dist },
+    { x: cx, y: cy, z: cz },
+    ms
+  );
+  return true;
+}
+
+function scheduleSpatialFrameCamera(delay = 0, attempt = 0){
   const gen = spatialFitGen;
   clearTimeout(spatialFitTimer);
   spatialFitTimer = setTimeout(() => {
-    if (gen !== spatialFitGen || !spatialState.active || !spatialState.graph || spatialState.focusFamily) return;
-    if (spatialConstellationCamera(500)) return;
-    if (attempt < 10) scheduleSpatialConstellationCamera(220, attempt + 1);
+    if (gen !== spatialFitGen || !spatialState.active || !spatialState.graph) return;
+    const frame = spatialState.focusFamily ? spatialOrbitCamera : spatialFrameCamera;
+    if (frame(500)) return;
+    if (attempt < 12) scheduleSpatialFrameCamera(180, attempt + 1);
   }, delay);
 }
 
 function scheduleSpatialFit(delay = 450){
   clearTimeout(spatialFitTimer);
   spatialFitTimer = setTimeout(() => {
-    if (!spatialState.active || !spatialState.graph || spatialState.focusFamily) return;
-    const g = spatialState.graph;
+    if (!spatialState.active || !spatialState.graph) return;
     const nodes = spatialGraphNodes();
     if (nodes.length < 1) return;
-    if (!spatialState.filterActive){
-      spatialFitGen += 1;
-      scheduleSpatialConstellationCamera(0);
-      return;
-    }
-    if (typeof g.zoomToFit !== "function") return;
-    g.zoomToFit(450, 55);
+    spatialFitGen += 1;
+    scheduleSpatialFrameCamera(0);
   }, delay);
 }
 
@@ -6116,9 +6143,9 @@ function enterSpatialComposition(familyId){
   updateSpatialHud();
   updateBreadcrumb();
   setTimeout(() => {
-    focusSpatialNode(familyId, 900);
+    spatialOrbitCamera(900);
     openFamilyProductDrawer(familyId);
-  }, 350);
+  }, 450);
 }
 
 function exitSpatialComposition(){
@@ -6428,7 +6455,7 @@ function refreshSpatialGraph(){
     refreshSpatialNodeVisuals();
     refreshSpatialLinkStyles();
     updateSpatialHud();
-    scheduleSpatialFit(spatialState.filterActive ? 520 : 920);
+    scheduleSpatialFit(spatialState.filterActive ? 780 : 920);
   };
   requestAnimationFrame(() => requestAnimationFrame(() => applyData(0)));
 }
@@ -6795,6 +6822,24 @@ window.getViewMode    = () => viewMode;
 window.getViewFocus   = () => viewFocus;
 window.getSpatialFocus = () => spatialState.focusFamily;
 window.__cpnSpatialGraph = () => spatialState.graph;
+window.__cpnSpatialCameraStats = () => {
+  const g = spatialState.graph;
+  if (!g) return null;
+  const pos = g.cameraPosition();
+  const nodes = spatialGraphNodes();
+  const bounds = spatialNodeBounds(nodes, { minNeeded: 1 });
+  let dist = 0;
+  if (pos && bounds){
+    dist = Math.hypot(pos.x - bounds.cx, pos.y - bounds.cy, pos.z - bounds.cz);
+  }
+  return {
+    nodeCount: nodes.length,
+    filterActive: spatialState.filterActive,
+    focusFamily: spatialState.focusFamily,
+    dist,
+    span: bounds?.span ?? 0
+  };
+};
 window.__cpnSpatialTileStats = () => {
   let ready = 0, matrix = 0, pending = 0;
   spatialState.tileCache.forEach((entry, key) => {
@@ -8575,7 +8620,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.19";
+const APP_VERSION   = "2.31.20";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
