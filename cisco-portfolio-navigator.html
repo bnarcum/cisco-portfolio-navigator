@@ -4296,9 +4296,8 @@ function setAmbientPillarTint(pillarId){
 }
 
 function updateCanvasFocusState(){
-  const focus = usePillarLayout() && (selected || singlePillarFocused());
-  document.body.classList.toggle("canvas-focus", !!focus);
-  document.body.classList.toggle("pillar-focus", singlePillarFocused());
+  document.body.classList.remove("canvas-focus");
+  document.body.classList.toggle("pillar-focus", usePillarLayout() && singlePillarFocused());
   if (viewMode === "families" && singlePillarFocused()) setAmbientPillarTint(focusedPillarId());
   else if (viewMode === "families" && selected && usePillarLayout()) setAmbientPillarTint(familyPillar(selected.id));
   else setAmbientPillarTint(null);
@@ -8620,7 +8619,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.20";
+const APP_VERSION   = "2.31.21";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
