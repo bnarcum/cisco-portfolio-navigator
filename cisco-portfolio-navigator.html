@@ -8993,28 +8993,28 @@ document.addEventListener("keydown",ev=>{
 
   const BEATS = [
     { kind:"title", kicker:"Cisco", title:"One Cisco",
-      sub:"One portfolio. One fabric. One story.",
-      caption:"This is the One Cisco story — how the entire portfolio comes together as a single, integrated fabric.",
+      sub:"This is One Cisco.",
+      caption:"The One Cisco story — how the entire portfolio comes together in one view.",
       before(){ goOverview(); } },
-    { kind:"tool", cue:"One portfolio. One fabric.",
-      sub:"Everything Cisco builds — connected end to end, accelerated by AI.",
-      caption:"Cisco is one portfolio on one secure fabric — not a pile of point products.",
+    { kind:"tool", cue:"Every family. One map.",
+      sub:"The full Cisco portfolio in one place.",
+      caption:"Start with the whole portfolio — every family, one integrated view.",
       before(){ goOverview(); } },
-    { kind:"tool", cue:"Today: disconnected point products",
-      sub:"Siloed. Complex. Hard to secure.",
+    { kind:"tool", cue:"Sound familiar?",
+      sub:"Too many products. Not enough connection.",
       caption:"Most customer environments look like this — lots of products, not enough connection.",
       before(){ goFamilies(); } },
-    { kind:"tool", cue:"One integrated fabric",
-      sub:"Hybrid Work — collaboration, identity, access, and assurance working together.",
-      caption:"Cisco brings it together: a reference architecture where the pieces actually connect.",
+    { kind:"tool", cue:"This is the difference.",
+      sub:"One reference architecture. Real products.",
+      caption:"Hybrid Work shows what integrated looks like — products that actually connect, not bolt-on point solutions.",
       before(){ goRefArch("Hybrid Work"); } },
-    { kind:"card", kicker:"From story to plan", title:"Minutes, not weeks",
-      list:["Tailored recommendations for the account","Clean migration path off legacy","Hands-on proof with dCloud labs","An exportable customer plan to leave behind"],
-      caption:"And it all turns into action — a tailored account plan, with recommendations and proof, ready to export.",
+    { kind:"card", kicker:"Your next step", title:"Minutes, not weeks",
+      list:["Recommend for the account","Migrate off legacy","Prove it in dCloud","Export the plan"],
+      caption:"Turn the story into action — recommendations, proof, and an exportable customer plan.",
       before(){ /* keep Hybrid Work lens behind the card */ } },
     { kind:"title", kicker:"The advantage", title:"One Cisco",
-      sub:"Sell the fabric. Sell the story.",
-      caption:"That is the One Cisco advantage — one portfolio, one fabric, one story.",
+      sub:"One conversation.",
+      caption:"One Cisco — show the whole thing, sell it together.",
       before(){ goOverview(); } }
   ];
 
@@ -9157,7 +9157,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.31";
+const APP_VERSION   = "2.31.32";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
