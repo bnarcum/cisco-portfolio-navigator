@@ -75,6 +75,8 @@ try {
       await page.waitForTimeout(2500);
       const filtered = await page.evaluate(() => window.__cpnSpatialCameraStats?.());
       console.log("Filtered camera:", filtered);
+      const lens = await page.evaluate(() => window.__cpnSpatialCameraStats?.());
+      console.log("Lens state:", lens);
       if (!filtered || filtered.nodeCount < 3) {
         console.error("FAIL: filtered spatial graph too few nodes", filtered);
         exitCode = 1;
