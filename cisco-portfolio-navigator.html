@@ -8742,7 +8742,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.22";
+const APP_VERSION   = "2.31.23";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -9282,6 +9282,9 @@ STYLE.textContent = `
     box-shadow:0 4px 18px rgba(15,23,42,0.2);flex-shrink:0}
   .p-hero-icon-badge svg{width:50px;height:50px;opacity:1;color:#fff;fill:#fff}
   .p-hero--icon-only .p-hero-fallback{z-index:1}
+  .p-hero--matrix .p-hero-fallback--reserve{display:none!important}
+  .p-hero--icon-only.p-hero--matrix .p-hero-fallback--reserve{display:flex!important}
+  .p-hero--matrix .p-hero-scrim{background:linear-gradient(180deg, transparent 72%, rgba(15,23,42,0.08) 100%)}
   .p-hero--icon-only .p-hero-scrim{background:linear-gradient(180deg, transparent 70%, rgba(15,23,42,0.06) 100%)}
   .p-hero-scrim{position:absolute;inset:0;background:linear-gradient(180deg, transparent 58%, rgba(15,23,42,0.1) 100%);
     pointer-events:none;z-index:2}
@@ -11697,6 +11700,11 @@ function enhanceProductPanel(id){
     insertPinAndCompareBtns(id, "product");
   }, 0);
 }
+function productMatrixHeroUrl(id){
+  if (!matrixBridgeEntry(id)) return null;
+  return matrixImageUrl(id);
+}
+
 function insertProductHero(id, kind){
   const pb = $("#pbody"); if (!pb) return;
   pb.querySelector(".p-hero")?.remove();
@@ -11707,12 +11715,37 @@ function insertProductHero(id, kind){
   const iconFill = cat ? CATS[cat].color : "#64748b";
   const symId = "#icon-" + (kind === "node" ? iconKey(nodeById[id]) :
     iconKey({ _kind: "product", _productRef: prodById[id], id }));
+  const matrixUrl = kind === "product" ? productMatrixHeroUrl(id) : null;
   const hero = document.createElement("div");
-  hero.className = "p-hero p-hero--icon-only";
-  hero.innerHTML = `
-    <div class="p-hero-fallback" style="background:${heroCategoryGradient(iconFill)}">${heroIconBadgeHtml(symId, iconFill)}</div>
-    <div class="p-hero-scrim"></div>
-    <div class="p-hero-meta"><span></span><span class="p-hero-cat">${cat ? escapeHtml(CATS[cat].label) : ""}</span></div>`;
+  const catLabel = cat ? escapeHtml(CATS[cat].label) : "";
+  const fallbackHtml = `<div class="p-hero-fallback" style="background:${heroCategoryGradient(iconFill)}">${heroIconBadgeHtml(symId, iconFill)}</div>`;
+  const fallbackReserveHtml = `<div class="p-hero-fallback p-hero-fallback--reserve" style="display:none;background:${heroCategoryGradient(iconFill)}">${heroIconBadgeHtml(symId, iconFill)}</div>`;
+  const metaHtml = `<div class="p-hero-scrim"></div>
+    <div class="p-hero-meta"><span></span><span class="p-hero-cat">${catLabel}</span></div>`;
+  if (matrixUrl){
+    hero.className = "p-hero p-hero--matrix";
+    hero.innerHTML = `
+      <img class="p-hero-matrix-img" src="${escapeHtml(matrixUrl)}" alt="${escapeHtml(n.name || id)}"
+        loading="lazy" decoding="async">
+      ${fallbackReserveHtml}
+      ${metaHtml}`;
+    const img = hero.querySelector(".p-hero-matrix-img");
+    if (img){
+      img.addEventListener("error", () => {
+        img.remove();
+        hero.classList.remove("p-hero--matrix");
+        hero.classList.add("p-hero--icon-only");
+        const fb = hero.querySelector(".p-hero-fallback");
+        if (fb){
+          fb.classList.remove("p-hero-fallback--reserve");
+          fb.style.display = "";
+        }
+      }, { once: true });
+    }
+  } else {
+    hero.className = "p-hero p-hero--icon-only";
+    hero.innerHTML = `${fallbackHtml}${metaHtml}`;
+  }
   const nameEl = pb.querySelector(".p-name");
   if (nameEl) pb.insertBefore(hero, nameEl);
   else pb.prepend(hero);

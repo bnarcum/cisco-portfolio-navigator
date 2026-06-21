@@ -50,7 +50,7 @@ async function inspectHero(page, id, kind) {
       document.getElementById("panel")?.classList.add("open");
     }, id);
   }
-  await page.waitForSelector(".p-hero .p-hero-fallback", { timeout: 5000 });
+  await page.waitForSelector(".p-hero", { timeout: 5000 });
 
   return page.evaluate(
     ({ pid, pkind, bgMin, contrastMin }) => {
@@ -106,17 +106,35 @@ async function inspectHero(page, id, kind) {
       const fallback = hero?.querySelector(".p-hero-fallback");
       const badge = fallback?.querySelector(".p-hero-icon-badge");
       const use = fallback?.querySelector("use");
-      const img = hero?.querySelector("img");
-      if (!hero || !fallback || !use) {
+      const img = hero?.querySelector("img.p-hero-matrix-img");
+      if (!hero) {
+        return { id: pid, kind: pkind, ok: false, reason: "missing hero" };
+      }
+
+      const hasMatrixImage = !!(img && (img.getAttribute("src") || "").includes("img-"));
+      if (hasMatrixImage) {
+        return {
+          id: pid,
+          kind: pkind,
+          ok: true,
+          reason: "",
+          bgLum: 1,
+          fillLum: null,
+          fillAttr: "",
+          iconOnly: false,
+          hasMatrixImage: true,
+        };
+      }
+
+      if (!fallback || !use) {
         return { id: pid, kind: pkind, ok: false, reason: "missing hero/fallback/use" };
       }
 
       const bgLum = fallbackBgLuminance(fallback);
       let fillLum = useFillLuminance(use);
       const fillAttr = use.getAttribute("fill") || "";
-      const hasMatrixImage = !!img;
       const iconOnly = hero.classList.contains("p-hero--icon-only");
-      const checkIcon = iconOnly || !hasMatrixImage;
+      const checkIcon = iconOnly;
 
       let ok = bgLum >= bgMin;
       let reason = "";
