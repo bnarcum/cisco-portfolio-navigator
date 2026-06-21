@@ -6446,17 +6446,16 @@ function spatialLinkParticles(l){
   const tier = spatialLinkHighlightTier(l);
   if (tier === "dim") return 0;
   if (tier === "hot"){
-    if (l.type === "direct") return 2;
+    if (l.type === "direct") return 1;
     if (l.type === "adjacent") return 1;
-    return 1;
+    return 0;
   }
   if (tier === "all" || tier === "mid" || tier === "orbit"){
-    if (l.type === "direct") return 2;
+    if (l.type === "direct") return 1;
     if (l.type === "adjacent") return 1;
-    return 1;
+    return 0;
   }
   if (l.type === "direct") return 1;
-  if (l.type === "adjacent") return 1;
   return 0;
 }
 
@@ -6482,7 +6481,7 @@ function spatialLinkParticleResolution(){
 }
 
 function spatialLinkParticleSpeed(){
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 0.0095;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 0.00475;
 }
 
 function refreshSpatialLinkStyles(){
@@ -9053,7 +9052,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.52";
+const APP_VERSION   = "2.31.53";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
