@@ -23,7 +23,7 @@ try {
   );
 
   const version = await page.evaluate(() => window.__cpnV2?.APP_VERSION);
-  if (version !== "2.31.25") errors.push(`expected APP_VERSION 2.31.25, got ${version}`);
+  if (version !== "2.31.26") errors.push(`expected APP_VERSION 2.31.26, got ${version}`);
 
   const pathCount = await page.evaluate(() => window.DCLOUD_PATHS?.length || 0);
   if (pathCount < 5) errors.push(`expected >=5 learning paths, got ${pathCount}`);
@@ -60,9 +60,14 @@ try {
   );
 
   const hasObjectives = await page.evaluate(() =>
-    !!document.querySelector("#pbody .p-dcloud-objectives, #pbody .p-learn-ladder")
+    !!document.querySelector("#pbody .p-dcloud-objectives")
   );
-  if (!hasObjectives) errors.push("Learn & Try panel missing objectives or ladder");
+  if (!hasObjectives) errors.push("Learn & Try panel missing objectives");
+
+  const redundantLinks = await page.evaluate(() =>
+    document.querySelectorAll("#pbody .la-dcloud-schedule, #pbody .p-learn-ladder").length
+  );
+  if (redundantLinks > 0) errors.push("redundant schedule links or step ladder still present");
 
   if (errors.length) {
     console.error("FAIL test-dcloud-learning:");

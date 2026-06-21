@@ -541,9 +541,6 @@
       border:1px solid rgba(0,212,255,.45);
       background:linear-gradient(145deg,rgba(0,200,255,.14) 0%,rgba(0,60,90,.12) 100%)}
     .gw-dcloud-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#b8f0ff;margin-bottom:8px}
-    .p-learn-ladder{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-    .p-learn-step{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
-      padding:3px 8px;border-radius:999px;background:rgba(0,212,255,.15);color:#b8f0ff;border:1px solid rgba(0,212,255,.35)}
     .p-dcloud-objectives{margin:0 0 10px;padding-left:18px;font-size:11.5px;color:#e8f6ff;line-height:1.5}
     .p-dcloud-objectives li{margin:3px 0}
     .p-dcloud-meta-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
@@ -552,8 +549,6 @@
     .p-dcloud-entry{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(0,212,255,.15)}
     .p-dcloud-entry:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
     .p-dcloud-entry-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-    .la-dcloud-schedule{border-color:rgba(148,163,184,.45)!important;background:rgba(15,23,42,.45)!important}
-    .la-dcloud-schedule .la-dcloud-meta{background:#64748b!important;color:#fff!important}
     .p-dcloud-eco{font-size:11px;color:#c4e8f8;margin:0 0 10px;line-height:1.45;font-style:italic}
     #learn-path-banner{position:fixed;top:62px;left:50%;transform:translateX(-50%);z-index:65;
       display:none;max-width:min(920px,calc(100vw - 40px));padding:10px 14px;border-radius:10px;
@@ -8925,7 +8920,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.25";
+const APP_VERSION   = "2.31.26";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -11731,13 +11726,6 @@ function dcloudPrimaryUrl(e){
   return e?.instantUrl || e?.catalogUrl || "";
 }
 
-function dcloudScheduleUrl(e){
-  if (!e?.catalogUrl) return "";
-  if (e.instantUrl && e.catalogUrl !== e.instantUrl) return e.catalogUrl;
-  if (!e.instantUrl) return e.catalogUrl;
-  return "";
-}
-
 function dcloudConnectedFamilyIds(familyIds = []){
   const connected = new Set(familyIds.filter(id => nodeById[id]));
   LINKS.forEach(l => {
@@ -11923,19 +11911,11 @@ function dcloudEntryObjectivesHtml(e){
 
 function dcloudEntryActionsHtml(e){
   const primary = dcloudPrimaryUrl(e);
-  const schedule = dcloudScheduleUrl(e);
   const instantLabel = e.demoType === "instant" ? "Launch instant demo ↗" : "Open in dCloud ↗";
-  let html = `<a class="la la-dcloud" href="${escapeHtml(primary)}" target="_blank" rel="noopener" data-dcloud-id="${escapeHtml(e.id)}">
+  return `<a class="la la-dcloud" href="${escapeHtml(primary)}" target="_blank" rel="noopener" data-dcloud-id="${escapeHtml(e.id)}">
     <span class="la-dcloud-main">${escapeHtml(e.linkLabel || e.name)}</span>
     <span class="la-dcloud-meta">${instantLabel}</span>
   </a>`;
-  if (schedule){
-    html += `<a class="la la-dcloud la-dcloud-schedule" href="${escapeHtml(schedule)}" target="_blank" rel="noopener">
-      <span class="la-dcloud-main">Schedule / profile page</span>
-      <span class="la-dcloud-meta">Book lab ↗</span>
-    </a>`;
-  }
-  return html;
 }
 
 function renderDcloudEntryBlock(e, opts = {}){
@@ -11953,17 +11933,11 @@ function renderDcloudSectionBody(entries, opts = {}){
   const hint = opts.sectionHint ?? DCLOUD_DEFAULTS.sectionHint;
   const loginNote = opts.loginNote ?? DCLOUD_DEFAULTS.loginNote;
   const compact = !!opts.compact;
-  const showLadder = !compact && !opts.hideLadder;
   const links = entries.map(e => renderDcloudEntryBlock(e, opts)).join("");
   const eco = opts.ecosystemNote ? `<div class="p-dcloud-eco">${escapeHtml(opts.ecosystemNote)}</div>` : "";
   return `${dcloudHeaderHtml(compact)}
     ${compact ? `<div class="gw-dcloud-title">Hands-on labs for this plan</div>` : `<div class="p-dcloud-tagline">${escapeHtml(DCLOUD_DEFAULTS.sectionTitle)}</div>`}
     ${compact ? "" : `<div class="p-dcloud-hint">${escapeHtml(hint)}</div>`}
-    ${showLadder ? `<div class="p-learn-ladder" aria-label="Learning flow">
-      <span class="p-learn-step">1 · Understand</span>
-      <span class="p-learn-step">2 · See in portfolio</span>
-      <span class="p-learn-step">3 · Try in dCloud</span>
-    </div>` : ""}
     ${eco}
     <div class="lb la-dcloud-list">${links}</div>
     ${loginNote ? `<div class="p-dcloud-note">${escapeHtml(loginNote)}</div>` : ""}`;
@@ -11973,7 +11947,7 @@ function dcloudGuidedRecommendationsHtml(){
   const entries = dcloudGuidedRecommendations(5);
   if (!entries.length) return "";
   const raw = entries.map(r => dcloudEntryById(r.id) || r);
-  return `<div class="gw-dcloud-section">${renderDcloudSectionBody(raw, { compact: true, hideLadder: true })}</div>`;
+  return `<div class="gw-dcloud-section">${renderDcloudSectionBody(raw, { compact: true })}</div>`;
 }
 
 function insertDcloudLinks(id, kind){
@@ -11990,7 +11964,6 @@ function insertDcloudLinks(id, kind){
   const eco = kind === "node" ? dcloudEcosystemLabs(id, 1) : [];
   if (eco.length && !entries.some(e => e.id === eco[0].id)) entries = [...entries, ...eco.slice(0, 1)];
 
-  const hasMatrix = kind === "product" && matrixDeviceUrl(id);
   const ecoNote = eco.length
     ? `Also covers connected families: ${eco[0].linkLabel || eco[0].name}`
     : "";
@@ -12010,13 +11983,6 @@ function insertDcloudLinks(id, kind){
   const anchor = pb.querySelector(".add-stack-btn");
   if (anchor) pb.insertBefore(sec, anchor);
   else pb.appendChild(sec);
-
-  if (hasMatrix){
-    const note = sec.querySelector(".p-learn-ladder");
-    if (note) note.innerHTML = `<span class="p-learn-step">1 · Understand</span>
-      <span class="p-learn-step">2 · 3D Showroom above</span>
-      <span class="p-learn-step">3 · Try in dCloud</span>`;
-  }
 }
 
 function refreshDcloudPanelIfOpen(){
@@ -12096,7 +12062,6 @@ function renderPlannerLabs(){
       const isDone = done.has(r.id);
       const objs = (e.learningObjectives || []).slice(0, 2);
       const primary = dcloudPrimaryUrl(e);
-      const schedule = dcloudScheduleUrl(e);
       return `<div class="lab-card${isDone ? " done" : ""}" data-lab-id="${escapeHtml(r.id)}">
         <div class="lab-head">
           <input type="checkbox" class="lab-check" ${isDone ? "checked" : ""} aria-label="Mark complete">
@@ -12106,7 +12071,6 @@ function renderPlannerLabs(){
         ${objs.length ? `<ul class="lab-objectives">${objs.map(o => `<li>${escapeHtml(o)}</li>`).join("")}</ul>` : (r.hint ? `<div class="lab-meta">${escapeHtml(r.hint.slice(0, 160))}${r.hint.length > 160 ? "…" : ""}</div>` : "")}
         <div class="lab-actions">
           <a class="rc-btn prim" href="${escapeHtml(primary)}" target="_blank" rel="noopener">Launch lab ↗</a>
-          ${schedule ? `<a class="rc-btn" href="${escapeHtml(schedule)}" target="_blank" rel="noopener">Schedule ↗</a>` : ""}
         </div>
       </div>`;
     }).join("")}`;
