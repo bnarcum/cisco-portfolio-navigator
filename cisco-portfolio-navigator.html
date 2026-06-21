@@ -5602,7 +5602,7 @@ function buildCompositionView(familyId){
 // ══════════════════════════════════════
 const SPATIAL_LIB = "vendor/3d-force-graph.min.js";
 const SPATIAL_LINK_PRESET_KEY = "cpn-spatial-link-preset-v2";
-const spatialState = { graph: null, active: false, libPromise: null, spritePromise: null, resizeObs: null, labelCache: new Map(), tileCache: new Map(), tileLoadGen: 0, focusFamily: null, lastNodeClick: null, hoveredId: null, lightsAdded: false, threeCaptured: false, nodeRendererReady: false, meshTemplate: null, filterBoost: 1, filterActive: false, lastStats: null, linkPreset: "curved", styleBarReady: false };
+const spatialState = { graph: null, active: false, libPromise: null, spritePromise: null, resizeObs: null, labelCache: new Map(), tileCache: new Map(), tileLoadGen: 0, focusFamily: null, lastNodeClick: null, hoveredId: null, lightsAdded: false, threeCaptured: false, nodeRendererReady: false, meshTemplate: null, filterBoost: 1, filterActive: false, lastStats: null, linkPreset: "curved", styleBarReady: false, decorAdded: false, decorGroup: null, floorMesh: null, boundaryRings: [] };
 
 function spatialResolveName(id){
   return nodeById[id]?.name || prodById[id]?.name || id;
@@ -5701,6 +5701,8 @@ function mergeSpatialThreeExtras(THREE){
   if (extras.MeshBasicMaterial) THREE.MeshBasicMaterial = extras.MeshBasicMaterial;
   if (extras.MeshLambertMaterial) THREE.MeshLambertMaterial = extras.MeshLambertMaterial;
   if (extras.SphereGeometry) THREE.SphereGeometry = extras.SphereGeometry;
+  if (extras.RingGeometry) THREE.RingGeometry = extras.RingGeometry;
+  if (extras.PlaneGeometry) THREE.PlaneGeometry = extras.PlaneGeometry;
   if (extras.AmbientLight) THREE.AmbientLight = extras.AmbientLight;
   if (extras.DirectionalLight) THREE.DirectionalLight = extras.DirectionalLight;
   return THREE;
@@ -5832,8 +5834,8 @@ function spatialFrameCamera(ms = 500){
   const { cx, cy, cz, span } = bounds;
   const dist = spatialCameraDistance(span, nodes.length, spatialState.filterActive);
   spatialState.graph.cameraPosition(
-    { x: cx, y: cy + span * 0.07, z: cz + dist },
-    { x: cx, y: cy, z: cz },
+    { x: cx, y: cy + span * 0.24, z: cz + dist * 0.92 },
+    { x: cx, y: cy - span * 0.04, z: cz },
     ms
   );
   return true;
@@ -5851,8 +5853,8 @@ function spatialOrbitCamera(ms = 500){
   const { cx, cy, cz, span } = bounds;
   const dist = Math.min(165, Math.max(92, span * 1.08 + 78));
   spatialState.graph.cameraPosition(
-    { x: cx, y: cy + span * 0.1, z: cz + dist },
-    { x: cx, y: cy, z: cz },
+    { x: cx, y: cy + span * 0.22, z: cz + dist * 0.94 },
+    { x: cx, y: cy - span * 0.03, z: cz },
     ms
   );
   return true;
@@ -5864,7 +5866,10 @@ function scheduleSpatialFrameCamera(delay = 0, attempt = 0){
   spatialFitTimer = setTimeout(() => {
     if (gen !== spatialFitGen || !spatialState.active || !spatialState.graph) return;
     const frame = spatialState.focusFamily ? spatialOrbitCamera : spatialFrameCamera;
-    if (frame(500)) return;
+    if (frame(500)){
+      setTimeout(() => updateSpatialDecor(), 120);
+      return;
+    }
     if (attempt < 12) scheduleSpatialFrameCamera(180, attempt + 1);
   }, delay);
 }
@@ -5915,7 +5920,7 @@ function spatialNodeCategory(node){
 function spatialNodeVisualProfile(node){
   const inOrbit = !!spatialState.focusFamily;
   const isHub = inOrbit && node.id === spatialState.focusFamily;
-  if (!inOrbit) return { mode: "constellation", tileScale: 2.35, tileMin: 12.5, labelGap: 1.65, ringScale: 1.12 };
+  if (!inOrbit) return { mode: "constellation", tileScale: 2.55, tileMin: 13.5, labelGap: 1.55, ringScale: 1.08 };
   if (isHub || node.kind === "family") return { mode: "hub", tileScale: 1.55, tileMin: 10.5, labelGap: 1.45, ringScale: 1.22 };
   return { mode: "product", tileScale: 1.18, tileMin: 8.5, labelGap: 1.25, ringScale: 1.14 };
 }
@@ -5965,7 +5970,7 @@ function spatialTileCacheKey(node){
   return [
     node.id,
     photoUrl ? "matrix:" + photoUrl : "icon:" + spatialIconKeyForNode(node),
-    "tile-v4",
+    "tile-v5",
     profile.mode,
     accent.core,
     selected?.id === node.id ? "sel" : "",
@@ -5975,11 +5980,29 @@ function spatialTileCacheKey(node){
 
 function buildSpatialTileSvg(node){
   const iconKey = spatialIconKeyForNode(node);
-  const accent = spatialNodeAccent(node);
-  const iconColor = spatialAccentHex(accent, "core");
+  const palette = spatialCategoryPalette(node);
+  const fill = palette.base;
+  const glow = palette.glow;
   const inner = spatialSymbolInner(iconKey);
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" style="color:${iconColor}">
-    <g transform="translate(128,128) scale(0.9) translate(-128,-128)" fill="${iconColor}" stroke="${iconColor}">${inner}</g>
+  const isSel = selected?.id === node.id;
+  const isStk = stack.has(node.id);
+  const stroke = isSel ? "#66e0ff" : (isStk ? "#02c8ff" : glow);
+  const strokeW = isSel ? 5 : (isStk ? 4 : 3);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+    <defs>
+      <radialGradient id="core" cx="50%" cy="46%" r="58%">
+        <stop offset="0%" stop-color="${fill}" stop-opacity="1"/>
+        <stop offset="78%" stop-color="${fill}" stop-opacity="0.96"/>
+        <stop offset="100%" stop-color="${glow}" stop-opacity="0.55"/>
+      </radialGradient>
+      <filter id="halo" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="5.5" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <circle cx="128" cy="128" r="112" fill="${glow}" opacity="0.22" filter="url(#halo)"/>
+    <circle cx="128" cy="128" r="94" fill="url(#core)" stroke="${stroke}" stroke-width="${strokeW}" stroke-opacity="0.72"/>
+    <g transform="translate(128,128) scale(0.68) translate(-128,-128)" fill="#ffffff" stroke="#ffffff" stroke-width="0">${inner}</g>
   </svg>`;
 }
 
@@ -6058,7 +6081,7 @@ function ensureSpatialTileOnGroup(group, node, radius, profile){
     tile.parent.remove(tile);
     tile.material?.map?.dispose?.();
   } else {
-    fresh.position.y = rs * 0.08;
+    fresh.position.y = 0;
     group.add(fresh);
   }
 }
@@ -6069,22 +6092,11 @@ function updateSpatialNodeGroup(group, node){
   const profile = spatialNodeVisualProfile(node);
   const accent = spatialNodeAccent(node);
   const deco = spatialDecoFade();
+  const isHot = selected?.id === node.id || spatialState.hoveredId === node.id;
   group.traverse(obj => {
     if (obj.userData?.role === "halo" && obj.material){
       obj.material.color.setHex(accent.glow);
-      obj.material.opacity = accent.glowOp * 0.8 * deco;
-    }
-    if (obj.userData?.role === "ring" && obj.material){
-      obj.material.color.setHex(accent.glow);
-      obj.material.opacity = (selected?.id === node.id ? 0.55 : 0.32) * deco;
-    }
-    if (obj.userData?.role === "pedestal" && obj.material){
-      obj.material.color.setHex(0x0d1828);
-      if (obj.material.emissive?.setHex) obj.material.emissive.setHex(accent.emissive);
-    }
-    if (obj.userData?.role === "rim" && obj.material){
-      obj.material.color.setHex(accent.core);
-      obj.material.opacity = stack.has(node.id) ? 0.92 : 0.62;
+      obj.material.opacity = (isHot ? accent.glowOp * 1.15 : accent.glowOp * 0.92) * deco;
     }
     if (obj.userData?.role === "label"){
       styleSpatialLabelSprite(obj, node);
@@ -6109,54 +6121,18 @@ function buildSpatialNodeObject(node){
   const accent = spatialNodeAccent(node);
   const rs = spatialNodeBaseScale(node, profile);
 
-  const ring = template.clone();
-  ring.material = new THREE.MeshBasicMaterial({
-    color: accent.glow,
-    wireframe: true,
-    transparent: true,
-    opacity: 0.34,
-    depthWrite: false
-  });
-  ring.userData.role = "ring";
-  ring.scale.set(rs * 1.18, rs * 0.07, rs * 1.18);
-  ring.rotation.x = Math.PI / 2;
-  group.add(ring);
-
   const halo = template.clone();
   halo.material = new THREE.MeshBasicMaterial({
     color: accent.glow,
     transparent: true,
-    opacity: accent.glowOp * 0.75,
-    depthWrite: false
+    opacity: accent.glowOp * 0.85,
+    depthWrite: false,
+    blending: 2,
   });
   halo.userData.role = "halo";
-  halo.scale.set(rs * 1.02, rs * 0.05, rs * 1.02);
+  halo.scale.set(rs * 1.35, rs * 0.08, rs * 1.35);
   halo.rotation.x = Math.PI / 2;
   group.add(halo);
-
-  const pedestal = template.clone();
-  const pedMat = { color: 0x0d1828, transparent: true, opacity: 0.9 };
-  if (THREE.MeshLambertMaterial !== THREE.MeshBasicMaterial){
-    pedMat.emissive = accent.emissive;
-    pedMat.emissiveIntensity = 0.14;
-  }
-  pedestal.material = new THREE.MeshLambertMaterial(pedMat);
-  pedestal.userData.role = "pedestal";
-  pedestal.scale.set(rs * 0.7, rs * 0.11, rs * 0.5);
-  pedestal.position.y = -rs * 0.2;
-  group.add(pedestal);
-
-  const rim = template.clone();
-  rim.material = new THREE.MeshBasicMaterial({
-    color: accent.core,
-    transparent: true,
-    opacity: 0.65,
-    depthWrite: false
-  });
-  rim.userData.role = "rim";
-  rim.scale.set(rs * 0.74, rs * 0.035, rs * 0.54);
-  rim.position.y = -rs * 0.13;
-  group.add(rim);
 
   ensureSpatialTileOnGroup(group, node, radius, profile);
 
@@ -6184,6 +6160,156 @@ function ensureSpatialLights(){
   fill.position.set(-70, 50, -90);
   scene.add(fill);
   spatialState.lightsAdded = true;
+  ensureSpatialDecor();
+}
+
+function drawSpatialFloorCanvas(size){
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return canvas;
+  ctx.fillStyle = "rgba(4,12,28,0.55)";
+  ctx.fillRect(0, 0, size, size);
+  const step = size / 16;
+  ctx.strokeStyle = "rgba(2,200,255,0.14)";
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 16; i++){
+    const p = i * step + 0.5;
+    ctx.beginPath();
+    ctx.moveTo(p, 0);
+    ctx.lineTo(p, size);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, p);
+    ctx.lineTo(size, p);
+    ctx.stroke();
+  }
+  const cx = size / 2;
+  const grd = ctx.createRadialGradient(cx, cx, 0, cx, cx, size * 0.72);
+  grd.addColorStop(0, "rgba(2,200,255,0.08)");
+  grd.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, size, size);
+  return canvas;
+}
+
+function ensureSpatialDecor(){
+  if (!spatialState.graph) return;
+  const THREE = ensureSpatialTHREE();
+  if (!THREE?.Mesh || !THREE?.MeshBasicMaterial) return;
+  const scene = spatialState.graph.scene();
+  if (!scene) return;
+  if (!spatialState.decorGroup){
+    const GroupCtor = resolveSpatialGroupCtor() || THREE.Group;
+    if (!GroupCtor) return;
+    spatialState.decorGroup = new GroupCtor();
+    spatialState.decorGroup.name = "spatial-decor";
+    spatialState.decorGroup.renderOrder = -20;
+    const floorCanvas = drawSpatialFloorCanvas(512);
+    const floorTex = spatialMakeTexture(floorCanvas);
+    if (THREE.PlaneGeometry){
+      spatialState.floorMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(1, 1),
+        new THREE.MeshBasicMaterial({
+          map: floorTex,
+          transparent: true,
+          opacity: 0.38,
+          depthWrite: false
+        })
+      );
+    } else {
+      const template = spatialState.meshTemplate;
+      if (!template) return;
+      spatialState.floorMesh = template.clone();
+      spatialState.floorMesh.material = new THREE.MeshBasicMaterial({
+        map: floorTex,
+        transparent: true,
+        opacity: 0.38,
+        depthWrite: false
+      });
+      spatialState.floorMesh.scale.set(400, 1, 400);
+    }
+    spatialState.floorMesh.rotation.x = -Math.PI / 2;
+    spatialState.floorMesh.renderOrder = -15;
+    spatialState.decorGroup.add(spatialState.floorMesh);
+    spatialState.boundaryRings = [];
+    const ringSpecs = [
+      { color: 0x02c8ff, opacity: 0.14, width: 0.55 },
+      { color: 0x0a60ff, opacity: 0.08, width: 1.1 }
+    ];
+    ringSpecs.forEach((spec, i) => {
+      let mesh;
+      if (THREE.RingGeometry){
+        mesh = new THREE.Mesh(
+          new THREE.RingGeometry(0.98, 1, 128),
+          new THREE.MeshBasicMaterial({
+            color: spec.color,
+            transparent: true,
+            opacity: spec.opacity,
+            depthWrite: false,
+            side: 2
+          })
+        );
+      } else {
+        const template = spatialState.meshTemplate;
+        if (!template) return;
+        mesh = template.clone();
+        mesh.material = new THREE.MeshBasicMaterial({
+          color: spec.color,
+          wireframe: true,
+          transparent: true,
+          opacity: spec.opacity * 1.4,
+          depthWrite: false
+        });
+        mesh.scale.set(1, 0.04, 1);
+      }
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.renderOrder = -12 + i;
+      mesh.userData.boundaryIndex = i;
+      mesh.userData.ringWidth = spec.width;
+      spatialState.boundaryRings.push(mesh);
+      spatialState.decorGroup.add(mesh);
+    });
+    scene.add(spatialState.decorGroup);
+    spatialState.decorAdded = true;
+  }
+  updateSpatialDecor();
+}
+
+function updateSpatialDecor(){
+  if (!spatialState.decorAdded || !spatialState.graph || !spatialState.decorGroup) return;
+  const nodes = spatialGraphNodes();
+  const bounds = spatialNodeBounds(nodes, { minNeeded: 1, minSpan: 24 });
+  if (!bounds){
+    spatialState.decorGroup.visible = false;
+    return;
+  }
+  spatialState.decorGroup.visible = true;
+  const { cx, cy, cz, span } = bounds;
+  const floorY = cy - span * 0.42;
+  const floorSize = Math.max(span * 3.2, 180);
+  if (spatialState.floorMesh){
+    spatialState.floorMesh.position.set(cx, floorY, cz);
+    if (spatialState.floorMesh.geometry?.type === "PlaneGeometry"){
+      spatialState.floorMesh.scale.set(floorSize, floorSize, 1);
+    } else {
+      spatialState.floorMesh.scale.set(floorSize * 0.5, 1, floorSize * 0.5);
+    }
+  }
+  const ringR = spatialState.focusFamily
+    ? Math.max(span * 0.62, 42)
+    : Math.max(span * 0.72, 70);
+  spatialState.boundaryRings.forEach(ring => {
+    const w = ring.userData.ringWidth || 0.8;
+    ring.position.set(cx, floorY + 0.35, cz);
+    if (ring.geometry?.type === "RingGeometry"){
+      ring.scale.set(ringR, ringR, 1);
+      ring.material.opacity = (ring.userData.boundaryIndex === 0 ? 0.16 : 0.09) * spatialDecoFade();
+    } else {
+      ring.scale.set(ringR * (1 + w * 0.04), ringR * 0.035, ringR * (1 + w * 0.04));
+    }
+  });
 }
 
 function refreshSpatialNodeVisuals(){
@@ -6217,10 +6343,10 @@ function spatialLinkHighlightTier(l){
 }
 
 function spatialLinkCurvature(){
-  if (spatialState.focusFamily) return 0.06;
+  if (spatialState.focusFamily) return 0.12;
   if (spatialState.linkPreset === "straight") return 0;
-  if (spatialState.filterActive) return 0.12;
-  return 0.24;
+  if (spatialState.filterActive) return 0.28;
+  return 0.42;
 }
 
 function readSpatialLinkPreset(){
@@ -6272,15 +6398,15 @@ function spatialLinkOpacity(l){
   if (tier === "hot") return 1;
   if (tier === "mid") return 0.68;
   if (tier === "all"){
-    if (l.type === "direct") return 0.96;
-    if (l.type === "adjacent") return 0.84;
-    if (l.type === "succession") return 0.78;
-    return 0.58;
+    if (l.type === "direct") return 0.82;
+    if (l.type === "adjacent") return 0.72;
+    if (l.type === "succession") return 0.66;
+    return 0.48;
   }
-  if (l.type === "direct") return 0.72;
-  if (l.type === "adjacent") return 0.58;
-  if (l.type === "succession") return 0.62;
-  return 0.42;
+  if (l.type === "direct") return 0.62;
+  if (l.type === "adjacent") return 0.52;
+  if (l.type === "succession") return 0.56;
+  return 0.38;
 }
 
 function spatialLinkColor(l){
@@ -6300,8 +6426,8 @@ function spatialLinkColor(l){
   }
   if (l.type === "succession") return tier === "all" ? "rgba(192,132,252,0.88)" : "rgba(168,85,247,0.62)";
   if (l.type === "composition") return "rgba(148,163,184,0.55)";
-  if (l.type === "direct") return tier === "all" ? "rgba(2,200,255,0.96)" : "rgba(2,200,255,0.72)";
-  if (l.type === "adjacent") return tier === "all" ? "rgba(251,191,36,0.9)" : "rgba(251,191,36,0.62)";
+  if (l.type === "direct") return tier === "all" ? "rgba(2,200,255,0.88)" : "rgba(2,200,255,0.68)";
+  if (l.type === "adjacent") return tier === "all" ? "rgba(255,180,60,0.82)" : "rgba(255,180,60,0.58)";
   return tier === "all" ? "rgba(148,163,184,0.55)" : "rgba(110,118,129,0.38)";
 }
 
@@ -6321,15 +6447,15 @@ function spatialLinkWidth(l){
   }
   if (tier === "mid") return l.type === "direct" ? 1.8 : 1.25;
   if (tier === "all"){
-    if (l.type === "direct") return 2.8;
-    if (l.type === "adjacent") return 2.0;
-    if (l.type === "succession") return 1.7;
-    return 1.15;
+    if (l.type === "direct") return 2.2;
+    if (l.type === "adjacent") return 1.65;
+    if (l.type === "succession") return 1.35;
+    return 0.95;
   }
-  if (l.type === "direct") return 1.9;
-  if (l.type === "adjacent") return 1.35;
-  if (l.type === "succession") return 1.15;
-  return 0.85;
+  if (l.type === "direct") return 1.55;
+  if (l.type === "adjacent") return 1.15;
+  if (l.type === "succession") return 1.0;
+  return 0.75;
 }
 
 function spatialLinkParticles(l){
@@ -6341,9 +6467,9 @@ function spatialLinkParticles(l){
     return 1;
   }
   if (tier === "all" || tier === "mid"){
-    if (l.type === "direct") return 3;
-    if (l.type === "adjacent") return 2;
-    return 0;
+    if (l.type === "direct") return 4;
+    if (l.type === "adjacent") return 3;
+    return 1;
   }
   if (l.type === "direct") return 2;
   if (l.type === "adjacent") return 1;
@@ -6382,8 +6508,8 @@ function configureSpatialForces(){
     g.d3Force("charge").strength(-112);
     g.d3Force("link").distance(l => l.type === "direct" ? 58 : 84);
   } else {
-    g.d3Force("charge").strength(-135);
-    g.d3Force("link").distance(l => l.type === "direct" ? 78 : 112);
+    g.d3Force("charge").strength(-148);
+    g.d3Force("link").distance(l => l.type === "direct" ? 68 : 96);
   }
 }
 
@@ -6467,9 +6593,9 @@ function loadSpriteTextLib(){
     const s = document.createElement("script");
     s.type = "module";
     s.textContent = `import SpriteText from "./vendor/three-spritetext.mjs";
-import { CanvasTexture, Sprite, SpriteMaterial, Group, Mesh, MeshBasicMaterial, MeshLambertMaterial, SphereGeometry, AmbientLight, DirectionalLight } from "./vendor/three.module.min.js";
+import { CanvasTexture, Sprite, SpriteMaterial, Group, Mesh, MeshBasicMaterial, MeshLambertMaterial, SphereGeometry, RingGeometry, PlaneGeometry, AmbientLight, DirectionalLight } from "./vendor/three.module.min.js";
 window.SpriteText = SpriteText.default || SpriteText;
-window.__cpnThreeExtras = { CanvasTexture, Sprite, SpriteMaterial, Group, Mesh, MeshBasicMaterial, MeshLambertMaterial, SphereGeometry, AmbientLight, DirectionalLight };
+window.__cpnThreeExtras = { CanvasTexture, Sprite, SpriteMaterial, Group, Mesh, MeshBasicMaterial, MeshLambertMaterial, SphereGeometry, RingGeometry, PlaneGeometry, AmbientLight, DirectionalLight };
 window.dispatchEvent(new Event("spatial-spritetext-ready"));`;
     s.onerror = () => {
       window.removeEventListener("spatial-spritetext-ready", onReady);
@@ -6492,29 +6618,17 @@ function spatialHexToRgba(hex, alpha){
 }
 
 function styleSpatialLabelSprite(sprite, node){
-  const palette = spatialCategoryPalette(node);
   const textH = spatialLabelTextHeight(node);
   const isSel = selected && selected.id === node.id;
   const isStk = stack.has(node.id);
-  if (isSel){
-    sprite.color = "#ffffff";
-    sprite.backgroundColor = "rgba(2,200,255,0.38)";
-    sprite.textHeight = textH;
-    sprite.strokeColor = "rgba(2,200,255,0.72)";
-  } else if (isStk){
-    sprite.color = "#f4fbff";
-    sprite.backgroundColor = "rgba(2,200,255,0.22)";
-    sprite.textHeight = textH;
-    sprite.strokeColor = "rgba(2,200,255,0.5)";
-  } else {
-    sprite.color = "#eef6ff";
-    sprite.backgroundColor = spatialHexToRgba(palette.glow, 0.22);
-    sprite.textHeight = textH;
-    sprite.strokeColor = spatialHexToRgba(palette.glow, 0.48);
-  }
-  sprite.strokeWidth = 0.55;
-  sprite.padding = 2.5;
-  sprite.borderRadius = 6;
+  const isHov = spatialState.hoveredId === node.id;
+  sprite.color = isSel ? "#ffffff" : (isHov ? "#f4fbff" : "#eef6ff");
+  sprite.backgroundColor = "rgba(0,0,0,0)";
+  sprite.textHeight = textH * (isSel ? 1.06 : 1);
+  sprite.strokeColor = isSel ? "rgba(2,200,255,0.85)" : (isStk ? "rgba(2,200,255,0.55)" : "rgba(2,200,255,0.28)");
+  sprite.strokeWidth = isSel ? 0.65 : (isStk ? 0.45 : 0.35);
+  sprite.padding = 0;
+  sprite.borderRadius = 0;
 }
 
 function getSpatialLabelSprite(node){
@@ -6671,7 +6785,7 @@ function initSpatialGraph(){
     .linkOpacity(spatialLinkOpacity)
     .linkDirectionalParticles(spatialLinkParticles)
     .linkDirectionalParticleWidth(spatialLinkParticleWidth)
-    .linkDirectionalParticleSpeed(0.004)
+    .linkDirectionalParticleSpeed(0.006)
     .onNodeClick(node => {
       const now = Date.now();
       const prev = spatialState.lastNodeClick;
@@ -6708,7 +6822,8 @@ function initSpatialGraph(){
         spatialState.hoveredId = next;
         refreshSpatialNodeVisuals();
       }
-    });
+    })
+    .onEngineStop(() => updateSpatialDecor());
   spatialState.graph.graphData({ nodes: [{ id: "__three_probe__", val: 1 }], links: [] });
   configureSpatialBackground();
   configureSpatialForces();
@@ -6751,6 +6866,8 @@ function refreshSpatialGraph(){
     refreshSpatialNodeVisuals();
     refreshSpatialLinkStyles();
     updateSpatialHud();
+    ensureSpatialDecor();
+    updateSpatialDecor();
     scheduleSpatialFit(spatialState.filterActive ? 780 : 920);
   };
   requestAnimationFrame(() => requestAnimationFrame(() => applyData(0)));
@@ -8929,7 +9046,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.43";
+const APP_VERSION   = "2.31.44";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
