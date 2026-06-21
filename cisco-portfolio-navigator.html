@@ -5304,8 +5304,8 @@ function buildCompositionView(familyId){
 // SPATIAL — optional 3D portfolio map
 // ══════════════════════════════════════
 const SPATIAL_LIB = "vendor/3d-force-graph.min.js";
-const SPATIAL_LINK_PRESET_KEY = "cpn-spatial-link-preset-v3";
-const spatialState = { graph: null, active: false, libPromise: null, spritePromise: null, resizeObs: null, labelCache: new Map(), tileCache: new Map(), tileLoadGen: 0, focusFamily: null, lastNodeClick: null, hoveredId: null, lightsAdded: false, threeCaptured: false, nodeRendererReady: false, meshTemplate: null, filterBoost: 1, filterActive: false, lastStats: null, linkPreset: "constellation", styleBarReady: false, pillarForceBound: false };
+const SPATIAL_LINK_PRESET_KEY = "cpn-spatial-link-preset-v2";
+const spatialState = { graph: null, active: false, libPromise: null, spritePromise: null, resizeObs: null, labelCache: new Map(), tileCache: new Map(), tileLoadGen: 0, focusFamily: null, lastNodeClick: null, hoveredId: null, lightsAdded: false, threeCaptured: false, nodeRendererReady: false, meshTemplate: null, filterBoost: 1, filterActive: false, lastStats: null, linkPreset: "curved", styleBarReady: false };
 
 function spatialResolveName(id){
   return nodeById[id]?.name || prodById[id]?.name || id;
@@ -5482,78 +5482,8 @@ function spatialFilterBoost(){
   return 1.1;
 }
 
-function spatialMrConstellationMode(){
-  return !spatialState.focusFamily;
-}
-
-function spatialConstellationLens(){
-  if (!spatialMrConstellationMode()) return false;
-  return spatialState.linkPreset === "constellation" || spatialState.linkPreset === "focus";
-}
-
-function spatialFullMesh(){
-  return spatialState.linkPreset === "fullmesh" || spatialState.linkPreset === "curved";
-}
-
-function spatialMrTileFocus(node){
-  if (!spatialMrConstellationMode()) return { scale: 1, alpha: 1 };
-  const isSel = selected?.id === node.id;
-  const isHov = spatialState.hoveredId === node.id;
-  const isStk = stack.has(node.id);
-  const conn = selected ? connectionNodeSet(selected.id, connectionHighlightDepth) : null;
-  const isConn = conn?.has(node.id);
-  if (isSel) return { scale: 1.14, alpha: 1 };
-  if (isHov || isStk || isConn) return { scale: 1.06, alpha: 0.94 };
-  if (selected) return { scale: 0.86, alpha: 0.4 };
-  return { scale: 1, alpha: 0.84 };
-}
-
-function computeSpatialPillarSeeds(visibleIds){
-  const positions = new Map();
-  const buckets = pillarLayoutBuckets(visibleIds);
-  const scale = 0.36;
-  const yFlat = 0.5;
-  PILLAR_LAYOUT.zones.forEach(z => {
-    const items = buckets[z.id] || [];
-    if (!items.length) return;
-    const lz = layoutZoneForItems(z, items);
-    const content = pillarContentArea(lz);
-    const n = items.length;
-    let cols = computePillarGridCols(z, n, content.w);
-    cols = Math.max(1, Math.min(cols, n));
-    const rows = Math.ceil(n / cols);
-    const zBase = z.id === "resilience" ? 38 : -34;
-    items.forEach((nodeRef, idx) => {
-      const col = idx % cols;
-      const row = Math.floor(idx / cols);
-      const pos = pillarNodeInCell(content, col, row, cols, rows);
-      positions.set(nodeRef.id, {
-        x: pos.x * scale,
-        y: pos.y * scale * yFlat,
-        z: zBase + (row - (rows - 1) / 2) * 3.5
-      });
-    });
-  });
-  return positions;
-}
-
-function bindSpatialPillarForce(){
-  if (!spatialState.graph || spatialState.pillarForceBound || spatialState.focusFamily) return;
-  spatialState.graph.d3Force("spatialPillar", alpha => {
-    spatialGraphNodes().forEach(node => {
-      const a = node._pillarAnchor;
-      if (!a) return;
-      const k = spatialState.filterActive ? 0.16 : 0.11;
-      node.vx = (node.vx || 0) + (a.x - (node.x || 0)) * k * alpha;
-      node.vy = (node.vy || 0) + (a.y - (node.y || 0)) * k * alpha;
-      node.vz = (node.vz || 0) + (a.z - (node.z || 0)) * k * alpha;
-    });
-  });
-  spatialState.pillarForceBound = true;
-}
-
 function spatialDecoFade(){
-  return spatialState.filterActive ? 0.55 : 1;
+  return spatialState.filterActive ? 0.42 : 1;
 }
 
 let spatialFitTimer = null;
@@ -5668,13 +5598,8 @@ function spatialDisplayName(node){
   return name;
 }
 
-function spatialLabelVisible(node){
-  if (spatialState.focusFamily) return true;
-  if (stack.has(node.id)) return true;
-  if (selected && selected.id === node.id) return true;
-  if (spatialState.hoveredId === node.id) return true;
-  if (spatialFullMesh()) return true;
-  return false;
+function spatialLabelVisible(){
+  return true;
 }
 
 function spatialIconKeyForNode(node){
@@ -5693,7 +5618,7 @@ function spatialNodeCategory(node){
 function spatialNodeVisualProfile(node){
   const inOrbit = !!spatialState.focusFamily;
   const isHub = inOrbit && node.id === spatialState.focusFamily;
-  if (!inOrbit) return { mode: "constellation", tileScale: 1.75, tileMin: 9.5, labelGap: 0.55, ringScale: 1.02 };
+  if (!inOrbit) return { mode: "constellation", tileScale: 2.35, tileMin: 12.5, labelGap: 1.65, ringScale: 1.12 };
   if (isHub || node.kind === "family") return { mode: "hub", tileScale: 1.55, tileMin: 10.5, labelGap: 1.45, ringScale: 1.22 };
   return { mode: "product", tileScale: 1.18, tileMin: 8.5, labelGap: 1.25, ringScale: 1.14 };
 }
@@ -5715,9 +5640,6 @@ function spatialLabelTextHeight(node){
 function spatialLabelOffsetY(node, radius, profile){
   const tileSize = spatialTileWorldSize(radius, profile);
   const textH = spatialLabelTextHeight(node);
-  if (spatialMrConstellationMode()){
-    return -tileSize * 0.42 - textH * 0.35;
-  }
   const gap = profile.labelGap ?? 1.35;
   return tileSize * 0.52 + gap + textH * 0.52;
 }
@@ -5746,7 +5668,7 @@ function spatialTileCacheKey(node){
   return [
     node.id,
     photoUrl ? "matrix:" + photoUrl : "icon:" + spatialIconKeyForNode(node),
-    "tile-mr-v5",
+    "tile-v4",
     profile.mode,
     accent.core,
     selected?.id === node.id ? "sel" : "",
@@ -5850,52 +5772,29 @@ function updateSpatialNodeGroup(group, node){
   const profile = spatialNodeVisualProfile(node);
   const accent = spatialNodeAccent(node);
   const deco = spatialDecoFade();
-  const mr = spatialMrConstellationMode();
-  const focus = spatialMrTileFocus(node);
-  group.scale.setScalar(focus.scale);
   group.traverse(obj => {
-    if (obj.userData?.role === "glass" && obj.material){
-      obj.visible = mr;
-      obj.material.color.setHex(accent.core);
-      obj.material.opacity = 0.2 * deco * focus.alpha;
-    }
-    if (obj.userData?.role === "edge" && obj.material){
-      obj.visible = mr;
-      obj.material.color.setHex(accent.glow);
-      obj.material.opacity = (selected?.id === node.id ? 0.85 : 0.48) * deco * focus.alpha;
-    }
     if (obj.userData?.role === "halo" && obj.material){
-      obj.visible = !mr;
       obj.material.color.setHex(accent.glow);
-      obj.material.opacity = accent.glowOp * 0.8 * deco * focus.alpha;
+      obj.material.opacity = accent.glowOp * 0.8 * deco;
     }
     if (obj.userData?.role === "ring" && obj.material){
-      obj.visible = !mr;
       obj.material.color.setHex(accent.glow);
-      obj.material.opacity = (selected?.id === node.id ? 0.55 : 0.32) * deco * focus.alpha;
+      obj.material.opacity = (selected?.id === node.id ? 0.55 : 0.32) * deco;
     }
     if (obj.userData?.role === "pedestal" && obj.material){
-      obj.visible = !mr;
       obj.material.color.setHex(0x0d1828);
       if (obj.material.emissive?.setHex) obj.material.emissive.setHex(accent.emissive);
-      if (obj.material.opacity != null) obj.material.opacity = 0.9 * focus.alpha;
     }
     if (obj.userData?.role === "rim" && obj.material){
-      obj.visible = !mr;
       obj.material.color.setHex(accent.core);
-      obj.material.opacity = (stack.has(node.id) ? 0.92 : 0.62) * focus.alpha;
-    }
-    if (obj.userData?.role === "tile" && obj.material){
-      obj.material.opacity = 0.98 * focus.alpha;
+      obj.material.opacity = stack.has(node.id) ? 0.92 : 0.62;
     }
     if (obj.userData?.role === "label"){
       styleSpatialLabelSprite(obj, node);
       if (obj.text !== spatialDisplayName(node)) obj.text = spatialDisplayName(node);
       obj.visible = spatialLabelVisible(node);
-      if (obj.center) obj.center.y = mr ? 0.12 : -1.08;
       obj.position.y = spatialLabelOffsetY(node, radius, profile);
       obj.renderOrder = 12;
-      if (obj.material) obj.material.opacity = focus.alpha;
     }
   });
   ensureSpatialTileOnGroup(group, node, radius, profile);
@@ -5912,29 +5811,6 @@ function buildSpatialNodeObject(node){
   const profile = spatialNodeVisualProfile(node);
   const accent = spatialNodeAccent(node);
   const rs = spatialNodeBaseScale(node, profile);
-
-  const glass = template.clone();
-  glass.material = new THREE.MeshBasicMaterial({
-    color: accent.core,
-    transparent: true,
-    opacity: 0.2,
-    depthWrite: false
-  });
-  glass.userData.role = "glass";
-  glass.scale.set(rs * 1.12, rs * 0.05, rs * 0.88);
-  group.add(glass);
-
-  const edge = template.clone();
-  edge.material = new THREE.MeshBasicMaterial({
-    color: accent.glow,
-    wireframe: true,
-    transparent: true,
-    opacity: 0.52,
-    depthWrite: false
-  });
-  edge.userData.role = "edge";
-  edge.scale.set(rs * 1.16, rs * 0.035, rs * 0.92);
-  group.add(edge);
 
   const ring = template.clone();
   ring.material = new THREE.MeshBasicMaterial({
@@ -6033,45 +5909,38 @@ function refreshSpatialNodeVisuals(){
 
 function spatialLinkHighlightTier(l){
   if (spatialState.focusFamily) return "orbit";
-  if (spatialConstellationLens()){
-    if (!selected) return "hidden";
+  if (spatialState.linkPreset === "focus" && selected){
     const conn = connectionNodeSet(selected.id, connectionHighlightDepth);
     const s = sid(l), t = tid(l);
-    if (!conn.has(s) || !conn.has(t)) return "hidden";
+    if (!conn.has(s) || !conn.has(t)) return "dim";
     if (s === selected.id || t === selected.id) return "hot";
     return "mid";
   }
-  if (spatialFullMesh()) return "all";
   return "all";
 }
 
 function spatialLinkCurvature(){
   if (spatialState.focusFamily) return 0.06;
   if (spatialState.linkPreset === "straight") return 0;
-  if (spatialFullMesh()) return spatialState.filterActive ? 0.1 : 0.16;
-  if (selected) return 0.08;
-  return 0;
+  if (spatialState.filterActive) return 0.12;
+  return 0.24;
 }
 
 function readSpatialLinkPreset(){
   try{
     const saved = localStorage.getItem(SPATIAL_LINK_PRESET_KEY);
-    if (saved === "constellation" || saved === "fullmesh" || saved === "straight") return saved;
-    if (saved === "curved") return "fullmesh";
-    if (saved === "focus") return "constellation";
+    if (saved === "curved" || saved === "straight" || saved === "focus") return saved;
   }catch(e){}
-  return "constellation";
+  return "curved";
 }
 
 function setSpatialLinkPreset(preset){
-  const allowed = ["constellation", "fullmesh", "straight"];
-  if (!allowed.includes(preset)) return;
+  if (!["curved", "straight", "focus"].includes(preset)) return;
   spatialState.linkPreset = preset;
   try{ localStorage.setItem(SPATIAL_LINK_PRESET_KEY, preset); }catch(e){}
   updateSpatialStyleBar();
   configureSpatialForces();
   refreshSpatialLinkStyles();
-  refreshSpatialNodeVisuals();
   updateSpatialHud();
 }
 
@@ -6101,7 +5970,6 @@ function bindSpatialStyleBar(){
 
 function spatialLinkOpacity(l){
   const tier = spatialLinkHighlightTier(l);
-  if (tier === "hidden") return 0;
   if (tier === "orbit") return 0.55;
   if (tier === "dim") return 0.05;
   if (tier === "hot") return 1;
@@ -6120,7 +5988,6 @@ function spatialLinkOpacity(l){
 
 function spatialLinkColor(l){
   const tier = spatialLinkHighlightTier(l);
-  if (tier === "hidden") return "rgba(0,0,0,0)";
   if (tier === "dim") return "rgba(8,18,32,0.35)";
   if (tier === "hot"){
     if (l.type === "direct") return "rgba(2,200,255,1)";
@@ -6143,7 +6010,6 @@ function spatialLinkColor(l){
 
 function spatialLinkWidth(l){
   const tier = spatialLinkHighlightTier(l);
-  if (tier === "hidden") return 0;
   if (tier === "orbit"){
     if (l.type === "succession") return 1.1;
     if (l.type === "composition") return 0.7;
@@ -6171,7 +6037,6 @@ function spatialLinkWidth(l){
 
 function spatialLinkParticles(l){
   const tier = spatialLinkHighlightTier(l);
-  if (tier === "hidden") return 0;
   if (tier === "dim") return 0;
   if (tier === "hot"){
     if (l.type === "direct") return 4;
@@ -6179,8 +6044,8 @@ function spatialLinkParticles(l){
     return 1;
   }
   if (tier === "all" || tier === "mid"){
-    if (l.type === "direct") return tier === "all" ? 1 : 3;
-    if (l.type === "adjacent") return tier === "mid" ? 1 : 0;
+    if (l.type === "direct") return 3;
+    if (l.type === "adjacent") return 2;
     return 0;
   }
   if (l.type === "direct") return 2;
@@ -6216,18 +6081,12 @@ function configureSpatialForces(){
       if (l.type === "succession") return 62;
       return 68;
     });
-  } else if (spatialConstellationLens() && !selected){
-    g.d3Force("charge").strength(-52);
-    g.d3Force("link").distance(l => l.type === "direct" ? 68 : 92);
   } else if (spatialState.filterActive){
-    g.d3Force("charge").strength(-98);
+    g.d3Force("charge").strength(-112);
     g.d3Force("link").distance(l => l.type === "direct" ? 58 : 84);
-  } else if (spatialFullMesh()){
-    g.d3Force("charge").strength(-118);
-    g.d3Force("link").distance(l => l.type === "direct" ? 72 : 102);
   } else {
-    g.d3Force("charge").strength(-88);
-    g.d3Force("link").distance(l => l.type === "direct" ? 64 : 88);
+    g.d3Force("charge").strength(-135);
+    g.d3Force("link").distance(l => l.type === "direct" ? 78 : 112);
   }
 }
 
@@ -6240,16 +6099,16 @@ function updateSpatialHud(){
     hud.innerHTML = `${fam?.name || "Family"} — click a product for details · <kbd>Esc</kbd> back to Spatial map`;
   } else if (spatialState.filterActive && spatialState.lastStats){
     const s = spatialState.lastStats;
-    const styleHint = spatialConstellationLens()
-      ? "Click a family to light its connections · cyan = direct · gold = adjacent"
+    const styleHint = spatialState.linkPreset === "focus"
+      ? "Focus mode — click a family to isolate its integrations"
       : "All connections lit · cyan = direct · gold = adjacent";
     hud.innerHTML = `<strong>${s.families}</strong> families · <strong>${s.links}</strong> connections (${s.direct} direct · ${s.adjacent} adjacent) · ${styleHint}`;
   } else {
-    const styleHint = spatialConstellationLens()
-      ? "Three outcome pillars · click a family to light its connections · labels on hover"
-      : spatialFullMesh()
-        ? (spatialState.linkPreset === "straight" ? "Full mesh · straight links · all connections lit" : "Full mesh · all connections lit · cyan = direct · gold = adjacent")
-        : "Click a family to light its connections";
+    const styleHint = spatialState.linkPreset === "straight"
+      ? "Straight spokes · all connections lit"
+      : spatialState.linkPreset === "focus"
+        ? "Curved mesh · click a family to focus its links"
+        : "Curved mesh · all connections lit · cyan = direct · gold = adjacent";
     hud.innerHTML = `${styleHint} · Double-click a family to explore products · <kbd>Esc</kbd> back to Families`;
   }
 }
@@ -6370,7 +6229,7 @@ function getSpatialLabelSprite(node){
     sprite.padding = 2.5;
     sprite.borderRadius = 4;
     sprite.fontWeight = "600";
-    sprite.center.y = spatialMrConstellationMode() ? 0.12 : -1.08;
+    sprite.center.y = -1.08;
     if (sprite.material){
       sprite.material.depthWrite = false;
       sprite.material.depthTest = false;
@@ -6425,24 +6284,13 @@ function familyNodeVisible(n){
 
 function buildSpatialGraphData(){
   const vis = getFilteredFamilyIds();
-  const seeds = computeSpatialPillarSeeds(vis);
-  const nodes = NODES.filter(n => vis.has(n.id)).map(n => {
-    const seed = seeds.get(n.id);
-    const node = {
-      id: n.id,
-      name: n.name,
-      category: n.category,
-      color: CATS[n.category].color,
-      val: stack.has(n.id) ? 3 : Math.max(0.6, rscale(degree[n.id] || 0) / 10)
-    };
-    if (seed){
-      node.x = seed.x;
-      node.y = seed.y;
-      node.z = seed.z;
-      node._pillarAnchor = seed;
-    }
-    return node;
-  });
+  const nodes = NODES.filter(n => vis.has(n.id)).map(n => ({
+    id: n.id,
+    name: n.name,
+    category: n.category,
+    color: CATS[n.category].color,
+    val: stack.has(n.id) ? 3 : Math.max(0.6, rscale(degree[n.id] || 0) / 10)
+  }));
   const nodeSet = new Set(nodes.map(n => n.id));
   const links = LINKS.filter(l => nodeSet.has(sid(l)) && nodeSet.has(tid(l))).map(l => ({
     source: sid(l), target: tid(l), type: l.type
@@ -6467,43 +6315,20 @@ function loadSpatialLib(){
   return spatialState.libPromise;
 }
 
-function syncSpatialStyleBarButtons(){
-  const bar = document.getElementById("spatial-style-bar");
-  if (!bar) return;
-  const defs = [
-    { id: "constellation", label: "Constellation", title: "Glass tiles in three pillars — click a family to light its connections" },
-    { id: "fullmesh", label: "Full mesh", title: "Show all integration links lit" },
-    { id: "straight", label: "Straight", title: "Use straight link lines" }
-  ];
-  const btns = bar.querySelectorAll("button[data-spatial-style]");
-  if (btns.length !== defs.length){
-    bar.innerHTML = `<span class="ssb-label">Views</span>${defs.map(d =>
-      `<button type="button" data-spatial-style="${d.id}" data-title="${d.title}">${d.label}</button>`
-    ).join("")}`;
-    spatialState.styleBarReady = false;
-    bindSpatialStyleBar();
-  } else {
-    btns.forEach((btn, i) => {
-      btn.dataset.spatialStyle = defs[i].id;
-      btn.dataset.title = defs[i].title;
-      btn.textContent = defs[i].label;
-    });
-  }
-}
-
 function ensureSpatialDOM(){
   let wrap = document.getElementById("spatial-wrap");
   if (wrap){
-    syncSpatialStyleBarButtons();
+    const lbl = wrap.querySelector("#spatial-style-bar .ssb-label");
+    if (lbl) lbl.textContent = "Views";
     return wrap;
   }
   wrap = document.createElement("div");
   wrap.id = "spatial-wrap";
   wrap.innerHTML = `<div id="spatial-style-bar" role="group" aria-label="Spatial view style">
       <span class="ssb-label">Views</span>
-      <button type="button" data-spatial-style="constellation" data-title="Glass tiles in three pillars — click a family to light its connections">Constellation</button>
-      <button type="button" data-spatial-style="fullmesh" data-title="Show all integration links lit">Full mesh</button>
-      <button type="button" data-spatial-style="straight" data-title="Use straight link lines">Straight</button>
+      <button type="button" data-spatial-style="curved" data-title="Curved mesh — all integrations lit">Curved mesh</button>
+      <button type="button" data-spatial-style="straight" data-title="Straight spokes — all integrations lit">Straight</button>
+      <button type="button" data-spatial-style="focus" data-title="Dim background — click a family to spotlight its links">Focus</button>
     </div>
     <div id="spatial-hud"></div>
     <div id="spatial-graph"></div>`;
@@ -6586,15 +6411,6 @@ function initSpatialGraph(){
         spatialState.hoveredId = next;
         refreshSpatialNodeVisuals();
       }
-    })
-    .onBackgroundClick(() => {
-      if (spatialState.focusFamily || !selected) return;
-      selected = null;
-      closePanel();
-      hideTip();
-      configureSpatialForces();
-      refreshSpatialNodeVisuals();
-      refreshSpatialLinkStyles();
     });
   spatialState.graph.graphData({ nodes: [{ id: "__three_probe__", val: 1 }], links: [] });
   configureSpatialBackground();
@@ -6634,7 +6450,6 @@ function refreshSpatialGraph(){
     preloadSpatialTiles(data.nodes);
     spatialState.graph.graphData(data);
     configureSpatialForces();
-    bindSpatialPillarForce();
     ensureSpatialLights();
     refreshSpatialNodeVisuals();
     refreshSpatialLinkStyles();
@@ -6665,7 +6480,6 @@ function selectNodeSpatial(d, graphNode){
   if (pb){ pb.dataset.lastId = d.id; pb.dataset.lastKind = "node"; }
   window.__cpnV2?.phases?.enhanceDetailPanel?.();
   if (spatialState.graph){
-    configureSpatialForces();
     refreshSpatialNodeVisuals();
     refreshSpatialLinkStyles();
     const focus = () => focusSpatialNode(d.id, 700);
@@ -7021,8 +6835,6 @@ window.__cpnSpatialCameraStats = () => {
     nodeCount: nodes.length,
     filterActive: spatialState.filterActive,
     focusFamily: spatialState.focusFamily,
-    linkPreset: spatialState.linkPreset,
-    lensActive: spatialConstellationLens(),
     dist,
     span: bounds?.span ?? 0
   };
@@ -7165,7 +6977,6 @@ function selectNode(d, opts = {}) {
 function resetHL() {
   if (viewMode === "spatial"){
     if (spatialState.graph){
-      configureSpatialForces();
       refreshSpatialNodeVisuals();
       refreshSpatialLinkStyles();
     }
@@ -8808,7 +8619,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.32.0";
+const APP_VERSION   = "2.31.21";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
