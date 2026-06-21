@@ -1387,8 +1387,8 @@ const NODES = [
    desc:"CPaaS embedding SMS, WhatsApp, email, push, and voice into customer journeys with visual flow builders and contact center integrations.",
    useCases:["Contact Center","Digital Transformation"],
    industries:["Financial Services","Retail","Healthcare","Education"],
-   url:"https://www.webex.com/connect.html",
-   docsUrl:"https://www.webex.com/connect.html"},
+   url:"https://www.webex.com/us/en/products/customer-experience/cpaas/webex-connect.html",
+   docsUrl:"https://www.webex.com/us/en/products/customer-experience/cpaas/webex-connect.html"},
 
   // COMPUTING
   {id:"ucs",               name:"Cisco UCS Servers",           category:"computing",
@@ -2668,24 +2668,24 @@ const PRODUCTS = [
   // ── WEBEX CONTACT CENTER (Current)
   {id:"wxcc-standard",  name:"Webex Contact Center Standard", family:"webex-cc", status:"current",
    desc:"Per-agent CCaaS: ACD/IVR, voice + digital channels, real-time/historical reporting.",
-   url:"https://www.webex.com/contact-center/pricing.html"},
+   url:"https://www.webex.com/contact-center.html"},
   {id:"wxcc-premium",   name:"Webex Contact Center Premium",  family:"webex-cc", status:"current",
    desc:"Adds AI virtual agents, agent assist, workforce optimization (WFO), and quality management.",
-   url:"https://www.webex.com/contact-center/pricing.html"},
+   url:"https://www.webex.com/contact-center.html"},
   {id:"wxcc-flex3",     name:"Webex Contact Center Flex 3",   family:"webex-cc", status:"current",
    desc:"Bundled per-named-user subscription combining CC + WFO + collaboration — preferred for hybrid agent + back-office.",
-   url:"https://www.webex.com/contact-center/pricing.html"},
+   url:"https://www.webex.com/contact-center.html"},
   {id:"wx-engage",      name:"Webex Engage",                  family:"webex-cc", status:"current",
    desc:"Digital-first customer-engagement layer: WhatsApp, SMS, Apple Messages for Business, web chat, and email.",
-   url:"https://www.webex.com/engage.html"},
+   url:"https://www.webex.com/contact-center.html"},
 
   // ── WEBEX CONNECT (Current)
   {id:"webex-connect-sub", name:"Webex Connect Subscription", family:"webex-connect", status:"current",
    desc:"CPaaS subscription including visual flow builder, identity verification, and chatbot orchestration.",
-   url:"https://www.webex.com/connect.html"},
+   url:"https://www.webex.com/us/en/products/customer-experience/cpaas/webex-connect.html"},
   {id:"webex-connect-msg", name:"Webex Connect Per-Message Usage", family:"webex-connect", status:"current",
    desc:"Pay-per-message billing for SMS, WhatsApp, Apple Messages for Business, RCS, push, and voice.",
-   url:"https://www.webex.com/connect.html"},
+   url:"https://www.webex.com/us/en/products/customer-experience/cpaas/webex-connect.html"},
 
   // ── ROOM SYSTEMS / DESK / HEADSETS (additions)
   {id:"room-bar-pro-g2", name:"Cisco Room Bar Pro G2",        family:"room-systems",   status:"current",
@@ -2835,6 +2835,25 @@ const PRODUCTS = [
 // Build lookup maps
 const nodeById = Object.fromEntries(NODES.map(n => [n.id, n]));
 const prodById = Object.fromEntries(PRODUCTS.map(p => [p.id, p]));
+
+const EXTERNAL_URL_REWRITES = {
+  "https://www.webex.com/connect.html": "https://www.webex.com/us/en/products/customer-experience/cpaas/webex-connect.html",
+  "https://www.webex.com/engage.html": "https://www.webex.com/contact-center.html",
+  "https://www.webex.com/contact-center/pricing.html": "https://www.webex.com/contact-center.html"
+};
+
+function rewriteExternalUrl(url){
+  if (!url) return url;
+  return EXTERNAL_URL_REWRITES[url] || url;
+}
+
+function productPageUrl(record){
+  return rewriteExternalUrl(record?.url || "");
+}
+
+function documentationUrl(record){
+  return rewriteExternalUrl(record?.docsUrl || record?.url || "");
+}
 // Assign category to products from parent node
 PRODUCTS.forEach(p => { p.category = nodeById[p.family]?.category || "networking"; });
 
@@ -5322,9 +5341,22 @@ function resolveSpatialGroupCtor(){
   return THREE.Group;
 }
 
+function ensureSpatialMeshTemplate(){
+  if (spatialState.meshTemplate) return true;
+  const THREE = ensureSpatialTHREE();
+  if (!THREE?.Mesh || !THREE.SphereGeometry || !THREE.MeshBasicMaterial) return !!captureBundledTHREE()?.meshTemplate;
+  spatialState.meshTemplate = new THREE.Mesh(
+    new THREE.SphereGeometry(1, 16, 12),
+    new THREE.MeshBasicMaterial({ color: 0xffffff })
+  );
+  return true;
+}
+
 function ensureSpatialNodeRenderer(attempt){
   if (!spatialState.graph) return false;
-  if (!spatialState.meshTemplate && !captureBundledTHREE()) return false;
+  ensureSpatialTHREE();
+  if (window.__cpnTHREE) mergeSpatialThreeExtras(window.__cpnTHREE);
+  if (!ensureSpatialMeshTemplate() && !captureBundledTHREE()) return false;
   if (!resolveSpatialGroupCtor()) return false;
   if (!spatialState.nodeRendererReady){
     const g = spatialState.graph;
@@ -5346,19 +5378,35 @@ function mergeSpatialThreeExtras(THREE){
   if (extras.Sprite) THREE.Sprite = extras.Sprite;
   if (extras.SpriteMaterial) THREE.SpriteMaterial = extras.SpriteMaterial;
   if (extras.CanvasTexture) THREE.CanvasTexture = extras.CanvasTexture;
+  if (extras.Group) THREE.Group = extras.Group;
+  if (extras.Mesh) THREE.Mesh = extras.Mesh;
+  if (extras.MeshBasicMaterial) THREE.MeshBasicMaterial = extras.MeshBasicMaterial;
+  if (extras.MeshLambertMaterial) THREE.MeshLambertMaterial = extras.MeshLambertMaterial;
+  if (extras.SphereGeometry) THREE.SphereGeometry = extras.SphereGeometry;
+  if (extras.AmbientLight) THREE.AmbientLight = extras.AmbientLight;
+  if (extras.DirectionalLight) THREE.DirectionalLight = extras.DirectionalLight;
   return THREE;
 }
 
-function finishSpatialGraphSetup(){
-  return ensureSpatialNodeRenderer(0);
+function primedSpatialTHREE(){
+  const extras = window.__cpnThreeExtras;
+  if (!extras) return null;
+  return mergeSpatialThreeExtras(Object.assign({ __primed: true }, extras));
 }
 
 function ensureSpatialTHREE(){
-  if (window.__cpnTHREE?.__bundled){
+  if (window.__cpnTHREE?.__bundled || window.__cpnTHREE?.__primed){
     mergeSpatialThreeExtras(window.__cpnTHREE);
     return window.__cpnTHREE;
   }
-  return captureBundledTHREE();
+  const captured = captureBundledTHREE();
+  if (captured) return captured;
+  const primed = primedSpatialTHREE();
+  if (primed){
+    window.__cpnTHREE = primed;
+    return primed;
+  }
+  return null;
 }
 
 function spatialMakeTexture(source){
@@ -5474,8 +5522,8 @@ function buildSpatialTileSvg(node){
   const accent = spatialNodeAccent(node);
   const iconColor = spatialAccentHex(accent, "core");
   const inner = spatialSymbolInner(iconKey);
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-    <g transform="translate(128,128) scale(0.62) translate(-128,-128)" fill="${iconColor}" stroke="${iconColor}" color="${iconColor}">${inner}</g>
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" style="color:${iconColor}">
+    <g transform="translate(128,128) scale(0.62) translate(-128,-128)" fill="${iconColor}" stroke="${iconColor}">${inner}</g>
   </svg>`;
 }
 
@@ -5593,7 +5641,7 @@ function updateSpatialNodeGroup(group, node){
 
 function buildSpatialNodeObject(node){
   const THREE = ensureSpatialTHREE();
-  const GroupCtor = resolveSpatialGroupCtor();
+  const GroupCtor = resolveSpatialGroupCtor() || THREE?.Group || THREE?.Object3D;
   const template = spatialState.meshTemplate;
   if (!GroupCtor || !template) return getSpatialLabelSprite(node);
   const group = new GroupCtor();
@@ -5799,9 +5847,9 @@ function loadSpriteTextLib(){
     const s = document.createElement("script");
     s.type = "module";
     s.textContent = `import SpriteText from "./vendor/three-spritetext.mjs";
-import { CanvasTexture, Sprite, SpriteMaterial } from "./vendor/three.module.min.js";
+import { CanvasTexture, Sprite, SpriteMaterial, Group, Mesh, MeshBasicMaterial, MeshLambertMaterial, SphereGeometry, AmbientLight, DirectionalLight } from "./vendor/three.module.min.js";
 window.SpriteText = SpriteText.default || SpriteText;
-window.__cpnThreeExtras = { CanvasTexture, Sprite, SpriteMaterial };
+window.__cpnThreeExtras = { CanvasTexture, Sprite, SpriteMaterial, Group, Mesh, MeshBasicMaterial, MeshLambertMaterial, SphereGeometry, AmbientLight, DirectionalLight };
 window.dispatchEvent(new Event("spatial-spritetext-ready"));`;
     s.onerror = () => {
       window.removeEventListener("spatial-spritetext-ready", onReady);
@@ -5813,23 +5861,40 @@ window.dispatchEvent(new Event("spatial-spritetext-ready"));`;
   return spatialState.spritePromise;
 }
 
+function finishSpatialGraphSetup(){
+  return ensureSpatialNodeRenderer(0);
+}
+
+function spatialHexToRgba(hex, alpha){
+  const n = spatialHexToNum(hex);
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
 function styleSpatialLabelSprite(sprite, node){
+  const palette = spatialCategoryPalette(node);
   const isProduct = node.kind === "product" && spatialState.focusFamily;
-  if (selected && selected.id === node.id){
+  const isSel = selected && selected.id === node.id;
+  const isStk = stack.has(node.id);
+  if (isSel){
     sprite.color = "#ffffff";
-    sprite.backgroundColor = "rgba(2,200,255,0.42)";
-    sprite.textHeight = isProduct ? 3.2 : 3.6;
-  } else if (stack.has(node.id)){
-    sprite.color = "#ffffff";
-    sprite.backgroundColor = "rgba(2,200,255,0.26)";
-    sprite.textHeight = isProduct ? 3 : 3.4;
+    sprite.backgroundColor = "rgba(2,200,255,0.38)";
+    sprite.textHeight = isProduct ? 3.2 : 3.5;
+    sprite.strokeColor = "rgba(2,200,255,0.72)";
+  } else if (isStk){
+    sprite.color = "#f4fbff";
+    sprite.backgroundColor = "rgba(2,200,255,0.22)";
+    sprite.textHeight = isProduct ? 3 : 3.3;
+    sprite.strokeColor = "rgba(2,200,255,0.5)";
   } else {
-    sprite.color = "#f4f8fc";
-    sprite.backgroundColor = "rgba(7,24,45,0.94)";
-    sprite.textHeight = isProduct ? 2.85 : 3.25;
+    sprite.color = "#eef6ff";
+    sprite.backgroundColor = spatialHexToRgba(palette.glow, 0.18);
+    sprite.textHeight = isProduct ? 2.9 : 3.15;
+    sprite.strokeColor = spatialHexToRgba(palette.glow, 0.48);
   }
-  sprite.strokeWidth = 0.35;
-  sprite.strokeColor = "rgba(2,200,255,0.35)";
+  sprite.strokeWidth = 0.55;
+  sprite.padding = 3;
+  sprite.borderRadius = 6;
 }
 
 function getSpatialLabelSprite(node){
@@ -6707,8 +6772,8 @@ function showDetailPanel(d) {
     <div class="p-sec"><div class="p-sec-t">Industries</div><div class="tr">${d.industries.map(i=>`<span class="tg" onclick="filterTagInd('${i}')">${i}</span>`).join("")}</div></div>
     ${renderConnectionsSection(d)}
     <div class="p-sec"><div class="p-sec-t">Learn More</div><div class="lb">
-      <a class="la" href="${d.url}" target="_blank" rel="noopener">Product Page <span>cisco.com ↗</span></a>
-      <a class="la" href="${d.docsUrl}" target="_blank" rel="noopener">Documentation <span>docs ↗</span></a>
+      <a class="la" href="${productPageUrl(d)}" target="_blank" rel="noopener">Product Page <span>cisco.com ↗</span></a>
+      <a class="la" href="${documentationUrl(d)}" target="_blank" rel="noopener">Documentation <span>docs ↗</span></a>
     </div></div>`;
 
   // Graph explore — hidden when that family is already open on the canvas.
@@ -6773,7 +6838,8 @@ window.showProductDetail = function(id) {
         <div class="rif"><div class="rn">${node.name}</div><div class="rt">View extended ecosystem in graph (2 hops)</div></div>
         <div class="ra">›</div></div></div>`:""}
     <div class="p-sec"><div class="p-sec-t">Product Resources</div><div class="lb">
-      <a class="la" href="${p.url}" target="_blank" rel="noopener">Product Page / EOL Notice <span>cisco.com ↗</span></a>
+      <a class="la" href="${productPageUrl(p)}" target="_blank" rel="noopener">Product Page / EOL Notice <span>cisco.com ↗</span></a>
+      ${node ? `<a class="la" href="${documentationUrl(node)}" target="_blank" rel="noopener">Documentation <span>docs ↗</span></a>` : ""}
     </div></div>`;
 
   const addBtn = document.createElement("button");
@@ -8176,7 +8242,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.7";
+const APP_VERSION   = "2.31.8";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",

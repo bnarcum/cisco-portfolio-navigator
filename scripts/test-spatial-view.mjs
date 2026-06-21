@@ -62,7 +62,14 @@ try {
     console.error("FAIL: SpriteText library not loaded");
     exitCode = 1;
   } else {
-    console.log("PASS: Spatial view loaded with WebGL canvas and SpriteText labels");
+    const tiles = await page.evaluate(() => window.__cpnSpatialTileStats?.());
+    console.log("Tile stats:", tiles);
+    if (!tiles || tiles.groups < 1 || tiles.withTile < Math.min(3, tiles.groups)) {
+      console.error("FAIL: spatial nodes missing icon tiles", tiles);
+      exitCode = 1;
+    } else {
+      console.log("PASS: Spatial view loaded with WebGL canvas, labels, and icon tiles");
+    }
   }
 } finally {
   await browser.close();
