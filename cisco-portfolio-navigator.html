@@ -5480,9 +5480,28 @@ function spatialNodeCategory(node){
 function spatialNodeVisualProfile(node){
   const inOrbit = !!spatialState.focusFamily;
   const isHub = inOrbit && node.id === spatialState.focusFamily;
-  if (!inOrbit) return { mode: "constellation", tileScale: 1.58, labelLift: 4.35, ringScale: 1.48 };
-  if (isHub || node.kind === "family") return { mode: "hub", tileScale: 1.32, labelLift: 4.55, ringScale: 1.36 };
-  return { mode: "product", tileScale: 1.02, labelLift: 3.45, ringScale: 1.24 };
+  if (!inOrbit) return { mode: "constellation", tileScale: 2.35, tileMin: 12.5, labelGap: 1.65, ringScale: 1.12 };
+  if (isHub || node.kind === "family") return { mode: "hub", tileScale: 1.55, tileMin: 10.5, labelGap: 1.45, ringScale: 1.22 };
+  return { mode: "product", tileScale: 1.18, tileMin: 8.5, labelGap: 1.25, ringScale: 1.14 };
+}
+
+function spatialTileWorldSize(radius, profile){
+  const scaled = radius * profile.tileScale * 1.12;
+  return Math.max(scaled, profile.tileMin || scaled);
+}
+
+function spatialLabelTextHeight(node){
+  const isProduct = node.kind === "product" && spatialState.focusFamily;
+  if (selected && selected.id === node.id) return isProduct ? 3.2 : 3.5;
+  if (stack.has(node.id)) return isProduct ? 3 : 3.3;
+  return isProduct ? 2.9 : 3.15;
+}
+
+function spatialLabelOffsetY(node, radius, profile){
+  const tileSize = spatialTileWorldSize(radius, profile);
+  const textH = spatialLabelTextHeight(node);
+  const gap = profile.labelGap ?? 1.35;
+  return tileSize * 0.52 + gap + textH * 0.52;
 }
 
 function spatialSymbolInner(iconKey){
@@ -5509,7 +5528,7 @@ function spatialTileCacheKey(node){
   return [
     node.id,
     photoUrl ? "matrix:" + photoUrl : "icon:" + spatialIconKeyForNode(node),
-    "tile-v3",
+    "tile-v4",
     profile.mode,
     accent.core,
     selected?.id === node.id ? "sel" : "",
@@ -5523,7 +5542,7 @@ function buildSpatialTileSvg(node){
   const iconColor = spatialAccentHex(accent, "core");
   const inner = spatialSymbolInner(iconKey);
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" style="color:${iconColor}">
-    <g transform="translate(128,128) scale(0.62) translate(-128,-128)" fill="${iconColor}" stroke="${iconColor}">${inner}</g>
+    <g transform="translate(128,128) scale(0.9) translate(-128,-128)" fill="${iconColor}" stroke="${iconColor}">${inner}</g>
   </svg>`;
 }
 
@@ -5579,9 +5598,9 @@ function getSpatialTileSprite(node, radius, profile){
     opacity: 0.98
   });
   const sprite = new THREE.Sprite(mat);
-  const s = radius * profile.tileScale * 1.05;
+  const s = spatialTileWorldSize(radius, profile);
   sprite.scale.set(s, s, 1);
-  sprite.renderOrder = 2;
+  sprite.renderOrder = 4;
   return sprite;
 }
 
@@ -5633,7 +5652,8 @@ function updateSpatialNodeGroup(group, node){
       styleSpatialLabelSprite(obj, node);
       if (obj.text !== spatialDisplayName(node)) obj.text = spatialDisplayName(node);
       obj.visible = spatialLabelVisible(node);
-      obj.position.y = radius * 0.42 + profile.labelLift;
+      obj.position.y = spatialLabelOffsetY(node, radius, profile);
+      obj.renderOrder = 12;
     }
   });
   ensureSpatialTileOnGroup(group, node, radius, profile);
@@ -5704,7 +5724,8 @@ function buildSpatialNodeObject(node){
 
   const label = getSpatialLabelSprite(node);
   label.userData.role = "label";
-  label.position.y = radius * 0.42 + profile.labelLift;
+  label.position.y = spatialLabelOffsetY(node, radius, profile);
+  label.renderOrder = 12;
   label.visible = spatialLabelVisible(node);
   group.add(label);
 
@@ -5766,16 +5787,20 @@ function spatialLinkParticles(l){
 
 function configureSpatialForces(){
   if (!spatialState.graph) return;
+  const g = spatialState.graph;
+  if (typeof g.linkCurvature === "function"){
+    g.linkCurvature(spatialState.focusFamily ? 0.06 : 0.24);
+  }
   if (spatialState.focusFamily){
-    spatialState.graph.d3Force("charge").strength(-145);
-    spatialState.graph.d3Force("link").distance(l => {
+    g.d3Force("charge").strength(-145);
+    g.d3Force("link").distance(l => {
       if (l.type === "composition") return 58;
       if (l.type === "succession") return 62;
       return 68;
     });
   } else {
-    spatialState.graph.d3Force("charge").strength(-135);
-    spatialState.graph.d3Force("link").distance(l => l.type === "direct" ? 62 : 98);
+    g.d3Force("charge").strength(-135);
+    g.d3Force("link").distance(l => l.type === "direct" ? 78 : 112);
   }
 }
 
@@ -5873,27 +5898,27 @@ function spatialHexToRgba(hex, alpha){
 
 function styleSpatialLabelSprite(sprite, node){
   const palette = spatialCategoryPalette(node);
-  const isProduct = node.kind === "product" && spatialState.focusFamily;
+  const textH = spatialLabelTextHeight(node);
   const isSel = selected && selected.id === node.id;
   const isStk = stack.has(node.id);
   if (isSel){
     sprite.color = "#ffffff";
     sprite.backgroundColor = "rgba(2,200,255,0.38)";
-    sprite.textHeight = isProduct ? 3.2 : 3.5;
+    sprite.textHeight = textH;
     sprite.strokeColor = "rgba(2,200,255,0.72)";
   } else if (isStk){
     sprite.color = "#f4fbff";
     sprite.backgroundColor = "rgba(2,200,255,0.22)";
-    sprite.textHeight = isProduct ? 3 : 3.3;
+    sprite.textHeight = textH;
     sprite.strokeColor = "rgba(2,200,255,0.5)";
   } else {
     sprite.color = "#eef6ff";
-    sprite.backgroundColor = spatialHexToRgba(palette.glow, 0.18);
-    sprite.textHeight = isProduct ? 2.9 : 3.15;
+    sprite.backgroundColor = spatialHexToRgba(palette.glow, 0.22);
+    sprite.textHeight = textH;
     sprite.strokeColor = spatialHexToRgba(palette.glow, 0.48);
   }
   sprite.strokeWidth = 0.55;
-  sprite.padding = 3;
+  sprite.padding = 2.5;
   sprite.borderRadius = 6;
 }
 
@@ -5906,8 +5931,11 @@ function getSpatialLabelSprite(node){
     sprite.padding = 2.5;
     sprite.borderRadius = 4;
     sprite.fontWeight = "600";
-    sprite.center.y = -0.85;
-    if (sprite.material) sprite.material.depthWrite = false;
+    sprite.center.y = -1.08;
+    if (sprite.material){
+      sprite.material.depthWrite = false;
+      sprite.material.depthTest = false;
+    }
     spatialState.labelCache.set(node.id, sprite);
   } else if (sprite.text !== labelText){
     sprite.text = labelText;
@@ -8242,7 +8270,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.8";
+const APP_VERSION   = "2.31.9";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
