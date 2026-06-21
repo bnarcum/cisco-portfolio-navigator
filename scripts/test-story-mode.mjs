@@ -15,58 +15,56 @@ try {
   await page.goto(`file://${html}`, { waitUntil: "load", timeout: 60000 });
   await page.waitForFunction(() => window.__cpnV2?.APP_VERSION, { timeout: 60000 });
 
-  // Button exists and is not auto-launched.
+  const themeBefore = await page.evaluate(() =>
+    document.documentElement.getAttribute("data-theme"));
+
   const hasBtn = await page.evaluate(() => !!document.getElementById("story-btn"));
   if (!hasBtn) errors.push("missing #story-btn launch button");
   const autoShown = await page.evaluate(() =>
     document.getElementById("story-overlay")?.classList.contains("show"));
   if (autoShown) errors.push("story overlay should not auto-launch");
 
-  // Launch via the button.
   await page.click("#story-btn");
   await page.waitForTimeout(300);
   const shown = await page.evaluate(() =>
     document.getElementById("story-overlay")?.classList.contains("show"));
   if (!shown) errors.push("story overlay did not show after button click");
 
-  const lightForced = await page.evaluate(() =>
-    document.documentElement.getAttribute("data-theme") === "light");
-  if (!lightForced) errors.push("story did not force light theme");
+  const themeAfterStart = await page.evaluate(() =>
+    document.documentElement.getAttribute("data-theme"));
+  if (themeAfterStart !== themeBefore) errors.push("story should not change theme");
 
   const chromeHidden = await page.evaluate(() =>
     document.body.classList.contains("story-open"));
   if (!chromeHidden) errors.push("story did not add body.story-open");
 
-  // Beat 0 is the title card.
   const startBeat = await page.evaluate(() => window.__storyBeat);
   if (startBeat !== 0) errors.push(`expected start beat 0, got ${startBeat}`);
 
-  // Step forward; reach the fragmented scene (beat 2) then fabric collapse (beat 3).
-  await page.keyboard.press("ArrowRight"); await page.waitForTimeout(120);
+  // Beat 1 → overview tool beat.
   await page.keyboard.press("ArrowRight"); await page.waitForTimeout(200);
-  const fragScene = await page.evaluate(() => ({
+  const beat1 = await page.evaluate(() => ({
     beat: window.__storyBeat,
-    scene: document.getElementById("story-overlay")?.classList.contains("scene"),
-    fabric: document.getElementById("story-scene")?.classList.contains("fabric")
+    tool: document.getElementById("story-overlay")?.classList.contains("tool"),
+    view: window.getViewMode && window.getViewMode()
   }));
-  if (fragScene.beat !== 2) errors.push(`expected beat 2, got ${fragScene.beat}`);
-  if (!fragScene.scene) errors.push("beat 2 should be a scene beat");
-  if (fragScene.fabric) errors.push("beat 2 fragmented scene should not be fabric");
+  if (beat1.beat !== 1) errors.push(`expected beat 1, got ${beat1.beat}`);
+  if (!beat1.tool) errors.push("beat 1 should be a tool beat");
+  if (beat1.view !== "overview") errors.push(`beat 1 expected overview, got ${beat1.view}`);
 
-  await page.keyboard.press("ArrowRight"); await page.waitForTimeout(300);
-  const fabricScene = await page.evaluate(() =>
-    document.getElementById("story-scene")?.classList.contains("fabric"));
-  if (!fabricScene) errors.push("beat 3 should collapse tiles into fabric");
-
-  // Beat 4 → families view (real app driven).
+  // Beat 2 → families (disconnected narrative).
   await page.keyboard.press("ArrowRight"); await page.waitForTimeout(400);
   const famView = await page.evaluate(() => window.getViewMode && window.getViewMode());
-  if (famView !== "families") errors.push(`beat 4 expected families view, got ${famView}`);
+  if (famView !== "families") errors.push(`beat 2 expected families view, got ${famView}`);
 
-  // Beat 5 → Hybrid Work reference architecture.
+  // Beat 3 → Hybrid Work reference architecture.
   await page.keyboard.press("ArrowRight"); await page.waitForTimeout(500);
   const refArchUC = await page.evaluate(() => document.getElementById("ucs")?.value);
-  if (refArchUC !== "Hybrid Work") errors.push(`beat 5 expected Hybrid Work UC, got ${refArchUC}`);
+  if (refArchUC !== "Hybrid Work") errors.push(`beat 3 expected Hybrid Work UC, got ${refArchUC}`);
+
+  // No abstract scene elements.
+  const hasScene = await page.evaluate(() => !!document.getElementById("story-scene"));
+  if (hasScene) errors.push("abstract story-scene should be removed");
 
   // Captions toggle.
   await page.keyboard.press("c"); await page.waitForTimeout(120);
@@ -74,18 +72,18 @@ try {
     document.getElementById("story-overlay")?.classList.contains("captions"));
   if (!capsOn) errors.push("captions toggle (c) did not enable captions");
 
-  // Exit and verify clean restore.
   await page.keyboard.press("Escape"); await page.waitForTimeout(400);
   const afterExit = await page.evaluate(() => ({
     shown: document.getElementById("story-overlay")?.classList.contains("show"),
     open: document.body.classList.contains("story-open"),
-    uc: document.getElementById("ucs")?.value
+    uc: document.getElementById("ucs")?.value,
+    theme: document.documentElement.getAttribute("data-theme")
   }));
   if (afterExit.shown) errors.push("overlay still shown after Esc");
   if (afterExit.open) errors.push("body.story-open not cleared after Esc");
   if (afterExit.uc) errors.push(`use case not restored after exit (got "${afterExit.uc}")`);
+  if (afterExit.theme !== themeBefore) errors.push("theme not preserved after exit");
 
-  // Re-launch should still work (idempotent build).
   await page.click("#story-btn"); await page.waitForTimeout(200);
   const relaunch = await page.evaluate(() =>
     document.getElementById("story-overlay")?.classList.contains("show"));
