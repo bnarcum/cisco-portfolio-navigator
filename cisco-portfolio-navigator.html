@@ -405,10 +405,21 @@
     .explore-btn-secondary:hover{border-color:var(--accent);color:var(--accent);background:rgba(2,200,255,.08)}
     .fam-prod-list{display:flex;flex-direction:column;gap:5px;max-height:min(42vh,320px);overflow-y:auto;
       padding-right:2px;margin-top:2px}
-    .fam-prod-row{display:block;width:100%;text-align:left;padding:8px 10px;background:var(--surface2);
+    .fam-prod-row{display:block;flex:1;text-align:left;padding:8px 10px;background:var(--surface2);
       border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:border-color .12s,background .12s;
       font-size:12px;font-weight:500;color:var(--text);font-family:inherit}
     .fam-prod-row:hover{border-color:var(--accent);background:rgba(2,200,255,.06)}
+    .fam-prod-row-wrap{display:flex;align-items:stretch;gap:6px}
+    .fam-prod-matrix{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
+    .fam-matrix-btn,.matrix-mini-btn{
+      border:1px solid rgba(192,132,252,.45);background:rgba(30,10,55,.45);color:#f3e8ff;
+      border-radius:6px;font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+      cursor:pointer;transition:all .15s;font-family:inherit}
+    .fam-matrix-btn{flex:1;min-width:42px;padding:0 8px}
+    .matrix-mini-btn{padding:4px 8px}
+    .fam-matrix-btn:hover,.matrix-mini-btn:hover{border-color:#c084fc;background:rgba(168,85,247,.28);color:#fff}
+    .matrix-inline-actions{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
+    #tip.tip-interactive{pointer-events:auto}
     .p-dcloud-card{
       padding:14px 14px 12px;border-radius:10px;
       border:1px solid rgba(0,212,255,.5);
@@ -501,7 +512,30 @@
       background:rgba(30,10,55,.55);color:#f3e8ff;font-size:22px;line-height:1;cursor:pointer;
       display:flex;align-items:center;justify-content:center;transition:all .15s}
     .matrix-overlay-close:hover{border-color:#c084fc;background:rgba(168,85,247,.28);color:#fff}
-    .matrix-overlay-frame{flex:1;width:100%;min-height:0;border:0;background:#07182d}
+    .matrix-overlay-frame{flex:1;width:100%;min-height:0;border:0;background:#07182d;transition:opacity .2s ease}
+    .matrix-overlay-viewport{position:relative;flex:1;min-height:0;display:flex;flex-direction:column}
+    .matrix-overlay-viewport.is-loading .matrix-overlay-frame{opacity:0}
+    .matrix-overlay-loading{
+      position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:10px;background:#07182d;z-index:2;transition:opacity .22s ease,visibility .22s ease}
+    .matrix-overlay-loading.hide{opacity:0;pointer-events:none;visibility:hidden}
+    .matrix-overlay-spinner{
+      width:38px;height:38px;border:3px solid rgba(168,85,247,.22);border-top-color:#c084fc;
+      border-radius:50%;animation:matrixSpin .75s linear infinite}
+    @keyframes matrixSpin{to{transform:rotate(360deg)}}
+    .matrix-overlay-loading-text{font-size:12px;font-weight:600;color:#e9d5ff;letter-spacing:.02em}
+    .p-hero--clickable{cursor:pointer}
+    .p-hero--clickable .p-hero-matrix-img{cursor:pointer}
+    .p-hero-open-hint{
+      position:absolute;left:10px;top:8px;z-index:4;font-size:9px;font-weight:700;letter-spacing:.06em;
+      text-transform:uppercase;padding:4px 8px;border-radius:999px;color:#581c87;
+      background:rgba(192,132,252,.88);pointer-events:none;opacity:0;transition:opacity .15s}
+    .p-hero--clickable:hover .p-hero-open-hint,.p-hero--clickable:focus-within .p-hero-open-hint{opacity:1}
+    .p-hero-aisle-btn{
+      pointer-events:auto;border:1px solid rgba(192,132,252,.5);background:rgba(88,28,135,.55);color:#f3e8ff;
+      border-radius:999px;font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+      padding:3px 8px;cursor:pointer;font:inherit;transition:all .15s}
+    .p-hero-aisle-btn:hover{border-color:#c084fc;background:rgba(168,85,247,.35);color:#fff}
     .gw-dcloud-section{
       margin-top:14px;padding:14px;border-radius:10px;text-align:left;
       border:1px solid rgba(0,212,255,.45);
@@ -3852,7 +3886,54 @@ function matrixDeviceUrl(id, view){
   return `${base}?${params.toString()}`;
 }
 
-const matrixOverlayState = { open: false, productId: null, view: null };
+const matrixOverlayState = { open: false, productId: null, view: null, prefetchedUrl: null };
+
+function productHasMatrixBridge(id){
+  return !!matrixDeviceUrl(id);
+}
+
+function matrixActionButtonsHtml(productId){
+  if (!productHasMatrixBridge(productId)) return "";
+  return `<span class="matrix-inline-actions">
+    <button type="button" class="matrix-mini-btn" data-matrix-view="showroom" data-matrix-product="${escapeHtml(productId)}">3D Showroom</button>
+    <button type="button" class="matrix-mini-btn" data-matrix-view="aisle" data-matrix-product="${escapeHtml(productId)}">Aisle</button>
+  </span>`;
+}
+
+function renderFamProdRow(p){
+  const matrixBtns = productHasMatrixBridge(p.id)
+    ? `<span class="fam-prod-matrix">
+        <button type="button" class="fam-matrix-btn" data-matrix-view="showroom" data-matrix-product="${escapeHtml(p.id)}" title="3D Showroom">3D</button>
+        <button type="button" class="fam-matrix-btn" data-matrix-view="aisle" data-matrix-product="${escapeHtml(p.id)}" title="Device Aisle">Aisle</button>
+      </span>`
+    : "";
+  return `<div class="fam-prod-row-wrap">
+    <button type="button" class="fam-prod-row" onclick="showProductDetail('${p.id}')">${escapeHtml(p.name)}</button>
+    ${matrixBtns}
+  </div>`;
+}
+
+function prefetchMatrixEmbed(productId, view){
+  const url = matrixDeviceUrl(productId, view === "aisle" ? "aisle" : "showroom");
+  if (!url || matrixOverlayState.prefetchedUrl === url) return;
+  let pre = document.getElementById("matrix-prefetch-frame");
+  if (!pre){
+    pre = document.createElement("iframe");
+    pre.id = "matrix-prefetch-frame";
+    pre.setAttribute("aria-hidden", "true");
+    pre.tabIndex = -1;
+    pre.style.cssText = "position:absolute;width:0;height:0;border:0;visibility:hidden;pointer-events:none";
+    document.body.appendChild(pre);
+  }
+  pre.src = url;
+  matrixOverlayState.prefetchedUrl = url;
+}
+
+function setMatrixOverlayLoading(loading){
+  const el = document.getElementById("matrix-overlay-loading");
+  if (el) el.classList.toggle("hide", !loading);
+  document.querySelector(".matrix-overlay-viewport")?.classList.toggle("is-loading", loading);
+}
 
 function ensureMatrixOverlay(){
   let ov = document.getElementById("matrix-overlay");
@@ -3872,9 +3953,15 @@ function ensureMatrixOverlay(){
         <span class="matrix-overlay-mode" id="matrix-overlay-mode">Showroom</span>
         <button type="button" class="matrix-overlay-close" id="matrix-overlay-close" aria-label="Close Device Matrix">×</button>
       </header>
-      <iframe id="matrix-overlay-frame" class="matrix-overlay-frame"
-        title="Collaboration Device Matrix — 3D showroom and aisle"
-        allow="fullscreen" loading="lazy"></iframe>
+      <div class="matrix-overlay-viewport is-loading">
+        <div class="matrix-overlay-loading" id="matrix-overlay-loading" role="status" aria-live="polite">
+          <div class="matrix-overlay-spinner" aria-hidden="true"></div>
+          <div class="matrix-overlay-loading-text">Loading 3D view…</div>
+        </div>
+        <iframe id="matrix-overlay-frame" class="matrix-overlay-frame"
+          title="Collaboration Device Matrix — 3D showroom and aisle"
+          allow="fullscreen" loading="lazy"></iframe>
+      </div>
     </div>`;
   document.body.appendChild(ov);
   ov.querySelector("#matrix-overlay-close")?.addEventListener("click", closeMatrixEmbed);
@@ -3891,10 +3978,22 @@ function openMatrixEmbed(productId, view){
   const frame = document.getElementById("matrix-overlay-frame");
   const titleEl = document.getElementById("matrix-overlay-title");
   const modeEl = document.getElementById("matrix-overlay-mode");
+  const loadingText = document.querySelector(".matrix-overlay-loading-text");
   const product = prodById[productId];
   if (titleEl) titleEl.textContent = product?.name || spatialResolveName(productId);
   if (modeEl) modeEl.textContent = view === "aisle" ? "Aisle" : "Showroom";
-  if (frame) frame.src = url;
+  if (loadingText) loadingText.textContent = view === "aisle" ? "Loading Device Aisle…" : "Loading 3D Showroom…";
+  setMatrixOverlayLoading(true);
+  if (frame){
+    const onDone = () => {
+      setMatrixOverlayLoading(false);
+      frame.removeEventListener("load", onDone);
+      frame.removeEventListener("error", onDone);
+    };
+    frame.addEventListener("load", onDone);
+    frame.addEventListener("error", onDone);
+    frame.src = url;
+  }
   ov.classList.add("show");
   ov.setAttribute("aria-hidden", "false");
   document.body.classList.add("matrix-overlay-open");
@@ -3914,6 +4013,7 @@ function closeMatrixEmbed(){
   matrixOverlayState.open = false;
   matrixOverlayState.productId = null;
   matrixOverlayState.view = null;
+  setMatrixOverlayLoading(false);
   if (frame) frame.src = "about:blank";
 }
 window.openMatrixEmbed = openMatrixEmbed;
@@ -3921,16 +4021,33 @@ window.closeMatrixEmbed = closeMatrixEmbed;
 
 document.addEventListener("click", e => {
   const btn = e.target.closest("[data-matrix-view]");
-  if (!btn) return;
-  const sec = btn.closest(".p-matrix-link");
-  const productId = sec?.dataset.productId;
-  if (!productId) return;
-  e.preventDefault();
-  openMatrixEmbed(productId, btn.dataset.matrixView);
+  if (btn){
+    const productId = btn.dataset.matrixProduct
+      || btn.closest(".p-matrix-link")?.dataset.productId;
+    if (productId){
+      e.preventDefault();
+      e.stopPropagation();
+      openMatrixEmbed(productId, btn.dataset.matrixView);
+      return;
+    }
+  }
+  const hero = e.target.closest(".p-hero--clickable");
+  if (hero && !e.target.closest("[data-matrix-view]")){
+    const productId = hero.dataset.productId;
+    if (productId){
+      e.preventDefault();
+      openMatrixEmbed(productId, "showroom");
+    }
+  }
 });
 document.addEventListener("keydown", e => {
   if (e.key === "Escape" && matrixOverlayState.open) closeMatrixEmbed();
 });
+document.addEventListener("mouseenter", e => {
+  const el = e.target.closest?.("[data-matrix-prefetch]");
+  if (!el) return;
+  prefetchMatrixEmbed(el.dataset.matrixPrefetch, "showroom");
+}, true);
 /** Matrix photos on the graph — room + desk collaboration endpoints only. */
 const MATRIX_PHOTO_FAMILIES = new Set(["room-systems", "desk-devices"]);
 function productAllowsMatrixPhoto(id){
@@ -4484,8 +4601,13 @@ function updateCompositionOrbitGuide(){
 
 function showCompositionNodeTip(ev, d){
   const desc = d._productRef?.desc || d.desc || CATS[d.category]?.label || "";
+  const short = desc.length > 130 ? desc.slice(0, 128) + "…" : desc;
   document.getElementById("tn").textContent = d.name;
-  document.getElementById("tc").textContent = desc.length > 130 ? desc.slice(0, 128) + "…" : desc;
+  const matrixActions = d._kind === "product" ? matrixActionButtonsHtml(d.id) : "";
+  const tc = document.getElementById("tc");
+  tc.innerHTML = escapeHtml(short) + matrixActions;
+  tipEl.classList.toggle("tip-interactive", !!matrixActions);
+  tipEl.style.pointerEvents = matrixActions ? "auto" : "none";
   tipEl.style.display = "block";
   moveTip(ev);
 }
@@ -7249,7 +7371,7 @@ function showDetailPanel(d) {
   if(curProds.length){
     prodsHtml+=`<div class="p-sec"><div class="p-sec-t">Products in this family (${curProds.length})</div>
       <div class="fam-prod-list">
-      ${curProds.map(p=>`<button type="button" class="fam-prod-row" onclick="showProductDetail('${p.id}')">${p.name}</button>`).join("")}
+      ${curProds.map(p => renderFamProdRow(p)).join("")}
       </div></div>`;
   }
   if(eolProds.length){
@@ -7534,7 +7656,7 @@ function showNodeTip(ev,d){
   tipEl.style.display = "block"; moveTip(ev);
 }
 function moveTip(ev){ const {w}=getDims(),x=ev.clientX+14,y=ev.clientY-10; tipEl.style.left=(x+240>w?x-254:x)+"px"; tipEl.style.top=y+"px"; }
-function hideTip(){ tipEl.style.display="none"; }
+function hideTip(){ tipEl.style.display="none"; tipEl.classList.remove("tip-interactive"); tipEl.style.pointerEvents="none"; }
 
 // ══════════════════════════════════════
 // SEARCH — nodes + specific products
@@ -8742,7 +8864,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.23";
+const APP_VERSION   = "2.31.24";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -11723,18 +11845,28 @@ function insertProductHero(id, kind){
   const metaHtml = `<div class="p-hero-scrim"></div>
     <div class="p-hero-meta"><span></span><span class="p-hero-cat">${catLabel}</span></div>`;
   if (matrixUrl){
-    hero.className = "p-hero p-hero--matrix";
+    hero.className = "p-hero p-hero--matrix p-hero--clickable";
+    hero.dataset.productId = id;
+    hero.dataset.matrixPrefetch = id;
+    hero.title = "Click for 3D Showroom";
     hero.innerHTML = `
+      <span class="p-hero-open-hint">Click for 3D Showroom</span>
       <img class="p-hero-matrix-img" src="${escapeHtml(matrixUrl)}" alt="${escapeHtml(n.name || id)}"
         loading="lazy" decoding="async">
       ${fallbackReserveHtml}
-      ${metaHtml}`;
+      <div class="p-hero-scrim"></div>
+      <div class="p-hero-meta">
+        <button type="button" class="p-hero-aisle-btn" data-matrix-view="aisle" data-matrix-product="${escapeHtml(id)}">Aisle</button>
+        <span class="p-hero-cat">${catLabel}</span>
+      </div>`;
     const img = hero.querySelector(".p-hero-matrix-img");
     if (img){
       img.addEventListener("error", () => {
         img.remove();
-        hero.classList.remove("p-hero--matrix");
+        hero.classList.remove("p-hero--matrix", "p-hero--clickable");
         hero.classList.add("p-hero--icon-only");
+        delete hero.dataset.productId;
+        delete hero.dataset.matrixPrefetch;
         const fb = hero.querySelector(".p-hero-fallback");
         if (fb){
           fb.classList.remove("p-hero-fallback--reserve");
@@ -11783,6 +11915,7 @@ function insertMatrixLink(id, kind){
   const sec = document.createElement("div");
   sec.className = "p-sec p-matrix-link";
   sec.dataset.productId = id;
+  sec.dataset.matrixPrefetch = id;
   sec.innerHTML = `
     <div class="p-matrix-card">
       <div class="p-matrix-header">

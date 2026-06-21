@@ -18,6 +18,14 @@ try {
   await page.evaluate((pid) => window.showProductDetail(pid), MATRIX_PRODUCT);
   await page.waitForSelector(".p-matrix-link", { timeout: 8000 });
 
+  const heroUi = await page.evaluate(() => ({
+    clickable: document.querySelector(".p-hero--clickable") != null,
+    aisleBtn: document.querySelector(".p-hero-aisle-btn") != null,
+    prefetch: document.querySelector(".p-hero")?.dataset.matrixPrefetch || null,
+    loadingEl: !!document.getElementById("matrix-overlay-loading"),
+  }));
+  console.log("Hero matrix UI:", heroUi);
+
   const panel = await page.evaluate(() => {
     const sec = document.querySelector(".p-matrix-link");
     const showroom = sec?.querySelector('[data-matrix-view="showroom"]');
@@ -34,7 +42,10 @@ try {
   });
   console.log("Panel matrix UI:", panel);
 
-  if (!panel.hasSec || !panel.hasShowroom || !panel.hasAisle || panel.hasExternal) {
+  if (!heroUi.clickable || !heroUi.aisleBtn || heroUi.prefetch !== "desk-pro-g2") {
+    console.error("FAIL: matrix hero should be clickable with Aisle button", heroUi);
+    exitCode = 1;
+  } else if (!panel.hasSec || !panel.hasShowroom || !panel.hasAisle || panel.hasExternal) {
     console.error("FAIL: matrix panel should offer in-app Showroom/Aisle buttons only");
     exitCode = 1;
   } else if (!panel.url?.includes("embed=cpn") || !panel.url?.includes("device=desk-pro-g2")) {
@@ -61,6 +72,25 @@ try {
     } else {
       await page.click("#matrix-overlay-close");
       await page.waitForFunction(() => !window.__cpnMatrixOverlayOpen?.(), { timeout: 3000 });
+      await page.click(".p-hero--clickable");
+      await page.waitForSelector("#matrix-overlay.show", { timeout: 5000 });
+      const heroOpen = await page.evaluate(() => window.__cpnMatrixOverlayOpen?.());
+      if (!heroOpen) {
+        console.error("FAIL: clicking hero should open showroom overlay");
+        exitCode = 1;
+      } else {
+      await page.click("#matrix-overlay-close");
+      await page.waitForFunction(() => !window.__cpnMatrixOverlayOpen?.(), { timeout: 3000 });
+      const hasLoading = await page.evaluate(() => {
+        window.openMatrixEmbed("desk-pro-g2", "showroom");
+        return !document.getElementById("matrix-overlay-loading")?.classList.contains("hide");
+      });
+      if (!hasLoading) {
+        console.error("FAIL: matrix overlay loading skeleton should show on open");
+        exitCode = 1;
+      } else {
+      await page.click("#matrix-overlay-close");
+      await page.waitForFunction(() => !window.__cpnMatrixOverlayOpen?.(), { timeout: 3000 });
       await page.click('[data-matrix-view="aisle"]');
       await page.waitForSelector("#matrix-overlay.show", { timeout: 5000 });
       const aisle = await page.evaluate(() => document.getElementById("matrix-overlay-frame")?.src || "");
@@ -69,6 +99,8 @@ try {
         exitCode = 1;
       } else {
         console.log("PASS: in-app Device Matrix Showroom and Aisle overlays OK");
+      }
+      }
       }
     }
   }
