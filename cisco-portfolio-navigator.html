@@ -5803,41 +5803,118 @@ function refreshSpatialNodeVisuals(){
   });
 }
 
+function spatialLinkHighlightTier(l){
+  if (spatialState.focusFamily) return "orbit";
+  if (selected){
+    const conn = connectionNodeSet(selected.id, connectionHighlightDepth);
+    const s = sid(l), t = tid(l);
+    if (!conn.has(s) || !conn.has(t)) return "dim";
+    if (s === selected.id || t === selected.id) return "hot";
+    return "mid";
+  }
+  return spatialState.filterActive ? "all" : "normal";
+}
+
 function spatialLinkOpacity(l){
-  if (spatialState.focusFamily) return 0.55;
-  if (!spatialState.filterActive) return 0.55;
-  if (l.type === "direct") return 0.92;
-  if (l.type === "succession") return 0.78;
-  return 0.5;
+  const tier = spatialLinkHighlightTier(l);
+  if (tier === "orbit") return 0.55;
+  if (tier === "dim") return 0.05;
+  if (tier === "hot") return 1;
+  if (tier === "mid") return 0.68;
+  if (tier === "all"){
+    if (l.type === "direct") return 0.96;
+    if (l.type === "adjacent") return 0.84;
+    if (l.type === "succession") return 0.78;
+    return 0.58;
+  }
+  if (l.type === "direct") return 0.72;
+  if (l.type === "adjacent") return 0.58;
+  if (l.type === "succession") return 0.62;
+  return 0.42;
 }
 
 function spatialLinkColor(l){
-  if (l.type === "succession") return spatialState.filterActive ? "rgba(168,85,247,0.85)" : "rgba(168,85,247,0.55)";
-  if (l.type === "composition") return spatialState.filterActive ? "rgba(148,163,184,0.62)" : "rgba(110,118,129,0.38)";
-  if (l.type === "direct") return spatialState.filterActive ? "rgba(2,200,255,0.92)" : "rgba(2,200,255,0.45)";
-  return spatialState.filterActive ? "rgba(148,163,184,0.48)" : "rgba(110,118,129,0.28)";
+  const tier = spatialLinkHighlightTier(l);
+  if (tier === "dim") return "rgba(8,18,32,0.35)";
+  if (tier === "hot"){
+    if (l.type === "direct") return "rgba(2,200,255,1)";
+    if (l.type === "adjacent") return "rgba(251,191,36,0.98)";
+    if (l.type === "succession") return "rgba(192,132,252,0.95)";
+    return "rgba(148,163,184,0.9)";
+  }
+  if (tier === "mid"){
+    const glow = spatialCategoryPalette(selected).glow;
+    if (l.type === "direct") return glow;
+    if (l.type === "adjacent") return "rgba(251,191,36,0.72)";
+    return "rgba(148,163,184,0.55)";
+  }
+  if (l.type === "succession") return tier === "all" ? "rgba(192,132,252,0.88)" : "rgba(168,85,247,0.62)";
+  if (l.type === "composition") return "rgba(148,163,184,0.55)";
+  if (l.type === "direct") return tier === "all" ? "rgba(2,200,255,0.96)" : "rgba(2,200,255,0.72)";
+  if (l.type === "adjacent") return tier === "all" ? "rgba(251,191,36,0.9)" : "rgba(251,191,36,0.62)";
+  return tier === "all" ? "rgba(148,163,184,0.55)" : "rgba(110,118,129,0.38)";
 }
 
 function spatialLinkWidth(l){
-  if (spatialState.focusFamily){
+  const tier = spatialLinkHighlightTier(l);
+  if (tier === "orbit"){
     if (l.type === "succession") return 1.1;
     if (l.type === "composition") return 0.7;
     return l.type === "direct" ? 1.4 : 0.6;
   }
-  if (spatialState.filterActive){
-    if (l.type === "succession") return 1.65;
-    if (l.type === "composition") return 1.05;
-    return l.type === "direct" ? 2.5 : 1.15;
+  if (tier === "dim") return 0.35;
+  if (tier === "hot"){
+    if (l.type === "direct") return 3.2;
+    if (l.type === "adjacent") return 2.2;
+    if (l.type === "succession") return 1.8;
+    return 1.4;
   }
-  if (l.type === "succession") return 1.1;
-  if (l.type === "composition") return 0.7;
-  return l.type === "direct" ? 1.4 : 0.6;
+  if (tier === "mid") return l.type === "direct" ? 1.8 : 1.25;
+  if (tier === "all"){
+    if (l.type === "direct") return 2.8;
+    if (l.type === "adjacent") return 2.0;
+    if (l.type === "succession") return 1.7;
+    return 1.15;
+  }
+  if (l.type === "direct") return 1.9;
+  if (l.type === "adjacent") return 1.35;
+  if (l.type === "succession") return 1.15;
+  return 0.85;
 }
 
 function spatialLinkParticles(l){
-  if (l.type === "succession") return spatialState.filterActive ? 2 : 1;
-  if (l.type === "direct") return spatialState.filterActive ? 3 : 2;
+  const tier = spatialLinkHighlightTier(l);
+  if (tier === "dim") return 0;
+  if (tier === "hot"){
+    if (l.type === "direct") return 4;
+    if (l.type === "adjacent") return 2;
+    return 1;
+  }
+  if (tier === "all" || tier === "mid"){
+    if (l.type === "direct") return 3;
+    if (l.type === "adjacent") return 2;
+    return 0;
+  }
+  if (l.type === "direct") return 2;
+  if (l.type === "adjacent") return 1;
   return 0;
+}
+
+function spatialLinkParticleWidth(l){
+  const tier = spatialLinkHighlightTier(l);
+  if (tier === "hot") return 2.4;
+  if (tier === "all" || tier === "mid") return l.type === "direct" ? 2 : 1.6;
+  return 1.25;
+}
+
+function refreshSpatialLinkStyles(){
+  if (!spatialState.graph) return;
+  const g = spatialState.graph;
+  if (typeof g.linkColor === "function") g.linkColor(g.linkColor());
+  if (typeof g.linkWidth === "function") g.linkWidth(g.linkWidth());
+  if (typeof g.linkOpacity === "function") g.linkOpacity(g.linkOpacity());
+  if (typeof g.linkDirectionalParticles === "function") g.linkDirectionalParticles(g.linkDirectionalParticles());
+  if (typeof g.linkDirectionalParticleWidth === "function") g.linkDirectionalParticleWidth(g.linkDirectionalParticleWidth());
 }
 
 function configureSpatialForces(){
@@ -5872,7 +5949,7 @@ function updateSpatialHud(){
     hud.innerHTML = `${fam?.name || "Family"} — click a product for details · <kbd>Esc</kbd> back to Spatial map`;
   } else if (spatialState.filterActive && spatialState.lastStats){
     const s = spatialState.lastStats;
-    hud.innerHTML = `<strong>${s.families}</strong> families · <strong>${s.links}</strong> links (${s.direct} direct integrations) · cyan = direct · grey = adjacent · Double-click a family to explore products`;
+    hud.innerHTML = `<strong>${s.families}</strong> families · <strong>${s.links}</strong> connections (${s.direct} direct · ${s.adjacent} adjacent) · <span style="opacity:.9">cyan = direct · gold = adjacent</span> · Click a family to highlight its integrations`;
   } else {
     hud.innerHTML = `Drag to orbit · Scroll to zoom · Click for details · Double-click a family to explore its products · <kbd>Esc</kbd> back to Families`;
   }
@@ -6125,7 +6202,7 @@ function initSpatialGraph(){
     .linkWidth(spatialLinkWidth)
     .linkOpacity(spatialLinkOpacity)
     .linkDirectionalParticles(spatialLinkParticles)
-    .linkDirectionalParticleWidth(1.2)
+    .linkDirectionalParticleWidth(spatialLinkParticleWidth)
     .linkDirectionalParticleSpeed(0.004)
     .onNodeClick(node => {
       const now = Date.now();
@@ -6189,7 +6266,8 @@ function refreshSpatialGraph(){
   spatialState.lastStats = spatialState.filterActive ? {
     families: data.nodes.length,
     links: data.links.length,
-    direct: data.links.filter(l => l.type === "direct").length
+    direct: data.links.filter(l => l.type === "direct").length,
+    adjacent: data.links.filter(l => l.type === "adjacent").length
   } : null;
   if (!spatialState.graph) initSpatialGraph();
   if (!spatialState.graph) return;
@@ -6203,6 +6281,7 @@ function refreshSpatialGraph(){
     configureSpatialForces();
     ensureSpatialLights();
     refreshSpatialNodeVisuals();
+    refreshSpatialLinkStyles();
     updateSpatialHud();
     scheduleSpatialFit(spatialState.filterActive ? 520 : 680);
   };
@@ -6231,6 +6310,7 @@ function selectNodeSpatial(d, graphNode){
   window.__cpnV2?.phases?.enhanceDetailPanel?.();
   if (spatialState.graph){
     refreshSpatialNodeVisuals();
+    refreshSpatialLinkStyles();
     const focus = () => focusSpatialNode(d.id, 700);
     if (graphNode) focus();
     else setTimeout(focus, 500);
@@ -6684,7 +6764,10 @@ function selectNode(d, opts = {}) {
   showDetailPanel(d);
   if (viewMode === "spatial"){
     focusSpatialNode(d.id, 700);
-    if (spatialState.graph) refreshSpatialNodeVisuals();
+    if (spatialState.graph){
+      refreshSpatialNodeVisuals();
+      refreshSpatialLinkStyles();
+    }
     return;
   }
   if (viewMode === "composition"){
@@ -6703,7 +6786,10 @@ function selectNode(d, opts = {}) {
 
 function resetHL() {
   if (viewMode === "spatial"){
-    if (spatialState.graph) refreshSpatialNodeVisuals();
+    if (spatialState.graph){
+      refreshSpatialNodeVisuals();
+      refreshSpatialLinkStyles();
+    }
     return;
   }
   if (viewMode === "all-products"){
@@ -8342,7 +8428,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.11";
+const APP_VERSION   = "2.31.12";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
