@@ -8168,7 +8168,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.30.9";
+const APP_VERSION   = "2.31.0";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -8459,6 +8459,10 @@ const FIELD_NOTICE_BY_PROD = Object.fromEntries(FIELD_NOTICES.map(f => [f.produc
    [24] Changelog
    ────────────────────────────────────────────────────────────────*/
 const CHANGELOG = [
+  {ver:"2.31.0", date:"2026-06-21", items:[
+    "Icon build uses balanced SVG parsing (art-layer extraction, junk group removal) — fixes white squares from empty Splunk/Catalyst/Industrial symbols and solid export-frame rects.",
+    "Remapped collaboration and observability icons: ThousandEyes→globe, XDR→secure radar, Contact Center→services desk, Webex Connect→customer journey, Webex App→hybrid work, conference phones→conference glyph.",
+  ]},
   {ver:"2.30.9", date:"2026-06-21", items:[
     "Icon build now strips Illustrator <style>/guide layers so brand SVGs tint correctly — fixes black telescope plus Catalyst Center, Splunk, and Industrial icons.",
     "Collaboration icons differentiated: Webex Connect (omnichannel), Contact Center (agent), Conference Phones (mic); ThousandEyes→real-time, XDR→insights.",
