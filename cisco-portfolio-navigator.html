@@ -5516,16 +5516,18 @@ function rebindGraph(opts){
         .attr("stroke","transparent").attr("stroke-width", 12)
         .on("mouseover", (ev,l) => onLinkPointer(ev, l))
         .on("mousemove", ev => {
+          if (!hoverCardsEnabled()) return;
           if (hoveredLinkKey || selectedLinkKey) positionLinkWhyCard(ev);
           else moveTip(ev);
         })
         .on("mouseout", () => {
-          if (selectedLinkKey) return;
+          if (!hoverCardsEnabled() || selectedLinkKey) return;
           hoveredLinkKey = null;
           hideLinkWhyCard();
           hideTip();
         })
         .on("click", (ev, l) => {
+          if (!hoverCardsEnabled()) return;
           ev.stopPropagation();
           selectLink(ev, l);
         }),
@@ -5616,7 +5618,6 @@ function rebindGraph(opts){
             if (viewMode === "composition"){
               compositionHoverId = d.id;
               applyCompositionInteractionStyles(selected);
-              showCompositionNodeTip(ev, d);
             } else {
               if (usePillarLayout()){
                 pillarHoverId = d.id;
@@ -5630,7 +5631,7 @@ function rebindGraph(opts){
               if (d !== selected) showNodeTip(ev, d);
             }
           })
-          .on("mousemove", moveTip)
+          .on("mousemove", ev => { if (hoverCardsEnabled()) moveTip(ev); })
           .on("mouseout", ()=>{
             if (viewMode === "composition"){
               compositionHoverId = null;
@@ -5817,9 +5818,11 @@ function positionLinkWhyCard(ev){
   card.style.left = x + "px";
   card.style.top = y + "px";
 }
+function hoverCardsEnabled(){ return viewMode !== "composition"; }
+
 function showLinkWhyCard(ev, link){
   const card = document.getElementById("link-why-card");
-  if (!card || !link) return;
+  if (!card || !link || !hoverCardsEnabled()) return;
   hideTip();
   const sn = linkNodeName(sid(link)), tn = linkNodeName(tid(link));
   const overlap = linkUseCaseOverlap(link);
@@ -5857,6 +5860,7 @@ function clearLinkSelection(){
   applyLinkHighlight();
 }
 function onLinkPointer(ev, link){
+  if (!hoverCardsEnabled()) return;
   if (!link){
     hoveredLinkKey = null;
     if (!selectedLinkKey) hideLinkWhyCard();
@@ -5868,7 +5872,7 @@ function onLinkPointer(ev, link){
   showLinkWhyCard(ev, link);
 }
 function selectLink(ev, link){
-  if (!link) return;
+  if (!link || !hoverCardsEnabled()) return;
   selectedLinkKey = linkKey(link);
   showLinkWhyCard(ev, link);
   applyLinkHighlight();
@@ -7527,6 +7531,7 @@ function applyViewLevel(mode, opts){
     nodeClickTimer = null;
     closePanel();
     hideTip();
+    clearLinkSelection();
     const v = buildCompositionView(viewFocus);
     viewNodes = v.nodes; viewLinks = v.links;
   } else if (mode === "all-products"){
@@ -9606,7 +9611,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.77";
+const APP_VERSION   = "2.31.78";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
