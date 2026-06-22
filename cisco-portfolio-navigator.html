@@ -9601,7 +9601,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.74";
+const APP_VERSION   = "2.31.75";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -11091,20 +11091,7 @@ function planSummary(){
 
   const pillarHit = stackPillarCoverage();
   const pillars = ONE_CISCO.pillars.map(p => ({ ...p, covered: !!pillarHit[p.id] }));
-  const stackConnSeen = new Set();
-  const stackConnections = [];
-  LINKS.forEach(l => {
-    const s = sid(l), t = tid(l);
-    if (!effNodes.has(s) || !effNodes.has(t)) return;
-    const key = [s, t].sort().join("--");
-    if (stackConnSeen.has(key)) return;
-    stackConnSeen.add(key);
-    stackConnections.push({
-      sourceName: linkNodeName(s), targetName: linkNodeName(t),
-      type: l.type, typeLabel: connectionTypeLabel(l.type), label: l.label || "",
-      useCaseOverlap: linkUseCaseOverlap(l)
-    });
-  });
+  const stackConnections = buildStackConnections();
 
   return {
     acct, date, profile, items, legacy, recs, stackUCs, allUC, bundles, dcloudDemos,
@@ -11140,7 +11127,9 @@ function exportMarkdown(){
   if (s.stackConnections?.length){
     md += `\n## Stack Integrations\n\n`;
     s.stackConnections.forEach(c => {
-      md += `- **${c.sourceName} ↔ ${c.targetName}** — ${c.typeLabel}${c.label ? " · " + c.label : ""}\n`;
+      md += `- **${c.sourceName} ↔ ${c.targetName}** — ${c.typeLabel}${c.label ? " · " + c.label : ""}`;
+      if (c.useCaseOverlap?.length) md += ` · shared: ${c.useCaseOverlap.join(", ")}`;
+      md += `\n`;
     });
   }
   md += `\n## Solution Packages\n\n`;
