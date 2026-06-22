@@ -512,6 +512,7 @@
       border:1px solid rgba(0,212,255,.45)}
     .p-dcloud-tagline{font-size:13px;font-weight:700;color:#fff;margin-bottom:6px;letter-spacing:.01em}
     .p-dcloud-hint{font-size:12px;color:#f0f8ff;margin-bottom:12px;line-height:1.5;font-weight:500}
+    .p-dcloud-hint--panel{font-size:11px;margin-bottom:8px;color:#d8ecfa}
     .p-dcloud-entry-hint{font-size:11px;color:#e3f2fb;margin:8px 0 0;line-height:1.45;padding-left:2px;font-weight:500}
     .p-dcloud-note{
       font-size:11px;color:#d8ecfa;margin-top:10px;line-height:1.45;font-weight:500;
@@ -664,14 +665,35 @@
       border:1px solid rgba(0,212,255,.45);
       background:linear-gradient(145deg,rgba(0,200,255,.14) 0%,rgba(0,60,90,.12) 100%)}
     .gw-dcloud-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#b8f0ff;margin-bottom:8px}
-    .p-dcloud-objectives{margin:0 0 10px;padding-left:18px;font-size:11.5px;color:#e8f6ff;line-height:1.5}
+    .p-dcloud-objectives{margin:0 0 8px;padding-left:18px;font-size:11.5px;color:#e8f6ff;line-height:1.5}
+    .p-dcloud-objectives--single{margin:0 0 8px;padding-left:0;list-style:none}
+    .p-dcloud-objectives--single li{margin:0;font-size:11.5px;color:#d8ecfa;line-height:1.45}
     .p-dcloud-objectives li{margin:3px 0}
-    .p-dcloud-meta-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+    .p-dcloud-meta-row{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-bottom:6px}
     .p-dcloud-chip{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
       padding:3px 8px;border-radius:6px;background:rgba(0,0,0,.22);color:#d0ecfa;border:1px solid rgba(0,212,255,.25)}
-    .p-dcloud-entry{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(0,212,255,.15)}
+    .p-dcloud-chip--rec{background:rgba(45,206,92,.22);color:#b8f5c8;border-color:rgba(45,206,92,.45)}
+    .p-dcloud-chip--instant{background:rgba(255,200,50,.18);color:#ffe9a8;border-color:rgba(255,200,50,.4)}
+    .p-dcloud-chip--eco{background:rgba(168,85,247,.18);color:#e9d5ff;border-color:rgba(192,132,252,.35)}
+    .p-dcloud-entry{margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid rgba(0,212,255,.12)}
+    .p-dcloud-entry.is-done{opacity:.78}
+    .p-dcloud-entry.is-done .la-dcloud-meta{background:rgba(45,206,92,.85)}
     .p-dcloud-entry:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
-    .p-dcloud-entry-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+    .p-dcloud-entry-head{display:flex;align-items:flex-start;gap:8px;margin-bottom:4px}
+    .p-dcloud-done{width:16px;height:16px;flex-shrink:0;margin-top:2px;cursor:pointer;accent-color:#00d4ff}
+    .p-dcloud-entry-title{font-size:12.5px;font-weight:700;color:#fff;line-height:1.35;flex:1;min-width:0}
+    .p-dcloud-entry-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+    .p-dcloud-entry-actions .la-dcloud{padding:9px 11px}
+    .p-dcloud-progress{font-size:10px;color:#b8e8ff;margin:0 0 8px;padding:5px 8px;border-radius:6px;
+      background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.18)}
+    .p-dcloud-more[hidden]{display:none!important}
+    .p-dcloud-toggle,.p-dcloud-browse-all{
+      display:block;width:100%;margin:6px 0 2px;padding:7px 10px;border-radius:7px;cursor:pointer;font:inherit;
+      font-size:11px;font-weight:700;text-align:center;transition:all .15s}
+    .p-dcloud-toggle{background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.28);color:#b8f0ff}
+    .p-dcloud-toggle:hover{border-color:#00d4ff;background:rgba(0,212,255,.18);color:#fff}
+    .p-dcloud-browse-all{background:transparent;border:1px dashed rgba(0,212,255,.35);color:#8ecae0}
+    .p-dcloud-browse-all:hover{border-color:#00d4ff;color:#fff}
     .p-dcloud-eco{font-size:11px;color:#c4e8f8;margin:0 0 10px;line-height:1.45;font-style:italic}
     #learn-path-banner{position:relative;left:auto;transform:none;
       display:none;width:100%;max-width:min(920px,calc(100vw - 40px));
@@ -9655,7 +9677,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.86";
+const APP_VERSION   = "2.31.87";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -12937,18 +12959,25 @@ function dcloudHeaderHtml(compact){
   </div>`;
 }
 
-function dcloudEntryMetaHtml(e){
+function dcloudEntryMetaHtml(e, opts = {}){
   const chips = [];
-  if (e.duration) chips.push(e.duration);
-  if (e.level) chips.push(e.level);
-  if (e.demoType === "instant") chips.push("Instant demo");
-  return chips.length ? `<div class="p-dcloud-meta-row">${chips.map(c => `<span class="p-dcloud-chip">${escapeHtml(c)}</span>`).join("")}</div>` : "";
+  if (opts.bestMatch) chips.push({ label: "Best match", cls: "p-dcloud-chip--rec" });
+  if (opts.ecosystem) chips.push({ label: "Ecosystem", cls: "p-dcloud-chip--eco" });
+  if (e.duration) chips.push({ label: e.duration, cls: "" });
+  if (e.level) chips.push({ label: e.level, cls: "" });
+  if (e.demoType === "instant") chips.push({ label: "Instant demo", cls: "p-dcloud-chip--instant" });
+  if (!chips.length) return "";
+  return `<div class="p-dcloud-meta-row">${chips.map(c =>
+    `<span class="p-dcloud-chip${c.cls ? " " + c.cls : ""}">${escapeHtml(c.label)}</span>`
+  ).join("")}</div>`;
 }
 
-function dcloudEntryObjectivesHtml(e){
+function dcloudEntryObjectivesHtml(e, max = 3){
   const objs = e.learningObjectives || [];
   if (!objs.length) return "";
-  return `<ul class="p-dcloud-objectives">${objs.slice(0, 3).map(o => `<li>${escapeHtml(o)}</li>`).join("")}</ul>`;
+  const slice = objs.slice(0, max);
+  const single = max === 1;
+  return `<ul class="p-dcloud-objectives${single ? " p-dcloud-objectives--single" : ""}">${slice.map(o => `<li>${escapeHtml(o)}</li>`).join("")}</ul>`;
 }
 
 function dcloudEntryActionsHtml(e){
@@ -12960,11 +12989,98 @@ function dcloudEntryActionsHtml(e){
   </a>`;
 }
 
+function dcloudPanelProgressHtml(entries){
+  if (entries.length < 2) return "";
+  const done = dcloudLabsDoneSet();
+  const covered = entries.filter(e => done.has(e.id)).length;
+  return `<div class="p-dcloud-progress" data-dcloud-progress><strong>${covered}</strong> of ${entries.length} labs complete</div>`;
+}
+
+function renderDcloudPanelEntry(e, opts = {}){
+  const isDone = dcloudLabsDoneSet().has(e.id);
+  const objectiveMax = opts.objectiveMax ?? 1;
+  return `<div class="p-dcloud-entry${opts.primary ? " is-primary" : ""}${isDone ? " is-done" : ""}" data-lab-id="${escapeHtml(e.id)}">
+    <div class="p-dcloud-entry-head">
+      <input type="checkbox" class="p-dcloud-done" data-lab-id="${escapeHtml(e.id)}" ${isDone ? "checked" : ""} aria-label="Mark lab complete"/>
+      <div class="p-dcloud-entry-title">${escapeHtml(e.linkLabel || e.name)}</div>
+    </div>
+    ${dcloudEntryMetaHtml(e, opts)}
+    ${dcloudEntryObjectivesHtml(e, objectiveMax)}
+    <div class="p-dcloud-entry-actions">${dcloudEntryActionsHtml(e)}</div>
+  </div>`;
+}
+
+function renderDcloudPanelEntries(entries, opts = {}){
+  if (!entries.length) return "";
+  const primary = entries[0];
+  const rest = entries.slice(1);
+  let html = dcloudPanelProgressHtml(entries);
+  html += renderDcloudPanelEntry(primary, { ...opts, bestMatch: true, primary: true, objectiveMax: 1 });
+  if (rest.length){
+    html += `<div class="p-dcloud-more" hidden>${rest.map(e => renderDcloudPanelEntry(e, { ...opts, objectiveMax: 1 })).join("")}</div>`;
+    html += `<button type="button" class="p-dcloud-toggle" aria-expanded="false">+ ${rest.length} more lab${rest.length > 1 ? "s" : ""}</button>`;
+  }
+  if (opts.browseLabel){
+    html += `<button type="button" class="p-dcloud-browse-all" data-dcloud-browse="1">Browse all labs for ${escapeHtml(opts.browseLabel)}</button>`;
+  }
+  return html;
+}
+
+function updateDcloudPanelProgress(sec, entries){
+  const el = sec.querySelector("[data-dcloud-progress]");
+  if (!el || !entries?.length) return;
+  const done = dcloudLabsDoneSet();
+  const covered = entries.filter(e => done.has(e.id)).length;
+  el.innerHTML = `<strong>${covered}</strong> of ${entries.length} labs complete`;
+}
+
+function wireDcloudPanelSection(sec, entries, browseQuery){
+  sec.querySelector(".p-dcloud-toggle")?.addEventListener("click", function(){
+    const more = sec.querySelector(".p-dcloud-more");
+    if (!more) return;
+    const open = more.hasAttribute("hidden");
+    if (open){
+      more.removeAttribute("hidden");
+      this.setAttribute("aria-expanded", "true");
+      this.textContent = "Show fewer labs";
+    } else {
+      more.setAttribute("hidden", "");
+      this.setAttribute("aria-expanded", "false");
+      const n = entries.length - 1;
+      this.textContent = `+ ${n} more lab${n > 1 ? "s" : ""}`;
+    }
+  });
+  sec.querySelector("[data-dcloud-browse]")?.addEventListener("click", () => {
+    openDcloudBrowser({ query: browseQuery || "" });
+  });
+  sec.querySelectorAll(".p-dcloud-done").forEach(cb => {
+    cb.addEventListener("change", () => {
+      const id = cb.dataset.labId;
+      if (!id) return;
+      dcloudMarkLabDone(id, cb.checked);
+      cb.closest(".p-dcloud-entry")?.classList.toggle("is-done", cb.checked);
+      updateDcloudPanelProgress(sec, entries);
+    });
+  });
+  sec.querySelectorAll("[data-dcloud-id]").forEach(a => {
+    a.addEventListener("click", () => {
+      const id = a.dataset.dcloudId;
+      if (!id) return;
+      dcloudMarkLabDone(id, true);
+      const entry = a.closest(".p-dcloud-entry");
+      entry?.classList.add("is-done");
+      const cb = entry?.querySelector(".p-dcloud-done");
+      if (cb) cb.checked = true;
+      updateDcloudPanelProgress(sec, entries);
+    });
+  });
+}
+
 function renderDcloudEntryBlock(e, opts = {}){
   const compact = !!opts.compact;
   return `<div class="p-dcloud-entry">
-    ${compact ? "" : dcloudEntryMetaHtml(e)}
-    ${dcloudEntryObjectivesHtml(e)}
+    ${compact ? "" : dcloudEntryMetaHtml(e, opts)}
+    ${dcloudEntryObjectivesHtml(e, compact ? 1 : 3)}
     <div class="p-dcloud-entry-actions">${dcloudEntryActionsHtml(e)}</div>
     ${e.hint && compact ? `<div class="p-dcloud-entry-hint">${escapeHtml(e.hint)}</div>` : ""}
   </div>`;
@@ -12975,11 +13091,15 @@ function renderDcloudSectionBody(entries, opts = {}){
   const hint = opts.sectionHint ?? DCLOUD_DEFAULTS.sectionHint;
   const loginNote = opts.loginNote ?? DCLOUD_DEFAULTS.loginNote;
   const compact = !!opts.compact;
-  const links = entries.map(e => renderDcloudEntryBlock(e, opts)).join("");
+  const panel = !!opts.panel;
+  const links = panel
+    ? renderDcloudPanelEntries(entries, opts)
+    : entries.map(e => renderDcloudEntryBlock(e, opts)).join("");
   const eco = opts.ecosystemNote ? `<div class="p-dcloud-eco">${escapeHtml(opts.ecosystemNote)}</div>` : "";
-  return `${dcloudHeaderHtml(compact)}
-    ${compact ? `<div class="gw-dcloud-title">Hands-on labs for this plan</div>` : `<div class="p-dcloud-tagline">${escapeHtml(DCLOUD_DEFAULTS.sectionTitle)}</div>`}
-    ${compact ? "" : `<div class="p-dcloud-hint">${escapeHtml(hint)}</div>`}
+  return `${dcloudHeaderHtml(compact && !panel)}
+    ${compact && !panel ? `<div class="gw-dcloud-title">Hands-on labs for this plan</div>` : `<div class="p-dcloud-tagline">${escapeHtml(DCLOUD_DEFAULTS.sectionTitle)}</div>`}
+    ${compact || panel ? "" : `<div class="p-dcloud-hint">${escapeHtml(hint)}</div>`}
+    ${panel ? `<div class="p-dcloud-hint p-dcloud-hint--panel">${escapeHtml(hint)}</div>` : ""}
     ${eco}
     <div class="lb la-dcloud-list">${links}</div>
     ${loginNote ? `<div class="p-dcloud-note">${escapeHtml(loginNote)}</div>` : ""}`;
@@ -12996,27 +13116,22 @@ function insertDcloudLinks(id, kind){
   const pb = $("#pbody"); if (!pb || pb.querySelector(".p-dcloud")) return;
   const product = kind === "product" ? prodById[id] : null;
   const familyId = kind === "product" ? product?.family : id;
-  let entries = dcloudLinksFor(
+  const entries = dcloudLinksFor(
     kind === "product"
       ? { productId: id, familyId, kind: "product" }
       : { familyId: id, kind: "node" }
   );
   if (!entries.length) return;
 
-  const eco = kind === "node" ? dcloudEcosystemLabs(id, 1) : [];
-  if (eco.length && !entries.some(e => e.id === eco[0].id)) entries = [...entries, ...eco.slice(0, 1)];
-
-  const ecoNote = eco.length
-    ? `Also covers connected families: ${eco[0].linkLabel || eco[0].name}`
-    : "";
+  const browseLabel = (kind === "product" ? product?.name : nodeById[id]?.name) ||
+    nodeById[familyId]?.name || "this family";
+  const browseQuery = nodeById[familyId]?.name || browseLabel;
 
   const sec = document.createElement("div");
   sec.className = "p-sec p-dcloud";
-  sec.innerHTML = `<div class="p-dcloud-card">${renderDcloudSectionBody(entries, { ecosystemNote: ecoNote })}</div>`;
+  sec.innerHTML = `<div class="p-dcloud-card">${renderDcloudSectionBody(entries, { panel: true, browseLabel, browseQuery })}</div>`;
 
-  sec.querySelectorAll("[data-dcloud-id]").forEach(a => {
-    a.addEventListener("click", () => dcloudMarkLabDone(a.dataset.dcloudId, true));
-  });
+  wireDcloudPanelSection(sec, entries, browseQuery);
 
   const matrix = pb.querySelector(".p-matrix-link");
   if (matrix){ matrix.insertAdjacentElement("afterend", sec); return; }
