@@ -3987,15 +3987,17 @@ function applyAllProductsNodeStyles(selectedNode){
       .attr("filter", hot ? "url(#glow)" : (dim ? null : "url(#glow)"));
     g.select(".mc")
       .attr("r", d._r)
-      .attr("fill", color)
+      .attr("fill", isBrandIcon(iconKey(d)) ? "#ffffff" : color)
       .attr("fill-opacity", hot || inStk ? 1 : (dim ? 0.22 : (isFamily ? 0.98 : 0.94)))
-      .attr("stroke", isSel ? "#ffffff" : (inStk ? "#FFD700" : (p?.status === "eol" ? "#ef4444" : p?.status === "eos" ? "#FF9000" : color)))
-      .attr("stroke-width", isSel ? 2.6 : (inStk ? 2.2 : (isFamily ? 2.35 : 2)))
+      .attr("stroke", isBrandIcon(iconKey(d)) ? "rgba(148,163,184,0.45)" : (isSel ? "#ffffff" : (inStk ? "#FFD700" : (p?.status === "eol" ? "#ef4444" : p?.status === "eos" ? "#FF9000" : color))))
+      .attr("stroke-width", isBrandIcon(iconKey(d)) ? 1.4 : (isSel ? 2.6 : (inStk ? 2.2 : (isFamily ? 2.35 : 2))))
       .attr("stroke-opacity", hot || inStk || isFamily ? 1 : (dim ? 0.35 : 0.9));
     g.select("image.pimg").remove();
     g.select("circle.mring").attr("stroke", "transparent").attr("stroke-width", 0);
     g.select("use.icn")
       .attr("href", "#icon-" + iconKey(d))
+      .attr("fill", isBrandIcon(iconKey(d)) ? null : "#ffffff")
+      .style("color", isBrandIcon(iconKey(d)) ? null : "#ffffff")
       .style("display", null)
       .attr("opacity", hot || inStk ? 1 : (dim ? 0.18 : (isFamily ? 1 : 0.96)));
     g.select(".node-scaler").attr("transform", hot ? "scale(1.08)" : null);
@@ -4370,7 +4372,7 @@ function productIconKey(p){
   if (/hyperflex/.test(s)) return "hyperflex";
   if (/ucs|server|blade|c220|c240/.test(s)) return "server";
   if (p?.family === "intersight") return "intersight";
-  if (/thousandeyes|\bte-/.test(s)) return "real-time";
+  if (/thousandeyes|\bte-/.test(s)) return "thousandeyes";
   if (/\bxdr\b|securex/.test(s)) return "insights";
   if (/splunk|appdynamics|fso/.test(s)) return "chart-line";
   const cat = p?.category;
@@ -4436,13 +4438,22 @@ function iconKey(n) {
   if (id === "hyperflex")                                        return "hyperflex";
   // Observability
   if (id === "cloud-control")                                    return "dashboard";
-  if (id === "thousandeyes")                                     return "real-time";
+  if (id === "thousandeyes")                                     return "thousandeyes";
   if (id === "appdynamics")                                      return "chart-line";
   if (id === "splunk")                                           return "chart-bars";
   if (id === "fso")                                              return "dashboard";
   // Fallback by category
   return ({networking:"fabric", security:"shield", collaboration:"telepresence",
            computing:"chip", observability:"chart-line"})[n.category] || "product";
+}
+
+/** Product marks with preserved brand colors (not monochrome pictograms). */
+const BRAND_ICON_KEYS = new Set(["thousandeyes"]);
+function isBrandIcon(key){ return BRAND_ICON_KEYS.has(key); }
+function nodeIconFill(d){
+  const key = iconKey(d);
+  if (isBrandIcon(key)) return "#ffffff";
+  return d._hasImage ? MATRIX_NODE_FILL : (d._pillarColor || catColor(d.category));
 }
 
 const root = svg.append("g");
@@ -4503,10 +4514,13 @@ function buildNodeGroup(sel){
     .attr("fill-opacity", 0).attr("filter","url(#glow)");
   inner.append("circle").attr("class","mc")
     .attr("r", d => d._r)
-    .attr("fill", d => d._hasImage ? MATRIX_NODE_FILL : (d._pillarColor || catColor(d.category)))
-    .attr("fill-opacity", d => d._hasImage ? 1 : 0.88)
-    .attr("stroke", d => d._hasImage ? MATRIX_NODE_RING : "transparent")
-    .attr("stroke-width", d => d._hasImage ? 1.4 : 2.5);
+    .attr("fill", d => nodeIconFill(d))
+    .attr("fill-opacity", d => isBrandIcon(iconKey(d)) ? 1 : (d._hasImage ? 1 : 0.88))
+    .attr("stroke", d => {
+      if (isBrandIcon(iconKey(d))) return "rgba(148,163,184,0.45)";
+      return d._hasImage ? MATRIX_NODE_RING : "transparent";
+    })
+    .attr("stroke-width", d => isBrandIcon(iconKey(d)) ? 1.4 : (d._hasImage ? 1.4 : 2.5));
   inner.append("circle").attr("class","mring")
     .attr("r", d => d._r + 1.4).attr("fill", "none")
     .attr("stroke", d => {
@@ -4530,12 +4544,12 @@ function buildNodeGroup(sel){
   });
   inner.append("use").attr("class","icn")
     .attr("href",   d => "#icon-" + iconKey(d))
-    .attr("width",  d => d._r * 1.28)
-    .attr("height", d => d._r * 1.28)
-    .attr("x",      d => -d._r * 0.64)
-    .attr("y",      d => -d._r * 0.64)
-    .attr("fill",   "#ffffff")
-    .style("color", "#ffffff")
+    .attr("width",  d => d._r * (isBrandIcon(iconKey(d)) ? 1.36 : 1.28))
+    .attr("height", d => d._r * (isBrandIcon(iconKey(d)) ? 1.36 : 1.28))
+    .attr("x",      d => -d._r * (isBrandIcon(iconKey(d)) ? 0.68 : 0.64))
+    .attr("y",      d => -d._r * (isBrandIcon(iconKey(d)) ? 0.68 : 0.64))
+    .attr("fill",   d => isBrandIcon(iconKey(d)) ? null : "#ffffff")
+    .style("color", d => isBrandIcon(iconKey(d)) ? null : "#ffffff")
     .style("pointer-events", "none")
     .style("display", d => d._hasImage ? "none" : null);
   const lwrap = sel.append("g").attr("class", "nl-wrap").style("pointer-events", "none");
@@ -5041,8 +5055,9 @@ function applyCompositionInteractionStyles(selectedNode){
 function applyCompositionNodeStyles(){
   if (viewMode !== "composition" || !ndEl) return;
   ndEl.select(".mc")
-    .attr("fill", d => d._hasImage ? MATRIX_NODE_FILL : catColor(d.category))
+    .attr("fill", d => nodeIconFill(d))
     .attr("stroke", d => {
+      if (isBrandIcon(iconKey(d))) return "rgba(148,163,184,0.45)";
       if (d._hasImage) return MATRIX_NODE_RING;
       if (d._status === "eol") return "#ef4444";
       if (d._status === "eos") return "#FF9000";
@@ -5669,6 +5684,8 @@ function rebindGraph(opts){
   // changes between modes (e.g. family in Families vs Composition).
   syncNodeProductImages();
   ndEl.select("use.icn").attr("href", d => "#icon-" + iconKey(d))
+    .attr("fill", d => isBrandIcon(iconKey(d)) ? null : "#ffffff")
+    .style("color", d => isBrandIcon(iconKey(d)) ? null : "#ffffff")
     .style("display", d => d._hasImage ? "none" : null);
   ndEl.select("text.nl").text(d => d._shortName || d.name);
   const pillarMode = viewMode === "families" && usePillarLayout();
@@ -5694,9 +5711,10 @@ function rebindGraph(opts){
           .attr("stroke", accent)
           .attr("stroke-width", boosted ? 2.5 : 2.25).attr("stroke-opacity", 1);
       } else {
-        el.attr("fill", d._hasImage ? MATRIX_NODE_FILL : catColor(d.category))
-          .attr("stroke", d._hasImage ? MATRIX_NODE_RING : "transparent")
-          .attr("stroke-width", d._hasImage ? 1.4 : 2.5).attr("stroke-opacity", 1);
+        const brand = isBrandIcon(iconKey(d));
+        el.attr("fill", nodeIconFill(d))
+          .attr("stroke", brand ? "rgba(148,163,184,0.45)" : (d._hasImage ? MATRIX_NODE_RING : "transparent"))
+          .attr("stroke-width", brand || d._hasImage ? 1.4 : 2.5).attr("stroke-opacity", 1);
       }
     });
   }
@@ -6552,8 +6570,9 @@ function spatialWhitenSymbolMarkup(fragment){
 }
 
 /** Cisco symbols are 80×80; scale and center them inside the spatial tile disc. */
-function spatialSymbolMarkup(iconKey, profile){
-  const inner = spatialWhitenSymbolMarkup(spatialSymbolInner(iconKey));
+function spatialSymbolMarkup(iconKeyVal, profile){
+  const raw = spatialSymbolInner(iconKeyVal);
+  const inner = isBrandIcon(iconKeyVal) ? raw : spatialWhitenSymbolMarkup(raw);
   if (!inner) return "";
   const scale = profile?.mode === "constellation" ? 1.78 : profile?.mode === "hub" ? 1.68 : 1.58;
   return `<g transform="translate(128 128) scale(${scale}) translate(-40 -40)">${inner}</g>`;
@@ -9655,7 +9674,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.83";
+const APP_VERSION   = "2.31.84";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -10212,17 +10231,20 @@ STYLE.textContent = `
   .p-photo{width:100%;height:120px;background:linear-gradient(135deg,var(--surface2),var(--surface3));
     border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;
     border:1px solid var(--border);overflow:hidden;position:relative}
-  .p-hero{width:100%;height:200px;margin-bottom:14px;border-radius:10px;overflow:hidden;position:relative;
+  .p-hero{width:100%;height:140px;margin-bottom:12px;border-radius:10px;overflow:hidden;position:relative;
     background:#ffffff;
     border:1px solid rgba(148,163,184,0.4);box-shadow:0 2px 12px rgba(15,23,42,0.08)}
-  .p-hero img{width:100%;height:100%;object-fit:contain;padding:12px 16px 18px;box-sizing:border-box;
+  .p-hero--icon-only{height:108px;margin-bottom:10px}
+  .p-hero img{width:100%;height:100%;object-fit:cover;object-position:center;padding:4px 8px 6px;box-sizing:border-box;
     filter:drop-shadow(0 2px 8px rgba(15,23,42,0.12));position:relative;z-index:1;background:#fff}
   .p-hero-fallback{display:flex;align-items:center;justify-content:center;height:100%;position:absolute;inset:0;z-index:0;
     background:linear-gradient(165deg, #f8fafc 0%, #eef2f7 100%)}
   .p-hero-fallback svg{width:68px;height:68px;opacity:.88}
-  .p-hero-icon-badge{width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  .p-hero-icon-badge{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;
     box-shadow:0 4px 18px rgba(15,23,42,0.2);flex-shrink:0}
-  .p-hero-icon-badge svg{width:50px;height:50px;opacity:1;color:#fff;fill:#fff}
+  .p-hero-icon-badge svg{width:44px;height:44px;opacity:1;color:#fff;fill:#fff}
+  .p-hero-icon-badge--brand{background:#fff!important;box-shadow:0 1px 8px rgba(15,23,42,0.1)}
+  .p-hero-icon-badge--brand svg{width:52px;height:52px;color:unset;fill:unset}
   .p-hero--icon-only .p-hero-fallback{z-index:1}
   .p-hero--matrix .p-hero-fallback--reserve{display:none!important}
   .p-hero--icon-only.p-hero--matrix .p-hero-fallback--reserve{display:flex!important}
@@ -13172,11 +13194,13 @@ function insertProductHero(id, kind){
   const iconFill = cat ? CATS[cat].color : "#64748b";
   const symId = "#icon-" + (kind === "node" ? iconKey(nodeById[id]) :
     iconKey({ _kind: "product", _productRef: prodById[id], id }));
+  const symKey = kind === "node" ? iconKey(nodeById[id]) :
+    iconKey({ _kind: "product", _productRef: prodById[id], id });
   const matrixUrl = kind === "product" ? productMatrixHeroUrl(id) : null;
   const hero = document.createElement("div");
   const catLabel = cat ? escapeHtml(CATS[cat].label) : "";
-  const fallbackHtml = `<div class="p-hero-fallback" style="background:${heroCategoryGradient(iconFill)}">${heroIconBadgeHtml(symId, iconFill)}</div>`;
-  const fallbackReserveHtml = `<div class="p-hero-fallback p-hero-fallback--reserve" style="display:none;background:${heroCategoryGradient(iconFill)}">${heroIconBadgeHtml(symId, iconFill)}</div>`;
+  const fallbackHtml = `<div class="p-hero-fallback" style="background:${heroCategoryGradient(iconFill)}">${heroIconBadgeHtml(symId, iconFill, symKey)}</div>`;
+  const fallbackReserveHtml = `<div class="p-hero-fallback p-hero-fallback--reserve" style="display:none;background:${heroCategoryGradient(iconFill)}">${heroIconBadgeHtml(symId, iconFill, symKey)}</div>`;
   const metaHtml = `<div class="p-hero-scrim"></div>
     <div class="p-hero-meta"><span></span><span class="p-hero-cat">${catLabel}</span></div>`;
   if (matrixUrl){
@@ -13217,7 +13241,12 @@ function insertProductHero(id, kind){
   if (nameEl) pb.insertBefore(hero, nameEl);
   else pb.prepend(hero);
 }
-function heroIconBadgeHtml(symId, iconFill){
+function heroIconBadgeHtml(symId, iconFill, symKey){
+  if (isBrandIcon(symKey)){
+    return `<div class="p-hero-icon-badge p-hero-icon-badge--brand">
+      <svg viewBox="0 0 80 80" aria-hidden="true"><use href="${symId}"/></svg>
+    </div>`;
+  }
   return `<div class="p-hero-icon-badge" style="background:${escapeHtml(iconFill)}">
     <svg viewBox="0 0 256 256" aria-hidden="true" style="color:#ffffff;fill:#ffffff">
       <use href="${symId}"/>
