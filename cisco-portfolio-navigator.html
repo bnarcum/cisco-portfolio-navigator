@@ -6320,11 +6320,11 @@ function spatialHexToNum(hex){
 
 function spatialCategoryPalette(node){
   const palettes = {
-    networking:    { base: "#02C8FF", emissive: "#001828", glow: "#66e8ff", icon: "#ffffff" },
-    collaboration: { base: "#34d86a", emissive: "#082818", glow: "#5ef090", icon: "#ffffff" },
-    security:      { base: "#FF9000", emissive: "#2a1400", glow: "#ffb84d", icon: "#ffffff" },
-    computing:     { base: "#0A60FF", emissive: "#001038", glow: "#4d8cff", icon: "#ffffff" },
-    observability: { base: "#FF9000", emissive: "#2a1400", glow: "#ffb84d", icon: "#ffffff" }
+    networking:    { base: "#02C8FF", emissive: "#001828", deep: "#012636", glow: "#66e8ff", icon: "#ffffff" },
+    collaboration: { base: "#34d86a", emissive: "#082818", deep: "#0c3a22", glow: "#5ef090", icon: "#ffffff" },
+    security:      { base: "#FF9000", emissive: "#2a1400", deep: "#4a2400", glow: "#ffb84d", icon: "#ffffff" },
+    computing:     { base: "#0A60FF", emissive: "#001038", deep: "#082060", glow: "#4d8cff", icon: "#ffffff" },
+    observability: { base: "#FF9000", emissive: "#2a1400", deep: "#4a2400", glow: "#ffb84d", icon: "#ffffff" }
   };
   return palettes[node.category] || palettes.networking;
 }
@@ -6577,7 +6577,7 @@ function spatialTileCacheKey(node){
   return [
     node.id,
     photoUrl ? "matrix:" + photoUrl : "icon:" + spatialIconKeyForNode(node),
-    "tile-v9",
+    "tile-v10",
     profile.mode,
     accent.core,
     selected?.id === node.id ? "sel" : "",
@@ -6591,43 +6591,36 @@ function buildSpatialTileSvg(node){
   const palette = spatialCategoryPalette(node);
   const fill = palette.base;
   const glow = palette.glow;
+  const deep = palette.deep || palette.emissive;
   const inner = spatialSymbolMarkup(iconKey, profile);
   const isSel = selected?.id === node.id;
   const isStk = stack.has(node.id);
-  const stroke = isSel ? "#b8f4ff" : (isStk ? "#66e8ff" : "rgba(255,255,255,0.55)");
-  const strokeW = isSel ? 5.5 : (isStk ? 4.75 : 3.5);
-  const rim = isSel ? "#66e0ff" : fill;
+  const rim = isSel ? "#66e0ff" : (isStk ? "#ffd700" : glow);
+  const rimW = isSel ? 5.5 : (isStk ? 4.5 : 3.75);
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
     <defs>
       <radialGradient id="aura" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="${glow}" stop-opacity="0.55"/>
-        <stop offset="72%" stop-color="${glow}" stop-opacity="0.12"/>
+        <stop offset="0%" stop-color="${glow}" stop-opacity="0.48"/>
+        <stop offset="70%" stop-color="${glow}" stop-opacity="0.1"/>
         <stop offset="100%" stop-color="${glow}" stop-opacity="0"/>
       </radialGradient>
-      <radialGradient id="orb" cx="42%" cy="34%" r="68%">
-        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.98"/>
-        <stop offset="38%" stop-color="${fill}" stop-opacity="0.96"/>
-        <stop offset="88%" stop-color="${fill}" stop-opacity="0.88"/>
-        <stop offset="100%" stop-color="#061018" stop-opacity="0.92"/>
-      </radialGradient>
-      <radialGradient id="iconWell" cx="50%" cy="46%" r="52%">
-        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.94"/>
-        <stop offset="100%" stop-color="#ffffff" stop-opacity="0.72"/>
+      <radialGradient id="orb" cx="36%" cy="30%" r="72%">
+        <stop offset="0%" stop-color="${glow}" stop-opacity="1"/>
+        <stop offset="42%" stop-color="${fill}" stop-opacity="1"/>
+        <stop offset="100%" stop-color="${deep}" stop-opacity="1"/>
       </radialGradient>
       <filter id="halo" x="-40%" y="-40%" width="180%" height="180%">
-        <feGaussianBlur stdDeviation="9" result="b"/>
+        <feGaussianBlur stdDeviation="8" result="b"/>
         <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
-      <filter id="iconPop" x="-55%" y="-55%" width="210%" height="210%">
-        <feDropShadow dx="0" dy="3" stdDeviation="3.2" flood-color="#020810" flood-opacity="0.72"/>
-        <feDropShadow dx="0" dy="0" stdDeviation="1.2" flood-color="#ffffff" flood-opacity="0.45"/>
+      <filter id="iconPop" x="-60%" y="-60%" width="220%" height="220%">
+        <feDropShadow dx="0" dy="2" stdDeviation="2.4" flood-color="#000000" flood-opacity="0.78"/>
       </filter>
     </defs>
-    <circle cx="128" cy="128" r="122" fill="url(#aura)" filter="url(#halo)"/>
-    <circle cx="128" cy="128" r="100" fill="url(#orb)" stroke="${rim}" stroke-width="${strokeW}" stroke-opacity="${isSel || isStk ? 1 : 0.85}"/>
-    <circle cx="128" cy="128" r="62" fill="url(#iconWell)" stroke="${stroke}" stroke-width="1.75" stroke-opacity="0.55"/>
-    <ellipse cx="128" cy="92" rx="34" ry="18" fill="#ffffff" opacity="0.22"/>
-    <g fill="#ffffff" stroke="#0a1828" stroke-width="0.85" stroke-opacity="0.35" paint-order="stroke fill" filter="url(#iconPop)">${inner}</g>
+    <circle cx="128" cy="128" r="120" fill="url(#aura)" filter="url(#halo)"/>
+    <circle cx="128" cy="128" r="98" fill="url(#orb)" stroke="${rim}" stroke-width="${rimW}" stroke-opacity="${isSel || isStk ? 1 : 0.9}"/>
+    <circle cx="128" cy="128" r="64" fill="${deep}" stroke="rgba(255,255,255,0.28)" stroke-width="1.5"/>
+    <g fill="#ffffff" stroke="#020608" stroke-width="2.35" stroke-opacity="0.92" stroke-linejoin="round" stroke-linecap="round" paint-order="stroke fill" filter="url(#iconPop)">${inner}</g>
   </svg>`;
 }
 
