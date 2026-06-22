@@ -9131,15 +9131,14 @@ document.addEventListener("keydown",ev=>{
     {
       target: "#tools", place: "top",
       title: "Bottom-left toolbar",
-      body: `Three quick utilities sit here, replacing the old legend panel:<br><br>
+      body: `Two quick utilities sit here, replacing the old legend panel:<br><br>
              <strong>★ Recent / Pinned</strong> — items you've viewed or starred<br>
-             <strong>⏱ Refresh timeline</strong> — full-screen EOS/EOL gantt across the portfolio<br>
-             <strong>⌕ Filters</strong> — filter by status (Current / EOS / EOL) or licensing tier`,
+             <strong>⏱ Refresh Timeline</strong> — full-screen current, EOS, and EOL gantt across the portfolio`,
     },
     {
       target: "#tools-timeline", place: "top",
-      title: "Refresh timeline",
-      body: `Opens a Gantt-style view of every product's lifecycle. Each product
+      title: "Refresh Timeline",
+      body: `Opens a Gantt-style view of current, End-of-Sale, and End-of-Life products. Each product
              gets its own track per family. Use <code>+</code> / <code>−</code> /
              <code>0</code> or <code>⌘/Ctrl + scroll</code> to zoom in &amp; out
              — narrow blocks hide their labels until they have room.`,
@@ -9167,7 +9166,7 @@ document.addEventListener("keydown",ev=>{
       body: `The footer shows the data-freshness date and the keyboard shortcuts cheat-sheet.<br><br>
              Try <code>?</code> any time to relaunch this tour, <code>G</code> for Guided Plan,
              <code>/</code> to focus search, <code>a</code> to open the AI assistant,
-             <code>t</code> to toggle Refresh timeline. In Spatial view, <code>Esc</code> steps
+             <code>t</code> to toggle Refresh Timeline. In Spatial view, <code>Esc</code> steps
              back one level at a time.`,
     },
 
@@ -9403,7 +9402,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.70";
+const APP_VERSION   = "2.31.71";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -13378,8 +13377,8 @@ function buildTimelineView(){
     <div id="tl-ambient" aria-hidden="true"></div>
     <div id="tl-head">
       <div>
-        <div class="tl-title">Refresh timeline</div>
-        <div class="tl-sub">Tracks lay out side-by-side per family. Scroll horizontally to pan years · hover narrow blocks for names · ⌘/Ctrl + scroll to zoom.</div>
+        <div class="tl-title">Refresh Timeline</div>
+        <div class="tl-sub">Current, End-of-Sale, and End-of-Life products by family. Scroll horizontally to pan years · hover narrow blocks for names · ⌘/Ctrl + scroll to zoom.</div>
       </div>
       <div style="display:flex;gap:6px;align-items:center">
         <div class="tl-zoom" role="group" aria-label="Zoom">
@@ -13454,8 +13453,8 @@ function buildTimelineView(){
   const tBtn = document.createElement("button");
   tBtn.className = "tools-btn";
   tBtn.id = "tools-timeline";
-  tBtn.innerHTML = `<span class="ti">⏱</span><span>Refresh timeline</span>`;
-  tBtn.title = "Open refresh timeline — EOS/EOL dates across the portfolio (T)";
+  tBtn.innerHTML = `<span class="ti">⏱</span><span>Refresh Timeline</span>`;
+  tBtn.title = "Open Refresh Timeline — current, EOS, and EOL dates across the portfolio (T)";
   tBtn.addEventListener("click", () => {
     const open = $("#tl-wrap").classList.contains("show");
     if (open) { closeTimelineView(); tBtn.classList.remove("active"); }
@@ -13515,6 +13514,21 @@ function packIntoLanes(blocks){
     b.lane = lane;
   });
   return lanes.length;
+}
+
+function productVisibleInTimeline(p){
+  if (!p) return false;
+  if (!activeCats.has(p.category)) return false;
+  const fam = nodeById[p.family];
+  if (activeUC && !((fam?.useCases || []).includes(activeUC))) return false;
+  if (activeInd && !((fam?.industries || []).includes(activeInd))) return false;
+  if (!["current", "eos", "eol"].includes(p.status)) return false;
+  if (facetState.tier.size > 0){
+    const tiers = window.__cpnV2?.TIERS;
+    const tier = tiers?.[p.family]?.tier || "";
+    if (![...facetState.tier].some(label => tier.toLowerCase().includes(label.toLowerCase()))) return false;
+  }
+  return true;
 }
 
 function renderTimeline(){
@@ -13596,7 +13610,7 @@ function renderTimeline(){
   // source of truth so timeline + graph can never disagree.
   const visibleProducts = PRODUCTS.filter(p => {
     if (TL.onlyStack && !stack.has(p.id) && !stack.has(p.family)) return false;
-    return productMatchesFilters(p);
+    return productVisibleInTimeline(p);
   });
 
   let startY = now.getFullYear() - 5;
@@ -13843,18 +13857,6 @@ function buildFacets(){
   const f = document.createElement("div");
   f.id = "facets";
   document.body.appendChild(f);
-  // Toolbar button (replaces old legend toggle)
-  const fBtn = document.createElement("button");
-  fBtn.className = "tools-btn";
-  fBtn.id = "tools-filters";
-  fBtn.innerHTML = `<span class="ti">⌕</span><span>Filters</span>`;
-  fBtn.title = "More filters (status, license tier)";
-  fBtn.addEventListener("click", () => {
-    f.classList.toggle("show");
-    fBtn.classList.toggle("active", f.classList.contains("show"));
-    renderFacets();
-  });
-  $("#tools").appendChild(fBtn);
 }
 function renderFacets(){
   const f = $("#facets");
@@ -14434,7 +14436,7 @@ function openShortcuts(){
     ["/", "Focus search"],
     ["P", "Toggle account planner"],
     ["G", "Open Guided Plan wizard"],
-    ["T", "Toggle refresh timeline"],
+    ["T", "Toggle Refresh Timeline"],
     ["A", "Toggle AI assistant"],
     ["?", "Re-launch guided tour"],
     ["Dbl-click family", "Drill into Composition view (graph)"],
