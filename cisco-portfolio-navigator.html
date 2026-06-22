@@ -9163,7 +9163,7 @@ document.addEventListener("keydown",ev=>{
   // The old "cisco-portfolio-tour-completed-v1" key still suppresses the *first-time* tour
   // for users who already completed v1; they can re-launch the latest via the ? button.
   const STORAGE_KEY = "cisco-portfolio-tour-completed-v1";
-  const TOUR_VERSION = "v2.6";
+  const TOUR_VERSION = "v3.0";
   const STORAGE_KEY_LATEST = "cisco-portfolio-tour-latest-seen";
 
   // Inject DOM
@@ -9188,320 +9188,203 @@ document.addEventListener("keydown",ev=>{
   //   place:    "top" | "bottom" | "left" | "right" | "center" (auto if omitted)
   //   before:   optional fn to set up state before step shows (e.g. open planner)
   const STEPS = [
-    // ── Welcome ──────────────────────────────────────────────────────────────
     {
       target: null, place: "center",
-      title: "Welcome to the Cisco Portfolio Navigator",
-      body: `This tool helps you <strong>explore the Cisco portfolio</strong>,
-             <strong>build account plans</strong> with augment / replace / bundle
-             recommendations, <strong>visualize EOS/EOL timelines</strong>, browse an
-             optional <strong>3D Spatial map</strong>, and generate stacks with a built-in
-             <strong>AI assistant</strong>.<br><br>
-             We'll cover the highlights in ~2 minutes. Skip any time with
-             <code>Esc</code> or the Skip button.`
+      chapter: "Act 1 — One Cisco",
+      title: "One portfolio, one story",
+      body: `<strong>Cisco Portfolio Navigator</strong> starts with the <strong>One Cisco</strong> narrative — three
+             outcome pillars on Overview — then lets you <strong>drill down</strong> through connected families and
+             products, <strong>learn</strong> with dCloud labs and courses in the side panel, and
+             <strong>plan</strong> the account with Guided Plan, AI, and export.<br><br>
+             We'll walk that path in ~3 minutes. Skip anytime with <code>Esc</code>.`
     },
-
-    // ── Top bar fundamentals ─────────────────────────────────────────────────
     {
-      target: "#search", place: "bottom",
-      title: "Search anything in the portfolio",
-      body: `Type any <strong>product, family, or use case</strong>. Searches both
-             <strong>product families</strong> (ISE, Meraki, Cisco Desk Devices …) and
-             <strong>specific models</strong> (Cisco Desk Pro, Catalyst 9300, ASA 5525-X …).
-             EOL/EOS items show colored badges.`,
-      tip: `Press <code>/</code> or <code>⌘K</code> / <code>Ctrl+K</code> from anywhere to focus search. As you type, the matching graph nodes pulse. Picking a <strong>specific product</strong> from the results auto-drills the graph into that product's family.`
+      target: "#gw", place: "bottom",
+      chapter: "Act 1 — One Cisco",
+      title: "Three pillars on Overview",
+      body: `Switch to <strong>Overview</strong> for the One Cisco deck — the same story customers hear at the executive level:
+             <ul style="margin:8px 0 0 16px;padding:0;line-height:1.55">
+               <li><b style="color:#0A60FF">AI-Ready Data Centers</b> — power AI workloads anywhere</li>
+               <li><b style="color:#2dce5c">Future-Proofed Workplaces</b> — modernize how people and technology work</li>
+               <li><b style="color:#FF9000">Digital Resilience</b> — stay secure through any disruption</li>
+             </ul>
+             Secure global connectivity runs through the center — the spine that ties the portfolio together.`,
+      tip: `Click any pillar card to jump into <strong>Families</strong> filtered to that outcome.`,
+      before: () => {
+        document.getElementById("gw-overlay")?.classList.remove("show");
+        window.closePanel && window.closePanel();
+        if (window.getViewMode && window.getViewMode() !== "overview") {
+          window.applyViewLevel && window.applyViewLevel("overview");
+        }
+      }
     },
-
-    // ── View modes ───────────────────────────────────────────────────────────
+    {
+      target: "#gw", place: "bottom",
+      chapter: "Act 2 — Connect & drill",
+      title: "See how families connect",
+      body: `In <strong>Families</strong> view, each bubble is a product family laid out by One Cisco pillar.
+             <strong>Solid lines</strong> are direct integrations; <strong>dashed lines</strong> are adjacent /
+             complementary relationships.<br><br>
+             <strong>Click</strong> a family for its drawer · <strong>Double-click</strong> to drill into products ·
+             <strong>Right-click</strong> for quick actions · scroll to zoom, drag to pan.`,
+      tip: `Use the pillar legend (top-left) to focus on one outcome — AI-Ready DC, Workplaces, or Resilience.`,
+      before: () => {
+        window.closePanel && window.closePanel();
+        if (window.getViewMode && window.getViewMode() !== "families") {
+          window.applyViewLevel && window.applyViewLevel("families");
+        }
+      }
+    },
     {
       target: "#vm-seg", place: "bottom",
-      title: "Five ways to explore the portfolio",
-      body: `Same data, multiple lenses — pick whichever zoom level fits the question you're asking:
-             <ul style="margin:8px 0 0 16px;padding:0">
-               <li><b>Overview</b> — 5 category bubbles. Best for first-look conversations.</li>
-               <li><b>Families</b> — 53 product families <em>(default)</em>. The classic 2D map of how things connect.</li>
-               <li><b>Composition</b> — one family pinned in the middle, every specific SKU around it, with dashed purple <em>"replaced by"</em> arrows to successor products.</li>
-               <li><b>All</b> — every family + every product (~350 nodes) in one dense graph. Power-user view.</li>
-               <li><b>Spatial</b> — immersive 3D map of families with always-visible name labels; orbit and zoom freely.</li>
+      chapter: "Act 2 — Connect & drill",
+      title: "Drill to products & upgrade paths",
+      body: `<strong>Composition</strong> pins one family in the center with every SKU orbiting it —
+             including purple <em>replaced by</em> arrows to successor products.<br><br>
+             Same relationships as the 2D map; <strong>Spatial</strong> offers the same drill-down in 3D when you
+             want an immersive walkthrough.`,
+      before: () => {
+        window.closePanel && window.closePanel();
+        if (window.getViewMode && window.getViewMode() !== "composition") {
+          window.applyViewLevel && window.applyViewLevel("composition", { focusFamily: "room-systems" });
+        }
+        setTimeout(() => {
+          window.jumpTo && window.jumpTo("room-systems");
+        }, 400);
+      }
+    },
+    {
+      target: "#panel", place: "left",
+      chapter: "Act 3 — Learn as you explore",
+      title: "Family drawer — start learning here",
+      body: `Every family opens a side panel with description, use cases, and a learning ladder:
+             <ul style="margin:6px 0 0 16px;padding:0;line-height:1.5">
+               <li><b>Learn &amp; Try on dCloud</b> — one recommended starter lab + browse all</li>
+               <li><b>Build skills</b> — Cisco U or Webex Academy overview course</li>
+               <li><b>Partner enablement</b> — Black Belt track when relevant</li>
              </ul>`,
-      tip: `<b>Family product list:</b> single-click any family bubble (or the center hub in Composition) to open a scrollable product list in the side drawer. Double-click drills into the Composition graph; the drawer opens automatically with the same list.`,
-      before: () => {
-        if (window.getViewMode && window.getViewMode() !== "families") {
-          window.applyViewLevel && window.applyViewLevel("families");
-        }
-      }
-    },
-
-    {
-      target: '#vm-seg button[data-vm="spatial"]', place: "bottom",
-      title: "Spatial view — 3D portfolio map",
-      body: `Switch to <strong>Spatial</strong> for an immersive 3D force graph of product families.
-             Every node shows an always-visible name label. Click a family for its detail panel;
-             filters (category, use case, industry) and stack highlights work the same as in 2D.<br><br>
-             <strong>Double-click</strong> a family — or use <em>Explore N products</em> on the panel —
-             to drill into a 3D composition where SKUs orbit the family center, with purple succession links.`,
-      tip: `Spatial libraries are bundled locally (no CDN). Press <code>Esc</code> with the panel closed to step back one level, or return all the way to Families. Requires WebGL.`,
-      before: () => {
-        if (window.getViewMode && window.getViewMode() !== "families") {
-          window.applyViewLevel && window.applyViewLevel("families");
-        }
-      }
-    },
-
-    {
-      target: "#cpills", place: "bottom",
-      title: "Filter by category",
-      body: `Toggle these chips to narrow the graph by category — Networking,
-             Security, Collaboration, Computing, Observability. The chip colors
-             match each node's color in the graph.`,
-    },
-    {
-      target: "#ucs", place: "bottom",
-      title: "Use cases & industries",
-      body: `Pick a <strong>use case</strong> (Hybrid Work, Zero Trust, SD-WAN …)
-             or <strong>industry</strong> (Healthcare, Manufacturing, Retail …) to
-             see only the products that map to it.`,
-      tip: `<b>v2:</b> picking a use case also overlays its <strong>Reference Architecture</strong> — the canonical Cisco product stack for that solution — and shows a <strong>dCloud learning path</strong> with hands-on labs to run.`
-    },
-    {
-      target: "#learn-path-banner", place: "bottom",
-      title: "dCloud learning paths",
-      body: `When you filter by use case, a <strong>learning path</strong> appears with ordered
-             dCloud labs — each with duration, level, and a direct launch link.<br><br>
-             Complete labs with a customer, then export a <strong>Customer Learning Agenda</strong>
-             from the planner.`,
-      before: () => {
-        const uc = document.getElementById("ucs");
-        if (uc && !uc.value) { uc.value = "Hybrid Work"; uc.dispatchEvent(new Event("change")); }
-      }
-    },
-    {
-      target: "#gw", place: "left",
-      title: "The interactive graph",
-      body: `In 2D modes, each <strong>node</strong> is a product family, color-coded by category.
-             <strong>Solid lines</strong> are direct integrations; <strong>dashed lines</strong>
-             are adjacent / complementary.<br><br>
-             <strong>Click</strong> any node for details · <strong>Double-click</strong>
-             a family to drill into its products (Composition mode) ·
-             <strong>Right-click</strong> for a quick action menu ·
-             <strong>Scroll</strong> to zoom · <strong>Drag</strong> to pan.<br><br>
-             Switch to <strong>Spatial</strong> for the same relationships in 3D — orbit with drag,
-             zoom with scroll, and double-click families to explore products in depth.`,
+      tip: `Pick a product from the family list below the description to go SKU-specific.`,
       before: () => {
         if (window.getViewMode && window.getViewMode() === "spatial") {
           window.applyViewLevel && window.applyViewLevel("families");
         }
+        window.jumpTo && window.jumpTo("room-systems");
       }
     },
-
-    // ── Plans + sharing ──────────────────────────────────────────────────────
     {
-      target: "#plans-btn", place: "bottom",
-      title: "Save, name & share account plans",
-      body: `Every change to their product list <strong>auto-saves</strong>. Click here to
-             rename the current plan, save a new one, switch between plans, or
-             copy a <strong>shareable URL</strong> that encodes the entire stack
-             and filters in the link.`,
-      tip: `Saved plans live in this browser only — use Export to send them out.`,
+      target: "#panel", place: "left",
+      chapter: "Act 3 — Learn as you explore",
+      title: "Product drawer — labs, courses & showroom",
+      body: `Open a specific product for the full learning path:
+             <ul style="margin:6px 0 0 16px;padding:0;line-height:1.5">
+               <li><b>dCloud</b> — ranked hands-on labs, best match, progress tracking</li>
+               <li><b>Cisco U / Webex Academy</b> — courses matched to this SKU</li>
+               <li><b>Device Matrix 3D</b> — built-in showroom for collaboration hardware</li>
+               <li>Links to cisco.com, documentation, tier badges, and field notices</li>
+             </ul>`,
       before: () => {
-        // Close any open menu so the spotlight lands on the trigger itself
-        document.getElementById("plans-menu")?.classList.remove("show");
+        window.showProductDetail && window.showProductDetail("room-kit-pro");
       }
     },
-
-    // ── Guided Plan wizard ───────────────────────────────────────────────────
+    {
+      target: "#learn-path-banner", place: "bottom",
+      chapter: "Act 3 — Learn as you explore",
+      title: "Use-case learning paths",
+      body: `Filter by <strong>use case</strong> (Hybrid Work, Zero Trust, SD-WAN …) to overlay the
+             reference architecture and show an ordered <strong>dCloud learning path</strong> —
+             each step with duration, level, and a direct launch link.`,
+      tip: `Complete labs with a customer, then export a <strong>Customer Learning Agenda</strong> from the planner.`,
+      before: () => {
+        window.closePanel && window.closePanel();
+        if (window.getViewMode && window.getViewMode() !== "families") {
+          window.applyViewLevel && window.applyViewLevel("families");
+        }
+        const uc = document.getElementById("ucs");
+        if (uc) { uc.value = "Hybrid Work"; uc.dispatchEvent(new Event("change")); }
+      }
+    },
     {
       target: "#guided-btn", place: "bottom",
-      title: "Guided Plan — start here for new accounts",
-      body: `The fastest way to build a plan: a <strong>5-step wizard</strong> that walks
-             you through industry, customer size, what's already deployed, and any
-             legacy refresh triggers — then auto-builds the stack and runs analysis.<br><br>
-             On the results screen, pick an <strong>AI deliverable</strong> — executive summary,
-             90-day roadmap, customer follow-up email, or capability gap analysis — and generate
-             it inline without leaving the wizard. Results persist with your session.<br><br>
-             When you're done, the button stays <strong>Guided Plan</strong> with a green
-             outline so you can return to your results, edit answers, or Ask AI without starting over.`,
-      tip: `Press <code>G</code> from anywhere to launch it. Generated deliverables can be
-            included as polished slides when you export to PowerPoint.`,
+      chapter: "Act 4 — Plan the account",
+      title: "Guided Plan — build the account",
+      body: `The fastest way to turn exploration into a plan: a <strong>5-step wizard</strong> for industry,
+             customer size, what's deployed, and legacy refresh triggers — then auto-builds the stack
+             and runs analysis.<br><br>
+             On the results screen, generate an <strong>executive summary</strong>, 90-day roadmap,
+             customer email, or gap analysis inline.`,
+      tip: `Press <code>G</code> from anywhere. The button stays green-outlined so you can return to your results.`,
       before: () => {
         document.getElementById("plans-menu")?.classList.remove("show");
         document.getElementById("gw-overlay")?.classList.remove("show");
         const pn = document.getElementById("planner");
         if (pn?.classList.contains("open")) document.getElementById("planner-btn")?.click();
+        window.closePanel && window.closePanel();
       }
     },
-
-    // ── Planner: open + profile + templates ──────────────────────────────────
     {
       target: "#planner-btn", place: "bottom",
-      title: "Account Planner — expert mode",
-      body: `For hands-on control, open the planner to search and add products manually,
-             tweak industry templates, and fine-tune recommendations.<br><br>
-             If you used <strong>Guided Plan</strong>, their products land here automatically —
-             edit anything and re-run analysis.`,
+      chapter: "Act 4 — Plan the account",
+      title: "Account Planner — stack & analyze",
+      body: `Everything lands in the <strong>Account Planner</strong>: search and add products, use Quick start
+             templates, flag legacy tech, then <strong>Analyze Account</strong> for seven result tabs —
+             Suggestions, Upgrades, Hands-on labs, Solution packages, Coverage, Migration plan, and Issues to fix.`,
       ctaText: "Open Planner →",
       before: () => {
+        document.getElementById("gw-overlay")?.classList.remove("show");
+        const pn = document.getElementById("planner");
+        if (pn && !pn.classList.contains("open")) document.getElementById("planner-btn").click();
+        window.closePanel && window.closePanel();
+      }
+    },
+    {
+      target: "#ai-btn", place: "bottom",
+      chapter: "Act 4 — Plan the account",
+      title: "Ask AI — your key, your provider",
+      body: `Bring your own API key to <strong>OpenRouter</strong>, <strong>Groq</strong>, <strong>LM Studio</strong>,
+             <strong>Ollama</strong>, OpenAI, Anthropic, or any OpenAI-compatible endpoint.<br><br>
+             Generate stacks from a scenario, justify recommendations, or draft customer narrative —
+             automatically enriched with your current account plan context.`,
+      tip: `Configure once in the dialog; keys stay in <code>localStorage</code> on this device only.`,
+      before: () => {
+        document.getElementById("gw-overlay")?.classList.remove("show");
+        const pn = document.getElementById("planner");
+        if (pn?.classList.contains("open")) document.getElementById("planner-btn")?.click();
+      }
+    },
+    {
+      target: "#exp-btn", place: "top",
+      chapter: "Act 5 — Deliver",
+      title: "Export recommendations & labs",
+      body: `Turn the plan into customer-ready output — <strong>Markdown</strong>, <strong>CSV</strong>,
+             <strong>JSON</strong>, <strong>PowerPoint</strong>, PDF (via print), or plain text.<br><br>
+             Exports include the stack, EOS/EOL migration paths, top recommendations, bundle coverage,
+             dCloud lab suggestions, and any AI deliverables you generated in Guided Plan.`,
+      before: () => {
+        document.getElementById("exp-menu")?.classList.remove("show");
+        document.getElementById("gw-overlay")?.classList.remove("show");
         const pn = document.getElementById("planner");
         if (pn && !pn.classList.contains("open")) document.getElementById("planner-btn").click();
       }
     },
     {
-      target: "#pln-quick-acc", place: "left",
-      title: "Quick start",
-      body: `Expand <strong>Quick start</strong> for one-click industry starter stacks
-             and optional customer profile fields (vertical, size, work mode) to
-             refine recommendations.`,
-    },
-    {
-      target: ".psw", place: "left",
-      title: "Add products to the stack",
-      body: `Search by <strong>model</strong> (Cisco Desk Pro, Catalyst 9300, Webex Room Bar …)
-             or <strong>family</strong> (Meraki, ISE, Umbrella …). EOL/EOS items get colored
-             badges so you'll see migration paths in the analysis.`,
-      tip: `<b>Try it later:</b> type "<em>desk pro</em>" or "<em>8821</em>" to see EOL handling.`
-    },
-    {
-      target: "#pln-legacy-acc", place: "left",
-      title: "Mark outgoing legacy tech",
-      body: `Expand to flag <strong>Cisco legacy technology</strong> the customer
-             is moving away from — AnyConnect VPN, Prime, CUCM, classic ASA, MPLS WAN,
-             standalone WLC, and more. The <strong>Upgrades</strong> tab maps each to the modern Cisco
-             successor with a migration rationale.`,
-    },
-    {
-      target: "#pf", place: "left",
-      title: "Run the analysis",
-      body: `Once you've added at least one product or legacy item, the sticky
-             <strong>Analyze Account</strong> button enables. Click it to generate
-             scored recommendations across the result tabs.`,
-    },
-
-    // ── Analysis output ──────────────────────────────────────────────────────
-    {
-      target: null, place: "center",
-      title: "Seven views of the analysis",
-      body: `After running, you get seven tabs:<br><br>
-             <strong style="color:#02C8FF">Suggestions</strong> — products that pair well with what they already have<br>
-             <strong style="color:#f87171">Upgrades</strong> — replace old or end-of-life technology<br>
-             <strong style="color:#00d4ff">Hands-on labs</strong> — ranked dCloud demos with learning objectives<br>
-             <strong>Solution packages</strong> — progress toward complete Cisco solution sets<br>
-             <strong>Coverage</strong> — gaps &amp; strengths: which needs are covered vs. still open<br>
-             <strong style="color:#FF9000">Migration plan</strong> — step-by-step migration with dates &amp; successors<br>
-             <strong style="color:#ef4444">Issues to fix</strong> — compatibility &amp; dependency gaps`,
-    },
-
-    // ── Detail panel goodies ─────────────────────────────────────────────────
-    {
-      target: "#panel", place: "right",
-      title: "Rich detail panels",
-      body: `Click any node or product for a detail panel with description, links,
-             use cases, and industries.
-             <ul style="margin:6px 0 0 16px;padding:0">
-               <li><b>Explore N products →</b> — drills into Composition (2D) or Spatial composition (3D) for this family</li>
-               <li><b>Learn &amp; Try on dCloud</b> — hands-on labs with learning objectives</li>
-               <li><b>Family panels</b> — starter dCloud lab, one overview course, and Black Belt when relevant</li>
-               <li><b>Product panels</b> — full lab list, progress tracking, and SKU-matched courses</li>
-               <li><b>Device Matrix 3D</b> — built-in showroom for collaboration devices</li>
-               <li><b>Breadcrumbs</b> — back/forward navigation through visited items</li>
-               <li><b>Licensing tier badge</b> — DNA / Advantage / Premier and similar</li>
-               <li><b>Field notices</b> — surfaced PSIRT advisories where relevant</li>
-               <li><b>Pin</b> — save to Recent / Pinned</li>
-               <li><b>⇆ Compare</b> — add to side-by-side comparison</li>
-             </ul>`,
-      before: () => {
-        // Open a representative node so the panel actually has content
-        if (window.jumpTo) window.jumpTo("ise");
-      }
-    },
-    {
-      target: "#cmp-panel", place: "left",
-      title: "Compare mode",
-      body: `Pin 2–4 products and they appear here side-by-side: descriptions,
-             use cases, industries, EOS/EOL status, and tiers in one grid — great
-             for evaluating alternatives.`,
-      before: () => {
-        // Best-effort: open compare so it's visible. Falls back gracefully if helpers aren't available.
-        try {
-          window.__cpnV2?.phases?.addToCompare?.("ise", "node");
-          window.__cpnV2?.phases?.addToCompare?.("duo", "node");
-          document.getElementById("cmp-panel")?.classList.add("open");
-        } catch(e){}
-      }
-    },
-
-    // ── Export ───────────────────────────────────────────────────────────────
-    {
-      target: "#exp-btn", place: "top",
-      title: "Export — pick your format",
-      body: `Generate a shareable plan in <strong>Markdown, CSV, JSON, PDF (via
-             print), PowerPoint (.pptx),</strong> or plain text. Each export
-             includes the stack, EOS/EOL migration paths, top recommendations,
-             and bundle coverage. PowerPoint produces a customer-ready deck — including
-             an Account Discovery Summary and one polished slide per AI deliverable
-             you generated in Guided Plan.`,
-      before: () => {
-        // Close the planner so the export button (lower in planner) is visible
-        document.getElementById("exp-menu")?.classList.remove("show");
-      }
-    },
-
-    // ── Bottom-left toolbar ──────────────────────────────────────────────────
-    {
-      target: "#tools", place: "top",
-      title: "Bottom-left toolbar",
-      body: `Two quick utilities sit here, replacing the old legend panel:<br><br>
-             <strong>★ Recent / Pinned</strong> — items you've viewed or starred<br>
-             <strong>⏱ Refresh Timeline</strong> — full-screen current, EOS, and EOL gantt across the portfolio`,
-    },
-    {
-      target: "#tools-timeline", place: "top",
-      title: "Refresh Timeline",
-      body: `Opens a Gantt-style view of current, End-of-Sale, and End-of-Life products. Each product
-             gets its own track per family. Use <code>+</code> / <code>−</code> /
-             <code>0</code> or <code>⌘/Ctrl + scroll</code> to zoom in &amp; out
-             — narrow blocks hide their labels until they have room.`,
-      tip: `Use "Show only stack items" to focus on what's in your current plan.`
-    },
-
-    // ── AI Assistant ─────────────────────────────────────────────────────────
-    {
-      target: "#ai-btn", place: "bottom",
-      title: "AI Assistant — BYOK",
-      body: `Generate stacks from a scenario (<em>"Hospital with 800 beds replacing
-             Zoom"</em>), justify recommendations, or compare options.
-             <strong>Bring your own key</strong> — OpenRouter, Groq, LM Studio,
-             Ollama, OpenAI, Anthropic, or any OpenAI-compatible endpoint.<br><br>
-             When you have an account plan (Guided Plan or manual stack), the assistant
-             automatically includes that context in its answers. Click Configure to pick
-             a provider — the dialog tells you which options work from <code>file://</code>
-             vs need a local HTTP server.`,
-    },
-
-    // ── Footer + changelog + shortcuts ───────────────────────────────────────
-    {
-      target: "#v2-footer", place: "top",
-      title: "Footer — version & shortcuts",
-      body: `The footer shows the data-freshness date and the keyboard shortcuts cheat-sheet.<br><br>
-             Try <code>?</code> any time to relaunch this tour, <code>G</code> for Guided Plan,
-             <code>/</code> to focus search, <code>a</code> to open the AI assistant,
-             <code>t</code> to toggle Refresh Timeline. In Spatial view, <code>Esc</code> steps
-             back one level at a time.`,
-    },
-
-    // ── Wrap-up ──────────────────────────────────────────────────────────────
-    {
       target: "#help-fab", place: "left",
+      chapter: "Act 5 — Deliver",
       title: "You're ready!",
-      body: `Re-launch this tour any time by clicking the <strong>?</strong> button
-             in the bottom-right corner (or press <code>?</code>).<br><br>
-             Happy planning! 🎯`,
+      body: `Re-launch this tour anytime with the <strong>?</strong> button or press <code>?</code>.<br><br>
+             <strong>Quick keys:</strong> <code>G</code> Guided Plan · <code>/</code> search ·
+             <code>a</code> Ask AI · Overview → Families → Composition for the One Cisco story.`,
       finalBtnText: "Get started",
       before: () => {
-        // Tidy up demo state from earlier steps so the user starts with a clean slate
         try {
           document.getElementById("cmp-panel")?.classList.remove("open");
           window.__cpnV2?.phases?.closeCompare?.();
           window.closePanel && window.closePanel();
+          document.getElementById("gw-overlay")?.classList.remove("show");
+          const pn = document.getElementById("planner");
+          if (pn?.classList.contains("open")) document.getElementById("planner-btn")?.click();
+          if (window.getViewMode && window.getViewMode() !== "families") {
+            window.applyViewLevel && window.applyViewLevel("families");
+          }
         } catch(e){}
       }
     },
@@ -9554,9 +9437,10 @@ document.addEventListener("keydown",ev=>{
       const cls = i === stepIdx ? "tp-dot active" : (i < stepIdx ? "tp-dot done" : "tp-dot");
       return `<span class="${cls}"></span>`;
     }).join("");
+    const actLabel = step.chapter ? `${step.chapter} · ` : "";
     const primText = isLast ? (step.finalBtnText || "Done") : (step.ctaText || "Next →");
     popover.innerHTML = `
-      <div class="tp-step">Step ${stepIdx + 1} of ${STEPS.length}</div>
+      <div class="tp-step">${actLabel}Step ${stepIdx + 1} of ${STEPS.length}</div>
       <div class="tp-title">${step.title}</div>
       <div class="tp-body">${step.body}</div>
       ${step.tip ? `<div class="tp-tip">${step.tip}</div>` : ""}
@@ -9680,7 +9564,7 @@ document.addEventListener("keydown",ev=>{
   try { latestSeen = localStorage.getItem(STORAGE_KEY_LATEST) || ""; } catch(e){}
   if (latestSeen !== TOUR_VERSION) {
     fab.classList.add("new-badge");
-    fab.title = "Take the tour (Spatial view & Guided Plan AI)";
+    fab.title = "Take the tour (One Cisco story arc)";
   } else {
     fab.title = "Take the tour";
   }
@@ -9720,7 +9604,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.91";
+const APP_VERSION   = "2.31.92";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
