@@ -300,31 +300,33 @@
 
     /* TOOLTIP */
     #tip{position:fixed;pointer-events:none;background:var(--surface);
-      border:1px solid var(--border);border-radius:8px;padding:8px 12px;
-      font-size:13px;display:none;z-index:400;max-width:220px}
-    #tn{font-weight:600;margin-bottom:2px}
-    #tc{font-size:11px;color:#cbd5e1;line-height:1.45}
+      border:1px solid var(--glass-edge);border-radius:8px;padding:8px 12px;
+      font-size:13px;display:none;z-index:400;max-width:220px;
+      box-shadow:0 8px 28px rgba(0,0,0,.45)}
+    #tn{font-weight:600;margin-bottom:2px;color:var(--text)}
+    #tc{font-size:11px;color:#e2e8f0;line-height:1.45}
 
     /* LINK "WHY CONNECTED" CARD */
     #link-why-card{position:fixed;display:none;z-index:410;pointer-events:none;
       max-width:min(300px,92vw);padding:11px 13px;border-radius:10px;
-      background:var(--glass-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-      border:1px solid var(--glass-edge);box-shadow:0 12px 40px rgba(0,0,0,.45)}
+      background:var(--surface);border:1px solid var(--glass-edge);
+      box-shadow:0 12px 40px rgba(0,0,0,.55)}
     #link-why-card .lwc-head{display:flex;align-items:center;gap:7px;margin-bottom:6px;flex-wrap:wrap}
     #link-why-card .lwc-type{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
       padding:2px 7px;border-radius:4px;background:color-mix(in srgb, var(--ltc,#02C8FF) 22%, transparent);
       color:var(--ltc,#02C8FF);border:1px solid color-mix(in srgb, var(--ltc,#02C8FF) 40%, transparent)}
     #link-why-card .lwc-label{font-size:12px;font-weight:600;color:var(--text);line-height:1.3}
-    #link-why-card .lwc-nodes{font-size:11px;color:#cbd5e1;margin-bottom:5px;line-height:1.35}
-    #link-why-card .lwc-why{font-size:10.5px;color:#c8d0da;line-height:1.45;margin-bottom:4px}
+    #link-why-card .lwc-nodes{font-size:11px;color:#e2e8f0;margin-bottom:5px;line-height:1.35}
+    #link-why-card .lwc-why{font-size:11px;color:#e8edf3;line-height:1.5;margin-bottom:4px}
     #link-why-card .lwc-ov-t{display:block;font-size:9px;font-weight:700;text-transform:uppercase;
       letter-spacing:.06em;color:var(--accent);margin-bottom:4px}
     #link-why-card .lwc-ov-tags{display:flex;flex-wrap:wrap;gap:4px}
     #link-why-card .lwc-tag{font-size:9px;padding:2px 6px;border-radius:4px;
-      background:rgba(2,200,255,.1);color:#cbd5e1;border:1px solid rgba(2,200,255,.18)}
-    [data-theme="light"] #link-why-card .lwc-nodes,
-    [data-theme="light"] #link-why-card .lwc-why{color:var(--muted)}
-    [data-theme="light"] #link-why-card .lwc-tag{color:#475569}
+      background:rgba(2,200,255,.14);color:#e2e8f0;border:1px solid rgba(2,200,255,.28)}
+    [data-theme="light"] #link-why-card{background:var(--surface);border-color:var(--glass-edge)}
+    [data-theme="light"] #link-why-card .lwc-nodes{color:#334155}
+    [data-theme="light"] #link-why-card .lwc-why{color:#475569}
+    [data-theme="light"] #link-why-card .lwc-tag{color:#334155;background:rgba(0,110,143,.08);border-color:rgba(0,110,143,.22)}
     @keyframes link-flow{from{stroke-dashoffset:26}to{stroke-dashoffset:0}}
     line.lv.link-hot{stroke-opacity:1!important;stroke-width:3!important;
       animation:link-flow 1.1s linear infinite;stroke-dasharray:8 5}
@@ -9604,7 +9606,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.76";
+const APP_VERSION   = "2.31.77";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
