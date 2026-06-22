@@ -326,6 +326,14 @@
         radial-gradient(ellipse 46% 38% at 50% 88%, rgba(255,144,0,.08) 0%, transparent 62%);
     }
     body.families-mode.pillar-focus .bg-glow{opacity:.72}
+    body.pillar-focus .nd .gr{filter:url(#glow)}
+    body.pillar-focus .nd.nd-selected .mc,
+    body.pillar-focus .nd.nd-hover .mc{stroke:#fff!important;stroke-width:2.5!important}
+    body.pillar-focus .pillar-guides .zone-hot .zone-fill{fill-opacity:.94}
+    body.pillar-focus .pillar-guides .zone-hot .zone-tint{fill-opacity:.18}
+    body.pillar-focus .pillar-guides .zone-hot .zone-border{stroke-width:2.75}
+    body.pillar-focus .pillar-guides .zone-title{font-size:18px;fill:#7eeaff}
+    body.pillar-focus .pillar-guides .zone-focus-backdrop{filter:url(#pillar-zone-glow)}
     .overview-deck .ov-card rect{transition:stroke-opacity .15s ease, filter .15s ease;filter:url(#ov-card-glow)}
     @keyframes nodeRingPulse{
       0%,100%{stroke-opacity:.7}
@@ -1171,7 +1179,7 @@ const OVERVIEW_FIT = { pad: 40, widthFill: 0.68, heightFill: 0.52, maxK: 1.12, m
 /** Families pillar layout — all pillars vs single-pillar focus. */
 const PILLAR_FIT = {
   all: { pad: 28, widthFill: 0.90, heightFill: 0.86, maxK: 1.68, minK: 0.72, marginX: 36, marginY: 72 },
-  focus: { pad: 32, widthFill: 0.78, heightFill: 0.68, maxK: 1.28, minK: 0.72, marginX: 56, marginY: 88 },
+  focus: { pad: 20, widthFill: 0.94, heightFill: 0.90, maxK: 1.65, minK: 0.78, marginX: 40, marginY: 68 },
 };
 
 /** All-products graph — full network ~68% wide × ~77% tall with margin. */
@@ -1200,6 +1208,12 @@ const PILLAR_LAYOUT = {
       color: "#FF9000", cx: 0, cy: 318, w: 980, h: 320, gradient: true,
       contentInset: { left: 0.06, top: 0.20, right: 0.06, bottom: 0.08 } }
   ]
+};
+/** Drill-down panel — preserve each pillar's shape (wide vs tall) at a larger scale. */
+const FOCUSED_PILLAR_PANEL = {
+  "ai-dc":    { w: 640, h: 520, minCols: 4, maxCols: 4 },
+  workplaces: { w: 920, h: 540, minCols: 6, maxCols: 7 },
+  resilience: { w: 980, h: 400, minCols: 8, maxCols: 9 },
 };
 const PILLAR_ZONE_BY_ID = Object.fromEntries(PILLAR_LAYOUT.zones.map(z => [z.id, z]));
 const PILLAR_BY_ID = Object.fromEntries(ONE_CISCO.pillars.map(p => [p.id, p]));
@@ -3143,10 +3157,10 @@ function computePillarGridCols(zone, n, innerW){
   if (n <= 1) ideal = 1;
   else if (zone.id === "ai-dc") ideal = Math.min(4, n);
   else if (zone.id === "workplaces") ideal = focused
-    ? Math.min(4, Math.max(3, Math.ceil(n / 5)))
+    ? Math.min(7, Math.max(6, Math.ceil(n / 4)))
     : Math.min(6, Math.max(4, Math.ceil(n / 4)));
   else ideal = focused
-    ? Math.min(6, Math.max(4, Math.ceil(n / 4)))
+    ? Math.min(9, Math.max(8, Math.ceil(n / 3)))
     : Math.min(9, Math.max(5, Math.ceil(n / 3)));
   if (innerW != null){
     const maxByWidth = Math.max(1, Math.floor(innerW / PILLAR_MIN_CELL_W));
@@ -3160,6 +3174,30 @@ function layoutZoneForItems(zone, items){
   const fracW = 1 - ins.left - ins.right;
   const fracH = 1 - ins.top - ins.bottom;
   const focused = singlePillarFocused() && focusedPillarId() === zone.id;
+  if (focused){
+    const spec = FOCUSED_PILLAR_PANEL[zone.id] || { w: zone.w * 1.35, h: zone.h * 1.15, minCols: 4, maxCols: 8 };
+    let w = spec.w, h = spec.h;
+    const minCellH = pillarMinCellH();
+    let cols = computePillarGridCols(zone, n, w * fracW - 12);
+    if (spec.minCols != null) cols = Math.max(spec.minCols, cols);
+    if (spec.maxCols != null) cols = Math.min(spec.maxCols, cols);
+    cols = Math.max(1, Math.min(cols, n));
+    let rows = Math.ceil(n / cols);
+    for (let attempt = 0; attempt < 14; attempt++){
+      const contentW = w * fracW - 12;
+      const contentH = h * fracH - 10;
+      const maxCols = Math.max(1, Math.floor(contentW / PILLAR_MIN_CELL_W));
+      const maxRows = Math.max(1, Math.floor(contentH / minCellH));
+      rows = Math.ceil(n / cols);
+      if (cols <= maxCols && rows <= maxRows) break;
+      if (cols < maxCols && cols < n){ cols++; continue; }
+      if (rows > maxRows && h < spec.h * 1.14){ h += 22; continue; }
+      if (cols > maxCols && w < spec.w * 1.1){ w += 32; continue; }
+      if (rows > maxRows && cols > (spec.minCols || 1)){ cols--; continue; }
+      break;
+    }
+    return { ...zone, cx: 0, cy: 6, w, h };
+  }
   let cols = computePillarGridCols(zone, n);
   let rows = Math.ceil(n / cols);
   const minCellH = pillarMinCellH();
@@ -3751,7 +3789,7 @@ function pillarLinkOpacity(l, k){
   }
   if (pid){
     if (sp !== tp || sp !== pid) return 0;
-    return l.type === "direct" ? 0.32 : 0.16;
+    return l.type === "direct" ? 0.42 : 0.22;
   }
   if (sp !== tp) return l.type === "direct" ? 0.22 : 0.1;
   return l.type === "direct" ? 0.1 : 0.05;
@@ -4645,7 +4683,7 @@ function fitPillarLayoutView(){
   const availH = Math.max(240, (focused ? h - top : h) - F.marginY);
   const k = Math.min(F.maxK, Math.max(F.minK,
     Math.min(availW / bw * F.widthFill, availH / bh * F.heightFill)));
-  applyGraphTransform(0, (minY + maxY) / 2, k, false, focused ? undefined : { topBias: 0.18 });
+  applyGraphTransform(0, (minY + maxY) / 2, k, false, { topBias: 0.18 });
 }
 
 let graphFitTimer = null;
@@ -4722,11 +4760,12 @@ function applyPillarNodeVisualState(selectedNode){
       .classed("nd-stack", false);
     g.select(".gr")
       .attr("fill", accent)
-      .attr("fill-opacity", hot ? 0.44 : (boosted ? 0.34 : 0.3));
+      .attr("fill-opacity", hot ? 0.46 : (boosted ? 0.38 : 0.3))
+      .attr("filter", boosted || hot ? "url(#glow)" : null);
     g.select(".mc")
-      .attr("fill-opacity", hot ? 1 : (boosted ? 0.98 : 0.9))
-      .attr("stroke", accent)
-      .attr("stroke-width", hot ? 2.5 : 2.25)
+      .attr("fill-opacity", hot ? 1 : (boosted ? 1 : 0.9))
+      .attr("stroke", hot ? "#ffffff" : accent)
+      .attr("stroke-width", hot ? 2.75 : (boosted ? 2.5 : 2.25))
       .attr("stroke-opacity", hot ? 1 : (boosted ? 1 : 0.94));
     g.select(".node-scaler").attr("transform", (isSel || isHov) ? "scale(1.06)" : null);
   });
@@ -4906,7 +4945,7 @@ function pillarGuidesTheme(){
     connLabel: "#ffffff",
     spineStroke: "#e2eaf4",
     zoneBorder: "#02C8FF",
-    glowOpacity: 0.38
+    glowOpacity: 0.42
   };
 }
 
@@ -4975,6 +5014,23 @@ function updatePillarGuides(){
     if (!items.length) return;
     laidOut[z.id] = pillarZoneLayout?.[z.id] || layoutZoneForItems(z, items);
   });
+  if (singlePillarFocused()){
+    const fp = focusedPillarId();
+    const lz = laidOut[fp];
+    if (lz){
+      const pad = 32;
+      const bx = lz.cx - lz.w / 2 - pad, by = lz.cy - lz.h / 2 - pad;
+      g.append("rect").attr("class", "zone-focus-backdrop")
+        .attr("x", bx).attr("y", by)
+        .attr("width", lz.w + pad * 2).attr("height", lz.h + pad * 2)
+        .attr("rx", 14)
+        .attr("fill", isLightTheme() ? "rgba(255,255,255,0.62)" : "rgba(1,10,24,0.68)")
+        .attr("stroke", T.cardBorder)
+        .attr("stroke-width", 1.25)
+        .attr("stroke-opacity", isLightTheme() ? 0.45 : 0.55)
+        .style("pointer-events", "none");
+    }
+  }
   const hasAi = (buckets["ai-dc"]?.length || 0) > 0;
   const hasWp = (buckets.workplaces?.length || 0) > 0;
   const hasRes = (buckets.resilience?.length || 0) > 0;
@@ -5022,22 +5078,22 @@ function updatePillarGuides(){
       .attr("x", x).attr("y", y).attr("width", lz.w).attr("height", lz.h)
       .attr("rx", z.gradient ? 8 : 6)
       .attr("fill", T.cardFill)
-      .attr("fill-opacity", hot ? 0.92 : 0.86)
+      .attr("fill-opacity", hot ? (singlePillarFocused() ? 0.94 : 0.92) : 0.86)
       .attr("stroke", "none")
       .style("pointer-events", "none");
     zg.append("rect").attr("class", "zone-rect zone-tint")
       .attr("x", x).attr("y", y).attr("width", lz.w).attr("height", lz.h)
       .attr("rx", z.gradient ? 8 : 6)
       .attr("fill", z.color)
-      .attr("fill-opacity", hot ? 0.14 : 0.1)
+      .attr("fill-opacity", hot ? (singlePillarFocused() ? 0.18 : 0.14) : 0.1)
       .attr("stroke", "none")
       .style("pointer-events", "none");
     zg.append("rect").attr("class", "zone-rect zone-border")
       .attr("x", x).attr("y", y).attr("width", lz.w).attr("height", lz.h)
       .attr("rx", z.gradient ? 8 : 6)
       .attr("fill", "none")
-      .attr("stroke", z.gradient ? "url(#pillar-resilience-grad)" : T.zoneBorder)
-      .attr("stroke-width", z.gradient ? 2.75 : 2.25)
+      .attr("stroke", z.gradient ? "url(#pillar-resilience-grad)" : (hot && singlePillarFocused() ? z.color : T.zoneBorder))
+      .attr("stroke-width", hot && singlePillarFocused() ? (z.gradient ? 3 : 2.75) : (z.gradient ? 2.75 : 2.25))
       .attr("stroke-opacity", 1)
       .style("pointer-events", "none");
     appendPillarZoneHeader(zg, z, x, y, lz.w, headerOp);
@@ -5436,9 +5492,9 @@ function rebindGraph(opts){
   const pillarMode = viewMode === "families" && usePillarLayout();
   ndEl.select("circle.gr")
     .attr("r", d => d._r + (pillarMode ? 2 : 9))
-    .attr("filter", pillarMode ? null : "url(#glow)")
+    .attr("filter", pillarMode && singlePillarFocused() ? "url(#glow)" : (pillarMode ? null : "url(#glow)"))
     .attr("fill", d => pillarMode ? pillarNodeAccent(d.id) : (d._pillarColor || catColor(d.category)))
-    .attr("fill-opacity", d => pillarMode ? 0.32 : 0);
+    .attr("fill-opacity", d => pillarMode ? (singlePillarFocused() ? 0.38 : 0.32) : 0);
   ndEl.select("circle.mc").attr("r", d => d._r);
   if (viewMode === "families" && !pillarMode){
     viewNodes.forEach(n => { if (nodeById[n.id]) n._r = rscale(degree[n.id] || 0); });
@@ -5451,9 +5507,10 @@ function rebindGraph(opts){
       const el = d3.select(this);
       if (pillarMode){
         const accent = pillarNodeAccent(d.id);
-        el.attr("fill", accent).attr("fill-opacity", 0.94)
+        const boosted = singlePillarFocused();
+        el.attr("fill", accent).attr("fill-opacity", boosted ? 1 : 0.94)
           .attr("stroke", accent)
-          .attr("stroke-width", 2.25).attr("stroke-opacity", 0.96);
+          .attr("stroke-width", boosted ? 2.5 : 2.25).attr("stroke-opacity", 1);
       } else {
         el.attr("fill", d._hasImage ? MATRIX_NODE_FILL : catColor(d.category))
           .attr("stroke", d._hasImage ? MATRIX_NODE_RING : "transparent")
@@ -9218,7 +9275,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.61";
+const APP_VERSION   = "2.31.62";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
