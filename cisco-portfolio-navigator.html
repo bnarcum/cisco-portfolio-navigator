@@ -9677,7 +9677,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.87";
+const APP_VERSION   = "2.31.88";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -12801,9 +12801,63 @@ function dcloudConnectedFamilyIds(familyIds = []){
   return [...connected];
 }
 
+function dcloudScoreEntry(e, ctx){
+  const { familyIds = [], productIds = [], connected = [], connectedBonus = true } = ctx;
+  const familyHit = familyIds.some(f => e.families?.includes(f));
+  const productHit = productIds.some(p => e.products?.includes(p));
+  const nFam = e.families?.length || 0;
+  const nProd = e.products?.length || 0;
+  let score = 0;
+
+  if (productHit){
+    score += 30;
+    if (nProd === 1) score += 22;
+    else if (nProd === 2) score += 10;
+    else score -= 3 * (nProd - 2);
+  }
+
+  if (familyHit){
+    if (productIds.length){
+      score += 4;
+    } else {
+      score += 12;
+      if (nFam === 1) score += 18;
+      else if (nFam === 2) score += 10;
+      else score -= 4 * (nFam - 2);
+    }
+  }
+
+  if (productIds.length){
+    for (const pid of productIds){
+      const p = prodById[pid];
+      if (!p) continue;
+      const hay = `${e.linkLabel || ""} ${e.name || ""} ${e.hint || ""}`.toLowerCase();
+      const name = p.name.toLowerCase();
+      if (hay.includes(name)) score += 16;
+      else {
+        const tokens = name.split(/[\s·/]+/).filter(t => t.length > 3);
+        if (tokens.filter(t => hay.includes(t)).length >= Math.min(2, tokens.length)) score += 10;
+      }
+    }
+  }
+
+  if (e.primary) score += 3;
+  if (e.pathStep === 1) score += 5;
+
+  if (connectedBonus && !productIds.length && familyHit){
+    const rel = e.relatedFamilies?.length ? e.relatedFamilies : (e.families || []);
+    const multiHit = connected.filter(f => rel.includes(f)).length;
+    if (multiHit >= 2 && nFam <= 3) score += 4;
+    else if (multiHit === 1 && !familyHit) score += 1;
+  }
+
+  return score;
+}
+
 function dcloudRankEntries({ familyIds = [], productIds = [], useCases = [], limit = 5, requireProductOrFamily = false, connectedBonus = true } = {}){
   if (!DCLOUD_ENTRIES.length) return [];
   const connected = connectedBonus ? dcloudConnectedFamilyIds(familyIds) : familyIds;
+  const ctx = { familyIds, productIds, connected, connectedBonus };
   const scored = DCLOUD_ENTRIES.map(e => {
     const productSpecific = (e.products?.length ?? 0) > 0;
     const familyHit = familyIds.some(f => e.families?.includes(f));
@@ -12817,18 +12871,17 @@ function dcloudRankEntries({ familyIds = [], productIds = [], useCases = [], lim
         : (familyHit || productHit || useCaseHit);
       if (!relevant) return null;
     }
-    let score = 0;
-    if (e.primary) score += 1;
-    if (familyHit) score += 3;
-    if (productHit) score += 5;
-    if (useCaseHit) score += 2;
-    const rel = e.relatedFamilies?.length ? e.relatedFamilies : (e.families || []);
-    const multiHit = connected.filter(f => rel.includes(f)).length;
-    if (multiHit >= 2) score += 4;
-    else if (multiHit === 1 && !familyHit) score += 1;
+    const score = dcloudScoreEntry(e, ctx);
     return { entry: e, score };
   }).filter(Boolean);
-  scored.sort((a, b) => b.score - a.score || (b.entry.primary ? 1 : 0) - (a.entry.primary ? 1 : 0));
+  scored.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    if (b.entry.primary !== a.entry.primary) return (b.entry.primary ? 1 : 0) - (a.entry.primary ? 1 : 0);
+    const bSpec = (b.entry.products?.length || 99) + (b.entry.families?.length || 99);
+    const aSpec = (a.entry.products?.length || 99) + (a.entry.families?.length || 99);
+    if (aSpec !== bSpec) return aSpec - bSpec;
+    return (a.entry.linkLabel || a.entry.name).localeCompare(b.entry.linkLabel || b.entry.name);
+  });
   const seen = new Set();
   const out = [];
   for (const { entry } of scored) {
