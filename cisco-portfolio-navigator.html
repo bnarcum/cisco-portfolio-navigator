@@ -8001,6 +8001,7 @@ function openFamilyProductDrawer(familyId){
   const d = resolveFamilyForPanel({ id: familyId, _kind: "family" });
   selected = d;
   hideTip();
+  clearLinkSelection();
   if (viewMode === "composition") applyCompositionInteractionStyles(d);
   else if (usePillarLayout()) applyPillarLabelStyles(d);
   else applyConnectionHighlight(d, connectionHighlightDepth);
@@ -8147,7 +8148,7 @@ window.showProductDetail = function(id) {
 };
 
 function closePanel() { document.getElementById("panel").classList.remove("open"); }
-document.getElementById("pcl").addEventListener("click",()=>{ selected=null; resetHL(); closePanel(); });
+document.getElementById("pcl").addEventListener("click",()=>{ selected=null; clearLinkSelection(); resetHL(); closePanel(); });
 
 window.jumpTo = (id, opts = {}) => {
   const d=nodeById[id]; if(!d) return;
@@ -9600,7 +9601,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.73";
+const APP_VERSION   = "2.31.74";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -11053,12 +11054,15 @@ function planSummary(){
   const items = [...stack].map(id => {
     const isProd = stackItems.get(id) === "product";
     const it = isProd ? prodById[id] : nodeById[id];
-    const tier = TIERS[isProd ? it?.family : id];
+    const famId = isProd ? it?.family : id;
+    const tier = TIERS[famId];
+    const pm = pillarMeta(familyPillar(famId));
     return {
       id, name: it?.name || id, kind: isProd ? "product" : "family",
       category: CATS[it?.category]?.label, status: it?.status || "current",
       tier: tier?.tier, eosDate: it?.eosDate, eolDate: it?.eolDate,
-      successor: it?.successor ? nameOf(it.successor) : null
+      successor: it?.successor ? nameOf(it.successor) : null,
+      pillar: pm ? { label: pm.label, shortLabel: pm.shortLabel, color: pm.color } : null
     };
   });
   const legacy = [...legacySel].map(id => ALL_LEGACY.find(l => l.id === id)).filter(Boolean);
@@ -11084,7 +11088,28 @@ function planSummary(){
   }).sort((a,b) => b.pct - a.pct);
 
   const dcloudDemos = typeof dcloudPlanRecommendations === "function" ? dcloudPlanRecommendations(8) : [];
-  return { acct, date, profile, items, legacy, recs, stackUCs, allUC, bundles, dcloudDemos };
+
+  const pillarHit = stackPillarCoverage();
+  const pillars = ONE_CISCO.pillars.map(p => ({ ...p, covered: !!pillarHit[p.id] }));
+  const stackConnSeen = new Set();
+  const stackConnections = [];
+  LINKS.forEach(l => {
+    const s = sid(l), t = tid(l);
+    if (!effNodes.has(s) || !effNodes.has(t)) return;
+    const key = [s, t].sort().join("--");
+    if (stackConnSeen.has(key)) return;
+    stackConnSeen.add(key);
+    stackConnections.push({
+      sourceName: linkNodeName(s), targetName: linkNodeName(t),
+      type: l.type, typeLabel: connectionTypeLabel(l.type), label: l.label || "",
+      useCaseOverlap: linkUseCaseOverlap(l)
+    });
+  });
+
+  return {
+    acct, date, profile, items, legacy, recs, stackUCs, allUC, bundles, dcloudDemos,
+    connectivityLabel: ONE_CISCO.connectivityLabel, pillars, stackConnections
+  };
 }
 
 function exportMarkdown(){
@@ -11093,9 +11118,9 @@ function exportMarkdown(){
   if (s.profile.vertical || s.profile.size || s.profile.mode){
     md += `**Customer profile:** ${[s.profile.vertical, s.profile.size, s.profile.mode].filter(Boolean).join(" · ")}\n\n`;
   }
-  md += `## Current Stack (${s.items.length})\n\n| Product | Type | Category | Status | Tier | Notes |\n|---|---|---|---|---|---|\n`;
+  md += `## Current Stack (${s.items.length})\n\n| Product | Type | Pillar | Category | Status | Tier | Notes |\n|---|---|---|---|---|---|---|\n`;
   s.items.forEach(it => {
-    md += `| ${it.name} | ${it.kind} | ${it.category||"-"} | ${it.status.toUpperCase()} | ${it.tier||"-"} | ${it.successor?"Migrate to "+it.successor:""} |\n`;
+    md += `| ${it.name} | ${it.kind} | ${it.pillar?.shortLabel||"-"} | ${it.category||"-"} | ${it.status.toUpperCase()} | ${it.tier||"-"} | ${it.successor?"Migrate to "+it.successor:""} |\n`;
   });
   if (s.legacy.length){
     md += `\n## Legacy / Outgoing\n\n`;
@@ -11107,6 +11132,16 @@ function exportMarkdown(){
   if (s.recs.length){
     md += `\n## Top Suggestions\n\n`;
     s.recs.forEach((r,i) => { md += `${i+1}. **${r.name}** _(${r.category})_ — ${r.direct} direct + ${r.adjacent} related connections (fit score ${r.score})\n`; });
+  }
+  if (s.pillars?.length){
+    md += `\n## One Cisco Framing\n\n**${s.connectivityLabel}**\n\n`;
+    s.pillars.forEach(p => { md += `- **${p.shortLabel}** — ${p.covered ? "Represented in stack" : "Gap — not in current stack"}\n`; });
+  }
+  if (s.stackConnections?.length){
+    md += `\n## Stack Integrations\n\n`;
+    s.stackConnections.forEach(c => {
+      md += `- **${c.sourceName} ↔ ${c.targetName}** — ${c.typeLabel}${c.label ? " · " + c.label : ""}\n`;
+    });
   }
   md += `\n## Solution Packages\n\n`;
   s.bundles.forEach(b => { md += `- **${b.name}** — ${b.pct}% (${b.owned}/${b.total})${b.missing.length?"; missing "+b.missing.slice(0,3).join(", "):""}\n`; });
@@ -11170,8 +11205,10 @@ function exportPDF(){
     <h1>Cisco Account Plan — ${escapeHtml(s.acct)}</h1>
     <p>${s.date}${s.profile.vertical?` · ${escapeHtml(s.profile.vertical)}`:""}${s.profile.size?` · ${escapeHtml(s.profile.size)}`:""}${s.profile.mode?` · ${escapeHtml(s.profile.mode)}`:""}</p>
     <h2>Their Products</h2>
-    <table><thead><tr><th>Product</th><th>Type</th><th>Category</th><th>Status</th><th>Tier</th></tr></thead>
-    <tbody>${s.items.map(it => `<tr><td>${escapeHtml(it.name)}</td><td>${it.kind}</td><td>${escapeHtml(it.category||"-")}</td><td>${it.status.toUpperCase()}</td><td>${escapeHtml(it.tier||"-")}</td></tr>`).join("")}</tbody></table>
+    <table><thead><tr><th>Product</th><th>Type</th><th>Pillar</th><th>Category</th><th>Status</th><th>Tier</th></tr></thead>
+    <tbody>${s.items.map(it => `<tr><td>${escapeHtml(it.name)}</td><td>${it.kind}</td><td>${escapeHtml(it.pillar?.shortLabel||"-")}</td><td>${escapeHtml(it.category||"-")}</td><td>${it.status.toUpperCase()}</td><td>${escapeHtml(it.tier||"-")}</td></tr>`).join("")}</tbody></table>
+    ${s.pillars?.length?`<h2>One Cisco Framing</h2><p><strong>${escapeHtml(s.connectivityLabel||"")}</strong></p><ul>${s.pillars.map(p => `<li><strong>${escapeHtml(p.shortLabel)}</strong> — ${p.covered?"Represented in stack":"Gap — not in current stack"}</li>`).join("")}</ul>`:""}
+    ${s.stackConnections?.length?`<h2>Stack Integrations</h2><ul>${s.stackConnections.map(c => `<li><strong>${escapeHtml(c.sourceName)} ↔ ${escapeHtml(c.targetName)}</strong> — ${escapeHtml(c.typeLabel)}${c.label?" · "+escapeHtml(c.label):""}</li>`).join("")}</ul>`:""}
     ${s.legacy.length?`<h2>Legacy / Outgoing</h2><ul>${s.legacy.map(l => `<li><strong>${escapeHtml(l.name)}</strong> → ${l.replaces.map(r => escapeHtml(nameOf(r))).join(", ")}<br><em>${escapeHtml(l.reason)}</em></li>`).join("")}</ul>`:""}
     ${s.recs.length?`<h2>Top Suggestions</h2><ol>${s.recs.map(r => `<li><strong>${escapeHtml(r.name)}</strong> — ${escapeHtml(r.category)} (fit score ${r.score})</li>`).join("")}</ol>`:""}
     <h2>Solution Packages</h2><table><thead><tr><th>Package</th><th>Complete</th><th>Owned/Total</th></tr></thead>
