@@ -573,6 +573,53 @@
       border-radius:50%;animation:matrixSpin .75s linear infinite}
     @keyframes matrixSpin{to{transform:rotate(360deg)}}
     .matrix-overlay-loading-text{font-size:12px;font-weight:600;color:#e9d5ff;letter-spacing:.02em}
+
+    /* dCloud labs browser overlay */
+    #dcloud-btn{flex-shrink:0;display:flex;align-items:center;gap:6px;
+      background:linear-gradient(135deg,rgba(0,212,255,.12),rgba(0,100,140,.08));
+      color:#5ceaff;border:1px solid rgba(0,212,255,.45);border-radius:7px;
+      font-size:12px;font-weight:700;padding:6px 13px;cursor:pointer;transition:all .15s;white-space:nowrap}
+    #dcloud-btn:hover{background:linear-gradient(135deg,rgba(0,212,255,.22),rgba(0,100,140,.14));
+      border-color:#00d4ff;color:#fff;box-shadow:0 0 16px rgba(0,212,255,.18)}
+    #dcloud-btn.active{background:rgba(0,212,255,.16);color:#fff;border-color:#00d4ff}
+    #dcloud-overlay{position:fixed;inset:0;z-index:505;display:none;
+      align-items:center;justify-content:center;padding:24px 16px;
+      background:rgba(4,12,24,.78);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+    #dcloud-overlay.show{display:flex}
+    body.dcloud-overlay-open{overflow:hidden}
+    .dcloud-overlay-shell{width:min(720px,100%);max-height:min(88vh,820px);display:flex;flex-direction:column;
+      background:linear-gradient(165deg,#061525 0%,#0a2038 100%);border:1px solid rgba(0,212,255,.28);
+      border-radius:14px;box-shadow:0 24px 64px rgba(0,0,0,.55),0 0 40px rgba(0,212,255,.08);overflow:hidden}
+    .dcloud-overlay-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;
+      padding:14px 16px;border-bottom:1px solid rgba(0,212,255,.18);background:rgba(0,212,255,.04)}
+    .dcloud-overlay-bar .dcloud-brand .dcloud-word{font-size:17px}
+    .dcloud-overlay-close{width:34px;height:34px;border-radius:8px;border:1px solid rgba(0,212,255,.25);
+      background:transparent;color:#b8f0ff;font-size:22px;line-height:1;cursor:pointer;flex-shrink:0}
+    .dcloud-overlay-close:hover{border-color:#00d4ff;background:rgba(0,212,255,.12);color:#fff}
+    .dcloud-overlay-toolbar{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid rgba(0,212,255,.1)}
+    .dcloud-overlay-toolbar input{flex:1;min-width:0;background:rgba(4,16,32,.75);border:1px solid rgba(0,212,255,.22);
+      border-radius:8px;color:#f0f8ff;font-size:13px;padding:9px 12px;outline:none}
+    .dcloud-overlay-toolbar input:focus{border-color:#00d4ff;box-shadow:0 0 0 3px rgba(0,212,255,.12)}
+    .dcloud-overlay-toolbar input::placeholder{color:#7aa8bc}
+    .dcloud-overlay-count{font-size:11px;color:#8ecae0;white-space:nowrap;flex-shrink:0}
+    .dcloud-overlay-body{flex:1;overflow-y:auto;padding:12px 16px 16px}
+    .dcloud-browser-section{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+      color:#5ceaff;margin:4px 0 8px}
+    .dcloud-browser-card{background:rgba(8,24,44,.85);border:1px solid rgba(0,212,255,.16);border-left:3px solid #00d4ff;
+      border-radius:9px;padding:12px 14px;margin-bottom:10px}
+    .dcloud-browser-card.is-rec{border-left-color:#2dce5c}
+    .dcloud-browser-card h4{margin:0 0 4px;font-size:13px;font-weight:700;color:#fff}
+    .dcloud-browser-card .dbc-meta{font-size:10px;color:#8ecae0;margin-bottom:6px}
+    .dcloud-browser-card .dbc-hint{font-size:11px;color:#c4e8f8;line-height:1.45;margin-bottom:8px}
+    .dcloud-browser-actions{display:flex;flex-wrap:wrap;gap:6px}
+    .dcloud-browser-actions a{font-size:11px;font-weight:700;padding:5px 10px;border-radius:6px;text-decoration:none}
+    .dcloud-browser-actions .dbc-launch{background:#00d4ff;color:#003648}
+    .dcloud-browser-actions .dbc-launch:hover{background:#fff}
+    .dcloud-browser-actions .dbc-family{background:transparent;border:1px solid rgba(0,212,255,.35);color:#b8f0ff}
+    .dcloud-browser-actions .dbc-family:hover{border-color:#00d4ff;color:#fff}
+    .sri-dcloud{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;flex-shrink:0;
+      background:rgba(0,212,255,.15);color:#5ceaff;border:1px solid rgba(0,212,255,.35)}
+    .sri-dot--dcloud{background:#00d4ff;box-shadow:0 0 6px rgba(0,212,255,.55)}
     .p-hero--clickable{cursor:pointer}
     .p-hero--clickable .p-hero-matrix-img{cursor:pointer}
     .p-hero-open-hint{
@@ -987,6 +1034,12 @@
   <button id="rst">Reset</button>
   <button id="theme-toggle" type="button" title="Toggle light / dark presentation theme" aria-label="Toggle theme">☀ Light</button>
   <div class="actionbar-end">
+  <button id="dcloud-btn" type="button" title="Browse and launch Cisco dCloud hands-on labs">
+    <svg width="13" height="13" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <path d="M24.5 17.5c1.2 0 2.2-1 2.2-2.3 0-1.1-.7-2-1.7-2.3.3-2.4-2-4.4-4.7-4.4-1.8 0-3.4.8-4.5 2.1-1-1.2-2.5-1.9-4.1-1.9-3.1 0-5.7 2.2-5.7 5.1 0 .3 0 .6.1.9C2.8 16.6 1.5 18.2 1.5 20.2c0 2.4 2 4.3 4.4 4.3h16.6c2.7 0 4.8-2.1 4.8-4.7 0-2.6-2.1-4.8-4.8-4.8-.3 0-.6 0-.9.1-.4-1.2-1.5-2.1-2.8-2.1z" fill="currentColor"/>
+    </svg>
+    <span>dCloud Labs</span>
+  </button>
   <button id="guided-btn" type="button" title="Step-by-step guided account plan">
     <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/>
@@ -8113,7 +8166,9 @@ searchEl.addEventListener("input",()=>{
     p.name.toLowerCase().includes(q)||(p.desc||"").toLowerCase().includes(q)||
     (p.successor&&(prodById[p.successor]||nodeById[p.successor])?.name.toLowerCase().includes(q)))).slice(0,8);
 
-  if(!nMatch.length&&!pMatch.length){srEl.style.display="none";return;}
+  const dMatch = typeof window.dcloudSearchEntries === "function" ? window.dcloudSearchEntries(q, 8) : [];
+
+  if(!nMatch.length&&!pMatch.length&&!dMatch.length){srEl.style.display="none";return;}
 
   srEl.innerHTML="";
 
@@ -8178,6 +8233,49 @@ searchEl.addEventListener("input",()=>{
         { pillar: pm ? pm.label.split(" ").slice(0, 2).join(" ") : null }
       ));
     });
+  }
+  if(dMatch.length){
+    const hdr=document.createElement("div"); hdr.className="sr-group"; hdr.textContent="dCloud Labs";
+    srEl.appendChild(hdr);
+    dMatch.forEach(e => {
+      const famLabel = typeof window.dcloudEntryFamiliesLabel === "function" ? window.dcloudEntryFamiliesLabel(e) : "";
+      const sub = [e.duration, e.level, e.demoType === "instant" ? "Instant" : "Scheduled", famLabel].filter(Boolean).join(" · ");
+      const btn = makeSearchItem(
+        e.linkLabel || e.name,
+        sub,
+        "#00d4ff",
+        null,
+        () => {
+          const url = typeof window.dcloudPrimaryUrl === "function" ? window.dcloudPrimaryUrl(e) : "";
+          if (url) window.open(url, "_blank", "noopener");
+          if (typeof window.dcloudMarkLabDone === "function") window.dcloudMarkLabDone(e.id, true);
+        },
+        { pillar: null }
+      );
+      btn.querySelector(".sri-dot")?.classList.add("sri-dot--dcloud");
+      const textWrap = btn.querySelector(".sri-text");
+      if (textWrap){
+        const badge = document.createElement("span");
+        badge.className = "sri-dcloud";
+        badge.textContent = "Lab";
+        btn.insertBefore(badge, btn.querySelector(".sri-eol") || null);
+      }
+      srEl.appendChild(btn);
+    });
+    const browse = document.createElement("button");
+    browse.type = "button";
+    browse.className = "sri";
+    browse.style.cssText = "width:100%;border:none;background:transparent;color:inherit;font:inherit;text-align:left";
+    browse.innerHTML = `<div class="sri-dot sri-dot--dcloud" style="pointer-events:none"></div>
+      <div class="sri-text" style="pointer-events:none"><div style="font-size:12px;font-weight:600;color:var(--accent)">Browse all dCloud labs…</div></div>`;
+    browse.addEventListener("click", ev => {
+      ev.preventDefault();
+      searchEl.value = "";
+      srEl.style.display = "none";
+      srEl.innerHTML = "";
+      if (typeof window.openDcloudBrowser === "function") window.openDcloudBrowser({ query: q });
+    });
+    srEl.appendChild(browse);
   }
   srEl.style.display="block";
   srActiveIdx = 0;
@@ -9305,7 +9403,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.69";
+const APP_VERSION   = "2.31.70";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -12178,6 +12276,159 @@ async function loadDcloudLinks(){
   }
 }
 
+function dcloudEntryFamiliesLabel(e){
+  if (!e?.families?.length) return "";
+  return e.families.slice(0, 3).map(f => nodeById[f]?.name || f).join(" · ");
+}
+
+function dcloudEntrySearchHaystack(e){
+  return [
+    e.name, e.linkLabel, e.hint, e.id,
+    ...(e.learningObjectives || []),
+    ...(e.useCases || []),
+    ...(e.families || []).map(f => nodeById[f]?.name || f),
+    ...(e.products || []).map(p => prodById[p]?.name || p),
+    e.demoType === "instant" ? "instant demo" : "scheduled lab"
+  ].filter(Boolean).join(" ").toLowerCase();
+}
+
+function dcloudSearchEntries(q, limit = 8){
+  if (!DCLOUD_ENTRIES.length) return [];
+  const qq = q.trim().toLowerCase();
+  if (!qq) return [];
+  let pool = DCLOUD_ENTRIES;
+  if (qq === "dcloud" || qq === "d cloud" || qq === "dc"){
+    const recIds = new Set(dcloudPlanRecommendations(Math.min(limit, 12)).map(r => r.id));
+    const rec = DCLOUD_ENTRIES.filter(e => recIds.has(e.id));
+    const rest = DCLOUD_ENTRIES.filter(e => !recIds.has(e.id));
+    pool = [...rec, ...rest];
+  } else {
+    pool = DCLOUD_ENTRIES.filter(e => dcloudEntrySearchHaystack(e).includes(qq));
+    pool.sort((a, b) => {
+      if (b.primary !== a.primary) return (b.primary ? 1 : 0) - (a.primary ? 1 : 0);
+      const al = (a.linkLabel || a.name).toLowerCase();
+      const bl = (b.linkLabel || b.name).toLowerCase();
+      const as = al.startsWith(qq) ? 1 : 0;
+      const bs = bl.startsWith(qq) ? 1 : 0;
+      if (bs !== as) return bs - as;
+      return al.localeCompare(bl);
+    });
+  }
+  return pool.slice(0, limit);
+}
+
+let dcloudBrowserQuery = "";
+
+function renderDcloudBrowserList(){
+  const list = $("#dcloud-browser-list");
+  const countEl = $("#dcloud-browser-count");
+  if (!list) return;
+  const q = ($("#dcloud-browser-search")?.value || dcloudBrowserQuery || "").trim().toLowerCase();
+  const recIds = new Set(dcloudPlanRecommendations(12).map(r => r.id));
+  let entries = q
+    ? DCLOUD_ENTRIES.filter(e => dcloudEntrySearchHaystack(e).includes(q))
+    : DCLOUD_ENTRIES.slice();
+  entries.sort((a, b) => {
+    const ar = recIds.has(a.id) ? 1 : 0;
+    const br = recIds.has(b.id) ? 1 : 0;
+    if (br !== ar) return br - ar;
+    if (b.primary !== a.primary) return (b.primary ? 1 : 0) - (a.primary ? 1 : 0);
+    return (a.linkLabel || a.name).localeCompare(b.linkLabel || b.name);
+  });
+  if (countEl) countEl.textContent = `${entries.length} lab${entries.length === 1 ? "" : "s"}`;
+  if (!entries.length){
+    list.innerHTML = `<div class="empty"><h3>No labs match</h3><p>Try a product name, use case, or family (e.g. Meraki, XDR, Catalyst).</p></div>`;
+    return;
+  }
+  let html = "";
+  let inRec = false;
+  entries.forEach(e => {
+    const isRec = recIds.has(e.id);
+    if (isRec && !inRec && !q){
+      html += `<div class="dcloud-browser-section">Recommended for your plan</div>`;
+      inRec = true;
+    } else if (!isRec && inRec){
+      html += `<div class="dcloud-browser-section">All labs</div>`;
+      inRec = false;
+    }
+    const primary = dcloudPrimaryUrl(e);
+    const fam = dcloudEntryFamiliesLabel(e);
+    const meta = [e.duration, e.level, e.demoType === "instant" ? "Instant" : "Scheduled", fam].filter(Boolean).join(" · ");
+    const hint = (e.learningObjectives?.[0] || e.hint || "").slice(0, 180);
+    const famId = e.families?.[0];
+    html += `<article class="dcloud-browser-card${isRec ? " is-rec" : ""}" data-lab-id="${escapeHtml(e.id)}">
+      <h4>${escapeHtml(e.linkLabel || e.name)}</h4>
+      <div class="dbc-meta">${escapeHtml(meta)}</div>
+      ${hint ? `<div class="dbc-hint">${escapeHtml(hint)}${hint.length >= 180 ? "…" : ""}</div>` : ""}
+      <div class="dcloud-browser-actions">
+        <a class="dbc-launch" href="${escapeHtml(primary)}" target="_blank" rel="noopener" data-dcloud-id="${escapeHtml(e.id)}">Launch lab ↗</a>
+        ${famId ? `<button type="button" class="dbc-family" data-family="${escapeHtml(famId)}">View ${escapeHtml(nodeById[famId]?.name || famId)}</button>` : ""}
+      </div>
+    </article>`;
+  });
+  list.innerHTML = html;
+  list.querySelectorAll("[data-dcloud-id]").forEach(a => {
+    a.addEventListener("click", () => dcloudMarkLabDone(a.dataset.dcloudId, true));
+  });
+  list.querySelectorAll("[data-family]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      closeDcloudBrowser();
+      window.jumpTo?.(btn.dataset.family);
+    });
+  });
+}
+
+function openDcloudBrowser(opts = {}){
+  const ov = $("#dcloud-overlay");
+  if (!ov) return;
+  dcloudBrowserQuery = opts.query || "";
+  const inp = $("#dcloud-browser-search");
+  if (inp) inp.value = dcloudBrowserQuery;
+  renderDcloudBrowserList();
+  ov.classList.add("show");
+  document.body.classList.add("dcloud-overlay-open");
+  $("#dcloud-btn")?.classList.add("active");
+  setTimeout(() => inp?.focus(), 80);
+}
+
+function closeDcloudBrowser(){
+  $("#dcloud-overlay")?.classList.remove("show");
+  document.body.classList.remove("dcloud-overlay-open");
+  $("#dcloud-btn")?.classList.remove("active");
+}
+
+function buildDcloudBrowser(){
+  if ($("#dcloud-overlay")) return;
+  const ov = document.createElement("div");
+  ov.id = "dcloud-overlay";
+  ov.setAttribute("role", "dialog");
+  ov.setAttribute("aria-modal", "true");
+  ov.setAttribute("aria-labelledby", "dcloud-overlay-title");
+  ov.innerHTML = `
+    <div class="dcloud-overlay-shell">
+      <header class="dcloud-overlay-bar">
+        <div id="dcloud-overlay-title">${dcloudHeaderHtml(true)}</div>
+        <button type="button" class="dcloud-overlay-close" id="dcloud-overlay-close" aria-label="Close dCloud labs">×</button>
+      </header>
+      <div class="dcloud-overlay-toolbar">
+        <input id="dcloud-browser-search" type="search" placeholder="Search labs by name, product, or use case…" autocomplete="off" spellcheck="false"/>
+        <span class="dcloud-overlay-count" id="dcloud-browser-count"></span>
+      </div>
+      <div id="dcloud-browser-list" class="dcloud-overlay-body"></div>
+    </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener("click", e => { if (e.target === ov) closeDcloudBrowser(); });
+  $("#dcloud-overlay-close")?.addEventListener("click", closeDcloudBrowser);
+  $("#dcloud-browser-search")?.addEventListener("input", () => renderDcloudBrowserList());
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && ov.classList.contains("show")) closeDcloudBrowser();
+  });
+  $("#dcloud-btn")?.addEventListener("click", () => {
+    if (ov.classList.contains("show")) closeDcloudBrowser();
+    else openDcloudBrowser();
+  });
+}
+
 function dcloudEntryById(id){
   return DCLOUD_ENTRIES.find(e => e.id === id);
 }
@@ -14348,6 +14599,11 @@ function boot(){
     refreshDcloudPanelIfOpen();
     window.DCLOUD_PATHS = DCLOUD_PATHS;
     window.DCLOUD_ENTRIES = DCLOUD_ENTRIES;
+    window.dcloudSearchEntries = dcloudSearchEntries;
+    window.dcloudEntryFamiliesLabel = dcloudEntryFamiliesLabel;
+    window.dcloudPrimaryUrl = dcloudPrimaryUrl;
+    window.dcloudMarkLabDone = dcloudMarkLabDone;
+    window.openDcloudBrowser = openDcloudBrowser;
   });
   loadMatrixBridge();
   buildPlansMenu();
@@ -14355,6 +14611,7 @@ function boot(){
   buildProfileBox();
   buildTemplatesStrip();
   buildGuidedWizard();
+  buildDcloudBrowser();
   refreshGuidedBtnLabel();
   addPlannerTabs();
   buildComparePanel();
