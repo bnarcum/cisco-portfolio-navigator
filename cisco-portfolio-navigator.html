@@ -1018,6 +1018,8 @@
       0%{transform:scale(1);opacity:.8}
       100%{transform:scale(1.6);opacity:0}}
 
+    body.tour-highlight-wizard #gw-overlay.show{z-index:9100}
+
     #tour-backdrop{
       position:fixed;inset:0;z-index:9000;background:transparent;
       display:none;pointer-events:auto}
@@ -9163,7 +9165,7 @@ document.addEventListener("keydown",ev=>{
   // The old "cisco-portfolio-tour-completed-v1" key still suppresses the *first-time* tour
   // for users who already completed v1; they can re-launch the latest via the ? button.
   const STORAGE_KEY = "cisco-portfolio-tour-completed-v1";
-  const TOUR_VERSION = "v3.0";
+  const TOUR_VERSION = "v3.1";
   const STORAGE_KEY_LATEST = "cisco-portfolio-tour-latest-seen";
 
   // Inject DOM
@@ -9190,7 +9192,6 @@ document.addEventListener("keydown",ev=>{
   const STEPS = [
     {
       target: null, place: "center",
-      chapter: "Act 1 — One Cisco",
       title: "One portfolio, one story",
       body: `<strong>Cisco Portfolio Navigator</strong> starts with the <strong>One Cisco</strong> narrative — three
              outcome pillars on Overview — then lets you <strong>drill down</strong> through connected families and
@@ -9200,7 +9201,6 @@ document.addEventListener("keydown",ev=>{
     },
     {
       target: "#gw", place: "bottom",
-      chapter: "Act 1 — One Cisco",
       title: "Three pillars on Overview",
       body: `Switch to <strong>Overview</strong> for the One Cisco deck — the same story customers hear at the executive level:
              <ul style="margin:8px 0 0 16px;padding:0;line-height:1.55">
@@ -9220,7 +9220,6 @@ document.addEventListener("keydown",ev=>{
     },
     {
       target: "#gw", place: "bottom",
-      chapter: "Act 2 — Connect & drill",
       title: "See how families connect",
       body: `In <strong>Families</strong> view, each bubble is a product family laid out by One Cisco pillar.
              <strong>Solid lines</strong> are direct integrations; <strong>dashed lines</strong> are adjacent /
@@ -9237,7 +9236,6 @@ document.addEventListener("keydown",ev=>{
     },
     {
       target: "#vm-seg", place: "bottom",
-      chapter: "Act 2 — Connect & drill",
       title: "Drill to products & upgrade paths",
       body: `<strong>Composition</strong> pins one family in the center with every SKU orbiting it —
              including purple <em>replaced by</em> arrows to successor products.<br><br>
@@ -9255,7 +9253,6 @@ document.addEventListener("keydown",ev=>{
     },
     {
       target: "#panel", place: "left",
-      chapter: "Act 3 — Learn as you explore",
       title: "Family drawer — start learning here",
       body: `Every family opens a side panel with description, use cases, and a learning ladder:
              <ul style="margin:6px 0 0 16px;padding:0;line-height:1.5">
@@ -9273,7 +9270,6 @@ document.addEventListener("keydown",ev=>{
     },
     {
       target: "#panel", place: "left",
-      chapter: "Act 3 — Learn as you explore",
       title: "Product drawer — labs, courses & showroom",
       body: `Open a specific product for the full learning path:
              <ul style="margin:6px 0 0 16px;padding:0;line-height:1.5">
@@ -9288,7 +9284,6 @@ document.addEventListener("keydown",ev=>{
     },
     {
       target: "#learn-path-banner", place: "bottom",
-      chapter: "Act 3 — Learn as you explore",
       title: "Use-case learning paths",
       body: `Filter by <strong>use case</strong> (Hybrid Work, Zero Trust, SD-WAN …) to overlay the
              reference architecture and show an ordered <strong>dCloud learning path</strong> —
@@ -9304,8 +9299,7 @@ document.addEventListener("keydown",ev=>{
       }
     },
     {
-      target: "#guided-btn", place: "bottom",
-      chapter: "Act 4 — Plan the account",
+      target: "#gw-panel", place: "right",
       title: "Guided Plan — build the account",
       body: `The fastest way to turn exploration into a plan: a <strong>5-step wizard</strong> for industry,
              customer size, what's deployed, and legacy refresh triggers — then auto-builds the stack
@@ -9315,22 +9309,21 @@ document.addEventListener("keydown",ev=>{
       tip: `Press <code>G</code> from anywhere. The button stays green-outlined so you can return to your results.`,
       before: () => {
         document.getElementById("plans-menu")?.classList.remove("show");
-        document.getElementById("gw-overlay")?.classList.remove("show");
+        window.closePanel && window.closePanel();
         const pn = document.getElementById("planner");
         if (pn?.classList.contains("open")) document.getElementById("planner-btn")?.click();
-        window.closePanel && window.closePanel();
+        tourOpenGuidedWizard();
       }
     },
     {
       target: "#planner-btn", place: "bottom",
-      chapter: "Act 4 — Plan the account",
       title: "Account Planner — stack & analyze",
       body: `Everything lands in the <strong>Account Planner</strong>: search and add products, use Quick start
              templates, flag legacy tech, then <strong>Analyze Account</strong> for seven result tabs —
              Suggestions, Upgrades, Hands-on labs, Solution packages, Coverage, Migration plan, and Issues to fix.`,
       ctaText: "Open Planner →",
       before: () => {
-        document.getElementById("gw-overlay")?.classList.remove("show");
+        tourCloseGuidedWizard();
         const pn = document.getElementById("planner");
         if (pn && !pn.classList.contains("open")) document.getElementById("planner-btn").click();
         window.closePanel && window.closePanel();
@@ -9338,7 +9331,6 @@ document.addEventListener("keydown",ev=>{
     },
     {
       target: "#ai-btn", place: "bottom",
-      chapter: "Act 4 — Plan the account",
       title: "Ask AI — your key, your provider",
       body: `Bring your own API key to <strong>OpenRouter</strong>, <strong>Groq</strong>, <strong>LM Studio</strong>,
              <strong>Ollama</strong>, OpenAI, Anthropic, or any OpenAI-compatible endpoint.<br><br>
@@ -9346,29 +9338,27 @@ document.addEventListener("keydown",ev=>{
              automatically enriched with your current account plan context.`,
       tip: `Configure once in the dialog; keys stay in <code>localStorage</code> on this device only.`,
       before: () => {
-        document.getElementById("gw-overlay")?.classList.remove("show");
+        tourCloseGuidedWizard();
         const pn = document.getElementById("planner");
         if (pn?.classList.contains("open")) document.getElementById("planner-btn")?.click();
       }
     },
     {
       target: "#exp-btn", place: "top",
-      chapter: "Act 5 — Deliver",
       title: "Export recommendations & labs",
       body: `Turn the plan into customer-ready output — <strong>Markdown</strong>, <strong>CSV</strong>,
              <strong>JSON</strong>, <strong>PowerPoint</strong>, PDF (via print), or plain text.<br><br>
              Exports include the stack, EOS/EOL migration paths, top recommendations, bundle coverage,
              dCloud lab suggestions, and any AI deliverables you generated in Guided Plan.`,
       before: () => {
+        tourCloseGuidedWizard();
         document.getElementById("exp-menu")?.classList.remove("show");
-        document.getElementById("gw-overlay")?.classList.remove("show");
         const pn = document.getElementById("planner");
         if (pn && !pn.classList.contains("open")) document.getElementById("planner-btn").click();
       }
     },
     {
       target: "#help-fab", place: "left",
-      chapter: "Act 5 — Deliver",
       title: "You're ready!",
       body: `Re-launch this tour anytime with the <strong>?</strong> button or press <code>?</code>.<br><br>
              <strong>Quick keys:</strong> <code>G</code> Guided Plan · <code>/</code> search ·
@@ -9378,13 +9368,10 @@ document.addEventListener("keydown",ev=>{
         try {
           document.getElementById("cmp-panel")?.classList.remove("open");
           window.__cpnV2?.phases?.closeCompare?.();
+          tourCloseGuidedWizard();
           window.closePanel && window.closePanel();
-          document.getElementById("gw-overlay")?.classList.remove("show");
           const pn = document.getElementById("planner");
           if (pn?.classList.contains("open")) document.getElementById("planner-btn")?.click();
-          if (window.getViewMode && window.getViewMode() !== "families") {
-            window.applyViewLevel && window.applyViewLevel("families");
-          }
         } catch(e){}
       }
     },
@@ -9392,6 +9379,26 @@ document.addEventListener("keydown",ev=>{
 
   let stepIdx = 0;
   let active = false;
+
+  function tourCloseGuidedWizard(){
+    document.body.classList.remove("tour-highlight-wizard");
+    document.getElementById("gw-overlay")?.classList.remove("show");
+    document.body.style.overflow = "";
+  }
+  function tourOpenGuidedWizard(){
+    tourCloseGuidedWizard();
+    window.openGuidedWizard && window.openGuidedWizard();
+    document.body.classList.add("tour-highlight-wizard");
+  }
+  function tourResetToOverview(){
+    tourCloseGuidedWizard();
+    const uc = document.getElementById("ucs");
+    if (uc && uc.value) { uc.value = ""; uc.dispatchEvent(new Event("change")); }
+    window.closePanel && window.closePanel();
+    const pn = document.getElementById("planner");
+    if (pn?.classList.contains("open")) document.getElementById("planner-btn")?.click();
+    window.applyViewLevel && window.applyViewLevel("overview");
+  }
 
   function start() {
     stepIdx = 0; active = true;
@@ -9412,10 +9419,7 @@ document.addEventListener("keydown",ev=>{
       document.getElementById("gw-overlay")?.classList.remove("show");
       document.getElementById("cmp-panel")?.classList.remove("open");
       window.__cpnV2?.phases?.closeCompare?.();
-      window.closePanel && window.closePanel();
-      if (window.getViewMode && window.getViewMode() === "spatial") {
-        window.applyViewLevel && window.applyViewLevel("families");
-      }
+      tourResetToOverview();
     } catch(e){}
     if (completed) {
       try {
@@ -9437,10 +9441,9 @@ document.addEventListener("keydown",ev=>{
       const cls = i === stepIdx ? "tp-dot active" : (i < stepIdx ? "tp-dot done" : "tp-dot");
       return `<span class="${cls}"></span>`;
     }).join("");
-    const actLabel = step.chapter ? `${step.chapter} · ` : "";
     const primText = isLast ? (step.finalBtnText || "Done") : (step.ctaText || "Next →");
     popover.innerHTML = `
-      <div class="tp-step">${actLabel}Step ${stepIdx + 1} of ${STEPS.length}</div>
+      <div class="tp-step">Step ${stepIdx + 1} of ${STEPS.length}</div>
       <div class="tp-title">${step.title}</div>
       <div class="tp-body">${step.body}</div>
       ${step.tip ? `<div class="tp-tip">${step.tip}</div>` : ""}
@@ -9604,7 +9607,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.92";
+const APP_VERSION   = "2.31.93";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
