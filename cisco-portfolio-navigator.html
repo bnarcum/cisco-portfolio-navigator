@@ -264,6 +264,8 @@
     body.view-x-dissolve #bg-ambient .bg-glow{opacity:1.28;transition:opacity .35s ease}
     body.view-x-expand #bg-ambient .bg-glow{transform:scale(1.05);transition:transform .35s ease}
     body.spatial-selection-active #spatial-graph canvas{filter:saturate(1.12) brightness(1.06)}
+    body.view-transitioning #spatial-wrap,
+    body.view-transitioning #spatial-graph{pointer-events:none}
     @keyframes view-enter-expand{from{opacity:0;transform:scale(.965)}to{opacity:1;transform:scale(1)}}
     @keyframes view-enter-contract{from{opacity:0;transform:scale(1.03)}to{opacity:1;transform:scale(1)}}
     @keyframes view-enter-dissolve{from{opacity:0;filter:blur(10px) brightness(1.18)}to{opacity:1;filter:none}}
@@ -4842,6 +4844,15 @@ function viewTransitionClass(from, to){
   return "view-x-default";
 }
 
+function clearViewTransitionClasses(){
+  document.body.classList.remove("view-transitioning", "view-x-dissolve", "view-x-expand", "view-x-contract", "view-x-scan", "view-x-focus", "view-x-default");
+  ["gs", "spatial-wrap"].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove("view-exit", "view-enter", "view-x-dissolve", "view-x-expand", "view-x-contract", "view-x-scan", "view-x-focus", "view-x-default");
+  });
+}
+
 function runViewTransition(callback, from, to){
   const gs = document.getElementById("gs");
   const sw = document.getElementById("spatial-wrap");
@@ -4859,8 +4870,7 @@ function runViewTransition(callback, from, to){
         el.classList.add("view-enter", xcls);
       });
       setTimeout(() => {
-        els.forEach(el => el.classList.remove("view-enter", xcls));
-        document.body.classList.remove("view-transitioning", xcls);
+        clearViewTransitionClasses();
       }, 360);
     });
   }, from === "spatial" || to === "spatial" ? 200 : 160);
@@ -6426,6 +6436,7 @@ function updateSpatialNodeGroup(group, node){
   const profile = spatialNodeVisualProfile(node);
   const accent = spatialNodeAccent(node);
   const deco = spatialDecoFade();
+  const rs = spatialNodeBaseScale(node, profile);
   const isHot = selected?.id === node.id || spatialState.hoveredId === node.id;
   const isSel = selected?.id === node.id;
   group.traverse(obj => {
@@ -7161,6 +7172,7 @@ function resolveFamilyFocus(opts = {}){
 }
 
 function enterSpatialView(){
+  clearViewTransitionClasses();
   spatialState.active = true;
   spatialState.linkPreset = readSpatialLinkPreset();
   document.body.classList.add("spatial-open");
@@ -9304,7 +9316,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.65";
+const APP_VERSION   = "2.31.66";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
