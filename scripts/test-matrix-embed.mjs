@@ -48,7 +48,7 @@ try {
   } else if (!panel.hasSec || !panel.hasShowroom || !panel.hasAisle || panel.hasExternal) {
     console.error("FAIL: matrix panel should offer in-app Showroom/Aisle buttons only");
     exitCode = 1;
-  } else if (!panel.url?.includes("embed=cpn") || !panel.url?.includes("device=desk-pro-g2")) {
+  } else if (!panel.url?.includes("embed=cpn") || !panel.url?.includes("device=desk-pro-g2") || !panel.url?.includes("camera=ring")) {
     console.error("FAIL: matrix embed URL missing expected params", panel.url);
     exitCode = 1;
   } else {

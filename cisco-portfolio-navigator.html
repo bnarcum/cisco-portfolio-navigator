@@ -4070,7 +4070,7 @@ let nodeClickTimer = null;
 
 const MATRIX_SITE = "https://bnarcum.github.io/collaboration-device-matrix/";
 /** Bust iframe cache when Device Matrix deploys — bump with each matrix release. */
-const MATRIX_RELEASE = "20260621x";
+const MATRIX_RELEASE = "20260622a";
 const MATRIX_NODE_FILL = "#ffffff";
 const MATRIX_NODE_RING = "#cbd5e1";
 const MATRIX_IMG_BASE = MATRIX_SITE + "devices/";
@@ -4118,7 +4118,8 @@ function matrixDeviceUrl(id, view, opts){
   params.set("embed", "cpn");
   params.set("_v", MATRIX_RELEASE);
   if (view === "aisle") params.set("view", "showcase");
-  if (opts?.camera === "ring") params.set("camera", "ring");
+  else if (opts?.camera === "hero") params.set("camera", "hero");
+  else params.set("camera", "ring");
   return `${base}?${params.toString()}`;
 }
 
@@ -4186,7 +4187,7 @@ function ensureMatrixOverlay(){
           <span class="matrix-overlay-kicker">Device Matrix</span>
           <span class="matrix-overlay-title" id="matrix-overlay-title">Collaboration device</span>
         </div>
-        <button type="button" class="matrix-overlay-mode" id="matrix-overlay-showroom-btn" title="View full category showroom with this device highlighted">Showroom</button>
+        <button type="button" class="matrix-overlay-mode" id="matrix-overlay-showroom-btn" title="Reset to full showroom floor view">Full showroom</button>
         <button type="button" class="matrix-overlay-close" id="matrix-overlay-close" aria-label="Close Device Matrix">×</button>
       </header>
       <div class="matrix-overlay-viewport is-loading">
@@ -4244,7 +4245,7 @@ function openMatrixEmbed(productId, view, opts){
   const loadingText = document.querySelector(".matrix-overlay-loading-text");
   const product = prodById[productId];
   if (titleEl) titleEl.textContent = product?.name || spatialResolveName(productId);
-  if (modeEl) modeEl.textContent = view === "aisle" ? "Aisle" : "Showroom";
+  if (modeEl) modeEl.textContent = view === "aisle" ? "Aisle" : "Full showroom";
   if (loadingText) loadingText.textContent = view === "aisle" ? "Loading Device Aisle…" : "Loading 3D Showroom…";
   setMatrixOverlayLoading(true);
   if (frame){
@@ -9654,7 +9655,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.81";
+const APP_VERSION   = "2.31.83";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
