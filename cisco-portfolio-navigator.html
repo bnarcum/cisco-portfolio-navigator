@@ -3868,23 +3868,23 @@ function applyAllProductsNodeStyles(selectedNode){
     const hot = isSel || isHov || isConn;
     const inStk = stack.has(d.id);
     g.select(".gr")
-      .attr("r", d._r + (isFamily ? 9 : 4))
+      .attr("r", d._r + (isFamily ? 10 : 5))
       .attr("fill", color)
-      .attr("fill-opacity", hot ? 0.32 : (inStk ? 0.26 : (isFamily ? 0.14 : 0.1)))
+      .attr("fill-opacity", hot ? 0.40 : (inStk ? 0.32 : (isFamily ? 0.24 : 0.16)))
       .attr("filter", "url(#glow)");
     g.select(".mc")
       .attr("r", d._r)
       .attr("fill", color)
-      .attr("fill-opacity", hot || inStk ? 1 : 0.88)
-      .attr("stroke", isSel ? "#ffffff" : (inStk ? "#FFD700" : (p?.status === "eol" ? "#ef4444" : p?.status === "eos" ? "#FF9000" : "transparent")))
-      .attr("stroke-width", isSel ? 2.2 : (inStk || (p?.status && p.status !== "current") ? 1.4 : 0))
-      .attr("stroke-opacity", 1);
+      .attr("fill-opacity", hot || inStk ? 1 : (isFamily ? 0.98 : 0.94))
+      .attr("stroke", isSel ? "#ffffff" : (inStk ? "#FFD700" : (p?.status === "eol" ? "#ef4444" : p?.status === "eos" ? "#FF9000" : color)))
+      .attr("stroke-width", isSel ? 2.6 : (inStk ? 2.2 : (isFamily ? 2.35 : 2)))
+      .attr("stroke-opacity", hot || inStk || isFamily ? 1 : 0.9);
     g.select("image.pimg").remove();
     g.select("circle.mring").attr("stroke", "transparent").attr("stroke-width", 0);
     g.select("use.icn")
       .attr("href", "#icon-" + iconKey(d))
       .style("display", null)
-      .attr("opacity", hot || inStk ? 1 : 0.9);
+      .attr("opacity", hot || inStk ? 1 : (isFamily ? 1 : 0.96));
     g.select(".node-scaler").attr("transform", hot ? "scale(1.08)" : null);
   });
   applyAllProductsLabelStyles(selectedNode);
@@ -3896,7 +3896,7 @@ const svg = d3.select(svgEl);
 const getDims = () => ({w: svgEl.clientWidth, h: svgEl.clientHeight});
 
 const defs = svg.append("defs");
-defs.append("filter").attr("id","glow").html(`<feGaussianBlur stdDeviation="4" result="blur"/>
+defs.append("filter").attr("id","glow").html(`<feGaussianBlur stdDeviation="5" result="blur"/>
   <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>`);
 
 /* ── Graph icons: official Cisco brand symbols (assets/cisco-symbols.js) + Overview deck marks. */
@@ -5704,7 +5704,7 @@ function buildAllProductsView(){
     const cnt = PRODUCTS.filter(p => p.family === n.id).length;
     return Object.assign({}, n, {
       _kind: "family",
-      _r: 22,
+      _r: 24,
       _badge: cnt > 0 ? String(cnt) : null,
       // Reset any prior pin from Composition.
       fx: null, fy: null, _pinned: false
@@ -5712,7 +5712,7 @@ function buildAllProductsView(){
   });
   const productNodes = PRODUCTS.map(p => ({
     id: p.id, name: p.name, category: p.category,
-    _kind: "product", _r: 7,
+    _kind: "product", _r: 9,
     _productRef: p, _family: p.family,
     _iconKey: productIconKey(p),
     _hasImage: false,
@@ -5980,20 +5980,20 @@ function spatialHexToNum(hex){
 
 function spatialCategoryPalette(node){
   const palettes = {
-    networking:    { base: "#02a8d4", emissive: "#003344", glow: "#02c8ff" },
-    collaboration: { base: "#28b863", emissive: "#0a2818", glow: "#3ddf7a" },
-    security:      { base: "#e08000", emissive: "#331a00", glow: "#ff9000" },
-    computing:     { base: "#0850dd", emissive: "#001a44", glow: "#0a60ff" },
-    observability: { base: "#d07010", emissive: "#2a1800", glow: "#ff9000" }
+    networking:    { base: "#02C8FF", emissive: "#001828", glow: "#66e8ff", icon: "#ffffff" },
+    collaboration: { base: "#34d86a", emissive: "#082818", glow: "#5ef090", icon: "#ffffff" },
+    security:      { base: "#FF9000", emissive: "#2a1400", glow: "#ffb84d", icon: "#ffffff" },
+    computing:     { base: "#0A60FF", emissive: "#001038", glow: "#4d8cff", icon: "#ffffff" },
+    observability: { base: "#FF9000", emissive: "#2a1400", glow: "#ffb84d", icon: "#ffffff" }
   };
   return palettes[node.category] || palettes.networking;
 }
 
 function spatialNodeAccent(node){
-  if (selected && selected.id === node.id) return { core: 0xffffff, emissive: 0x224466, glow: 0x66e0ff, emissiveInt: 0.55, glowOp: 0.48 };
-  if (stack.has(node.id)) return { core: 0xffffff, emissive: 0x1a3344, glow: 0x02c8ff, emissiveInt: 0.42, glowOp: 0.38 };
+  if (selected && selected.id === node.id) return { core: 0xffffff, emissive: 0x224466, glow: 0x66e0ff, emissiveInt: 0.62, glowOp: 0.52 };
+  if (stack.has(node.id)) return { core: 0xffffff, emissive: 0x1a3344, glow: 0x02c8ff, emissiveInt: 0.48, glowOp: 0.42 };
   const p = spatialCategoryPalette(node);
-  return { core: spatialHexToNum(p.base), emissive: spatialHexToNum(p.emissive), glow: spatialHexToNum(p.glow), emissiveInt: 0.32, glowOp: 0.24 };
+  return { core: spatialHexToNum(p.base), emissive: spatialHexToNum(p.emissive), glow: spatialHexToNum(p.glow), emissiveInt: 0.38, glowOp: 0.34 };
 }
 
 function spatialFiltersActive(){
@@ -6173,7 +6173,7 @@ function spatialNodeCategory(node){
 function spatialNodeVisualProfile(node){
   const inOrbit = !!spatialState.focusFamily;
   const isHub = inOrbit && node.id === spatialState.focusFamily;
-  if (!inOrbit) return { mode: "constellation", tileScale: 2.55, tileMin: 13.5, labelGap: 1.55, ringScale: 1.08 };
+  if (!inOrbit) return { mode: "constellation", tileScale: 2.72, tileMin: 14.5, labelGap: 1.55, ringScale: 1.12 };
   if (isHub || node.kind === "family") return { mode: "hub", tileScale: 1.55, tileMin: 10.5, labelGap: 1.45, ringScale: 1.22 };
   return { mode: "product", tileScale: 1.18, tileMin: 8.5, labelGap: 1.25, ringScale: 1.14 };
 }
@@ -6223,7 +6223,7 @@ function spatialTileCacheKey(node){
   return [
     node.id,
     photoUrl ? "matrix:" + photoUrl : "icon:" + spatialIconKeyForNode(node),
-    "tile-v5",
+    "tile-v6",
     profile.mode,
     accent.core,
     selected?.id === node.id ? "sel" : "",
@@ -6239,23 +6239,29 @@ function buildSpatialTileSvg(node){
   const inner = spatialSymbolInner(iconKey);
   const isSel = selected?.id === node.id;
   const isStk = stack.has(node.id);
-  const stroke = isSel ? "#66e0ff" : (isStk ? "#02c8ff" : glow);
-  const strokeW = isSel ? 5 : (isStk ? 4 : 3);
+  const stroke = isSel ? "#66e0ff" : (isStk ? "#02C8FF" : "#02C8FF");
+  const strokeW = isSel ? 5.5 : (isStk ? 4.5 : 3.75);
+  const coreDark = "#040c18";
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
     <defs>
-      <radialGradient id="core" cx="50%" cy="46%" r="58%">
+      <radialGradient id="core" cx="50%" cy="42%" r="62%">
         <stop offset="0%" stop-color="${fill}" stop-opacity="1"/>
-        <stop offset="78%" stop-color="${fill}" stop-opacity="0.96"/>
-        <stop offset="100%" stop-color="${glow}" stop-opacity="0.55"/>
+        <stop offset="58%" stop-color="${fill}" stop-opacity="0.98"/>
+        <stop offset="100%" stop-color="${coreDark}" stop-opacity="0.92"/>
       </radialGradient>
-      <filter id="halo" x="-30%" y="-30%" width="160%" height="160%">
-        <feGaussianBlur stdDeviation="5.5" result="b"/>
+      <filter id="halo" x="-35%" y="-35%" width="170%" height="170%">
+        <feGaussianBlur stdDeviation="6.5" result="b"/>
         <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
+      <filter id="iconPop" x="-40%" y="-40%" width="180%" height="180%">
+        <feDropShadow dx="0" dy="1" stdDeviation="1.2" flood-color="#000000" flood-opacity="0.55"/>
+        <feDropShadow dx="0" dy="0" stdDeviation="0.6" flood-color="#ffffff" flood-opacity="0.35"/>
+      </filter>
     </defs>
-    <circle cx="128" cy="128" r="112" fill="${glow}" opacity="0.22" filter="url(#halo)"/>
-    <circle cx="128" cy="128" r="94" fill="url(#core)" stroke="${stroke}" stroke-width="${strokeW}" stroke-opacity="0.72"/>
-    <g transform="translate(128,128) scale(0.68) translate(-128,-128)" fill="#ffffff" stroke="#ffffff" stroke-width="0">${inner}</g>
+    <circle cx="128" cy="128" r="116" fill="${glow}" opacity="0.34" filter="url(#halo)"/>
+    <circle cx="128" cy="128" r="96" fill="url(#core)" stroke="${stroke}" stroke-width="${strokeW}" stroke-opacity="1"/>
+    <circle cx="128" cy="128" r="54" fill="${coreDark}" opacity="0.42"/>
+    <g transform="translate(128,128) scale(0.76) translate(-128,-128)" fill="#ffffff" stroke="none" filter="url(#iconPop)">${inner}</g>
   </svg>`;
 }
 
@@ -6308,7 +6314,7 @@ function getSpatialTileSprite(node, radius, profile){
     map,
     transparent: true,
     depthWrite: false,
-    opacity: 0.98
+    opacity: 1
   });
   const sprite = new THREE.Sprite(mat);
   const s = spatialTileWorldSize(radius, profile);
@@ -6349,7 +6355,7 @@ function updateSpatialNodeGroup(group, node){
   group.traverse(obj => {
     if (obj.userData?.role === "halo" && obj.material){
       obj.material.color.setHex(accent.glow);
-      obj.material.opacity = (isHot ? accent.glowOp * 1.15 : accent.glowOp * 0.92) * deco;
+      obj.material.opacity = (isHot ? accent.glowOp * 1.22 : accent.glowOp * 1.02) * deco;
     }
     if (obj.userData?.role === "label"){
       styleSpatialLabelSprite(obj, node);
@@ -6383,7 +6389,7 @@ function buildSpatialNodeObject(node){
     blending: 2,
   });
   halo.userData.role = "halo";
-  halo.scale.set(rs * 1.35, rs * 0.08, rs * 1.35);
+  halo.scale.set(rs * 1.42, rs * 0.08, rs * 1.42);
   halo.rotation.x = Math.PI / 2;
   group.add(halo);
 
@@ -6847,11 +6853,11 @@ function styleSpatialLabelSprite(sprite, node){
   const isSel = selected && selected.id === node.id;
   const isStk = stack.has(node.id);
   const isHov = spatialState.hoveredId === node.id;
-  sprite.color = isSel ? "#ffffff" : (isHov ? "#f4fbff" : "#eef6ff");
+  sprite.color = isSel ? "#ffffff" : (isHov ? "#ffffff" : "#f4fbff");
   sprite.backgroundColor = "rgba(0,0,0,0)";
-  sprite.textHeight = textH * (isSel ? 1.06 : 1);
-  sprite.strokeColor = isSel ? "rgba(2,200,255,0.85)" : (isStk ? "rgba(2,200,255,0.55)" : "rgba(2,200,255,0.28)");
-  sprite.strokeWidth = isSel ? 0.65 : (isStk ? 0.45 : 0.35);
+  sprite.textHeight = textH * (isSel ? 1.08 : 1.02);
+  sprite.strokeColor = isSel ? "rgba(2,200,255,0.95)" : (isStk ? "rgba(2,200,255,0.72)" : "rgba(2,200,255,0.42)");
+  sprite.strokeWidth = isSel ? 0.72 : (isStk ? 0.52 : 0.42);
   sprite.padding = 0;
   sprite.borderRadius = 0;
 }
@@ -9275,7 +9281,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.62";
+const APP_VERSION   = "2.31.63";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
