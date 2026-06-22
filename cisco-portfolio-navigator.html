@@ -5987,6 +5987,28 @@ function spatialNodeBounds(nodes, opts = {}){
   };
 }
 
+function spatialChromeInsets(){
+  return { top: 54, bottom: 76, left: 44, right: 36 };
+}
+
+function spatialFitCameraDistance(span, nodeCount, filtered, fitKey){
+  const F = SPATIAL_FIT[fitKey || "mesh"];
+  const padded = span + (F.pad || 0) * 2;
+  let dist = padded * F.spanMul + F.spanAdd;
+  const { w, h } = getSpatialDims();
+  const ins = spatialChromeInsets();
+  const availW = Math.max(320, w - ins.left - ins.right - F.marginX);
+  const availH = Math.max(240, h - ins.top - ins.bottom - F.marginY);
+  const aspect = availW / Math.max(1, availH);
+  const fillDist = padded / Math.min(F.widthFill, F.heightFill * aspect) * 0.94;
+  dist = Math.max(dist, fillDist);
+  if (fitKey === "mesh"){
+    dist = Math.max(dist, spatialCameraDistance(span, nodeCount, filtered) * (F.legacyScale || 1));
+    if (filtered) dist *= 1.08;
+  }
+  return Math.min(F.maxDist, Math.max(F.minDist, dist));
+}
+
 function spatialCameraDistance(span, nodeCount, filtered){
   const n = Math.max(1, nodeCount);
   if (n <= 2) return Math.min(200, Math.max(125, span * 1.05 + 90));
@@ -6005,7 +6027,7 @@ function spatialFrameCamera(ms = 500){
   const bounds = spatialNodeBounds(nodes);
   if (!bounds) return false;
   const { cx, cy, cz, span } = bounds;
-  const dist = spatialCameraDistance(span, nodes.length, spatialState.filterActive);
+  const dist = spatialFitCameraDistance(span, nodes.length, spatialState.filterActive, "mesh");
   spatialState.graph.cameraPosition(
     { x: cx, y: cy + span * 0.24, z: cz + dist * 0.92 },
     { x: cx, y: cy - span * 0.04, z: cz },
@@ -6024,7 +6046,7 @@ function spatialOrbitCamera(ms = 500){
     return true;
   }
   const { cx, cy, cz, span } = bounds;
-  const dist = Math.min(165, Math.max(92, span * 1.08 + 78));
+  const dist = spatialFitCameraDistance(span, nodes.length, false, "orbit");
   spatialState.graph.cameraPosition(
     { x: cx, y: cy + span * 0.22, z: cz + dist * 0.94 },
     { x: cx, y: cy - span * 0.03, z: cz },
@@ -9195,7 +9217,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.59";
+const APP_VERSION   = "2.31.60";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
