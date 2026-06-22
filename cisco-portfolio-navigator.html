@@ -11014,7 +11014,7 @@ function buildExportMenu(){
     else if (fmt === "csv")  exportCSV();
     else if (fmt === "json") exportJSON();
     else if (fmt === "pdf")  exportPDF();
-    else if (fmt === "pptx") { try { exportPPTX(); } catch(err){ console.warn("PPTX export failed", err); showToast("PPTX export failed — see console"); } }
+    else if (fmt === "pptx") { exportPPTX().catch(err => { console.warn("PPTX export failed", err); showToast("PPTX export failed — try PDF"); }); }
     else if (fmt === "txt")  exportText();
   }));
 }
@@ -11048,7 +11048,7 @@ function exportText(){
 }
 
 function planSummary(){
-  const acct = $("#acct-name").value.trim() || "Unnamed Account";
+  const acct = ($("#acct-name")?.value || "").trim() || "Unnamed Account";
   const date = new Date().toLocaleDateString("en-US", {year:"numeric", month:"long", day:"numeric"});
   const profile = lsGet(STORAGE_KEYS.profile, {});
   const items = [...stack].map(id => {
@@ -11226,20 +11226,20 @@ function exportPptxDcloudSlide(pp, demos){
   demos.slice(0, 5).forEach((d, i) => {
     const y = 1.35 + i * 1.05;
     const meta = [d.duration, d.level, d.demoType === "instant" ? "Instant" : ""].filter(Boolean).join(" · ");
-    sl.addText(`${i + 1}. ${d.label}`, {
-      x:0.6, y, w:12, h:0.32, fontSize:14, bold:true, color:"FFFFFF",
-      hyperlink: { url: d.instantUrl || d.catalogUrl, tooltip: d.name || d.label }
-    });
+    const url = (d.instantUrl || d.catalogUrl || "").trim();
+    const titleOpts = { x:0.6, y, w:12, h:0.32, fontSize:14, bold:true, color:"FFFFFF" };
+    if (url) titleOpts.hyperlink = { url, tooltip: d.name || d.label };
+    sl.addText(`${i + 1}. ${d.label}`, titleOpts);
     if (meta) sl.addText(meta, { x:0.7, y: y + 0.28, w:11.5, h:0.22, fontSize:9, color:"6E7681" });
     const obj = d.learningObjectives?.[0] || d.hint;
     if (obj){
       const short = obj.length > 100 ? obj.slice(0, 97) + "…" : obj;
       sl.addText(short, { x:0.7, y: y + 0.48, w:11.5, h:0.35, fontSize:10, color:"8B949E" });
     }
-    sl.addText(d.instantUrl || d.catalogUrl, {
-      x:0.7, y: y + 0.82, w:11.5, h:0.22, fontSize:9, color:"00BCEB",
-      hyperlink: { url: d.instantUrl || d.catalogUrl }
-    });
+    if (url){
+      const linkOpts = { x:0.7, y: y + 0.82, w:11.5, h:0.22, fontSize:9, color:"00BCEB", hyperlink: { url } };
+      sl.addText(url, linkOpts);
+    }
   });
   const note = typeof DCLOUD_DEFAULTS !== "undefined" ? DCLOUD_DEFAULTS.loginNote : "Cisco.com login required";
   if (note) sl.addText(note, { x:0.6, y:6.85, w:12, h:0.3, fontSize:9, color:"6E7681", italic:true });
@@ -11262,16 +11262,22 @@ function exportPptxAiDeliverables(pp) {
   });
 }
 
-function exportPPTX(){
+function exportPptxFileName(acct){
+  const slug = String(acct || "plan").replace(/[^\w\-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+  return `Cisco_Plan_${slug || "plan"}.pptx`;
+}
+
+async function exportPPTX(){
   if (typeof PptxGenJS === "undefined"){
     showToast("Loading PPTX library…");
     const s = document.createElement("script");
     s.src = "https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.min.js";
-    s.onload  = () => exportPPTX();
+    s.onload  = () => { exportPPTX().catch(err => { console.warn("PPTX export failed", err); showToast("PPTX export failed — try PDF"); }); };
     s.onerror = () => showToast("PPTX export needs internet — try PDF instead");
     document.head.appendChild(s);
     return;
   }
+  try {
   const pp = new PptxGenJS();
   const sm = planSummary();
   pp.layout = "LAYOUT_WIDE";
@@ -11349,7 +11355,7 @@ function exportPPTX(){
   sl.background = { color: "0D1117" };
   sl.addText("One Cisco Framing", { x:0.5, y:0.4, w:12, h:0.5, fontSize:24, bold:true, color:"00BCEB" });
   sl.addText(sm.connectivityLabel || "Secure global connectivity", { x:0.6, y:1.0, w:12, h:0.4, fontSize:14, bold:true, color:"FFFFFF" });
-  sm.pillars.forEach((p, i) => {
+  sm.pillars?.forEach((p, i) => {
     const y = 1.55 + i * 0.72;
     const hex = (p.color || "02C8FF").replace("#", "");
     sl.addShape(pp.ShapeType.roundRect, { x:0.6, y, w:0.35, h:0.35, fill:{color:hex}, rectRadius:0.08 });
@@ -11358,7 +11364,7 @@ function exportPPTX(){
       x:5.2, y, w:7, h:0.35, fontSize:11, color: p.covered ? "2DCE5C" : "8B949E"
     });
   });
-  if (sm.stackConnections.length){
+  if (sm.stackConnections?.length){
     sl.addText(`Stack integrations (${sm.stackConnections.length})`, { x:0.6, y:3.85, w:12, h:0.3, fontSize:11, bold:true, color:"00BCEB" });
     sm.stackConnections.slice(0, 5).forEach((c, i) => {
       const y = 4.2 + i * 0.42;
@@ -11399,8 +11405,12 @@ function exportPPTX(){
   sl.addText(`v${APP_VERSION} · ${new Date().toISOString().slice(0,10)}`,
     { x:0.5, y:3.9, w:12, h:0.4, fontSize:12, color:"6E7681", align:"center" });
 
-  pp.writeFile({ fileName: `Cisco_Plan_${String(sm.acct||"plan").replace(/\s+/g,"-")}.pptx` });
+  await pp.writeFile({ fileName: exportPptxFileName(sm.acct) });
   showToast("PPTX exported");
+  } catch (err) {
+    console.warn("PPTX export failed", err);
+    showToast("PPTX export failed — try PDF");
+  }
 }
 
 /* ════════════════════════════════════════════════════════════════════════
