@@ -1686,7 +1686,7 @@ const NODES = [
    useCases:["Hybrid Work","Network Automation","Digital Transformation","AI Networking"],
    industries:["Healthcare","Financial Services","Education","Government","Manufacturing","Retail"],
    url:"https://cloud.cisco.com",
-   docsUrl:"https://www.cisco.com/site/us/en/products/cloud-systems-management/cloud-control/index.html"},
+   docsUrl:"https://www.cisco.com/c/en/us/support/cloud-systems-management/index.html"},
   {id:"thousandeyes",      name:"Cisco ThousandEyes",          category:"observability",
    desc:"Network intelligence delivering end-to-end visibility across internet, cloud, enterprise WAN, and SaaS — identifying issues before users are impacted.",
    useCases:["SD-WAN / SASE","Hybrid Work","Cloud Migration","Network Automation","Digital Transformation"],
@@ -3086,13 +3086,16 @@ const PRODUCTS = [
   // ── CLOUD CONTROL (Current)
   {id:"control-hub",       name:"Collaboration Control Hub",   family:"cloud-control", status:"current",
    desc:"Admin console for Webex, Cisco devices, workspaces, services, and third-party integrations — the collaboration face of Cisco Cloud Control.",
-   url:"https://admin.webex.com"},
+   url:"https://admin.webex.com",
+   docsUrl:"https://help.webex.com/en-us/collaboration-control"},
   {id:"ai-canvas",         name:"AI Canvas",                   family:"cloud-control", status:"current",
    desc:"Multiplayer agentic workspace for deep troubleshooting — natural language, widgets, knowledge base, and collaborative remediation.",
-   url:"https://cloud.cisco.com"},
+   url:"https://cloud.cisco.com",
+   docsUrl:"https://help.webex.com/en-us/cloud-control"},
   {id:"ai-assistant-cc",   name:"Cloud Control AI Assistant",  family:"cloud-control", status:"current",
    desc:"Conversational copilot inside Cloud Control — contextual Q&A and quick actions on the page you are viewing.",
-   url:"https://cloud.cisco.com"},
+   url:"https://cloud.cisco.com",
+   docsUrl:"https://help.webex.com/en-us/cloud-control"},
 
   // ── FSO (Current)
   {id:"fso-platform",   name:"FSO Platform Subscription",     family:"fso", status:"current",
@@ -3110,7 +3113,8 @@ const prodById = Object.fromEntries(PRODUCTS.map(p => [p.id, p]));
 const EXTERNAL_URL_REWRITES = {
   "https://www.webex.com/connect.html": "https://www.webex.com/us/en/products/customer-experience/cpaas/webex-connect.html",
   "https://www.webex.com/engage.html": "https://www.webex.com/contact-center.html",
-  "https://www.webex.com/contact-center/pricing.html": "https://www.webex.com/contact-center.html"
+  "https://www.webex.com/contact-center/pricing.html": "https://www.webex.com/contact-center.html",
+  "https://www.cisco.com/site/us/en/products/cloud-systems-management/cloud-control/index.html": "https://www.cisco.com/c/en/us/support/cloud-systems-management/index.html"
 };
 
 function rewriteExternalUrl(url){
@@ -3124,6 +3128,11 @@ function productPageUrl(record){
 
 function documentationUrl(record){
   return rewriteExternalUrl(record?.docsUrl || record?.url || "");
+}
+
+function resolveDocumentationUrl(record, family){
+  const fam = family || (record?.family ? nodeById[record.family] : null);
+  return rewriteExternalUrl(record?.docsUrl || fam?.docsUrl || record?.url || fam?.url || "");
 }
 // Assign category to products from parent node
 PRODUCTS.forEach(p => { p.category = nodeById[p.family]?.category || "networking"; });
@@ -6524,12 +6533,20 @@ function spatialLabelOffsetY(node, radius, profile){
   const tileSize = spatialTileWorldSize(radius, profile);
   const textH = spatialLabelTextHeight(node);
   const gap = profile.labelGap ?? 1.35;
-  return tileSize * 0.52 + gap + textH * 0.52;
+  return tileSize * 0.58 + gap + textH * 0.15;
 }
 
 function spatialSymbolInner(iconKey){
   const sym = document.getElementById("icon-" + iconKey);
   return sym ? sym.innerHTML : document.getElementById("icon-product")?.innerHTML || "";
+}
+
+/** Cisco symbols are 80×80; scale and center them inside the spatial tile disc. */
+function spatialSymbolMarkup(iconKey){
+  const inner = spatialSymbolInner(iconKey);
+  if (!inner) return "";
+  const scale = 1.62;
+  return `<g transform="translate(128 128) scale(${scale}) translate(-40 -40)">${inner}</g>`;
 }
 
 function spatialAccentHex(accent, channel){
@@ -6551,7 +6568,7 @@ function spatialTileCacheKey(node){
   return [
     node.id,
     photoUrl ? "matrix:" + photoUrl : "icon:" + spatialIconKeyForNode(node),
-    "tile-v7",
+    "tile-v8",
     profile.mode,
     accent.core,
     selected?.id === node.id ? "sel" : "",
@@ -6564,7 +6581,7 @@ function buildSpatialTileSvg(node){
   const palette = spatialCategoryPalette(node);
   const fill = palette.base;
   const glow = palette.glow;
-  const inner = spatialSymbolInner(iconKey);
+  const inner = spatialSymbolMarkup(iconKey);
   const isSel = selected?.id === node.id;
   const isStk = stack.has(node.id);
   const stroke = isSel ? "#66e0ff" : (isStk ? "#02C8FF" : "#02C8FF");
@@ -6572,10 +6589,10 @@ function buildSpatialTileSvg(node){
   const coreDark = "#040c18";
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
     <defs>
-      <radialGradient id="core" cx="50%" cy="42%" r="62%">
+      <radialGradient id="core" cx="50%" cy="50%" r="58%">
         <stop offset="0%" stop-color="${fill}" stop-opacity="1"/>
-        <stop offset="58%" stop-color="${fill}" stop-opacity="0.98"/>
-        <stop offset="100%" stop-color="${coreDark}" stop-opacity="0.92"/>
+        <stop offset="55%" stop-color="${fill}" stop-opacity="0.98"/>
+        <stop offset="100%" stop-color="${coreDark}" stop-opacity="0.94"/>
       </radialGradient>
       <filter id="halo" x="-35%" y="-35%" width="170%" height="170%">
         <feGaussianBlur stdDeviation="7" result="b"/>
@@ -6588,9 +6605,9 @@ function buildSpatialTileSvg(node){
     </defs>
     <circle cx="128" cy="128" r="118" fill="${glow}" opacity="0.42" filter="url(#halo)"/>
     <circle cx="128" cy="128" r="98" fill="url(#core)" stroke="${stroke}" stroke-width="${strokeW}" stroke-opacity="1"/>
-    <circle cx="128" cy="128" r="52" fill="${coreDark}" opacity="0.9"/>
-    <circle cx="128" cy="128" r="50" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.22"/>
-    <g transform="translate(128,128) scale(1.12) translate(-128,-128)" fill="#ffffff" stroke="#07182d" stroke-width="1.35" stroke-opacity="0.72" paint-order="stroke fill" filter="url(#iconPop)">${inner}</g>
+    <circle cx="128" cy="128" r="58" fill="${coreDark}" opacity="0.92"/>
+    <circle cx="128" cy="128" r="56" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.24"/>
+    <g fill="#ffffff" stroke="#07182d" stroke-width="1.1" stroke-opacity="0.75" paint-order="stroke fill" filter="url(#iconPop)">${inner}</g>
   </svg>`;
 }
 
@@ -7145,7 +7162,7 @@ function getSpatialLabelSprite(node){
     sprite.padding = 2.5;
     sprite.borderRadius = 4;
     sprite.fontWeight = "600";
-    sprite.center.y = -1.08;
+    sprite.center.set(0.5, 0);
     if (sprite.material){
       sprite.material.depthWrite = false;
       sprite.material.depthTest = false;
@@ -8145,7 +8162,7 @@ window.showProductDetail = function(id) {
         <div class="ra">›</div></div></div>`:""}
     <div class="p-sec"><div class="p-sec-t">Product Resources</div><div class="lb">
       <a class="la" href="${productPageUrl(p)}" target="_blank" rel="noopener">Product Page / EOL Notice <span>cisco.com ↗</span></a>
-      ${node ? `<a class="la" href="${documentationUrl(node)}" target="_blank" rel="noopener">Documentation <span>docs ↗</span></a>` : ""}
+      ${node ? `<a class="la" href="${resolveDocumentationUrl(p, node)}" target="_blank" rel="noopener">Documentation <span>docs ↗</span></a>` : ""}
     </div></div>`;
 
   const addBtn = document.createElement("button");
@@ -9612,7 +9629,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.79";
+const APP_VERSION   = "2.31.80";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
