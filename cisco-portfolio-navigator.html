@@ -1170,7 +1170,7 @@ const OVERVIEW_FIT = { pad: 40, widthFill: 0.68, heightFill: 0.52, maxK: 1.12, m
 
 /** Families pillar layout — all pillars vs single-pillar focus. */
 const PILLAR_FIT = {
-  all: { pad: 40, widthFill: 0.72, heightFill: 0.56, maxK: 1.06, minK: 0.68, marginX: 48, marginY: 96 },
+  all: { pad: 28, widthFill: 0.90, heightFill: 0.86, maxK: 1.68, minK: 0.72, marginX: 36, marginY: 72 },
   focus: { pad: 32, widthFill: 0.78, heightFill: 0.68, maxK: 1.28, minK: 0.72, marginX: 56, marginY: 88 },
 };
 
@@ -4496,11 +4496,12 @@ function nodeVisibleForFit(n){
   return true;
 }
 
-function applyGraphTransform(cx, cy, k, immediate){
+function applyGraphTransform(cx, cy, k, immediate, opts){
   const {w, h} = getDims();
   const { left, top, right } = graphChromeInsets();
   const tx = (w - right + left) / 2;
-  const ty = (h + top) / 2;
+  const topBias = opts?.topBias ?? 1;
+  const ty = (h + top * topBias) / 2;
   const t = d3.zoomIdentity.translate(tx, ty).scale(k).translate(-cx, -cy);
   if (immediate){
     svg.interrupt();
@@ -4641,10 +4642,10 @@ function fitPillarLayoutView(){
   const { left, top, right } = graphChromeInsets();
   const bw = maxX - minX, bh = maxY - minY;
   const availW = Math.max(320, w - right - left - F.marginX);
-  const availH = Math.max(240, h - top - F.marginY);
+  const availH = Math.max(240, (focused ? h - top : h) - F.marginY);
   const k = Math.min(F.maxK, Math.max(F.minK,
     Math.min(availW / bw * F.widthFill, availH / bh * F.heightFill)));
-  applyGraphTransform(0, (minY + maxY) / 2, k);
+  applyGraphTransform(0, (minY + maxY) / 2, k, false, focused ? undefined : { topBias: 0.18 });
 }
 
 let graphFitTimer = null;
@@ -9217,7 +9218,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.60";
+const APP_VERSION   = "2.31.61";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
