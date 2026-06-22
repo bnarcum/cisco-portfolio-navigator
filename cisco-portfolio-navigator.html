@@ -695,6 +695,40 @@
     .p-dcloud-browse-all{background:transparent;border:1px dashed rgba(0,212,255,.35);color:#8ecae0}
     .p-dcloud-browse-all:hover{border-color:#00d4ff;color:#fff}
     .p-dcloud-eco{font-size:11px;color:#c4e8f8;margin:0 0 10px;line-height:1.45;font-style:italic}
+    .p-learn{margin-top:0}
+    .p-learn-card{background:rgba(6,20,38,.72);border:1px solid rgba(168,85,247,.22);border-radius:10px;padding:12px 14px}
+    .p-learn-skills .p-learn-card{border-color:rgba(124,58,237,.35)}
+    .p-learn-partner .p-learn-card{border-color:rgba(251,191,36,.28)}
+    .p-learn-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+    .p-learn-title{font-size:13px;font-weight:700;color:#fff;letter-spacing:.01em}
+    .p-learn-badge{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+      padding:3px 7px;border-radius:5px;background:rgba(124,58,237,.2);color:#e9d5ff;border:1px solid rgba(192,132,252,.35)}
+    .p-learn-partner .p-learn-badge{background:rgba(251,191,36,.15);color:#fde68a;border-color:rgba(251,191,36,.35)}
+    .p-learn-hint{font-size:11px;color:#d8ecfa;margin-bottom:10px;line-height:1.45;font-weight:500}
+    .p-learn-entry{margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid rgba(124,58,237,.12)}
+    .p-learn-partner .p-learn-entry{border-bottom-color:rgba(251,191,36,.12)}
+    .p-learn-entry:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+    .p-learn-entry-head{font-size:12.5px;font-weight:700;color:#fff;line-height:1.35;margin-bottom:4px}
+    .p-learn-meta-row{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-bottom:6px}
+    .p-learn-chip{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+      padding:2px 6px;border-radius:4px;background:rgba(124,58,237,.15);color:#ddd6fe;border:1px solid rgba(167,139,250,.3)}
+    .p-learn-chip--cu{background:rgba(0,212,255,.12);color:#b8f0ff;border-color:rgba(0,212,255,.35)}
+    .p-learn-chip--wa{background:rgba(45,206,92,.15);color:#bbf7d0;border-color:rgba(45,206,92,.35)}
+    .p-learn-chip--bb{background:rgba(251,191,36,.12);color:#fde68a;border-color:rgba(251,191,36,.35)}
+    .p-learn-entry-hint{font-size:11px;color:#c4e8f8;margin:0 0 6px;line-height:1.45}
+    .la-learn{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:7px;
+      text-decoration:none;background:rgba(124,58,237,.1);border:1px solid rgba(167,139,250,.25);transition:all .15s}
+    .la-learn:hover{border-color:#a78bfa;background:rgba(124,58,237,.2)}
+    .p-learn-partner .la-learn{background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.25)}
+    .p-learn-partner .la-learn:hover{border-color:#fbbf24;background:rgba(251,191,36,.16)}
+    .la-learn-main{font-weight:700;flex:1;min-width:0;padding-right:8px;color:#fff;font-size:12.5px}
+    .la-learn-meta{font-size:10px;font-weight:700;padding:4px 8px;border-radius:5px;background:rgba(124,58,237,.85);color:#fff;white-space:nowrap;flex-shrink:0}
+    .la-learn:hover .la-learn-meta{background:#fff;color:#4c1d95}
+    .p-learn-partner .la-learn-meta{background:rgba(251,191,36,.85);color:#422006}
+    .p-learn-partner .la-learn:hover .la-learn-meta{background:#fff;color:#78350f}
+    .p-learn-note{font-size:10px;color:#94c8e0;margin-top:10px;line-height:1.45;display:flex;gap:6px;align-items:flex-start}
+    .p-learn-note::before{content:"ℹ";font-size:10px;font-weight:700;color:#a78bfa;flex-shrink:0;margin-top:1px}
+    .p-learn-partner .p-learn-note::before{color:#fbbf24}
     #learn-path-banner{position:relative;left:auto;transform:none;
       display:none;width:100%;max-width:min(920px,calc(100vw - 40px));
       max-height:min(42vh,360px);overflow-y:auto;padding:10px 14px;border-radius:10px;
@@ -9357,7 +9391,9 @@ document.addEventListener("keydown",ev=>{
              use cases, and industries.
              <ul style="margin:6px 0 0 16px;padding:0">
                <li><b>Explore N products →</b> — drills into Composition (2D) or Spatial composition (3D) for this family</li>
-               <li><b>Learn &amp; Try on dCloud</b> — learning objectives + instant or scheduled lab links</li>
+               <li><b>Learn &amp; Try on dCloud</b> — hands-on labs with learning objectives</li>
+               <li><b>Build skills</b> — Cisco U and Webex Academy courses matched to the family or product</li>
+               <li><b>Partner enablement</b> — Black Belt tracks when relevant</li>
                <li><b>Device Matrix 3D</b> — built-in showroom for collaboration devices</li>
                <li><b>Breadcrumbs</b> — back/forward navigation through visited items</li>
                <li><b>Licensing tier badge</b> — DNA / Advantage / Premier and similar</li>
@@ -9677,7 +9713,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.88";
+const APP_VERSION   = "2.31.89";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -12801,7 +12837,7 @@ function dcloudConnectedFamilyIds(familyIds = []){
   return [...connected];
 }
 
-function dcloudScoreEntry(e, ctx){
+function learningScoreEntry(e, ctx){
   const { familyIds = [], productIds = [], connected = [], connectedBonus = true } = ctx;
   const familyHit = familyIds.some(f => e.families?.includes(f));
   const productHit = productIds.some(p => e.products?.includes(p));
@@ -12854,6 +12890,10 @@ function dcloudScoreEntry(e, ctx){
   return score;
 }
 
+function dcloudScoreEntry(e, ctx){
+  return learningScoreEntry(e, ctx);
+}
+
 function dcloudRankEntries({ familyIds = [], productIds = [], useCases = [], limit = 5, requireProductOrFamily = false, connectedBonus = true } = {}){
   if (!DCLOUD_ENTRIES.length) return [];
   const connected = connectedBonus ? dcloudConnectedFamilyIds(familyIds) : familyIds;
@@ -12902,6 +12942,221 @@ function dcloudLinksFor({ familyId, productId, kind = "node" } = {}){
     limit: 4,
     requireProductOrFamily: true
   });
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   Cisco U · Webex Academy · Black Belt (learning-links.json)
+   ════════════════════════════════════════════════════════════════════════*/
+let LEARNING_ENTRIES = [];
+const LEARNING_DEFAULTS = {
+  skillsTitle: "Build skills",
+  skillsHint: "Self-paced courses and learning paths — understand the solution before you lab.",
+  partnerTitle: "Partner enablement",
+  partnerHint: "Black Belt tracks for Cisco partners (CCO ID required).",
+  skillsNote: "Cisco ID login may be required",
+  partnerNote: "Partner-only · CCO ID required via SalesConnect"
+};
+const LEARNING_SOURCES = {
+  "cisco-u": { label: "Cisco U", cta: "Open course ↗" },
+  "webex-academy": { label: "Webex Academy", cta: "Open course ↗" },
+  blackbelt: { label: "Black Belt", cta: "View track ↗" }
+};
+const COLLAB_LEARNING_FAMILIES = new Set([
+  "webex-app", "webex-meetings", "webex-calling", "webex-cc", "room-systems",
+  "desk-devices", "ip-phones", "conf-phones", "cisco-headsets", "webex-connect", "cloud-control"
+]);
+const SKILLS_SOURCES = ["webex-academy", "cisco-u"];
+const PARTNER_SOURCES = ["blackbelt"];
+
+function learningNormalizeEntry(e){
+  if (!e) return e;
+  if (!e.relatedFamilies?.length) e.relatedFamilies = e.families ? [...e.families] : [];
+  return e;
+}
+
+async function loadLearningLinks(){
+  const apply = (data) => {
+    LEARNING_ENTRIES = (Array.isArray(data) ? data : (data.entries || [])).map(learningNormalizeEntry);
+    Object.assign(LEARNING_DEFAULTS, data.defaults || {});
+    Object.assign(LEARNING_SOURCES, data.sources || {});
+  };
+  try {
+    const res = await fetch("learning-links.json", { cache: "no-cache" });
+    if (res.ok) {
+      apply(await res.json());
+      return;
+    }
+  } catch (_) { /* file:// or offline */ }
+  if (typeof window.__LEARNING_BOOT !== "undefined" && window.__LEARNING_BOOT) {
+    apply(window.__LEARNING_BOOT);
+    try { delete window.__LEARNING_BOOT; } catch (_) {}
+  }
+}
+
+function learningEntryById(id){
+  return LEARNING_ENTRIES.find(e => e.id === id);
+}
+
+function learningSourceContextBonus(e, ctx){
+  const collab = (ctx.familyIds || []).some(f => COLLAB_LEARNING_FAMILIES.has(f));
+  if (collab && e.source === "webex-academy") return 14;
+  if (!collab && e.source === "cisco-u") return 6;
+  return 0;
+}
+
+function learningRankEntries({ familyIds = [], productIds = [], sources = [], limit = 2, requireProductOrFamily = true } = {}){
+  if (!LEARNING_ENTRIES.length) return [];
+  const sourceSet = sources.length ? new Set(sources) : null;
+  const connected = dcloudConnectedFamilyIds(familyIds);
+  const ctx = { familyIds, productIds, connected, connectedBonus: true };
+  const scored = LEARNING_ENTRIES.map(e => {
+    if (sourceSet && !sourceSet.has(e.source)) return null;
+    const productSpecific = (e.products?.length ?? 0) > 0;
+    const familyHit = familyIds.some(f => e.families?.includes(f));
+    const productHit = productIds.some(p => e.products?.includes(p));
+    if (productSpecific){
+      if (!productHit && !familyHit) return null;
+    } else if (requireProductOrFamily && !familyHit && !productHit) {
+      return null;
+    }
+    const score = learningScoreEntry(e, ctx) + learningSourceContextBonus(e, ctx);
+    return { entry: e, score };
+  }).filter(Boolean);
+  scored.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    if (b.entry.primary !== a.entry.primary) return (b.entry.primary ? 1 : 0) - (a.entry.primary ? 1 : 0);
+    const bSpec = (b.entry.products?.length || 99) + (b.entry.families?.length || 99);
+    const aSpec = (a.entry.products?.length || 99) + (a.entry.families?.length || 99);
+    if (aSpec !== bSpec) return aSpec - bSpec;
+    return (a.entry.linkLabel || a.entry.name).localeCompare(b.entry.linkLabel || b.entry.name);
+  });
+  const seen = new Set();
+  const out = [];
+  for (const { entry } of scored) {
+    if (seen.has(entry.id)) continue;
+    seen.add(entry.id);
+    out.push(entry);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+function learningLinksFor({ familyId, productId } = {}){
+  const product = productId ? prodById[productId] : null;
+  const fam = familyId || product?.family;
+  const familyIds = fam ? [fam] : [];
+  const productIds = productId ? [productId] : [];
+  return {
+    skills: learningRankEntries({
+      familyIds, productIds, sources: SKILLS_SOURCES, limit: 2, requireProductOrFamily: true
+    }),
+    partner: learningRankEntries({
+      familyIds, productIds, sources: PARTNER_SOURCES, limit: 1, requireProductOrFamily: true
+    })
+  };
+}
+
+function learningSourceMeta(source){
+  return LEARNING_SOURCES[source] || { label: source || "Learn", cta: "Open ↗" };
+}
+
+function learningEntryChipClass(source){
+  if (source === "cisco-u") return "p-learn-chip--cu";
+  if (source === "webex-academy") return "p-learn-chip--wa";
+  if (source === "blackbelt") return "p-learn-chip--bb";
+  return "";
+}
+
+function learningEntryMetaHtml(e){
+  const chips = [];
+  const src = learningSourceMeta(e.source);
+  chips.push({ label: src.label, cls: learningEntryChipClass(e.source) });
+  if (e.format === "learning-path") chips.push({ label: "Learning path", cls: "" });
+  if (e.duration) chips.push({ label: e.duration, cls: "" });
+  if (e.level) chips.push({ label: e.level, cls: "" });
+  if (!chips.length) return "";
+  return `<div class="p-learn-meta-row">${chips.map(c =>
+    `<span class="p-learn-chip${c.cls ? " " + c.cls : ""}">${escapeHtml(c.label)}</span>`
+  ).join("")}</div>`;
+}
+
+function learningEntryActionsHtml(e){
+  const src = learningSourceMeta(e.source);
+  return `<a class="la la-learn" href="${escapeHtml(e.url)}" target="_blank" rel="noopener" data-learning-id="${escapeHtml(e.id)}">
+    <span class="la-learn-main">${escapeHtml(e.linkLabel || e.name)}</span>
+    <span class="la-learn-meta">${escapeHtml(src.cta)}</span>
+  </a>`;
+}
+
+function renderLearningEntry(e){
+  return `<div class="p-learn-entry" data-learning-id="${escapeHtml(e.id)}">
+    <div class="p-learn-entry-head">${escapeHtml(e.linkLabel || e.name)}</div>
+    ${learningEntryMetaHtml(e)}
+    ${e.hint ? `<div class="p-learn-entry-hint">${escapeHtml(e.hint)}</div>` : ""}
+    ${learningEntryActionsHtml(e)}
+  </div>`;
+}
+
+function renderLearningSectionBody(entries, opts = {}){
+  if (!entries.length) return "";
+  const title = opts.title || LEARNING_DEFAULTS.skillsTitle;
+  const hint = opts.hint || LEARNING_DEFAULTS.skillsHint;
+  const note = opts.note || "";
+  const badge = opts.badge || "Self-paced";
+  const entriesHtml = entries.map(renderLearningEntry).join("");
+  return `${`<div class="p-learn-header">
+      <span class="p-learn-title">${escapeHtml(title)}</span>
+      <span class="p-learn-badge">${escapeHtml(badge)}</span>
+    </div>
+    <div class="p-learn-hint">${escapeHtml(hint)}</div>
+    <div class="p-learn-entries">${entriesHtml}</div>`}${note ? `<div class="p-learn-note">${escapeHtml(note)}</div>` : ""}`;
+}
+
+function insertLearningSections(id, kind){
+  const pb = $("#pbody");
+  if (!pb) return;
+  pb.querySelectorAll(".p-learn").forEach(el => el.remove());
+  if (!LEARNING_ENTRIES.length) return;
+
+  const product = kind === "product" ? prodById[id] : null;
+  const familyId = kind === "product" ? product?.family : id;
+  const { skills, partner } = learningLinksFor(
+    kind === "product" ? { productId: id, familyId } : { familyId: id }
+  );
+  if (!skills.length && !partner.length) return;
+
+  const anchor = pb.querySelector(".p-dcloud") || pb.querySelector(".p-matrix-link") ||
+    pb.querySelector(".p-desc") || pb.querySelector(".add-stack-btn");
+
+  const insertAfter = (el, node) => {
+    if (el) el.insertAdjacentElement("afterend", node);
+    else pb.appendChild(node);
+  };
+
+  let last = anchor;
+  if (skills.length){
+    const sec = document.createElement("div");
+    sec.className = "p-sec p-learn p-learn-skills";
+    sec.innerHTML = `<div class="p-learn-card">${renderLearningSectionBody(skills, {
+      title: LEARNING_DEFAULTS.skillsTitle,
+      hint: LEARNING_DEFAULTS.skillsHint,
+      note: LEARNING_DEFAULTS.skillsNote,
+      badge: "Self-paced"
+    })}</div>`;
+    insertAfter(last, sec);
+    last = sec;
+  }
+  if (partner.length){
+    const sec = document.createElement("div");
+    sec.className = "p-sec p-learn p-learn-partner";
+    sec.innerHTML = `<div class="p-learn-card">${renderLearningSectionBody(partner, {
+      title: LEARNING_DEFAULTS.partnerTitle,
+      hint: LEARNING_DEFAULTS.partnerHint,
+      note: LEARNING_DEFAULTS.partnerNote,
+      badge: "Partner"
+    })}</div>`;
+    insertAfter(last, sec);
+  }
 }
 
 function dcloudEcosystemLabs(familyId, limit = 2){
@@ -13174,25 +13429,30 @@ function insertDcloudLinks(id, kind){
       ? { productId: id, familyId, kind: "product" }
       : { familyId: id, kind: "node" }
   );
-  if (!entries.length) return;
+  if (entries.length){
+    const browseLabel = (kind === "product" ? product?.name : nodeById[id]?.name) ||
+      nodeById[familyId]?.name || "this family";
+    const browseQuery = nodeById[familyId]?.name || browseLabel;
 
-  const browseLabel = (kind === "product" ? product?.name : nodeById[id]?.name) ||
-    nodeById[familyId]?.name || "this family";
-  const browseQuery = nodeById[familyId]?.name || browseLabel;
+    const sec = document.createElement("div");
+    sec.className = "p-sec p-dcloud";
+    sec.innerHTML = `<div class="p-dcloud-card">${renderDcloudSectionBody(entries, { panel: true, browseLabel, browseQuery })}</div>`;
 
-  const sec = document.createElement("div");
-  sec.className = "p-sec p-dcloud";
-  sec.innerHTML = `<div class="p-dcloud-card">${renderDcloudSectionBody(entries, { panel: true, browseLabel, browseQuery })}</div>`;
+    wireDcloudPanelSection(sec, entries, browseQuery);
 
-  wireDcloudPanelSection(sec, entries, browseQuery);
-
-  const matrix = pb.querySelector(".p-matrix-link");
-  if (matrix){ matrix.insertAdjacentElement("afterend", sec); return; }
-  const desc = pb.querySelector(".p-desc");
-  if (desc){ desc.insertAdjacentElement("afterend", sec); return; }
-  const anchor = pb.querySelector(".add-stack-btn");
-  if (anchor) pb.insertBefore(sec, anchor);
-  else pb.appendChild(sec);
+    const matrix = pb.querySelector(".p-matrix-link");
+    if (matrix){ matrix.insertAdjacentElement("afterend", sec); }
+    else {
+      const desc = pb.querySelector(".p-desc");
+      if (desc){ desc.insertAdjacentElement("afterend", sec); }
+      else {
+        const anchor = pb.querySelector(".add-stack-btn");
+        if (anchor) pb.insertBefore(sec, anchor);
+        else pb.appendChild(sec);
+      }
+    }
+  }
+  insertLearningSections(id, kind);
 }
 
 function refreshDcloudPanelIfOpen(){
@@ -13200,6 +13460,7 @@ function refreshDcloudPanelIfOpen(){
   const panel = $("#panel");
   if (!pb || !panel?.classList.contains("open") || !pb.dataset.lastId) return;
   pb.querySelector(".p-dcloud")?.remove();
+  pb.querySelectorAll(".p-learn").forEach(el => el.remove());
   insertDcloudLinks(pb.dataset.lastId, pb.dataset.lastKind || "node");
 }
 
@@ -15178,10 +15439,11 @@ function wireThemeToggle(){
 function boot(){
   initAmbientBackground();
   wireThemeToggle();
-  loadDcloudLinks().then(() => {
+  Promise.all([loadDcloudLinks(), loadLearningLinks()]).then(() => {
     refreshDcloudPanelIfOpen();
     window.DCLOUD_PATHS = DCLOUD_PATHS;
     window.DCLOUD_ENTRIES = DCLOUD_ENTRIES;
+    window.LEARNING_ENTRIES = LEARNING_ENTRIES;
     window.dcloudSearchEntries = dcloudSearchEntries;
     window.dcloudEntryFamiliesLabel = dcloudEntryFamiliesLabel;
     window.dcloudPrimaryUrl = dcloudPrimaryUrl;
