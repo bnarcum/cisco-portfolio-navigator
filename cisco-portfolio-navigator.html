@@ -6119,10 +6119,7 @@ function scheduleSpatialFrameCamera(delay = 0, attempt = 0){
   spatialFitTimer = setTimeout(() => {
     if (gen !== spatialFitGen || !spatialState.active || !spatialState.graph) return;
     const frame = spatialState.focusFamily ? spatialOrbitCamera : spatialFrameCamera;
-    if (frame(500)){
-      setTimeout(() => updateSpatialDecor(), 120);
-      return;
-    }
+    if (frame(500)) return;
     if (attempt < 12) scheduleSpatialFrameCamera(180, attempt + 1);
   }, delay);
 }
@@ -6419,90 +6416,13 @@ function ensureSpatialLights(){
   fill.position.set(-70, 50, -90);
   scene.add(fill);
   spatialState.lightsAdded = true;
-  ensureSpatialDecor();
 }
 
 function ensureSpatialDecor(){
-  if (!spatialState.graph) return;
-  const THREE = ensureSpatialTHREE();
-  if (!THREE?.Mesh || !THREE?.MeshBasicMaterial) return;
-  const scene = spatialState.graph.scene();
-  if (!scene) return;
-  if (!spatialState.decorGroup){
-    const GroupCtor = resolveSpatialGroupCtor() || THREE.Group;
-    if (!GroupCtor) return;
-    spatialState.decorGroup = new GroupCtor();
-    spatialState.decorGroup.name = "spatial-decor";
-    spatialState.decorGroup.renderOrder = -20;
-    spatialState.boundaryRings = [];
-    const ringSpecs = [
-      { color: 0x02c8ff, opacity: 0.14, width: 0.55 },
-      { color: 0x0a60ff, opacity: 0.08, width: 1.1 }
-    ];
-    ringSpecs.forEach((spec, i) => {
-      let mesh;
-      if (THREE.RingGeometry){
-        mesh = new THREE.Mesh(
-          new THREE.RingGeometry(0.98, 1, 128),
-          new THREE.MeshBasicMaterial({
-            color: spec.color,
-            transparent: true,
-            opacity: spec.opacity,
-            depthWrite: false,
-            side: 2
-          })
-        );
-      } else {
-        const template = spatialState.meshTemplate;
-        if (!template) return;
-        mesh = template.clone();
-        mesh.material = new THREE.MeshBasicMaterial({
-          color: spec.color,
-          wireframe: true,
-          transparent: true,
-          opacity: spec.opacity * 1.4,
-          depthWrite: false
-        });
-        mesh.scale.set(1, 0.04, 1);
-      }
-      mesh.rotation.x = -Math.PI / 2;
-      mesh.renderOrder = -12 + i;
-      mesh.userData.boundaryIndex = i;
-      mesh.userData.ringWidth = spec.width;
-      spatialState.boundaryRings.push(mesh);
-      spatialState.decorGroup.add(mesh);
-    });
-    scene.add(spatialState.decorGroup);
-    spatialState.decorAdded = true;
-  }
-  updateSpatialDecor();
+  /* boundary rings removed — kept as no-op for callers */
 }
 
-function updateSpatialDecor(){
-  if (!spatialState.decorAdded || !spatialState.graph || !spatialState.decorGroup) return;
-  const nodes = spatialGraphNodes();
-  const bounds = spatialNodeBounds(nodes, { minNeeded: 1, minSpan: 24 });
-  if (!bounds){
-    spatialState.decorGroup.visible = false;
-    return;
-  }
-  spatialState.decorGroup.visible = true;
-  const { cx, cy, cz, span } = bounds;
-  const ringY = cy - span * 0.28;
-  const ringR = spatialState.focusFamily
-    ? Math.max(span * 0.62, 42)
-    : Math.max(span * 0.72, 70);
-  spatialState.boundaryRings.forEach(ring => {
-    const w = ring.userData.ringWidth || 0.8;
-    ring.position.set(cx, ringY, cz);
-    if (ring.geometry?.type === "RingGeometry"){
-      ring.scale.set(ringR, ringR, 1);
-      ring.material.opacity = (ring.userData.boundaryIndex === 0 ? 0.16 : 0.09) * spatialDecoFade();
-    } else {
-      ring.scale.set(ringR * (1 + w * 0.04), ringR * 0.035, ringR * (1 + w * 0.04));
-    }
-  });
-}
+function updateSpatialDecor(){}
 
 function refreshSpatialNodeVisuals(){
   if (!spatialState.graph) return;
@@ -7056,7 +6976,7 @@ function initSpatialGraph(){
         refreshSpatialNodeVisuals();
       }
     })
-    .onEngineStop(() => updateSpatialDecor());
+    .onEngineStop(() => {});
   spatialState.graph.graphData({ nodes: [{ id: "__three_probe__", val: 1 }], links: [] });
   configureSpatialBackground();
   configureSpatialForces();
