@@ -852,10 +852,13 @@
     .lc.sel{background:rgba(245,158,11,.12);border-color:#FF9000;color:#FF9000}
     #stack-hint{padding:14px 18px 6px;font-size:11.5px;color:var(--subtle);text-align:center;line-height:1.45}
     #pb{flex:1;overflow-x:hidden;min-height:0;padding-bottom:12px}
-    .ptabs{display:flex;border-bottom:1px solid var(--border);padding:0 18px;flex-shrink:0}
+    .ptabs{display:flex;border-bottom:1px solid var(--border);padding:0 12px;flex-shrink:0;
+      overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+    .ptabs::-webkit-scrollbar{height:4px}
+    .ptabs::-webkit-scrollbar-thumb{background:rgba(0,212,255,.28);border-radius:4px}
     .ptab{background:none;border:none;border-bottom:2px solid transparent;
       color:var(--muted);font-size:12px;font-weight:600;padding:9px 10px 8px;
-      cursor:pointer;transition:all .15s;margin-bottom:-1px}
+      cursor:pointer;transition:all .15s;margin-bottom:-1px;flex-shrink:0;white-space:nowrap}
     .ptab.active{color:var(--accent);border-bottom-color:var(--accent)}
     .ptab-b{display:inline-block;background:var(--accent);color:#000;
       border-radius:10px;font-size:9px;font-weight:700;padding:1px 5px;margin-left:4px}
@@ -1230,7 +1233,7 @@
           <button class="ptab active" data-tab="recs">Suggestions <span class="ptab-b" id="rec-cnt">0</span></button>
           <button class="ptab" data-tab="replace">Upgrades <span class="ptab-r" id="rep-cnt">0</span></button>
           <button class="ptab" data-tab="bundles">Solution packages</button>
-          <button class="ptab" data-tab="coverage">Gaps &amp; strengths</button>
+          <button class="ptab" data-tab="coverage" title="Gaps &amp; strengths">Coverage</button>
         </div>
         <div id="tab-recs" class="tc active"></div>
         <div id="tab-replace" class="tc"></div>
@@ -9382,7 +9385,7 @@ document.addEventListener("keydown",ev=>{
              <strong style="color:#f87171">Upgrades</strong> — replace old or end-of-life technology<br>
              <strong style="color:#00d4ff">Hands-on labs</strong> — ranked dCloud demos with learning objectives<br>
              <strong>Solution packages</strong> — progress toward complete Cisco solution sets<br>
-             <strong>Gaps &amp; strengths</strong> — which needs are covered vs. still open<br>
+             <strong>Coverage</strong> — gaps &amp; strengths: which needs are covered vs. still open<br>
              <strong style="color:#FF9000">Migration plan</strong> — step-by-step migration with dates &amp; successors<br>
              <strong style="color:#ef4444">Issues to fix</strong> — compatibility &amp; dependency gaps`,
     },
@@ -9717,7 +9720,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.31.90";
+const APP_VERSION   = "2.31.91";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",

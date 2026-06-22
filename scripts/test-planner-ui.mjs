@@ -83,14 +83,14 @@ try {
     suggestionsTab: document.querySelector('.ptab[data-tab="recs"]')?.textContent?.includes("Suggestions"),
     upgradesTab: document.querySelector('.ptab[data-tab="replace"]')?.textContent?.includes("Upgrades"),
     packagesTab: document.querySelector('.ptab[data-tab="bundles"]')?.textContent?.includes("Solution packages"),
-    gapsTab: document.querySelector('.ptab[data-tab="coverage"]')?.textContent?.includes("Gaps"),
+    gapsTab: document.querySelector('.ptab[data-tab="coverage"]')?.textContent?.includes("Coverage"),
     legend: !!document.querySelector("#tab-recs .recs-legend"),
     addBtn: document.querySelector("#tab-recs .rc-btn.prim")?.textContent?.includes("Add to list"),
   }));
   if (!plainLabels.suggestionsTab) errors.push("Suggestions tab label missing");
   if (!plainLabels.upgradesTab) errors.push("Upgrades tab label missing");
   if (!plainLabels.packagesTab) errors.push("Solution packages tab label missing");
-  if (!plainLabels.gapsTab) errors.push("Gaps & strengths tab label missing");
+  if (!plainLabels.gapsTab) errors.push("Coverage tab label missing");
   if (!plainLabels.legend) errors.push("connection strength legend missing");
   if (!plainLabels.addBtn) errors.push("Add to list button label missing");
 
