@@ -10,6 +10,8 @@ An interactive, single-file HTML tool for exploring the Cisco product portfolio 
 
 **Live demo:** https://bnarcum.github.io/cisco-portfolio-navigator/
 
+**Preview sandbox** (work-in-progress enhancements): https://bnarcum.github.io/cisco-portfolio-navigator-preview/ — see [DEVELOPING.md](DEVELOPING.md) for the git workflow.
+
 ## What it does
 
 - **Guided Plan** — 5-step wizard (industry → size → capabilities → legacy refresh) that builds your stack, runs analysis, and generates inline AI deliverables (exec summary, 90-day roadmap, customer email, gap analysis)

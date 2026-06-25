@@ -118,6 +118,9 @@
     }
 
     /* TOP BAR + ACTION BAR */
+    #preview-banner{display:none;background:#f5a623;color:#1a1200;text-align:center;
+      font-size:12px;font-weight:600;padding:5px 12px;letter-spacing:.02em}
+    #preview-banner.visible{display:block}
     #app-chrome{position:fixed;top:0;left:0;right:0;z-index:100}
     #topbar{position:relative;min-height:52px;height:auto;
       background:var(--glass-bg);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));
@@ -1105,6 +1108,8 @@
 </head>
 <body>
 
+<div id="preview-banner" role="status">Preview sandbox — changes here are not production. Live site: <a href="https://bnarcum.github.io/cisco-portfolio-navigator/" style="color:#1a1200;text-decoration:underline">Portfolio Navigator</a></div>
+<script>if(/cisco-portfolio-navigator-preview/i.test(location.pathname))document.getElementById("preview-banner").classList.add("visible");</script>
 <div id="app-chrome">
 <div id="topbar">
   <div class="logo">
