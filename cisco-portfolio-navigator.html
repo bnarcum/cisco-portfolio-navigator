@@ -14,9 +14,9 @@
   import * as THREE from "three";
   window.__cpnWalkTHREE = THREE;
   </script>
-  <link rel="stylesheet" href="assets/cpn-ui.css?v=2.79.9"/>
-  <link rel="stylesheet" href="assets/cpn-light.css?v=2.79.9"/>
-  <link rel="stylesheet" href="design-studio.css?v=2.79.9"/>
+  <link rel="stylesheet" href="assets/cpn-ui.css?v=2.79.10"/>
+  <link rel="stylesheet" href="assets/cpn-light.css?v=2.79.10"/>
+  <link rel="stylesheet" href="design-studio.css?v=2.79.10"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     @font-face{
@@ -52,6 +52,8 @@
     [data-theme="light"] .bg-grid{opacity:.55;stroke:rgba(7,24,45,.08)}
     [data-theme="light"] #gs,#spatial-wrap{filter:none}
     [data-theme="light"] .pillar-guides .zone-title{fill:#006e8f}
+    [data-theme="light"] .pillar-guides .zone-hot .zone-tint{fill-opacity:.06}
+    [data-theme="light"] .pillar-guides .zone-dim .zone-tint{fill-opacity:.02}
     [data-theme="light"] .pillar-guides .zone-spine-label{fill:#475569}
     [data-theme="light"] .pillar-guides .zone-stats{fill:#64748b}
     [data-theme="light"] #pillar-legend{background:rgba(255,255,255,.96);border-color:rgba(7,24,45,.15);
@@ -3994,6 +3996,7 @@ function applyPillarLabelStyles(selectedNode){
     renderPillarLabelText(textEl, pillarLabelLines(d.name, cellW, k, d.id), yOff, blockH, k);
   });
   const focusedPillar = singlePillarFocused();
+  const GL = graphLabels();
   ndEl.select("text.nl")
     .style("text-anchor", "middle")
     .style("dominant-baseline", "auto")
@@ -4001,11 +4004,11 @@ function applyPillarLabelStyles(selectedNode){
     .attr("lengthAdjust", null)
     .style("opacity", d => pillarLabelShown(d, selectedNode, conn, zoomFade) ? 1 : 0)
     .style("font-size", d => `${pillarLabelFontPx(k)}px`)
-    .style("font-weight", focusedPillar ? "700" : "700")
-    .style("fill", focusedPillar ? "#ffffff" : "#f8fcff")
+    .style("font-weight", "700")
+    .style("fill", GL.active)
     .style("letter-spacing", focusedPillar ? "0.015em" : "0.01em")
-    .style("stroke", focusedPillar ? "rgba(3,8,18,0.55)" : "rgba(7,15,28,0.82)")
-    .style("stroke-width", focusedPillar ? "2px" : "3px")
+    .style("stroke", GL.stroke)
+    .style("stroke-width", GL.strokeWidth)
     .style("stroke-linejoin", "round")
     .style("paint-order", "stroke fill");
   applyPillarLinkStyles(k);
@@ -4611,7 +4614,7 @@ function buildNodeGroup(sel){
   const lwrap = sel.append("g").attr("class", "nl-wrap").style("pointer-events", "none");
   lwrap.append("text").attr("class","nl")
     .attr("y", d => d._r + 14).text(d => d._shortName || d.name)
-    .style("font-size","11px").style("font-weight","500").style("fill", GRAPH_LABEL.default)
+    .style("font-size","11px").style("font-weight","500").style("fill", graphLabels().default)
     .style("text-anchor","middle").style("pointer-events","none");
 }
 
@@ -4640,13 +4643,30 @@ function syncNodeProductImages(){
   });
 }
 
-const GRAPH_LABEL = { default: "#e2e8f0", muted: "#94a3b8", connected: "#f1f5f9", active: "#ffffff" };
+function graphLabels(){
+  if (isLightTheme()){
+    return {
+      default: "#1e293b", muted: "#64748b", connected: "#334155", active: "#07182d",
+      stroke: "rgba(255,255,255,0.92)", strokeWidth: "2.5px"
+    };
+  }
+  return {
+    default: "#e2e8f0", muted: "#94a3b8", connected: "#f1f5f9", active: "#ffffff",
+    stroke: "rgba(7,15,28,0.82)", strokeWidth: "3px"
+  };
+}
+function deckIconFilter(){
+  return isLightTheme()
+    ? "brightness(0) saturate(100%) invert(22%) sepia(55%) saturate(1400%) hue-rotate(162deg) brightness(92%)"
+    : null;
+}
 
 function compositionLabelY(d){
   return d._r + (d._kind === "family" ? 28 : 24);
 }
 
 function applyCompositionLabelTextStyle(textSel){
+  const GL = graphLabels();
   textSel.each(function(d){
     const s = compositionLabelStyle(d);
     d3.select(this)
@@ -4655,16 +4675,17 @@ function applyCompositionLabelTextStyle(textSel){
       .style("fill", s.fill)
       .style("letter-spacing", "0.01em")
       .style("paint-order", "stroke fill")
-      .style("stroke", "rgba(8,12,22,0.9)")
-      .style("stroke-width", "3px")
+      .style("stroke", GL.stroke)
+      .style("stroke-width", GL.strokeWidth)
       .style("stroke-linejoin", "round");
   });
 }
 function compositionLabelStyle(d){
-  if (d._kind === "family") return { fill: "#ffffff", weight: "700", size: "13px" };
-  if (d._status === "eol") return { fill: "#fecaca", weight: "600", size: "12px" };
-  if (d._status === "eos") return { fill: "#fde68a", weight: "600", size: "12px" };
-  return { fill: "#f8fafc", weight: "600", size: "12px" };
+  const GL = graphLabels();
+  if (d._kind === "family") return { fill: GL.active, weight: "700", size: "13px" };
+  if (d._status === "eol") return { fill: isLightTheme() ? "#b91c1c" : "#fecaca", weight: "600", size: "12px" };
+  if (d._status === "eos") return { fill: isLightTheme() ? "#b45309" : "#fde68a", weight: "600", size: "12px" };
+  return { fill: isLightTheme() ? "#1e293b" : "#f8fafc", weight: "600", size: "12px" };
 }
 
 function resetStandardLabelStyles(){
@@ -4679,7 +4700,7 @@ function resetStandardLabelStyles(){
     .style("opacity", null)
     .style("font-size", "11px")
     .style("font-weight", "500")
-    .style("fill", GRAPH_LABEL.default)
+    .style("fill", graphLabels().default)
     .style("letter-spacing", null)
     .style("stroke", null)
     .style("stroke-width", null)
@@ -5094,8 +5115,9 @@ function applyCompositionInteractionStyles(selectedNode){
       return 0;
     });
     const labelStyle = compositionLabelStyle(nd);
+    const GL = graphLabels();
     g.select("text.nl").style("opacity", dim ? 0.4 : 1)
-      .style("fill", isSel ? "#ffffff" : (isHov ? "#ffffff" : labelStyle.fill));
+      .style("fill", isSel || isHov ? GL.active : labelStyle.fill);
   });
   if (lviz){
     lviz.attr("stroke-opacity", l => {
@@ -5172,7 +5194,7 @@ function pillarGuidesTheme(){
     return {
       accent: "#006e8f",
       cardBorder: "#006e8f",
-      cardFill: "rgba(255,255,255,0.58)",
+      cardFill: "rgba(255,255,255,0.94)",
       connStroke: "#334155",
       connLabel: "#07182d",
       spineStroke: "#64748b",
@@ -5219,7 +5241,8 @@ function appendPillarZoneHeader(zg, z, x, y, w, opacity){
     .attr("x", x + padX).attr("y", iconY)
     .attr("width", iconSize).attr("height", iconSize)
     .attr("opacity", opacity)
-    .attr("preserveAspectRatio", "xMidYMid meet");
+    .attr("preserveAspectRatio", "xMidYMid meet")
+    .style("filter", deckIconFilter());
   const textEl = content.append("text").attr("class", "zone-title")
     .attr("x", x + padX + iconSize + gap).attr("y", iconY + iconSize / 2 + 5)
     .attr("fill", accent).attr("fill-opacity", opacity)
@@ -5270,7 +5293,7 @@ function updatePillarGuides(){
         .attr("fill", isLightTheme() ? "rgba(255,255,255,0.62)" : "rgba(1,10,24,0.68)")
         .attr("stroke", T.cardBorder)
         .attr("stroke-width", 1.25)
-        .attr("stroke-opacity", isLightTheme() ? 0.45 : 0.55)
+        .attr("stroke-opacity", isLightTheme() ? 0.78 : 0.55)
         .style("pointer-events", "none");
     }
   }
@@ -5324,11 +5347,15 @@ function updatePillarGuides(){
       .attr("fill-opacity", hot ? (singlePillarFocused() ? 0.94 : 0.92) : 0.86)
       .attr("stroke", "none")
       .style("pointer-events", "none");
+    const tintLo = isLightTheme() ? 0.04 : 0.1;
+    const tintHi = isLightTheme()
+      ? (singlePillarFocused() ? 0.07 : 0.055)
+      : (singlePillarFocused() ? 0.18 : 0.14);
     zg.append("rect").attr("class", "zone-rect zone-tint")
       .attr("x", x).attr("y", y).attr("width", lz.w).attr("height", lz.h)
       .attr("rx", z.gradient ? 8 : 6)
       .attr("fill", z.color)
-      .attr("fill-opacity", hot ? (singlePillarFocused() ? 0.18 : 0.14) : 0.1)
+      .attr("fill-opacity", hot ? tintHi : tintLo)
       .attr("stroke", "none")
       .style("pointer-events", "none");
     zg.append("rect").attr("class", "zone-rect zone-border")
@@ -5404,7 +5431,7 @@ function overviewDeckTheme(){
       aiText: "#334155",
       chevron: "#64748b",
       chevronOpacity: [0.35, 0.55, 0.75],
-      cardFill: "rgba(255,255,255,0.55)"
+      cardFill: "rgba(255,255,255,0.94)"
     };
   }
   return {
@@ -5469,7 +5496,7 @@ function updateOverviewDeck(){
     .attr("fill", isLightTheme() ? "rgba(255,255,255,0.62)" : "rgba(1,10,24,0.68)")
     .attr("stroke", T.cardBorder)
     .attr("stroke-width", 1.25)
-    .attr("stroke-opacity", isLightTheme() ? 0.45 : 0.55)
+    .attr("stroke-opacity", isLightTheme() ? 0.78 : 0.55)
     .style("pointer-events", "none");
 
   const connG = g.append("g").attr("class", "ov-conn").style("pointer-events", "none");
@@ -5519,7 +5546,8 @@ function updateOverviewDeck(){
       .attr("href", DECK_ICON_URI[pillarId])
       .attr("x", contentX).attr("y", (h - iconSize) / 2)
       .attr("width", iconSize).attr("height", iconSize)
-      .attr("preserveAspectRatio", "xMidYMid meet");
+      .attr("preserveAspectRatio", "xMidYMid meet")
+      .style("filter", deckIconFilter());
     const textEl = content.append("text")
       .attr("x", contentX + iconSize + gap).attr("y", h / 2 + 6)
       .attr("fill", T.accent)
@@ -7970,7 +7998,7 @@ function applyConnectionHighlight(d, depth = connectionHighlightDepth){
     d3.select(this).select(".gr").attr("fill-opacity", isSel ? .3 : 0);
     d3.select(this).select(".mc").attr("fill-opacity", isC ? .95 : .1).attr("stroke", isSel ? "#fff" : "transparent");
     d3.select(this).select(".icn").attr("opacity", isC ? 1 : .12);
-    d3.select(this).select(".nl").style("fill", isC ? (isSel ? GRAPH_LABEL.active : GRAPH_LABEL.connected) : GRAPH_LABEL.muted);
+    d3.select(this).select(".nl").style("fill", isC ? (isSel ? graphLabels().active : graphLabels().connected) : graphLabels().muted);
   });
   lviz.each(function(l){
     const s = sid(l), t = tid(l);
@@ -8042,7 +8070,7 @@ function resetHL() {
     d3.select(this).select(".gr").attr("fill-opacity",inStk?.25:0);
     d3.select(this).select(".mc").attr("fill-opacity",inStk?1:.88).attr("stroke",inStk?"#fff":"transparent");
     d3.select(this).select(".icn").attr("opacity",1);
-    d3.select(this).select(".nl").style("fill", GRAPH_LABEL.default);
+    d3.select(this).select(".nl").style("fill", graphLabels().default);
   });
   lviz.attr("stroke",d=>d.type==="direct"?"#4a5568":"#2d3748")
     .attr("stroke-opacity",d=>d.type==="direct"?.75:.45)
@@ -8086,7 +8114,7 @@ function highlightStack() {
     d3.select(this).select(".gr").attr("fill-opacity",inStk?.3:0);
     d3.select(this).select(".mc").attr("fill-opacity",inStk?1:.2).attr("stroke",inStk?"#fff":"transparent");
     d3.select(this).select(".icn").attr("opacity",inStk?1:.18);
-    d3.select(this).select(".nl").style("fill", inStk ? GRAPH_LABEL.active : GRAPH_LABEL.default);
+    d3.select(this).select(".nl").style("fill", inStk ? graphLabels().active : graphLabels().default);
   });
   lviz.each(function(l){
     const s=sid(l),t=tid(l),both=stack.has(s)&&stack.has(t);
@@ -9606,7 +9634,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.79.9";
+const APP_VERSION   = "2.79.10";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -13912,7 +13940,7 @@ function applyRefArch(ucName){
     d3.select(this).select(".gr").attr("fill-opacity", inA ? 0.35 : 0);
     d3.select(this).select(".mc").attr("fill-opacity", inA ? 1 : 0.08).attr("stroke", inA ? "#fff" : "transparent").attr("stroke-width", inA ? 2 : 0);
     d3.select(this).select(".icn").attr("opacity", inA ? 1 : 0.1);
-    d3.select(this).select(".nl").style("fill", inA ? GRAPH_LABEL.active : GRAPH_LABEL.default);
+    d3.select(this).select(".nl").style("fill", inA ? graphLabels().active : graphLabels().default);
   });
   lviz.each(function(l){
     const s = sid(l), t = tid(l);
@@ -15461,7 +15489,19 @@ function initAmbientBackground(){
    ════════════════════════════════════════════════════════════════════════*/
 function refreshThemeVisuals(){
   ensureOverviewDefs();
+  ensurePillarZoneDefs();
   if (viewMode === "overview") updateOverviewDeck();
+  else if (usePillarLayout()) updatePillarGuides();
+  if (!ndEl) return;
+  if (viewMode === "all-products") applyAllProductsNodeStyles(selected);
+  else if (viewMode === "composition"){
+    applyCompositionNodeStyles();
+    applyCompositionLabelTextStyle(ndEl.selectAll("text.nl"));
+    applyCompositionInteractionStyles(selected);
+  } else if (usePillarLayout()){
+    applyPillarLabelStyles(selected);
+    applyPillarNodeVisualState(selected);
+  } else resetStandardLabelStyles();
 }
 
 function wireThemeToggle(){
@@ -15581,18 +15621,18 @@ window.__cpnV2 = {
 <script>window.__DS_ASSET_V="2.51.0";</script>
 <script src="design-studio-photos.js?v=2.58.2"></script>
 <script src="design-studio-stencils.js?v=2.58.2"></script>
-<script src="design-studio-templates.js?v=2.79.9"></script>
+<script src="design-studio-templates.js?v=2.79.10"></script>
 <script src="design-studio-rules.js?v=2.58.2"></script>
-<script src="design-studio-intent.js?v=2.79.9"></script>
+<script src="design-studio-intent.js?v=2.79.10"></script>
 <script src="design-studio-explore.js?v=2.58.2"></script>
-<script src="design-studio-premium.js?v=2.79.9"></script>
+<script src="design-studio-premium.js?v=2.79.10"></script>
 <script src="design-studio-expert.js?v=2.58.2"></script>
-<script src="design-studio-walk-layout.js?v=2.79.9"></script>
-<script src="design-studio-walk-voxel.js?v=2.79.9"></script>
-<script src="design-studio-field-panel.js?v=2.79.9"></script>
-<script src="design-studio-walk-audio.js?v=2.79.9"></script>
-<script src="design-studio-walk-models.js?v=2.79.9"></script>
-<script src="design-studio-walk.js?v=2.79.9"></script>
-<script src="design-studio.js?v=2.79.9"></script>
+<script src="design-studio-walk-layout.js?v=2.79.10"></script>
+<script src="design-studio-walk-voxel.js?v=2.79.10"></script>
+<script src="design-studio-field-panel.js?v=2.79.10"></script>
+<script src="design-studio-walk-audio.js?v=2.79.10"></script>
+<script src="design-studio-walk-models.js?v=2.79.10"></script>
+<script src="design-studio-walk.js?v=2.79.10"></script>
+<script src="design-studio.js?v=2.79.10"></script>
 </body>
 </html>
