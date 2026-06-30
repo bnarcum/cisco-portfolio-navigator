@@ -14,7 +14,7 @@
   import * as THREE from "three";
   window.__cpnWalkTHREE = THREE;
   </script>
-  <link rel="stylesheet" href="design-studio.css?v=2.79.3"/>
+  <link rel="stylesheet" href="design-studio.css?v=2.79.4"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     @font-face{
@@ -46,6 +46,7 @@
       color-scheme:light}
     [data-theme="light"] #bg-ambient{background:linear-gradient(165deg,#dce8f4 0%,#eef2f7 42%,#e4edf8 100%)}
     [data-theme="light"] .bg-glow{opacity:.28}
+    [data-theme="light"] .bg-glow-floor{opacity:.35}
     [data-theme="light"] .bg-grid{opacity:.55;stroke:rgba(7,24,45,.08)}
     [data-theme="light"] #gs,#spatial-wrap{filter:none}
     [data-theme="light"] .pillar-guides .zone-title{fill:#006e8f}
@@ -80,23 +81,18 @@
     #bg-ambient[data-tint-ai] .bg-pillar-tint--ai{opacity:calc(var(--ambient-intensity,.55)*.92)}
     #bg-ambient[data-tint-wp] .bg-pillar-tint--wp{opacity:calc(var(--ambient-intensity,.55)*.88)}
     #bg-ambient[data-tint-res] .bg-pillar-tint--res{opacity:calc(var(--ambient-intensity,.55)*.85)}
-    #bg-ambient.ambient-hot .bg-beams{opacity:.16}
     #bg-ambient.ambient-hot .bg-grid{opacity:1}
     .bg-vignette{position:absolute;inset:0;
       background:radial-gradient(ellipse 85% 75% at 50% 48%, transparent 35%, rgba(0,0,0,.45) 100%)}
-    .bg-glow{position:absolute;inset:-25%;opacity:1;will-change:transform;
+    /* Bottom band — pinned static so drift/beams never shimmer the lower canvas */
+    .bg-glow-floor{position:absolute;inset:0;pointer-events:none;
+      background:
+        radial-gradient(ellipse 52% 44% at 78% 68%, rgba(2,200,255,.22) 0%, transparent 65%),
+        radial-gradient(ellipse 46% 38% at 50% 88%, rgba(255,144,0,.12) 0%, transparent 62%)}
+    .bg-glow{position:absolute;inset:-20%;opacity:1;
       background:
         radial-gradient(ellipse 58% 48% at 22% 32%, rgba(10,96,255,.28) 0%, transparent 68%),
-        radial-gradient(ellipse 52% 44% at 78% 68%, rgba(2,200,255,.22) 0%, transparent 65%),
-        radial-gradient(ellipse 46% 38% at 50% 88%, rgba(255,144,0,.12) 0%, transparent 62%),
-        radial-gradient(ellipse 40% 35% at 50% 42%, rgba(2,200,255,.10) 0%, transparent 70%);
-      animation:bg-glow-drift 40s ease-in-out infinite}
-    .bg-beams{position:absolute;inset:-50%;opacity:.10;will-change:transform;
-      background:conic-gradient(from 210deg at 50% 50%,
-        transparent 0deg, rgba(2,200,255,.40) 32deg, transparent 64deg,
-        rgba(10,96,255,.32) 128deg, transparent 168deg,
-        rgba(2,200,255,.26) 248deg, transparent 300deg);
-      animation:bg-beams-spin 180s linear infinite}
+        radial-gradient(ellipse 40% 35% at 50% 42%, rgba(2,200,255,.10) 0%, transparent 70%)}
     .bg-grid{position:absolute;inset:0;opacity:1;
       background-image:
         linear-gradient(rgba(2,200,255,.06) 1px, transparent 1px),
@@ -105,23 +101,16 @@
       background-size:72px 72px, 72px 72px, 36px 36px;
       background-position:0 0, 0 0, 18px 18px;
       animation:bg-grid-pan 58.33s linear infinite}
-    #bg-mesh{position:absolute;inset:0;width:100%;height:100%;display:block}
+    #bg-mesh{position:absolute;inset:0;width:100%;height:100%;display:block;
+      -webkit-mask-image:linear-gradient(to bottom, #000 0%, #000 58%, rgba(0,0,0,.35) 100%);
+      mask-image:linear-gradient(to bottom, #000 0%, #000 58%, rgba(0,0,0,.35) 100%)}
     body.spatial-open #bg-mesh{opacity:0}
-    @keyframes bg-glow-drift{
-      0%,100%{transform:translate(0,0) scale(1)}
-      33%{transform:translate(2.5%,-2%) scale(1.04)}
-      66%{transform:translate(-2%,2.5%) scale(1.02)}
-    }
-    @keyframes bg-beams-spin{
-      0%{transform:rotate(0deg)}
-      100%{transform:rotate(360deg)}
-    }
     @keyframes bg-grid-pan{
       0%{background-position:0 0, 0 0, 18px 18px}
       100%{background-position:72px 72px, 72px 72px, 54px 54px}
     }
     @media (prefers-reduced-motion: reduce){
-      .bg-glow,.bg-grid,.bg-beams{animation:none}
+      .bg-grid{animation:none}
     }
 
     /* TOP BAR + ACTION BAR */
@@ -271,8 +260,6 @@
     #gs.view-x-scan.view-enter{animation:view-enter-scan .32s ease-out forwards}
     #gs.view-x-focus.view-exit{opacity:0;transform:scale(1.012);filter:blur(1.5px)}
     #gs.view-x-focus.view-enter{animation:view-enter-focus .3s ease-out forwards}
-    body.view-x-dissolve #bg-ambient .bg-glow{transform:scale(1.03);transition:transform .35s ease}
-    body.view-x-expand #bg-ambient .bg-glow{transform:scale(1.05);transition:transform .35s ease}
     body.spatial-selection-active #spatial-graph canvas{filter:saturate(1.18) brightness(1.1) contrast(1.06)}
     body.view-transitioning #spatial-wrap,
     body.view-transitioning #spatial-graph{pointer-events:none}
@@ -384,11 +371,11 @@
     .pillar-guides .zone-stats{font-size:10px;font-weight:600;fill:#94a3b8}
     .pillar-guides .zone-spine-label{font-size:12px;font-weight:600;fill:#e8f6ff;text-anchor:middle}
     body.families-mode .bg-glow{
+      background:radial-gradient(ellipse 58% 48% at 22% 32%, rgba(10,96,255,.16) 0%, transparent 68%)}
+    body.families-mode .bg-glow-floor{
       background:
-        radial-gradient(ellipse 58% 48% at 22% 32%, rgba(10,96,255,.16) 0%, transparent 68%),
         radial-gradient(ellipse 52% 44% at 78% 68%, rgba(2,200,255,.12) 0%, transparent 65%),
-        radial-gradient(ellipse 46% 38% at 50% 88%, rgba(255,144,0,.08) 0%, transparent 62%);
-    }
+        radial-gradient(ellipse 46% 38% at 50% 88%, rgba(255,144,0,.08) 0%, transparent 62%)}
     body.families-mode.pillar-focus .bg-glow{opacity:.72}
     body.pillar-focus .nd .gr{filter:url(#glow)}
     body.pillar-focus .nd.nd-selected .mc,
@@ -1198,7 +1185,7 @@
 <div id="gw">
   <div id="bg-ambient" aria-hidden="true">
     <div class="bg-vignette"></div>
-    <div class="bg-beams"></div>
+    <div class="bg-glow-floor"></div>
     <div class="bg-glow"></div>
     <div class="bg-pillar-tint bg-pillar-tint--ai" aria-hidden="true"></div>
     <div class="bg-pillar-tint bg-pillar-tint--wp" aria-hidden="true"></div>
@@ -9640,7 +9627,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.79.3";
+const APP_VERSION   = "2.79.4";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -15431,7 +15418,7 @@ function initAmbientBackground(){
         const dx = a.x - b.x, dy = a.y - b.y;
         const dist = Math.hypot(dx, dy);
         if (dist < LINK_DIST){
-          const alpha = (1 - dist / LINK_DIST) * 0.26;
+          const alpha = 0.15;
           ctx.strokeStyle = `rgba(2,200,255,${alpha})`;
           ctx.lineWidth = 1;
           ctx.beginPath();
@@ -15603,18 +15590,18 @@ window.__cpnV2 = {
 <script>window.__DS_ASSET_V="2.51.0";</script>
 <script src="design-studio-photos.js?v=2.58.2"></script>
 <script src="design-studio-stencils.js?v=2.58.2"></script>
-<script src="design-studio-templates.js?v=2.79.3"></script>
+<script src="design-studio-templates.js?v=2.79.4"></script>
 <script src="design-studio-rules.js?v=2.58.2"></script>
-<script src="design-studio-intent.js?v=2.79.3"></script>
+<script src="design-studio-intent.js?v=2.79.4"></script>
 <script src="design-studio-explore.js?v=2.58.2"></script>
-<script src="design-studio-premium.js?v=2.79.3"></script>
+<script src="design-studio-premium.js?v=2.79.4"></script>
 <script src="design-studio-expert.js?v=2.58.2"></script>
-<script src="design-studio-walk-layout.js?v=2.79.3"></script>
-<script src="design-studio-walk-voxel.js?v=2.79.3"></script>
-<script src="design-studio-field-panel.js?v=2.79.3"></script>
-<script src="design-studio-walk-audio.js?v=2.79.3"></script>
-<script src="design-studio-walk-models.js?v=2.79.3"></script>
-<script src="design-studio-walk.js?v=2.79.3"></script>
-<script src="design-studio.js?v=2.79.3"></script>
+<script src="design-studio-walk-layout.js?v=2.79.4"></script>
+<script src="design-studio-walk-voxel.js?v=2.79.4"></script>
+<script src="design-studio-field-panel.js?v=2.79.4"></script>
+<script src="design-studio-walk-audio.js?v=2.79.4"></script>
+<script src="design-studio-walk-models.js?v=2.79.4"></script>
+<script src="design-studio-walk.js?v=2.79.4"></script>
+<script src="design-studio.js?v=2.79.4"></script>
 </body>
 </html>
