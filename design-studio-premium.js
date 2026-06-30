@@ -4,7 +4,7 @@
 (function () {
   "use strict";
 
-  const TOUR_KEY = "cpn-ds-tour-v1";
+  const TOUR_KEY = "cpn-ds-tour-v2";
   const ROOM_TYPE_LABELS = {
     boardroom: "Boardroom", conference: "Conference", huddle: "Huddle", training: "Training",
     executive: "Executive", teamsRoom: "Teams", zoomRoom: "Zoom", ctMediumDualDisplay: "Dual display",
@@ -196,29 +196,70 @@
   }
 
   const TOUR_STEPS = [
-    { sel: "[data-pillar='workplaces']", text: "Start with a One Cisco pillar — workplaces loads an 18-room hybrid campus brief." },
-    { sel: "#ds-intent-chips", text: "Parsed signals show room mix and architecture before you generate." },
-    { sel: "#ds-room-mix-editor", text: "Tune room counts here, then Generate Draft." },
-    { sel: "#ds-generate", text: "Generate builds network + all rooms with real Cisco PIDs and citations." },
-    { sel: "[data-tab='room']", text: "Room tab — diagram or portfolio grid for all collaboration spaces." },
-    { sel: "#ds-explore-dock, #ds-explore-intent", text: "Go deeper: CVD guides, Cisco U, and dCloud labs matched to your design." },
-    { sel: ".ds-export-ccw", text: "Export CCW when validation passes — take the BOM to quote." }
+    {
+      center: true,
+      text: "Design Studio turns a brief into a validated network and room design with real Cisco PIDs — Intent, Network, Room, then Quote.",
+      before: (studio) => studio.setTab("intent")
+    },
+    {
+      sel: "#ds-one-cisco-deck",
+      text: "Start from a One Cisco pillar or starter phrase. Parsed chips preview room mix and architecture before you generate.",
+      before: (studio) => studio.setTab("intent")
+    },
+    {
+      sel: "#ds-generate",
+      text: "Generate Draft builds the full topology and collaboration spaces. Quickstart loads a sample and opens the 3D walk.",
+      before: (studio) => studio.setTab("intent")
+    },
+    {
+      sel: "#ds-tabs",
+      text: "Network and Room tabs hold your diagrams. Drag stencils from Build, wire ports, and launch 3D Walk from the canvas toolbar.",
+      before: (studio) => studio.setTab("network")
+    },
+    {
+      sel: "#ds-sidebar-modes",
+      text: "Quote covers BOM, validation, and suggestions. Learn surfaces CVD guides and dCloud labs matched to your design.",
+      before: (studio) => { studio.setTab("network"); studio.setSidebarMode("quote"); }
+    },
+    {
+      sel: "#ds-export-ccw",
+      text: "Export to CCW when validation passes. Use Gallery for reference architectures anytime — re-run Tour from the header when you need a refresher.",
+      before: (studio) => studio.setTab("intent")
+    }
   ];
+
+  let tourRingEl = null;
+
+  function clearTourRing() {
+    tourRingEl?.classList.remove("ds-tour-target-ring");
+    tourRingEl = null;
+  }
 
   function runTour(studio, step = 0) {
     if (step >= TOUR_STEPS.length) {
+      clearTourRing();
       try { localStorage.setItem(TOUR_KEY, "1"); } catch (e) { /* ignore */ }
       document.getElementById("ds-tour-overlay")?.remove();
       return;
     }
     const s = TOUR_STEPS[step];
+    if (s.before) {
+      try { s.before(studio); } catch (e) { /* ignore */ }
+    }
     let overlay = document.getElementById("ds-tour-overlay");
     if (!overlay) {
       overlay = document.createElement("div");
       overlay.id = "ds-tour-overlay";
       document.getElementById("design-studio")?.appendChild(overlay);
     }
-    const target = document.querySelector(s.sel);
+    overlay.classList.toggle("ds-tour-centered", !!s.center);
+    clearTourRing();
+    const target = s.sel ? document.querySelector(s.sel) : null;
+    if (target) {
+      tourRingEl = target;
+      target.classList.add("ds-tour-target-ring");
+      target.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
     overlay.innerHTML = `
       <div class="ds-tour-card">
         <span class="ds-tour-step">${step + 1} / ${TOUR_STEPS.length}</span>
@@ -229,11 +270,11 @@
         </div>
       </div>`;
     overlay.querySelector("[data-tour='skip']")?.addEventListener("click", () => {
+      clearTourRing();
       try { localStorage.setItem(TOUR_KEY, "1"); } catch (e) { /* ignore */ }
       overlay.remove();
     });
     overlay.querySelector("[data-tour='next']")?.addEventListener("click", () => runTour(studio, step + 1));
-    if (target) target.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }
 
   function validationPanelExtras(design, val, score) {

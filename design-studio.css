@@ -626,6 +626,8 @@
 .ds-portfolio-name{font-size:9px;color:var(--subtle);text-align:center;line-height:1.2}
 
 #ds-tour-overlay{position:absolute;inset:0;z-index:200;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;padding:24px}
+#ds-tour-overlay.ds-tour-centered{align-items:center}
+#ds-tour-overlay .ds-tour-target-ring{outline:2px solid rgba(0,212,255,.65);outline-offset:3px;border-radius:8px}
 .ds-tour-card{max-width:420px;padding:16px 18px;border-radius:10px;border:1px solid rgba(0,212,255,.35);background:#0c1e32;color:#e8f4ff}
 .ds-tour-step{font-size:9px;font-weight:800;text-transform:uppercase;color:#00d4ff}
 .ds-tour-card p{margin:8px 0 12px;font-size:12px;line-height:1.45}
