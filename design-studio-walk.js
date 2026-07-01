@@ -586,6 +586,9 @@
     const lift = podLift(ch.zone, kind, ch);
     const mode = kind === "room" ? "room" : "network";
     const def = window.__DS_STENCILS?.getDef?.(ch.stencilId, mode);
+    const onTable = kind === "room" && (
+      ch.zone === "table" || ch.zone === "desk" || ch.mount === "table" || ch.mount === "desk"
+    );
 
     let photoTex = await loadTexture(THREE, ch.photoUrl);
     if (!photoTex) photoTex = makeFallbackIconTexture(THREE, ch.label, theme);
@@ -605,7 +608,7 @@
       new THREE.MeshBasicMaterial({ color: theme.accent, transparent: true, opacity: 0.1, side: THREE.DoubleSide })
     );
     ring.rotation.x = -Math.PI / 2;
-    ring.position.y = 0.03 * scale;
+    ring.position.y = onTable ? lift + 0.03 * scale : 0.03 * scale;
     g.add(ring);
 
     const glow = new THREE.PointLight(theme.light, 0.06 * scale, 3.2 * scale);
@@ -635,7 +638,7 @@
       new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false })
     );
     shadow.rotation.x = -Math.PI / 2;
-    shadow.position.y = 0.02;
+    shadow.position.y = onTable ? lift + 0.02 : 0.02;
     g.add(shadow);
 
     const hitbox = new THREE.Mesh(

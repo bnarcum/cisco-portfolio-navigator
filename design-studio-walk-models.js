@@ -20,7 +20,7 @@
   /** Room stencils with matrix photos — render photo-forward shells instead of chunky procedural bodies. */
   const PHOTO_SHELL_STENCILS = new Set([
     "room-kit-eq", "room-kit-pro", "room-bar", "board-pro", "desk-pro",
-    "quad-cam", "room-navigator", "touch-10", "ceiling-mic", "table-mic"
+    "quad-cam", "room-navigator", "touch-10", "table-mic"
   ]);
 
   /** Per-stencil mount + proportions for photo shells. */
@@ -31,9 +31,8 @@
     "room-kit-eq": { mount: "rack", aspect: 1.55, targetH: 0.4, depth: 0.52 },
     "room-kit-pro": { mount: "rack", aspect: 1.48, targetH: 0.46, depth: 0.55 },
     "quad-cam": { mount: "wall", aspect: 2.0, targetH: 0.2, depth: 0.09 },
-    "room-navigator": { mount: "wall", aspect: 1.05, targetH: 0.32, depth: 0.07 },
+    "room-navigator": { mount: "table-flat", aspect: 1.05, targetH: 0.34, depth: 0.038, tilt: 0.06 },
     "touch-10": { mount: "table", aspect: 0.72, targetH: 0.36, depth: 0.045, tilt: 0.24 },
-    "ceiling-mic": { mount: "ceiling", aspect: 1.0, targetH: 0.26, depth: 0.2 },
     "table-mic": { mount: "table", aspect: 1.0, targetH: 0.3, depth: 0.11 }
   };
 
@@ -230,12 +229,26 @@
     return tex;
   }
 
+  function resolvePhotoShellProfile(ch) {
+    const sid = ch?.stencilId || "";
+    const base = { ...(PHOTO_SHELL_PROFILES[sid] || { mount: "shelf", aspect: 1.4, targetH: 0.5, depth: 0.18 }) };
+    const regMount = ch?.mount || window.__DS_STENCILS?.deviceProfile?.(sid, ch)?.mount;
+    if (!regMount) return base;
+    if (regMount === "table" || regMount === "desk") {
+      if (sid === "room-navigator") return { mount: "table-flat", aspect: 1.05, targetH: 0.34, depth: 0.038, tilt: 0.06 };
+      if (sid === "touch-10") return { mount: "table", aspect: 0.72, targetH: 0.36, depth: 0.045, tilt: 0.24 };
+      return { ...base, mount: base.mount === "table-flat" ? "table-flat" : "table" };
+    }
+    if (regMount === "wall-display" || regMount === "wall-panel" || regMount === "wall-camera" || regMount === "wall")
+      return { ...base, mount: "wall" };
+    if (regMount === "rack") return { ...base, mount: "rack" };
+    if (regMount === "shelf") return { ...base, mount: "shelf" };
+    return base;
+  }
+
   function buildPhotoShell(THREE, opts) {
     const { photoTex, theme, scale, ch } = opts;
-    let profile = { ...(PHOTO_SHELL_PROFILES[ch?.stencilId] || { mount: "shelf", aspect: 1.4, targetH: 0.5, depth: 0.18 }) };
-    if (ch?.stencilId === "room-navigator" && (ch?.zone === "table" || ch?.zone === "desk")) {
-      profile = { mount: "table", aspect: 0.72, targetH: 0.36, depth: 0.045, tilt: 0.24 };
-    }
+    const profile = resolvePhotoShellProfile(ch);
     const g = new THREE.Group();
     const h = profile.targetH * scale;
     const w = h * profile.aspect;
@@ -269,6 +282,18 @@
       );
       puck.position.y = h / 2;
       g.add(puck);
+    } else if (profile.mount === "table-flat") {
+      // Low-profile scheduler panel sitting flush on the table (Room Navigator).
+      const pad = new THREE.Mesh(
+        new THREE.BoxGeometry(w * 1.04, 0.012 * scale, d * 1.6),
+        stdMat(THREE, 0x2a3440, { metalness: 0.7, roughness: 0.38 })
+      );
+      pad.position.y = 0.006 * scale;
+      g.add(pad);
+      const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), trimMat);
+      body.position.set(0, h / 2 + 0.012 * scale, 0);
+      body.rotation.x = -(profile.tilt || 0.06);
+      g.add(body);
     } else if (profile.mount === "table") {
       const base = new THREE.Mesh(
         new THREE.CylinderGeometry(0.12 * scale, 0.14 * scale, 0.03 * scale, 18),
@@ -301,14 +326,17 @@
     const faceZ = profile.mount === "wall" ? d * 0.2 + 0.006
       : profile.mount === "rack" ? d / 2 + 0.008
       : profile.mount === "ceiling" ? d / 2 + 0.006
+      : profile.mount === "table-flat" ? d / 2 + 0.006
       : d * 0.28 + 0.006;
-    const faceY = profile.mount === "table" ? h * 0.55 : h / 2;
+    const faceY = profile.mount === "table" ? h * 0.55
+      : profile.mount === "table-flat" ? h / 2 + 0.012 * scale
+      : h / 2;
     const face = new THREE.Mesh(
       new THREE.PlaneGeometry(w * 0.9, h * 0.9),
       photoFaceMat(THREE, photoTex, 0.15)
     );
     face.position.set(0, faceY, faceZ);
-    if (profile.mount === "table") face.rotation.x = -(profile.tilt || 0.2);
+    if (profile.mount === "table" || profile.mount === "table-flat") face.rotation.x = -(profile.tilt || 0.2);
     face.userData.isPhotoFace = true;
     g.add(face);
     g.userData.photoMesh = face;
@@ -673,36 +701,68 @@
   }
 
   function buildCeilingMic(THREE, opts) {
-    const { theme, scale } = opts;
+    const { theme, scale, photoTex } = opts;
     const g = new THREE.Group();
-    // Ceiling mount plate at the top (where the PoE cable runs into the plenum).
+    const puckR = 0.20 * scale;
+    const puckH = 0.10 * scale;
+    const whiteMat = stdMat(THREE, 0xf2f5f8, { metalness: 0.32, roughness: 0.48 });
+    const rimMat = stdMat(THREE, 0xd8dde4, { metalness: 0.45, roughness: 0.42 });
+
+    // Ceiling mount plate (PoE cable into plenum).
     const plate = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.11 * scale, 0.11 * scale, 0.05 * scale, 16),
+      new THREE.CylinderGeometry(0.09 * scale, 0.09 * scale, 0.04 * scale, 16),
       stdMat(THREE, 0x3a4450, { metalness: 0.85, roughness: 0.25 })
     );
-    plate.position.y = 0.9 * scale;
+    plate.position.y = 0.94 * scale;
     g.add(plate);
-    // Drop stem hanging the mic down from the ceiling.
+    // Longer drop stem than AP — mic hangs lower over the table.
     const stem = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.025 * scale, 0.025 * scale, 0.55 * scale, 8),
+      new THREE.CylinderGeometry(0.022 * scale, 0.026 * scale, 0.58 * scale, 8),
       stdMat(THREE, 0x4a5565, { metalness: 0.8, roughness: 0.3 })
     );
-    stem.position.y = 0.6 * scale;
+    stem.position.y = 0.62 * scale;
     g.add(stem);
-    // Mic capsule facing down toward the table.
+    // Thicker, smaller puck than AP — unmistakably a mic capsule, not a WiFi disc.
     const puck = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.22 * scale, 0.18 * scale, 0.08 * scale, 24),
-      stdMat(THREE, 0xf0f4f8, { metalness: 0.4, roughness: 0.42 })
+      new THREE.CylinderGeometry(puckR * 1.02, puckR * 0.9, puckH, 28),
+      whiteMat
     );
-    puck.position.y = 0.25 * scale;
+    puck.position.y = 0.28 * scale;
     g.add(puck);
-    const ring = new THREE.Mesh(
-      new THREE.TorusGeometry(0.17 * scale, 0.014 * scale, 8, 24),
-      accentMat(THREE, theme, { emissiveIntensity: 0.6 })
+    const rim = new THREE.Mesh(
+      new THREE.TorusGeometry(puckR * 0.88, 0.008 * scale, 8, 28),
+      rimMat
     );
-    ring.rotation.x = Math.PI / 2;
-    ring.position.y = 0.22 * scale;
-    g.add(ring);
+    rim.rotation.x = Math.PI / 2;
+    rim.position.y = 0.24 * scale;
+    g.add(rim);
+    // Center mute LED (not AP-style perimeter accent ring).
+    const muteLed = new THREE.Mesh(
+      new THREE.SphereGeometry(0.028 * scale, 10, 10),
+      stdMat(THREE, 0x44cc88, { emissive: 0x44cc88, emissiveIntensity: 0.85 })
+    );
+    muteLed.position.set(0, 0.23 * scale, puckR * 0.55);
+    g.add(muteLed);
+    // Product photo on the downward face (mic points at the table).
+    if (photoTex) {
+      const face = new THREE.Mesh(
+        new THREE.CircleGeometry(puckR * 0.82, 28),
+        photoFaceMat(THREE, photoTex, 0.18)
+      );
+      face.rotation.x = Math.PI / 2;
+      face.position.y = 0.23 * scale;
+      face.userData.isPhotoFace = true;
+      g.add(face);
+      g.userData.photoMesh = face;
+    } else {
+      const grille = new THREE.Mesh(
+        new THREE.CircleGeometry(puckR * 0.35, 16),
+        stdMat(THREE, 0xc8d0d8, { metalness: 0.2, roughness: 0.55 })
+      );
+      grille.rotation.x = Math.PI / 2;
+      grille.position.y = 0.235 * scale;
+      g.add(grille);
+    }
     return fitGroup(g, 0.95 * scale);
   }
 
