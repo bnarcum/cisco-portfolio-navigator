@@ -57,7 +57,9 @@ try {
   if (display && camera && !near(display.z, camera.z, 0.6)) errors.push(`display/camera should share front wall (z ${display.z} vs ${camera.z})`);
   if (touch && touch.zone !== "table") errors.push(`touch should be table zone, got ${touch.zone}`);
   if (touch && (touch.y > 1.2 || touch.y < 0.6)) errors.push(`touch should be tabletop height (~0.82), got y=${touch.y}`);
-  if (conf.environmentTags?.["room-ceiling-grid"]) errors.push("conference should not render ceiling lattice");
+  if (!conf.environmentTags?.["room-ceiling-grid"]) errors.push("conference should render ceiling grid for cable tray");
+  if (!conf.environmentTags?.["room-cable-tray"]) errors.push("conference should render ceiling cable tray");
+  if (!conf.environmentTags?.["room-floor"]) errors.push("conference should use professional carpet floor");
   await page.evaluate(() => window.__DS_WALK?.close?.(true));
 
   // Campus: floor-only decor (no rack rows, walls, or ceiling tray).

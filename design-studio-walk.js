@@ -42,6 +42,7 @@
   const WALK_ONBOARD_KEY = "cpn-ds-walk-onboarded";
   const WALK_INSIGHTS_OFF_KEY = "cpn-ds-walk-insights-off";
   const WALK_PACKETS_KEY = "cpn-ds-walk-packets";
+  const WALK_PRESENT_KEY = "cpn-ds-walk-present";
   const PACKET_SPEEDS = [
     { mult: 0.5, label: "Slow" },
     { mult: 1, label: "Normal" },
@@ -75,6 +76,7 @@
     topology: null, easyNav: true, route: null, environmentTags: {},
     semanticFrame: null, layerFilter: "all",
     packetsEnabled: true, packetSpeedIdx: 1,
+    presentationMode: false,
     quest: null
   };
 
@@ -305,13 +307,28 @@
   }
 
   function setupDiagramWorld(THREE, scene, bounds, graph) {
-    const VOX = window.__DS_WALK_VOXEL;
-    if (!VOX || !bounds) return;
+    if (!bounds || !graph) return;
     state.environmentTags = {};
+    state.THREE = THREE;
+    if (graph.kind === "room") {
+      addProfessionalRoomShell(THREE, scene, bounds);
+      addAdaptiveVenue(THREE, scene, bounds, graph);
+      if (roomWantsCableTray(graph)) addCableInfrastructure(THREE, scene, bounds, graph);
+      addSubtleZonePads(THREE, scene, graph);
+      addDustParticles(THREE, scene, bounds);
+      return;
+    }
+    const VOX = window.__DS_WALK_VOXEL;
+    if (!VOX) return;
     const sky = VOX.setBlockSky(THREE, scene);
     state.disposables.push(sky);
     VOX.addDiagramWorld(THREE, scene, bounds, graph, state.disposables);
     addAdaptiveVenue(THREE, scene, bounds, graph);
+  }
+
+  function roomWantsCableTray(graph) {
+    const tpl = String(graph.room?.template || "");
+    return !/auditorium|training/i.test(tpl);
   }
 
   function setupAvatar(THREE, scene) {
@@ -683,6 +700,139 @@
     return lift + 0.45;                        // table / rack / default: into the body
   }
 
+  function isRackChamber(ch) {
+    if (!ch) return false;
+    const z = String(ch.zone || "").toLowerCase();
+    if (z === "rack") return true;
+    const label = String(ch.label || ch.stencilId || "").toLowerCase();
+    return /switch|c9200|c9300|meraki\s*ms|poe/.test(label);
+  }
+
+  function isCeilingZone(z) {
+    return String(z || "").toLowerCase() === "ceiling";
+  }
+
+  function isDisplayZone(z) {
+    const s = String(z || "").toLowerCase();
+    return s === "display" || s === "wall";
+  }
+
+  function v3(THREE, x, y, z) {
+    return new THREE.Vector3(x, y, z);
+  }
+
+  function simplifyCablePath(points) {
+    if (points.length <= 2) return points;
+    const out = [points[0].clone()];
+    for (let i = 1; i < points.length - 1; i++) {
+      const prev = out[out.length - 1];
+      const cur = points[i];
+      const next = points[i + 1];
+      const v1x = cur.x - prev.x, v1y = cur.y - prev.y, v1z = cur.z - prev.z;
+      const v2x = next.x - cur.x, v2y = next.y - cur.y, v2z = next.z - cur.z;
+      const l1 = Math.hypot(v1x, v1y, v1z);
+      const l2 = Math.hypot(v2x, v2y, v2z);
+      if (l1 < 0.04 || l2 < 0.04) continue;
+      const dot = (v1x * v2x + v1y * v2y + v1z * v2z) / (l1 * l2);
+      if (dot > 0.998 && Math.abs(v1y - v2y) < 0.05) continue;
+      out.push(cur.clone());
+    }
+    out.push(points[points.length - 1].clone());
+    return out;
+  }
+
+  function lateralOffset(dx, dz, sib, amount = 0.2) {
+    const len = Math.hypot(dx, dz) || 1;
+    const px = -dz / len, pz = dx / len;
+    const side = (sib - 1) % 2 === 0 ? 1 : -1;
+    const mag = Math.ceil((sib - 1) / 2) * amount * side;
+    return { x: px * mag, z: pz * mag };
+  }
+
+  function buildRoomCablePoints(THREE, cor, sib, bounds) {
+    const ax = cor.from.pos.x, az = cor.from.pos.z;
+    const bx = cor.to.pos.x, bz = cor.to.pos.z;
+    const ya = cablePortY(cor.from);
+    const yb = cablePortY(cor.to);
+    const media = String(cor.media || "cat6").toLowerCase();
+    const zA = String(cor.from.zone || "").toLowerCase();
+    const zB = String(cor.to.zone || "").toLowerCase();
+    const frame = state.graph?.semanticFrame || {};
+    const frontZ = Number.isFinite(frame.frontZ) ? frame.frontZ + 0.22 : bounds.minZ + 0.6;
+    const backZ = Number.isFinite(frame.credenzaZ) ? frame.credenzaZ - 0.55 : bounds.maxZ - 1.4;
+    const trayY = 3.04;
+    const floorY = 0.14;
+    const credY = 0.9;
+    const wallY = 2.05;
+    const len = Math.hypot(bx - ax, bz - az);
+    const off = lateralOffset(bx - ax, bz - az, sib);
+
+    const withOff = (pts, offStart = 1, offEnd = pts.length - 2) =>
+      pts.map((p, i) => {
+        if (i < offStart || i > offEnd) return p.clone();
+        return v3(THREE, p.x + off.x, p.y, p.z + off.z);
+      });
+
+    const isHdmi = /hdmi|usb/.test(media);
+    const ceilingPath = isCeilingZone(zA) || isCeilingZone(zB);
+    const displayPath = isDisplayZone(zA) || isDisplayZone(zB);
+
+    if (isHdmi || (displayPath && isHdmi)) {
+      return simplifyCablePath(withOff([
+        v3(THREE, ax, ya, az),
+        v3(THREE, ax, wallY, az),
+        v3(THREE, ax, wallY, frontZ),
+        v3(THREE, bx, wallY, frontZ),
+        v3(THREE, bx, wallY, bz),
+        v3(THREE, bx, yb, bz)
+      ]));
+    }
+
+    if (ceilingPath) {
+      const low = isCeilingZone(zA) ? cor.to : cor.from;
+      const high = isCeilingZone(zA) ? cor.from : cor.to;
+      const lx = low.pos.x, lz = low.pos.z, ly = cablePortY(low);
+      const hx = high.pos.x, hz = high.pos.z, hy = cablePortY(high);
+      return simplifyCablePath(withOff([
+        v3(THREE, lx, ly, lz),
+        v3(THREE, lx, credY, lz),
+        v3(THREE, lx, credY, backZ),
+        v3(THREE, hx, credY, backZ),
+        v3(THREE, hx, trayY, hz),
+        v3(THREE, hx, hy, hz)
+      ], 2, 4));
+    }
+
+    if (displayPath && !ceilingPath) {
+      return simplifyCablePath(withOff([
+        v3(THREE, ax, ya, az),
+        v3(THREE, ax, credY, az),
+        v3(THREE, ax, credY, backZ),
+        v3(THREE, bx, credY, backZ),
+        v3(THREE, bx, wallY, frontZ),
+        v3(THREE, bx, yb, bz)
+      ], 2, 4));
+    }
+
+    if (len < 2.8) {
+      const midY = Math.max(ya, yb, floorY) + 0.12 + (sib - 1) * 0.06;
+      return simplifyCablePath([
+        v3(THREE, ax, ya, az),
+        v3(THREE, (ax + bx) / 2 + off.x, midY, (az + bz) / 2 + off.z),
+        v3(THREE, bx, yb, bz)
+      ]);
+    }
+
+    return simplifyCablePath(withOff([
+      v3(THREE, ax, ya, az),
+      v3(THREE, ax, floorY, az),
+      v3(THREE, ax, floorY, backZ),
+      v3(THREE, bx, floorY, backZ),
+      v3(THREE, bx, floorY, bz),
+      v3(THREE, bx, yb, bz)
+    ], 2, 4));
+  }
+
   function makeCableRun(THREE, cor) {
     const ax = cor.from.pos.x, az = cor.from.pos.z;
     const bx = cor.to.pos.x, bz = cor.to.pos.z;
@@ -703,27 +853,40 @@
     // connection stays traceable.
     const pairKey = [cor.from.id, cor.to.id].sort().join("|");
     const sib = _pairCount[pairKey] = (_pairCount[pairKey] || 0) + 1;
-    const baseY = Math.max(ya, yb);
-    const arch = Math.min(Math.max(len * 0.26, 1.2), 5.0) + (sib - 1) * 0.85;
-    const perp = new THREE.Vector3(-dz, 0, dx).normalize();
-    const lateral = ((sib - 1) % 2 === 0 ? 1 : -1) * Math.ceil((sib - 1) / 2) * 1.1;
-    const mid = new THREE.Vector3(
-      (ax + bx) / 2 + perp.x * lateral,
-      baseY + arch,
-      (az + bz) / 2 + perp.z * lateral
-    );
-    const curve = new THREE.QuadraticBezierCurve3(a, mid, b);
+    const roomWalk = state.graph?.kind === "room";
 
+    let curve;
+    let tubeR = roomWalk ? 0.042 : 0.085;
+    let emissiveI = roomWalk ? 0.28 : 0.55;
+
+    if (roomWalk && state.bounds) {
+      const points = buildRoomCablePoints(THREE, cor, sib, state.bounds);
+      curve = new THREE.CatmullRomCurve3(points, false, "catmullrom", 0.18);
+    } else {
+      const baseY = Math.max(ya, yb);
+      const arch = Math.min(Math.max(len * 0.26, 1.2), 5.0) + (sib - 1) * 0.85;
+      const perp = new THREE.Vector3(-dz, 0, dx).normalize();
+      const lateral = ((sib - 1) % 2 === 0 ? 1 : -1) * Math.ceil((sib - 1) / 2) * 1.1;
+      const mid = new THREE.Vector3(
+        (ax + bx) / 2 + perp.x * lateral,
+        baseY + arch,
+        (az + bz) / 2 + perp.z * lateral
+      );
+      curve = new THREE.QuadraticBezierCurve3(a, mid, b);
+    }
+
+    const segs = roomWalk ? Math.max(16, Math.min(40, Math.round(len * 2))) : 28;
     const tube = new THREE.Mesh(
-      new THREE.TubeGeometry(curve, 28, 0.085, 7, false),
+      new THREE.TubeGeometry(curve, segs, tubeR, 7, false),
       new THREE.MeshStandardMaterial({
-        color, emissive: color, emissiveIntensity: 0.55,
-        metalness: 0.3, roughness: 0.5
+        color, emissive: color, emissiveIntensity: emissiveI,
+        metalness: 0.35, roughness: 0.48
       })
     );
+    tube.userData.baseEmissive = emissiveI;
+    tube.userData.baseOpacity = 1;
     g.add(tube);
 
-    const roomWalk = state.graph?.kind === "room";
     // Connector collars only in network walk — room devices are small; collars obscure product photos.
     if (!roomWalk) {
       const outA = new THREE.Vector3().subVectors(mid, a).normalize();
@@ -742,9 +905,11 @@
     }
 
     // Packets flow from source → target along the curve (data direction).
-    const pktR = roomWalk ? 0.16 : 0.12;
-    const haloR = roomWalk ? 0.3 : 0.22;
-    const packetCount = Math.max(2, Math.min(5, Math.round(len / 5)));
+    const pktR = roomWalk ? 0.09 : 0.12;
+    const haloR = roomWalk ? 0.16 : 0.22;
+    const packetCount = roomWalk
+      ? Math.max(1, Math.min(3, Math.round(len / 8)))
+      : Math.max(2, Math.min(5, Math.round(len / 5)));
     for (let i = 0; i < packetCount; i++) {
       const pkt = new THREE.Mesh(
         new THREE.SphereGeometry(pktR, 12, 12),
@@ -752,7 +917,7 @@
       );
       const halo = new THREE.Mesh(
         new THREE.SphereGeometry(haloR, 12, 12),
-        new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.35 })
+        new THREE.MeshBasicMaterial({ color, transparent: true, opacity: roomWalk ? 0.22 : 0.35 })
       );
       pkt.add(halo);
       pkt.userData = { packet: true, t: i / packetCount };
@@ -850,6 +1015,86 @@
     for (let z = bounds.minZ - 4; z <= bounds.maxZ + 4; z += 4) {
       box(THREE, scene, "room-ceiling-grid", [w, 0.035, 0.035], [cx, h, z], mat);
     }
+  }
+
+  function addProfessionalRoomShell(THREE, scene, bounds) {
+    const pad = 10;
+    const w = Math.max(bounds.maxX - bounds.minX + pad * 2, 20);
+    const d = Math.max(bounds.maxZ - bounds.minZ + pad * 2, 20);
+    const h = 3.38;
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    const cz = (bounds.minZ + bounds.maxZ) / 2;
+    setSkyBackground(THREE, scene, "room");
+    scene.fog = new THREE.FogExp2(0x1a2838, 0.022);
+
+    const floorTex = makeCarpetTexture(THREE);
+    floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
+    floorTex.repeat.set(w / 5, d / 5);
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(w, d),
+      new THREE.MeshStandardMaterial({ map: floorTex, color: 0x7a7770, metalness: 0.12, roughness: 0.82 })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.set(cx, 0, cz);
+    floor.receiveShadow = true;
+    addTagged(scene, floor, "room-floor");
+
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x2a323c, metalness: 0.18, roughness: 0.8 });
+    [
+      { sx: w, sz: 0.28, x: cx, z: cz - d / 2 },
+      { sx: w, sz: 0.28, x: cx, z: cz + d / 2 },
+      { sx: 0.28, sz: d, x: cx - w / 2, z: cz },
+      { sx: 0.28, sz: d, x: cx + w / 2, z: cz }
+    ].forEach(wl => box(THREE, scene, "room-shell-wall", [wl.sx, h, wl.sz], [wl.x, h / 2, wl.z], wallMat));
+
+    const ceil = new THREE.Mesh(
+      new THREE.PlaneGeometry(w, d),
+      new THREE.MeshStandardMaterial({ color: 0xe8ecef, metalness: 0.08, roughness: 0.92, side: THREE.DoubleSide })
+    );
+    ceil.rotation.x = Math.PI / 2;
+    ceil.position.set(cx, h, cz);
+    ceil.receiveShadow = true;
+    addTagged(scene, ceil, "room-ceiling");
+
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => {
+      const bulb = new THREE.PointLight(0xffeed8, 0.38, 14, 2);
+      bulb.position.set(cx + sx * w * 0.32, h - 0.15, cz + sz * d * 0.32);
+      scene.add(bulb);
+    });
+  }
+
+  function addCableInfrastructure(THREE, scene, bounds, graph) {
+    const frame = graph.semanticFrame || {};
+    const ceilH = 3.15;
+    addCeilingGrid(THREE, scene, bounds, ceilH);
+    const trayMat = new THREE.MeshStandardMaterial({ color: 0x9aa4ac, metalness: 0.72, roughness: 0.38 });
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    const cz = (bounds.minZ + bounds.maxZ) / 2;
+    const backZ = Number.isFinite(frame.credenzaZ) ? frame.credenzaZ - 0.45 : bounds.maxZ - 1.5;
+    const w = bounds.maxX - bounds.minX + 6;
+    box(THREE, scene, "room-cable-tray", [w, 0.05, 0.28], [cx, ceilH - 0.06, cz], trayMat);
+    box(THREE, scene, "room-credenza-raceway", [Math.max(w * 0.55, 8), 0.07, 0.2], [cx, 0.9, backZ], trayMat);
+    const frontZ = Number.isFinite(frame.frontZ) ? frame.frontZ + 0.08 : bounds.minZ + 0.5;
+    box(THREE, scene, "room-wall-raceway", [Math.max(w * 0.65, 10), 0.04, 0.14], [cx, 2.08, frontZ], trayMat);
+  }
+
+  function addSubtleZonePads(THREE, scene, graph) {
+    (graph.chambers || []).forEach(ch => {
+      const px = ch.pos.x, pz = ch.pos.z;
+      if (!Number.isFinite(px) || !Number.isFinite(pz)) return;
+      const theme = zoneTheme(ch.zone);
+      const pad = new THREE.Mesh(
+        new THREE.CircleGeometry(0.85, 24),
+        new THREE.MeshStandardMaterial({
+          color: theme.accent, transparent: true, opacity: 0.12,
+          metalness: 0.2, roughness: 0.85, depthWrite: false
+        })
+      );
+      pad.rotation.x = -Math.PI / 2;
+      pad.position.set(px, 0.025, pz);
+      pad.userData = { noShadow: true };
+      addTagged(scene, pad, "room-zone-pad");
+    });
   }
 
   function addSeatRows(THREE, scene, bounds, rows = 4) {
@@ -1111,6 +1356,12 @@
     state.devicePods = [];
     state.cables = [];
     state.colliders = [];
+    state.THREE = THREE;
+    loadPacketPrefs();
+    if (graph.kind === "room" && !sessionStorage.getItem(WALK_PACKETS_KEY)) {
+      state.packetsEnabled = false;
+    }
+    loadPresentationPrefs();
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: "high-performance" });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -1150,6 +1401,8 @@
     Object.keys(_pairCount).forEach(k => delete _pairCount[k]);
     graph.corridors.forEach(cor => scene.add(makeCableRun(THREE, cor)));
     populateLegend(graph);
+    applyPacketVisibility();
+    updateCableFocus(state.focusId);
 
     const spawn = graph.chambers.find(c => /switch|9200|9300/i.test(c.label)) || graph.chambers[0];
     state.chambers = graph.chambers;
@@ -1774,6 +2027,36 @@
       const on = pod.userData?.chamber?.id === id;
       pod.scale.setScalar(on ? 1.04 : 1);
       if (pod.userData.ring?.material) pod.userData.ring.material.opacity = on ? 0.55 : 0.2;
+    });
+    updateCableFocus(id);
+  }
+
+  function updateCableFocus(focusId) {
+    const room = state.graph?.kind === "room";
+    const dimOthers = room && (!!focusId || state.presentationMode);
+    state.cables.forEach(g => {
+      const cor = g.userData?.corridor;
+      if (!cor) return;
+      const connected = !dimOthers || cor.from.id === focusId || cor.to.id === focusId;
+      g.children.forEach(ch => {
+        if (!ch.isMesh || !ch.material) return;
+        if (ch.userData?.packet) {
+          ch.visible = !!state.packetsEnabled && (!dimOthers || connected);
+          return;
+        }
+        const baseE = ch.userData.baseEmissive ?? 0.3;
+        const baseO = ch.userData.baseOpacity ?? 1;
+        if (ch.material.emissiveIntensity !== undefined) {
+          ch.material.emissiveIntensity = connected ? baseE : baseE * 0.35;
+        }
+        if (!connected && dimOthers) {
+          ch.material.transparent = true;
+          ch.material.opacity = state.presentationMode ? 0.14 : 0.22;
+        } else {
+          ch.material.transparent = false;
+          ch.material.opacity = baseO;
+        }
+      });
     });
   }
 
@@ -2558,6 +2841,41 @@
       <div class="ds-oc-row"><span class="ds-oc-dot" style="background:#6F42C1"></span>IoT · 23°C · CO₂ 540ppm${st.mics.length ? ` · ${st.mics.length} mic${st.mics.length > 1 ? "s" : ""}` : ""}</div>`;
   }
 
+  function loadPresentationPrefs() {
+    try {
+      state.presentationMode = sessionStorage.getItem(WALK_PRESENT_KEY) === "1";
+    } catch (e) { /* ignore */ }
+  }
+
+  function savePresentationPrefs() {
+    try {
+      sessionStorage.setItem(WALK_PRESENT_KEY, state.presentationMode ? "1" : "0");
+    } catch (e) { /* ignore */ }
+  }
+
+  function syncPresentationHud() {
+    const btn = state.overlay?.querySelector('[data-action="present"]');
+    if (btn) {
+      btn.classList.toggle("active", !!state.presentationMode);
+      btn.textContent = state.presentationMode ? "Present: on" : "Present";
+    }
+    if (state.avatar) state.avatar.visible = state.thirdPerson && !state.presentationMode;
+  }
+
+  function togglePresentation() {
+    state.presentationMode = !state.presentationMode;
+    if (state.presentationMode) state.packetsEnabled = false;
+    applyPacketVisibility();
+    syncPacketsHud();
+    syncPresentationHud();
+    updateCableFocus(state.focusId);
+    savePresentationPrefs();
+    savePacketPrefs();
+    setStatus(state.presentationMode
+      ? "Presentation mode — clean room view for demos"
+      : "Presentation mode off");
+  }
+
   function loadPacketPrefs() {
     try {
       const raw = sessionStorage.getItem(WALK_PACKETS_KEY);
@@ -2629,6 +2947,9 @@
     const questBtn = tab === "room"
       ? `<button type="button" class="ds-walk-btn ds-walk-btn-quest" data-action="cable-quest" title="Mini-game: connect Room Bar or ceiling mic to the PoE switch">Cable Quest</button>`
       : "";
+    const presentBtn = tab === "room"
+      ? `<button type="button" class="ds-walk-btn ds-walk-btn-present" data-action="present" title="Clean demo view — dim unrelated cables, hide avatar, packets off">Present</button>`
+      : "";
     return `<div class="ds-walk-hud">
       <div class="ds-walk-hud-top">
         <strong class="ds-walk-title">3D WALKTHROUGH</strong>
@@ -2640,6 +2961,7 @@
         <button type="button" class="ds-walk-btn" data-action="next-dev" title="Next device">Next ›</button>
         ${questBtn}
         ${outcomesBtn}
+        ${presentBtn}
         <button type="button" class="ds-walk-btn ds-walk-pkt-toggle" data-action="packets" title="Show or hide data packets on links">Packets</button>
         <button type="button" class="ds-walk-btn ds-walk-pkt-speed" data-action="packet-speed" title="Packet speed">Normal</button>
         <button type="button" class="ds-walk-btn primary" data-action="inspect" title="Open device details">Inspect</button>
@@ -2693,6 +3015,7 @@
       if (!btn) return;
       const a = btn.dataset.action;
       if (a === "outcomes") { e.preventDefault(); e.stopPropagation(); toggleOutcomes(); }
+      else if (a === "present") { e.preventDefault(); e.stopPropagation(); togglePresentation(); }
       else if (a === "packets") { e.preventDefault(); e.stopPropagation(); togglePackets(); }
       else if (a === "packet-speed") { e.preventDefault(); e.stopPropagation(); cyclePacketSpeed(); }
       else if (a === "wayfind-open") openWayfindMenu();
@@ -2969,9 +3292,14 @@
       ${hudPanelsHtml()}`;
     bindHud();
     loadPacketPrefs();
+    loadPresentationPrefs();
+    if (studio.tab === "room" && !sessionStorage.getItem(WALK_PACKETS_KEY)) {
+      state.packetsEnabled = false;
+    }
     applyPacketVisibility();
     syncOutcomesHud();
     syncPacketsHud();
+    syncPresentationHud();
 
     const canvas = overlay.querySelector("#ds-walk-canvas");
     bindInput(canvas);

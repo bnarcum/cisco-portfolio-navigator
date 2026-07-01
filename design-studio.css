@@ -977,6 +977,9 @@
 .ds-walk-btn-spaces{border-color:rgba(111,66,193,.5);background:rgba(111,66,193,.14);color:#c9a7ff}
 .ds-walk-btn-spaces:hover{background:rgba(111,66,193,.26)}
 .ds-walk-btn-spaces.active{background:rgba(22,179,90,.28);border-color:rgba(22,179,90,.6);color:#9ff0c0}
+.ds-walk-btn-present{border-color:rgba(10,96,255,.45);background:rgba(10,96,255,.12);color:#9ec4ff}
+.ds-walk-btn-present:hover{background:rgba(10,96,255,.22)}
+.ds-walk-btn-present.active{background:rgba(10,96,255,.32);border-color:rgba(10,96,255,.65);color:#d4e6ff}
 .ds-walk-status{font-size:10px;color:var(--muted);margin-top:6px}
 .ds-walk-outcomes{margin-top:6px;padding:9px 11px;border-radius:12px;
   background:linear-gradient(180deg,rgba(8,20,34,.92),rgba(6,16,28,.92));
