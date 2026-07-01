@@ -42,7 +42,6 @@
   const WALK_ONBOARD_KEY = "cpn-ds-walk-onboarded";
   const WALK_INSIGHTS_OFF_KEY = "cpn-ds-walk-insights-off";
   const WALK_PACKETS_KEY = "cpn-ds-walk-packets";
-  const WALK_PRESENT_KEY = "cpn-ds-walk-present";
   const PACKET_SPEEDS = [
     { mult: 0.5, label: "Slow" },
     { mult: 1, label: "Normal" },
@@ -76,7 +75,6 @@
     topology: null, easyNav: true, route: null, environmentTags: {},
     semanticFrame: null, layerFilter: "all",
     packetsEnabled: true, packetSpeedIdx: 1,
-    presentationMode: false,
     quest: null
   };
 
@@ -150,7 +148,7 @@
     const wx = chambers.map(c => c.pos.x).filter(Number.isFinite);
     const wz = chambers.map(c => c.pos.z).filter(Number.isFinite);
     if (!wx.length) return null;
-    const pad = kind === "network" ? 10 : 5;
+    const pad = kind === "network" ? 10 : 8;
     return {
       minX: Math.min(...wx) - pad,
       maxX: Math.max(...wx) + pad,
@@ -307,46 +305,20 @@
   }
 
   function setupDiagramWorld(THREE, scene, bounds, graph) {
-    if (!bounds || !graph) return;
-    state.environmentTags = {};
-    state.THREE = THREE;
-    if (graph.kind === "room") {
-      addProfessionalRoomShell(THREE, scene, bounds);
-      if (!window.__DS_WALK_FX?.loaded?.()) addRoomLighting(THREE, scene, bounds);
-      addAdaptiveVenue(THREE, scene, bounds, graph);
-      if (roomWantsCableTray(graph)) addCableInfrastructure(THREE, scene, bounds, graph);
-      addSubtleZonePads(THREE, scene, graph);
-      addDustParticles(THREE, scene, bounds);
-      return;
-    }
-    const FX = window.__DS_WALK_FX;
-    if (FX?.loaded?.() && FX.buildNOC) {
-      FX.buildNOC(THREE, scene, bounds, graph, { addTagged, box, makeCanvasTexture });
-      addDustParticles(THREE, scene, bounds);
-      return;
-    }
     const VOX = window.__DS_WALK_VOXEL;
-    if (!VOX) return;
+    if (!VOX || !bounds) return;
+    state.environmentTags = {};
     const sky = VOX.setBlockSky(THREE, scene);
     state.disposables.push(sky);
     VOX.addDiagramWorld(THREE, scene, bounds, graph, state.disposables);
     addAdaptiveVenue(THREE, scene, bounds, graph);
   }
 
-  function roomWantsCableTray(graph) {
-    const tpl = String(graph.room?.template || "");
-    return !/auditorium|training/i.test(tpl);
-  }
-
   function setupAvatar(THREE, scene) {
-    const FX = window.__DS_WALK_FX;
     const VOX = window.__DS_WALK_VOXEL;
+    if (!VOX) return;
     if (state.avatar) scene.remove(state.avatar);
-    let avatar = null;
-    if (FX?.makeMannequin) { try { avatar = FX.makeMannequin(THREE); } catch { avatar = null; } }
-    if (!avatar && VOX?.makeAvatar) avatar = VOX.makeAvatar(THREE);
-    if (!avatar) return;
-    state.avatar = avatar;
+    state.avatar = VOX.makeAvatar(THREE);
     scene.add(state.avatar);
     state.avatar.visible = state.thirdPerson;
   }
@@ -711,140 +683,6 @@
     return lift + 0.45;                        // table / rack / default: into the body
   }
 
-  function isRackChamber(ch) {
-    if (!ch) return false;
-    const z = String(ch.zone || "").toLowerCase();
-    if (z === "rack") return true;
-    const label = String(ch.label || ch.stencilId || "").toLowerCase();
-    return /switch|c9200|c9300|meraki\s*ms|poe/.test(label);
-  }
-
-  function isCeilingZone(z) {
-    return String(z || "").toLowerCase() === "ceiling";
-  }
-
-  function isDisplayZone(z) {
-    const s = String(z || "").toLowerCase();
-    return s === "display" || s === "wall";
-  }
-
-  function v3(THREE, x, y, z) {
-    return new THREE.Vector3(x, y, z);
-  }
-
-  function simplifyCablePath(points) {
-    if (points.length <= 2) return points;
-    const out = [points[0].clone()];
-    for (let i = 1; i < points.length - 1; i++) {
-      const prev = out[out.length - 1];
-      const cur = points[i];
-      const next = points[i + 1];
-      const v1x = cur.x - prev.x, v1y = cur.y - prev.y, v1z = cur.z - prev.z;
-      const v2x = next.x - cur.x, v2y = next.y - cur.y, v2z = next.z - cur.z;
-      const l1 = Math.hypot(v1x, v1y, v1z);
-      const l2 = Math.hypot(v2x, v2y, v2z);
-      if (l1 < 0.04 || l2 < 0.04) continue;
-      const dot = (v1x * v2x + v1y * v2y + v1z * v2z) / (l1 * l2);
-      if (dot > 0.998 && Math.abs(v1y - v2y) < 0.05) continue;
-      out.push(cur.clone());
-    }
-    out.push(points[points.length - 1].clone());
-    return out;
-  }
-
-  function lateralOffset(dx, dz, sib, amount = 0.12) {
-    const len = Math.hypot(dx, dz) || 1;
-    const px = -dz / len, pz = dx / len;
-    const side = (sib - 1) % 2 === 0 ? 1 : -1;
-    const mag = Math.ceil((sib - 1) / 2) * amount * side;
-    return { x: px * mag, z: pz * mag };
-  }
-
-  function buildRoomCablePoints(THREE, cor, sib, bounds) {
-    const ax = cor.from.pos.x, az = cor.from.pos.z;
-    const bx = cor.to.pos.x, bz = cor.to.pos.z;
-    const ya = cablePortY(cor.from);
-    const yb = cablePortY(cor.to);
-    const media = String(cor.media || "cat6").toLowerCase();
-    const zA = String(cor.from.zone || "").toLowerCase();
-    const zB = String(cor.to.zone || "").toLowerCase();
-    const frame = state.graph?.semanticFrame || {};
-    const frontZ = Number.isFinite(frame.frontZ) ? frame.frontZ + 0.22 : bounds.minZ + 0.6;
-    const backZ = Number.isFinite(frame.credenzaZ) ? frame.credenzaZ - 0.55 : bounds.maxZ - 1.4;
-    const trayY = 4.05;
-    const credY = 0.88;
-    const tableY = 0.82;
-    const wallY = 2.05;
-    const len = Math.hypot(bx - ax, bz - az);
-    const off = lateralOffset(bx - ax, bz - az, sib);
-
-    const withOff = (pts, offStart = 1, offEnd = pts.length - 2) =>
-      pts.map((p, i) => {
-        if (i < offStart || i > offEnd) return p.clone();
-        return v3(THREE, p.x + off.x, p.y, p.z + off.z);
-      });
-
-    const isHdmi = /hdmi|usb/.test(media);
-    const ceilingPath = isCeilingZone(zA) || isCeilingZone(zB);
-    const displayPath = isDisplayZone(zA) || isDisplayZone(zB);
-
-    if (isHdmi || (displayPath && isHdmi)) {
-      return simplifyCablePath(withOff([
-        v3(THREE, ax, ya, az),
-        v3(THREE, ax, wallY, az),
-        v3(THREE, ax, wallY, frontZ),
-        v3(THREE, bx, wallY, frontZ),
-        v3(THREE, bx, wallY, bz),
-        v3(THREE, bx, yb, bz)
-      ]));
-    }
-
-    if (ceilingPath) {
-      const low = isCeilingZone(zA) ? cor.to : cor.from;
-      const high = isCeilingZone(zA) ? cor.from : cor.to;
-      const lx = low.pos.x, lz = low.pos.z, ly = cablePortY(low);
-      const hx = high.pos.x, hz = high.pos.z, hy = cablePortY(high);
-      return simplifyCablePath(withOff([
-        v3(THREE, lx, ly, lz),
-        v3(THREE, lx, credY, lz),
-        v3(THREE, lx, credY, backZ),
-        v3(THREE, hx, credY, backZ),
-        v3(THREE, hx, trayY, hz),
-        v3(THREE, hx, hy, hz)
-      ], 2, 4));
-    }
-
-    if (displayPath && !ceilingPath) {
-      return simplifyCablePath(withOff([
-        v3(THREE, ax, ya, az),
-        v3(THREE, ax, credY, az),
-        v3(THREE, ax, credY, backZ),
-        v3(THREE, bx, credY, backZ),
-        v3(THREE, bx, wallY, frontZ),
-        v3(THREE, bx, yb, bz)
-      ], 2, 4));
-    }
-
-    if (len < 2.8) {
-      const runY = Math.max(credY, tableY) + (sib - 1) * 0.04;
-      return simplifyCablePath([
-        v3(THREE, ax, ya, az),
-        v3(THREE, (ax + bx) / 2 + off.x, runY, (az + bz) / 2 + off.z),
-        v3(THREE, bx, yb, bz)
-      ]);
-    }
-
-    // PoE: stay in credenza raceway — never sprawl across the open floor.
-    return simplifyCablePath(withOff([
-      v3(THREE, ax, ya, az),
-      v3(THREE, ax, credY, az),
-      v3(THREE, ax, credY, backZ),
-      v3(THREE, bx, credY, backZ),
-      v3(THREE, bx, credY, bz),
-      v3(THREE, bx, yb, bz)
-    ], 2, 4));
-  }
-
   function makeCableRun(THREE, cor) {
     const ax = cor.from.pos.x, az = cor.from.pos.z;
     const bx = cor.to.pos.x, bz = cor.to.pos.z;
@@ -865,44 +703,31 @@
     // connection stays traceable.
     const pairKey = [cor.from.id, cor.to.id].sort().join("|");
     const sib = _pairCount[pairKey] = (_pairCount[pairKey] || 0) + 1;
-    const roomWalk = state.graph?.kind === "room";
+    const baseY = Math.max(ya, yb);
+    const arch = Math.min(Math.max(len * 0.26, 1.2), 5.0) + (sib - 1) * 0.85;
+    const perp = new THREE.Vector3(-dz, 0, dx).normalize();
+    const lateral = ((sib - 1) % 2 === 0 ? 1 : -1) * Math.ceil((sib - 1) / 2) * 1.1;
+    const mid = new THREE.Vector3(
+      (ax + bx) / 2 + perp.x * lateral,
+      baseY + arch,
+      (az + bz) / 2 + perp.z * lateral
+    );
+    const curve = new THREE.QuadraticBezierCurve3(a, mid, b);
 
-    let curve;
-    let tubeR = roomWalk ? 0.038 : 0.085;
-    let emissiveI = roomWalk ? 0.26 : 0.55;
-
-    if (roomWalk && state.bounds) {
-      const points = buildRoomCablePoints(THREE, cor, sib, state.bounds);
-      curve = new THREE.CatmullRomCurve3(points, false, "catmullrom", 0.18);
-    } else {
-      const baseY = Math.max(ya, yb);
-      const arch = Math.min(Math.max(len * 0.26, 1.2), 5.0) + (sib - 1) * 0.85;
-      const perp = new THREE.Vector3(-dz, 0, dx).normalize();
-      const lateral = ((sib - 1) % 2 === 0 ? 1 : -1) * Math.ceil((sib - 1) / 2) * 1.1;
-      const arcMid = new THREE.Vector3(
-        (ax + bx) / 2 + perp.x * lateral,
-        baseY + arch,
-        (az + bz) / 2 + perp.z * lateral
-      );
-      curve = new THREE.QuadraticBezierCurve3(a, arcMid, b);
-    }
-
-    const segs = roomWalk ? Math.max(16, Math.min(40, Math.round(len * 2))) : 28;
     const tube = new THREE.Mesh(
-      new THREE.TubeGeometry(curve, segs, tubeR, 7, false),
+      new THREE.TubeGeometry(curve, 28, 0.085, 7, false),
       new THREE.MeshStandardMaterial({
-        color, emissive: color, emissiveIntensity: emissiveI,
-        metalness: 0.35, roughness: 0.48
+        color, emissive: color, emissiveIntensity: 0.55,
+        metalness: 0.3, roughness: 0.5
       })
     );
-    tube.userData.baseEmissive = emissiveI;
-    tube.userData.baseOpacity = 1;
     g.add(tube);
 
+    const roomWalk = state.graph?.kind === "room";
     // Connector collars only in network walk — room devices are small; collars obscure product photos.
     if (!roomWalk) {
-      const outA = curve.getTangent(0).normalize();
-      const outB = curve.getTangent(1).normalize().multiplyScalar(-1);
+      const outA = new THREE.Vector3().subVectors(mid, a).normalize();
+      const outB = new THREE.Vector3().subVectors(mid, b).normalize();
       [ { p: a, out: outA }, { p: b, out: outB } ].forEach(({ p, out }) => {
         const collar = new THREE.Mesh(
           new THREE.CylinderGeometry(0.06, 0.072, 0.14, 10),
@@ -917,11 +742,9 @@
     }
 
     // Packets flow from source → target along the curve (data direction).
-    const pktR = roomWalk ? 0.09 : 0.12;
-    const haloR = roomWalk ? 0.16 : 0.22;
-    const packetCount = roomWalk
-      ? Math.max(1, Math.min(3, Math.round(len / 8)))
-      : Math.max(2, Math.min(5, Math.round(len / 5)));
+    const pktR = roomWalk ? 0.16 : 0.12;
+    const haloR = roomWalk ? 0.3 : 0.22;
+    const packetCount = Math.max(2, Math.min(5, Math.round(len / 5)));
     for (let i = 0; i < packetCount; i++) {
       const pkt = new THREE.Mesh(
         new THREE.SphereGeometry(pktR, 12, 12),
@@ -929,7 +752,7 @@
       );
       const halo = new THREE.Mesh(
         new THREE.SphereGeometry(haloR, 12, 12),
-        new THREE.MeshBasicMaterial({ color, transparent: true, opacity: roomWalk ? 0.22 : 0.35 })
+        new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.35 })
       );
       pkt.add(halo);
       pkt.userData = { packet: true, t: i / packetCount };
@@ -1015,104 +838,18 @@
     return addTagged(scene, m, tag);
   }
 
-  function addProfessionalRoomShell(THREE, scene, bounds) {
-    const pad = 6;
-    const w = Math.max(bounds.maxX - bounds.minX + pad * 2, 14);
-    const d = Math.max(bounds.maxZ - bounds.minZ + pad * 2, 14);
-    const h = 4.65;
+  function addCeilingGrid(THREE, scene, bounds, h = 3.15) {
+    const mat = new THREE.MeshStandardMaterial({ color: 0xd8e1e8, metalness: 0.2, roughness: 0.55, transparent: true, opacity: 0.55 });
     const cx = (bounds.minX + bounds.maxX) / 2;
     const cz = (bounds.minZ + bounds.maxZ) / 2;
-    setSkyBackground(THREE, scene, "room");
-    scene.fog = new THREE.FogExp2(0x2a3848, 0.01);
-
-    const floorTex = makeCarpetTexture(THREE);
-    floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
-    floorTex.repeat.set(w / 5, d / 5);
-    const floor = new THREE.Mesh(
-      new THREE.PlaneGeometry(w, d),
-      new THREE.MeshStandardMaterial({ map: floorTex, color: 0x7a8a9a, metalness: 0.08, roughness: 0.8 })
-    );
-    floor.rotation.x = -Math.PI / 2;
-    floor.position.set(cx, 0, cz);
-    floor.receiveShadow = true;
-    addTagged(scene, floor, "room-floor");
-
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0x3d4854, metalness: 0.14, roughness: 0.76 });
-    [
-      { sx: w, sz: 0.28, x: cx, z: cz - d / 2 },
-      { sx: w, sz: 0.28, x: cx, z: cz + d / 2 },
-      { sx: 0.28, sz: d, x: cx - w / 2, z: cz },
-      { sx: 0.28, sz: d, x: cx + w / 2, z: cz }
-    ].forEach(wl => box(THREE, scene, "room-shell-wall", [wl.sx, h, wl.sz], [wl.x, h / 2, wl.z], wallMat));
-
-    const ceil = new THREE.Mesh(
-      new THREE.PlaneGeometry(w, d),
-      new THREE.MeshStandardMaterial({
-        color: 0x2a343c, metalness: 0.05, roughness: 0.92,
-        side: THREE.DoubleSide, transparent: true, opacity: 0.28
-      })
-    );
-    ceil.rotation.x = Math.PI / 2;
-    ceil.position.set(cx, h, cz);
-    ceil.userData = { noShadow: true };
-    addTagged(scene, ceil, "room-ceiling");
-
-    // Corner fill bulbs only when the cinematic rig isn't active (it owns lighting).
-    if (!window.__DS_WALK_FX?.loaded?.()) {
-      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => {
-        const bulb = new THREE.PointLight(0xfff0d8, 0.62, 18, 2);
-        bulb.position.set(cx + sx * w * 0.32, h - 0.15, cz + sz * d * 0.32);
-        scene.add(bulb);
-      });
+    const w = bounds.maxX - bounds.minX + 8;
+    const d = bounds.maxZ - bounds.minZ + 8;
+    for (let x = bounds.minX - 4; x <= bounds.maxX + 4; x += 4) {
+      box(THREE, scene, "room-ceiling-grid", [0.035, 0.035, d], [x, h, cz], mat);
     }
-  }
-
-  function addRoomLighting(THREE, scene, bounds) {
-    const cx = (bounds.minX + bounds.maxX) / 2;
-    const cz = (bounds.minZ + bounds.maxZ) / 2;
-    const span = Math.max(bounds.maxX - bounds.minX, bounds.maxZ - bounds.minZ, 10);
-    scene.add(new THREE.HemisphereLight(0xe8eef8, 0x4a5058, 0.52));
-    const tableLight = new THREE.PointLight(0xfff6e8, 0.9, span * 1.1, 2);
-    tableLight.position.set(cx, 3.6, cz);
-    scene.add(tableLight);
-    const frontWash = new THREE.DirectionalLight(0xffffff, 0.55);
-    frontWash.position.set(cx, 2.8, bounds.minZ - 4);
-    scene.add(frontWash);
-    const backFill = new THREE.DirectionalLight(0xc8d8f0, 0.28);
-    backFill.position.set(cx, 2.2, bounds.maxZ + 3);
-    scene.add(backFill);
-  }
-
-  function addCableInfrastructure(THREE, scene, bounds, graph) {
-    const frame = graph.semanticFrame || {};
-    const trayMat = new THREE.MeshStandardMaterial({
-      color: 0x6a7278, metalness: 0.55, roughness: 0.5, transparent: true, opacity: 0.45
-    });
-    const cx = (bounds.minX + bounds.maxX) / 2;
-    const backZ = Number.isFinite(frame.credenzaZ) ? frame.credenzaZ - 0.45 : bounds.maxZ - 1.5;
-    const w = bounds.maxX - bounds.minX + 6;
-    box(THREE, scene, "room-credenza-raceway", [Math.max(w * 0.7, 10), 0.06, 0.16], [cx, 0.86, backZ], trayMat);
-    const frontZ = Number.isFinite(frame.frontZ) ? frame.frontZ + 0.08 : bounds.minZ + 0.5;
-    box(THREE, scene, "room-wall-raceway", [Math.max(w * 0.65, 10), 0.03, 0.1], [cx, 2.05, frontZ], trayMat);
-  }
-
-  function addSubtleZonePads(THREE, scene, graph) {
-    (graph.chambers || []).forEach(ch => {
-      const px = ch.pos.x, pz = ch.pos.z;
-      if (!Number.isFinite(px) || !Number.isFinite(pz)) return;
-      const theme = zoneTheme(ch.zone);
-      const pad = new THREE.Mesh(
-        new THREE.CircleGeometry(0.85, 24),
-        new THREE.MeshStandardMaterial({
-          color: theme.accent, transparent: true, opacity: 0.12,
-          metalness: 0.2, roughness: 0.85, depthWrite: false
-        })
-      );
-      pad.rotation.x = -Math.PI / 2;
-      pad.position.set(px, 0.025, pz);
-      pad.userData = { noShadow: true };
-      addTagged(scene, pad, "room-zone-pad");
-    });
+    for (let z = bounds.minZ - 4; z <= bounds.maxZ + 4; z += 4) {
+      box(THREE, scene, "room-ceiling-grid", [w, 0.035, 0.035], [cx, h, z], mat);
+    }
   }
 
   function addSeatRows(THREE, scene, bounds, rows = 4) {
@@ -1127,26 +864,15 @@
   }
 
   function addConferenceFurniture(THREE, scene, bounds, graph) {
-    const wood = new THREE.MeshStandardMaterial({ color: 0x6b4f3a, roughness: 0.58, metalness: 0.06 });
+    const wood = new THREE.MeshStandardMaterial({ color: 0x4a3c30, roughness: 0.62, metalness: 0.08 });
     const chairMat = new THREE.MeshStandardMaterial({ color: 0x2a3238, roughness: 0.7, metalness: 0.2 });
-    // Anchor the table to the semantic frame so it aligns with the spawn point
-    // and device placement (avoids the "avatar standing on the table" mismatch).
-    const frame = graph.semanticFrame || {};
-    let cx, cz, tw, td;
-    if (Number.isFinite(frame.tableCx) && Number.isFinite(frame.tableCz)) {
-      cx = frame.tableCx;
-      cz = frame.tableCz;
-      tw = Math.max(4.8, Math.min(12, (frame.tableSpread || 5.5) + 0.8));
-      td = Math.max(2.0, Math.min(4.2, (frame.tableDepth || 2.5) + 0.4));
-    } else {
-      const tableChambers = (graph.chambers || []).filter(ch => /table|mic/i.test(ch.zone || "") || /table/i.test(ch.label || ""));
-      const xs = tableChambers.length ? tableChambers.map(ch => ch.pos.x) : [bounds.minX + 4, bounds.maxX - 4];
-      const zs = tableChambers.length ? tableChambers.map(ch => ch.pos.z) : [bounds.minZ + 5, bounds.maxZ - 5];
-      cx = (Math.min(...xs) + Math.max(...xs)) / 2;
-      cz = (Math.min(...zs) + Math.max(...zs)) / 2;
-      tw = Math.max(4.8, Math.min(12, Math.max(...xs) - Math.min(...xs) + 4));
-      td = Math.max(2.0, Math.min(4.2, Math.max(...zs) - Math.min(...zs) + 2.2));
-    }
+    const tableChambers = (graph.chambers || []).filter(ch => /table|mic/i.test(ch.zone || "") || /table/i.test(ch.label || ""));
+    const xs = tableChambers.length ? tableChambers.map(ch => ch.pos.x) : [bounds.minX + 4, bounds.maxX - 4];
+    const zs = tableChambers.length ? tableChambers.map(ch => ch.pos.z) : [bounds.minZ + 5, bounds.maxZ - 5];
+    const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+    const cz = (Math.min(...zs) + Math.max(...zs)) / 2;
+    const tw = Math.max(4.8, Math.min(12, Math.max(...xs) - Math.min(...xs) + 4));
+    const td = Math.max(2.0, Math.min(4.2, Math.max(...zs) - Math.min(...zs) + 2.2));
     box(THREE, scene, "room-table", [tw, 0.12, td], [cx, 0.38, cz], wood);
     const seats = Math.max(4, Math.min(12, Math.round(tw / 1.2) * 2));
     for (let i = 0; i < seats / 2; i++) {
@@ -1163,7 +889,7 @@
     const frame = graph.semanticFrame || {};
     const wallMat = new THREE.MeshStandardMaterial({ color: 0x2a323c, roughness: 0.78, metalness: 0.15 });
     const cx = (bounds.minX + bounds.maxX) / 2;
-    const frontZ = Number.isFinite(frame.frontZ) ? frame.frontZ + 0.09 : bounds.minZ + 0.5;
+    const frontZ = Number.isFinite(frame.frontZ) ? frame.frontZ - 0.35 : bounds.minZ - 2.5;
     const hasDisplayDevice = (graph.chambers || []).some(ch =>
       /display/i.test(ch.stencilId || "") || ch.semantic?.kind === "display");
     const wallH = hasDisplayDevice ? 3.5 : 3.2;
@@ -1197,12 +923,12 @@
 
   function makeCarpetTexture(THREE) {
     return makeCanvasTexture(THREE, (ctx, w, h) => {
-      ctx.fillStyle = "#4a5564";
+      ctx.fillStyle = "#3a3835";
       ctx.fillRect(0, 0, w, h);
       for (let i = 0; i < 8000; i++) {
         const x = Math.random() * w, y = Math.random() * h;
-        const g = 72 + Math.random() * 28;
-        ctx.fillStyle = `rgba(${g - 8},${g},${g + 12},0.32)`;
+        const g = 40 + Math.random() * 30;
+        ctx.fillStyle = `rgba(${g},${g - 4},${g - 8},0.35)`;
         ctx.fillRect(x, y, 1, 1);
       }
     }, 256, 256);
@@ -1385,12 +1111,6 @@
     state.devicePods = [];
     state.cables = [];
     state.colliders = [];
-    state.THREE = THREE;
-    loadPacketPrefs();
-    if (graph.kind === "room" && !sessionStorage.getItem(WALK_PACKETS_KEY)) {
-      state.packetsEnabled = false;
-    }
-    loadPresentationPrefs();
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: "high-performance" });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -1398,7 +1118,7 @@
     renderer.outputColorSpace = THREE.SRGBColorSpace || renderer.outputEncoding;
     if (THREE.ACESFilmicToneMapping) {
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = graph.kind === "room" ? 1.34 : 1.12;
+      renderer.toneMappingExposure = 1.12;
     }
     if (THREE.PCFSoftShadowMap !== undefined) {
       renderer.shadowMap.enabled = true;
@@ -1408,28 +1128,14 @@
 
     const scene = new THREE.Scene();
     state.scene = scene;
+    addVoxelEnvironment(THREE, scene, true);
+    addImageBasedLighting(THREE, scene, renderer);
     state.bounds = graph.layoutBounds || {
       minX: Math.min(...graph.chambers.map(c => c.pos.x)) - 8,
       maxX: Math.max(...graph.chambers.map(c => c.pos.x)) + 8,
       minZ: Math.min(...graph.chambers.map(c => c.pos.z)) - 8,
       maxZ: Math.max(...graph.chambers.map(c => c.pos.z)) + 8
     };
-
-    // Cinematic addons (post-FX, RectAreaLight). Best-effort; falls back cleanly.
-    const FX = window.__DS_WALK_FX;
-    let fxReady = false;
-    if (FX?.ensure) { try { fxReady = !!(await FX.ensure()); } catch { fxReady = false; } }
-
-    addImageBasedLighting(THREE, scene, renderer);
-    const isRoom = graph.kind === "room";
-    if (fxReady && isRoom && FX.roomLightRig) {
-      state.sun = FX.roomLightRig(THREE, scene, state.bounds, renderer).sun;
-    } else if (fxReady && !isRoom && FX.nocLightRig) {
-      state.sun = FX.nocLightRig(THREE, scene, state.bounds).sun;
-    } else {
-      addVoxelEnvironment(THREE, scene, !isRoom);
-    }
-
     setupDiagramWorld(THREE, scene, state.bounds, graph);
 
     const camera = new THREE.PerspectiveCamera(76, 1, 0.1, 220);
@@ -1444,29 +1150,15 @@
     Object.keys(_pairCount).forEach(k => delete _pairCount[k]);
     graph.corridors.forEach(cor => scene.add(makeCableRun(THREE, cor)));
     populateLegend(graph);
-    applyPacketVisibility();
-    updateCableFocus(state.focusId);
 
-    const spawn = graph.kind === "room"
-      ? spawnRoomAtTable(graph)
-      : (graph.chambers.find(c => /switch|9200|9300/i.test(c.label)) || graph.chambers[0]);
+    const spawn = graph.chambers.find(c => /switch|9200|9300/i.test(c.label)) || graph.chambers[0];
     state.chambers = graph.chambers;
-    if (graph.kind !== "room") teleportToChamber(spawn, true);
-    else state.navIndex = Math.max(0, graph.chambers.indexOf(spawn));
+    teleportToChamber(spawn, true);
+    state.navIndex = graph.chambers.indexOf(spawn);
     document.getElementById("ds-walk-minimap")?.removeAttribute("hidden");
     buildDeviceNav(graph.chambers);
     buildConnectedNav(spawn);
     resizeRenderer();
-
-    if (fxReady && FX?.buildComposer) {
-      state.fx = FX.buildComposer(THREE, renderer, scene, camera, {
-        bloomStrength: isRoom ? 0.3 : 0.42,
-        bloomThreshold: isRoom ? 0.82 : 0.7,
-        aoRadius: isRoom ? 0.35 : 0.5,
-        dofFocus: isRoom ? 6 : 9
-      });
-      if (state.fx) { state.fx.setSize(state.renderer.domElement.width, state.renderer.domElement.height); state.fx.setQuality(2); }
-    }
 
     applySceneShadows();
     setStatus("Loading devices…");
@@ -1489,17 +1181,6 @@
     state.renderer.setSize(w, h, false);
     state.camera.aspect = w / h;
     state.camera.updateProjectionMatrix();
-    if (state.fx) state.fx.setSize(state.renderer.domElement.width, state.renderer.domElement.height, state.renderer.getPixelRatio());
-  }
-
-  // Enable depth-of-field only when the view has settled (not walking/flying),
-  // so motion stays crisp and the "beauty" shot gets cinematic focus falloff.
-  function updateDofFocus(dt) {
-    if (!state.fx?.setBokeh) return;
-    const moving = Math.hypot(state.vel.x, state.vel.z) > 0.15 || !!state.fly;
-    const now = state.clock;
-    if (moving) { state._settleT = now; if (state._dofOn) { state.fx.setBokeh(false); state._dofOn = false; } return; }
-    if (!state._dofOn && now - (state._settleT || 0) > 1.1) { state.fx.setBokeh(true); state._dofOn = true; }
   }
 
   function snapToWalkable(x, z) {
@@ -1525,54 +1206,6 @@
     return { dx: dx / len, dz: dz / len };
   }
 
-  function clampRoomStand(stand) {
-    const frame = state.graph?.semanticFrame;
-    if (state.graph?.kind !== "room" || !frame) return stand;
-    const minZ = (Number.isFinite(frame.frontZ) ? frame.frontZ : 0) + 0.75;
-    const maxZ = (Number.isFinite(frame.credenzaZ) ? frame.credenzaZ : 11) - 0.45;
-    const halfW = Math.max((frame.tableSpread || 5) * 0.6, 4.5) + 0.5;
-    const cx = Number.isFinite(frame.tableCx) ? frame.tableCx : stand.x;
-    stand.z = Math.max(minZ, Math.min(maxZ, stand.z));
-    stand.x = Math.max(cx - halfW, Math.min(cx + halfW, stand.x));
-    return stand;
-  }
-
-  function roomTableSpawn(graph) {
-    const frame = graph.semanticFrame || {};
-    const tcx = Number.isFinite(frame.tableCx) ? frame.tableCx : 0;
-    const tcz = Number.isFinite(frame.tableCz) ? frame.tableCz : 4.8;
-    const td = Number.isFinite(frame.tableDepth) ? frame.tableDepth : 2.5;
-    const frontZ = Number.isFinite(frame.frontZ) ? frame.frontZ : 0;
-    const credZ = Number.isFinite(frame.credenzaZ) ? frame.credenzaZ : tcz + 4;
-    // Stand just past the table's FAR edge (credenza side), looking at the displays.
-    const edge = tcz + td / 2 + 1.0;
-    const posZ = Math.min(edge, credZ - 1.2);
-    return {
-      pos: { x: tcx, y: EYE_HEIGHT, z: posZ },
-      yaw: Math.atan2(0, frontZ - posZ) // face -Z toward the front wall
-    };
-  }
-
-  function spawnRoomAtTable(graph) {
-    const tableCh = graph.chambers.find(c =>
-      /touch/i.test(c.label || "") && (c.zone === "table" || c.zone === "desk"))
-      || graph.chambers.find(c => c.zone === "table" && /mic|touch|conf-table/i.test(`${c.label || ""} ${c.stencilId || ""}`))
-      || graph.chambers.find(c => c.zone === "table")
-      || graph.chambers[0];
-    const spawn = roomTableSpawn(graph);
-    state.pos = { ...spawn.pos };
-    state.vel = { x: 0, y: 0, z: 0 };
-    state.yaw = spawn.yaw;
-    state.facing = spawn.yaw;
-    state.pitch = -0.06;
-    state.fly = null;
-    state.navIndex = Math.max(0, graph.chambers.indexOf(tableCh));
-    highlightNavChip(tableCh?.id);
-    buildConnectedNav(tableCh);
-    setStatus(`At conference table · facing displays${tableCh?.pid ? " · " + tableCh.pid : ""}`);
-    return tableCh;
-  }
-
   function chamberStandPos(ch) {
     const p = chamberWorldPos(ch);
     const pad = state.topology?.pads?.find(pad => pad.id === ch.id);
@@ -1591,7 +1224,6 @@
     const safe = resolveCollision(stand.x, stand.z);
     stand.x = safe.x;
     stand.z = safe.z;
-    clampRoomStand(stand);
     stand.y = EYE_HEIGHT;
     return stand;
   }
@@ -2143,38 +1775,6 @@
       pod.scale.setScalar(on ? 1.04 : 1);
       if (pod.userData.ring?.material) pod.userData.ring.material.opacity = on ? 0.55 : 0.2;
     });
-    updateCableFocus(id);
-  }
-
-  function updateCableFocus(focusId) {
-    const room = state.graph?.kind === "room";
-    const dimOthers = room && (!!focusId || state.presentationMode);
-    state.cables.forEach(g => {
-      const cor = g.userData?.corridor;
-      if (!cor) return;
-      const connected = !dimOthers || cor.from.id === focusId || cor.to.id === focusId;
-      g.children.forEach(ch => {
-        if (!ch.isMesh || !ch.material) return;
-        if (ch.userData?.packet) {
-          const showPkt = !!state.packetsEnabled
-            && (!state.presentationMode || connected || !dimOthers);
-          ch.visible = showPkt;
-          return;
-        }
-        const baseE = ch.userData.baseEmissive ?? 0.3;
-        const baseO = ch.userData.baseOpacity ?? 1;
-        if (ch.material.emissiveIntensity !== undefined) {
-          ch.material.emissiveIntensity = connected ? baseE : baseE * 0.35;
-        }
-        if (!connected && dimOthers) {
-          ch.material.transparent = true;
-          ch.material.opacity = state.presentationMode ? 0.14 : 0.22;
-        } else {
-          ch.material.transparent = false;
-          ch.material.opacity = baseO;
-        }
-      });
-    });
   }
 
   function minimapTeleport(mx, my, mmW, mmH) {
@@ -2481,11 +2081,8 @@
     const bob = spd > 0.25 ? Math.sin(state.bobPhase) * 0.038 : 0;
 
     if (state.thirdPerson && state.avatar) {
-      const room = state.graph?.kind === "room";
-      // Room shell ceiling is ~3.4m — keep third-person cam below it (default cam ~4m clips through ceiling).
-      const dist = room ? 4.0 : 5.4;
-      const camLift = room ? 1.35 : 2.35;
-      const camY = state.pos.y + camLift + bob * 0.4;
+      const dist = 5.4;
+      const camY = state.pos.y + 2.35 + bob * 0.4;
       const cx = state.pos.x - Math.sin(state.yaw) * dist;
       const cz = state.pos.z - Math.cos(state.yaw) * dist;
       cam.position.set(cx, camY, cz);
@@ -2494,7 +2091,7 @@
       const stride = moving ? Math.abs(Math.sin(state.bobPhase)) * 0.05 : 0;
       state.avatar.position.set(state.pos.x, state.pos.y - EYE_HEIGHT + stride, state.pos.z);
       state.avatar.rotation.y = state.facing;
-      state.avatar.visible = !state.presentationMode;
+      state.avatar.visible = true;
       animateAvatar(moving);
       if (state.viewmodel) state.viewmodel.visible = false;
     } else {
@@ -2743,13 +2340,7 @@
     // Minimap is canvas-2D and relatively costly; 15fps is plenty for a map.
     if (state.clock - (state._miniT || 0) > 0.066) { state._miniT = state.clock; drawMinimap(); }
     adaptQuality(dt);
-    updateDofFocus(dt);
-    if (state.fx) {
-      try { state.fx.render(dt); }
-      catch (err) { console.warn("[DS Walk] composer render failed, reverting to plain:", err); state.fx = null; state.renderer.render(state.scene, state.camera); }
-    } else {
-      state.renderer.render(state.scene, state.camera);
-    }
+    state.renderer.render(state.scene, state.camera);
     state.animId = requestAnimationFrame(loop);
   }
 
@@ -2762,23 +2353,10 @@
     if (s._fpsAcc < 1.5) return;
     const fps = s._fpsN / s._fpsAcc;
     s._fpsAcc = 0; s._fpsN = 0;
-    // Step 1: trim the heaviest post-FX (AO/bloom) before touching resolution.
-    if (s.fx && (s._fxQuality ?? 2) === 2 && fps < 40) {
-      s._fxQuality = 1;
-      s.fx.setQuality(1);
-      return;
-    }
-    // Step 2: drop device pixel ratio.
-    if (!s._qualityDropped && fps < 34 && s.renderer && s.renderer.getPixelRatio() > 1) {
+    if (!s._qualityDropped && fps < 38 && s.renderer && s.renderer.getPixelRatio() > 1) {
       s._qualityDropped = true;
       s.renderer.setPixelRatio(1);
       resizeRenderer();
-      return;
-    }
-    // Step 3: last resort — disable the composer entirely, plain render.
-    if (s.fx && fps < 26) {
-      s.fx.setQuality(0);
-      s._fxQuality = 0;
     }
   }
 
@@ -2980,41 +2558,6 @@
       <div class="ds-oc-row"><span class="ds-oc-dot" style="background:#6F42C1"></span>IoT · 23°C · CO₂ 540ppm${st.mics.length ? ` · ${st.mics.length} mic${st.mics.length > 1 ? "s" : ""}` : ""}</div>`;
   }
 
-  function loadPresentationPrefs() {
-    try {
-      state.presentationMode = sessionStorage.getItem(WALK_PRESENT_KEY) === "1";
-    } catch (e) { /* ignore */ }
-  }
-
-  function savePresentationPrefs() {
-    try {
-      sessionStorage.setItem(WALK_PRESENT_KEY, state.presentationMode ? "1" : "0");
-    } catch (e) { /* ignore */ }
-  }
-
-  function syncPresentationHud() {
-    const btn = state.overlay?.querySelector('[data-action="present"]');
-    if (btn) {
-      btn.classList.toggle("active", !!state.presentationMode);
-      btn.textContent = state.presentationMode ? "Present: on" : "Present";
-    }
-    if (state.avatar) state.avatar.visible = state.thirdPerson && !state.presentationMode;
-  }
-
-  function togglePresentation() {
-    state.presentationMode = !state.presentationMode;
-    if (state.presentationMode) state.packetsEnabled = false;
-    applyPacketVisibility();
-    syncPacketsHud();
-    syncPresentationHud();
-    updateCableFocus(state.focusId);
-    savePresentationPrefs();
-    savePacketPrefs();
-    setStatus(state.presentationMode
-      ? "Presentation mode — clean room view for demos"
-      : "Presentation mode off");
-  }
-
   function loadPacketPrefs() {
     try {
       const raw = sessionStorage.getItem(WALK_PACKETS_KEY);
@@ -3064,7 +2607,6 @@
   function togglePackets() {
     state.packetsEnabled = !state.packetsEnabled;
     applyPacketVisibility();
-    updateCableFocus(state.focusId);
     savePacketPrefs();
     syncPacketsHud();
     setStatus(state.packetsEnabled
@@ -3087,9 +2629,6 @@
     const questBtn = tab === "room"
       ? `<button type="button" class="ds-walk-btn ds-walk-btn-quest" data-action="cable-quest" title="Mini-game: connect Room Bar or ceiling mic to the PoE switch">Cable Quest</button>`
       : "";
-    const presentBtn = tab === "room"
-      ? `<button type="button" class="ds-walk-btn ds-walk-btn-present" data-action="present" title="Clean demo view — dim unrelated cables, hide avatar, packets off">Present</button>`
-      : "";
     return `<div class="ds-walk-hud">
       <div class="ds-walk-hud-top">
         <strong class="ds-walk-title">3D WALKTHROUGH</strong>
@@ -3101,7 +2640,6 @@
         <button type="button" class="ds-walk-btn" data-action="next-dev" title="Next device">Next ›</button>
         ${questBtn}
         ${outcomesBtn}
-        ${presentBtn}
         <button type="button" class="ds-walk-btn ds-walk-pkt-toggle" data-action="packets" title="Show or hide data packets on links">Packets</button>
         <button type="button" class="ds-walk-btn ds-walk-pkt-speed" data-action="packet-speed" title="Packet speed">Normal</button>
         <button type="button" class="ds-walk-btn primary" data-action="inspect" title="Open device details">Inspect</button>
@@ -3155,7 +2693,6 @@
       if (!btn) return;
       const a = btn.dataset.action;
       if (a === "outcomes") { e.preventDefault(); e.stopPropagation(); toggleOutcomes(); }
-      else if (a === "present") { e.preventDefault(); e.stopPropagation(); togglePresentation(); }
       else if (a === "packets") { e.preventDefault(); e.stopPropagation(); togglePackets(); }
       else if (a === "packet-speed") { e.preventDefault(); e.stopPropagation(); cyclePacketSpeed(); }
       else if (a === "wayfind-open") openWayfindMenu();
@@ -3432,14 +2969,9 @@
       ${hudPanelsHtml()}`;
     bindHud();
     loadPacketPrefs();
-    loadPresentationPrefs();
-    if (studio.tab === "room" && !sessionStorage.getItem(WALK_PACKETS_KEY)) {
-      state.packetsEnabled = false;
-    }
     applyPacketVisibility();
     syncOutcomesHud();
     syncPacketsHud();
-    syncPresentationHud();
 
     const canvas = overlay.querySelector("#ds-walk-canvas");
     bindInput(canvas);
