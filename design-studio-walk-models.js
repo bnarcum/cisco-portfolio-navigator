@@ -594,24 +594,42 @@
     return fitGroup(g, 1.1 * scale);
   }
 
+  function isAuxDisplay(ch) {
+    const s = `${ch?.stencilId || ""} ${ch?.label || ""}`.toLowerCase();
+    return /aux|secondary|content display|confidence|people display/i.test(s)
+      || (/display-86|86/.test(s) && !/primary|main|board|front/i.test(s));
+  }
+
+  function isWallMountedDisplay(ch, kind) {
+    if (kind !== "room") return false;
+    const z = (ch?.zone || "").toLowerCase();
+    return z === "display" || z === "wall";
+  }
+
   function buildDisplayPanel(THREE, opts) {
-    const { photoTex, theme, scale, ch } = opts;
+    const { photoTex, theme, scale, ch, kind } = opts;
     const g = new THREE.Group();
-    const isLarge = /display-86|86/.test(ch?.stencilId || ch?.label || "");
-    const w = (isLarge ? 1.85 : 1.55) * scale;
-    const h = (isLarge ? 1.05 : 0.88) * scale;
+    const wallMount = isWallMountedDisplay(ch, kind);
+    const isAux = isAuxDisplay(ch);
+    const isLarge = !wallMount && /display-86|86/.test(ch?.stencilId || ch?.label || "");
+    const w = wallMount
+      ? (isAux ? 1.15 : 1.45) * scale
+      : (isLarge ? 1.85 : 1.55) * scale;
+    const h = wallMount
+      ? (isAux ? 0.68 : 0.86) * scale
+      : (isLarge ? 1.05 : 0.88) * scale;
     const d = 0.06 * scale;
     const screen = new THREE.Mesh(
       new THREE.BoxGeometry(w, h, d),
       stdMat(THREE, 0x0a1420, { metalness: 0.85, roughness: 0.18 })
     );
-    screen.position.y = h / 2 + 0.08 * scale;
+    screen.position.y = h / 2 + (wallMount ? 0 : 0.08 * scale);
     g.add(screen);
     const bezel = new THREE.Mesh(
       new THREE.BoxGeometry(w * 1.03, h * 1.03, d * 0.4),
       stdMat(THREE, 0x080e18, { metalness: 0.92, roughness: 0.15 })
     );
-    bezel.position.set(0, h / 2 + 0.08 * scale, -d * 0.15);
+    bezel.position.set(0, screen.position.y, wallMount ? -d * 0.12 : -d * 0.15);
     g.add(bezel);
     let faceMat;
     if (photoTex) {
@@ -625,23 +643,28 @@
       if (faceMat.emissiveMap !== undefined) faceMat.emissiveMap = glowTex;
     }
     const face = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.94, h * 0.9), faceMat);
-    face.position.set(0, h / 2 + 0.08 * scale, d / 2 + 0.005);
+    face.position.set(0, screen.position.y, d / 2 + 0.005);
     face.userData.isPhotoFace = true;
     g.add(face);
-    const neck = new THREE.Mesh(
-      new THREE.BoxGeometry(0.12 * scale, 0.35 * scale, 0.1 * scale),
-      stdMat(THREE, 0x2a3440, { metalness: 0.8, roughness: 0.28 })
-    );
-    neck.position.set(0, 0.42 * scale, -0.02 * scale);
-    g.add(neck);
-    const base = new THREE.Mesh(
-      new THREE.BoxGeometry(0.55 * scale, 0.04 * scale, 0.28 * scale),
-      stdMat(THREE, 0x1e2838, { metalness: 0.75, roughness: 0.32 })
-    );
-    base.position.set(0, 0.02, 0.05 * scale);
-    g.add(base);
+    if (!wallMount) {
+      const neck = new THREE.Mesh(
+        new THREE.BoxGeometry(0.12 * scale, 0.35 * scale, 0.1 * scale),
+        stdMat(THREE, 0x2a3440, { metalness: 0.8, roughness: 0.28 })
+      );
+      neck.position.set(0, 0.42 * scale, -0.02 * scale);
+      g.add(neck);
+      const base = new THREE.Mesh(
+        new THREE.BoxGeometry(0.55 * scale, 0.04 * scale, 0.28 * scale),
+        stdMat(THREE, 0x1e2838, { metalness: 0.75, roughness: 0.32 })
+      );
+      base.position.set(0, 0.02, 0.05 * scale);
+      g.add(base);
+    }
     g.userData.photoMesh = face;
-    return fitGroup(g, (isLarge ? 1.95 : 1.65) * scale);
+    const targetH = wallMount
+      ? (isAux ? 0.95 : 1.2) * scale
+      : (isLarge ? 1.95 : 1.65) * scale;
+    return fitGroup(g, targetH);
   }
 
   function buildCeilingMic(THREE, opts) {

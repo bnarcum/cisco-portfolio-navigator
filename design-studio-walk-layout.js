@@ -174,7 +174,14 @@
       if (kind === "display") {
         ch.zone = "display";
         ch.pos.z = frame.frontZ + 0.12;
-        ch.pos.y = 2.05;
+        const aux = /aux|secondary|content display|confidence|people display/i.test(ch.label || "")
+          || (/display-86|86/i.test(ch.stencilId || "") && !/primary|main|board|front/i.test(ch.label || ""));
+        const panelH = aux ? 0.95 : 1.2;
+        const wallTop = 3.42;
+        const wallBot = 0.42;
+        const travel = Math.max(0.4, wallTop - wallBot - panelH);
+        ch.pos.y = wallBot + ry * travel;
+        ch.pos.y = Math.max(wallBot, Math.min(wallTop - panelH, ch.pos.y));
         ch.pos.x = frame.tableCx + (rx - 0.5) * Math.max(frame.tableSpread, 4);
         ch.faceYaw = 0;
       } else if (kind === "camera") {
