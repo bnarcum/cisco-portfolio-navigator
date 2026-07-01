@@ -892,7 +892,8 @@
     const frontZ = Number.isFinite(frame.frontZ) ? frame.frontZ - 0.35 : bounds.minZ - 2.5;
     const hasDisplayDevice = (graph.chambers || []).some(ch =>
       /display/i.test(ch.stencilId || "") || ch.semantic?.kind === "display");
-    box(THREE, scene, "room-front-wall", [Math.max(bounds.maxX - bounds.minX + 8, 16), 3.2, 0.18], [cx, 1.6, frontZ], wallMat);
+    const wallH = hasDisplayDevice ? 3.5 : 3.2;
+    box(THREE, scene, "room-front-wall", [Math.max(bounds.maxX - bounds.minX + 8, 16), wallH, 0.18], [cx, wallH / 2, frontZ], wallMat);
     if (/auditorium|training/i.test(template)) {
       box(THREE, scene, "room-stage", [Math.max(bounds.maxX - bounds.minX - 4, 8), 0.22, 1.8], [cx, 0.13, frontZ + 2.1], new THREE.MeshStandardMaterial({ color: 0x40362b, roughness: 0.7 }));
     }
