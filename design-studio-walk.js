@@ -1020,7 +1020,7 @@
     floorTex.repeat.set(w / 5, d / 5);
     const floor = new THREE.Mesh(
       new THREE.PlaneGeometry(w, d),
-      new THREE.MeshStandardMaterial({ map: floorTex, color: 0x9a958c, metalness: 0.1, roughness: 0.78 })
+      new THREE.MeshStandardMaterial({ map: floorTex, color: 0x7a8a9a, metalness: 0.08, roughness: 0.8 })
     );
     floor.rotation.x = -Math.PI / 2;
     floor.position.set(cx, 0, cz);
@@ -1114,7 +1114,7 @@
   }
 
   function addConferenceFurniture(THREE, scene, bounds, graph) {
-    const wood = new THREE.MeshStandardMaterial({ color: 0x4a3c30, roughness: 0.62, metalness: 0.08 });
+    const wood = new THREE.MeshStandardMaterial({ color: 0x6b4f3a, roughness: 0.58, metalness: 0.06 });
     const chairMat = new THREE.MeshStandardMaterial({ color: 0x2a3238, roughness: 0.7, metalness: 0.2 });
     const tableChambers = (graph.chambers || []).filter(ch => /table|mic/i.test(ch.zone || "") || /table/i.test(ch.label || ""));
     const xs = tableChambers.length ? tableChambers.map(ch => ch.pos.x) : [bounds.minX + 4, bounds.maxX - 4];
@@ -1139,7 +1139,7 @@
     const frame = graph.semanticFrame || {};
     const wallMat = new THREE.MeshStandardMaterial({ color: 0x2a323c, roughness: 0.78, metalness: 0.15 });
     const cx = (bounds.minX + bounds.maxX) / 2;
-    const frontZ = Number.isFinite(frame.frontZ) ? frame.frontZ - 0.35 : bounds.minZ - 2.5;
+    const frontZ = Number.isFinite(frame.frontZ) ? frame.frontZ + 0.09 : bounds.minZ + 0.5;
     const hasDisplayDevice = (graph.chambers || []).some(ch =>
       /display/i.test(ch.stencilId || "") || ch.semantic?.kind === "display");
     const wallH = hasDisplayDevice ? 3.5 : 3.2;
@@ -1173,12 +1173,12 @@
 
   function makeCarpetTexture(THREE) {
     return makeCanvasTexture(THREE, (ctx, w, h) => {
-      ctx.fillStyle = "#3a3835";
+      ctx.fillStyle = "#4a5564";
       ctx.fillRect(0, 0, w, h);
       for (let i = 0; i < 8000; i++) {
         const x = Math.random() * w, y = Math.random() * h;
-        const g = 40 + Math.random() * 30;
-        ctx.fillStyle = `rgba(${g},${g - 4},${g - 8},0.35)`;
+        const g = 72 + Math.random() * 28;
+        ctx.fillStyle = `rgba(${g - 8},${g},${g + 12},0.32)`;
         ctx.fillRect(x, y, 1, 1);
       }
     }, 256, 256);
@@ -1409,10 +1409,12 @@
     applyPacketVisibility();
     updateCableFocus(state.focusId);
 
-    const spawn = graph.chambers.find(c => /switch|9200|9300/i.test(c.label)) || graph.chambers[0];
+    const spawn = graph.kind === "room"
+      ? spawnRoomAtTable(graph)
+      : (graph.chambers.find(c => /switch|9200|9300/i.test(c.label)) || graph.chambers[0]);
     state.chambers = graph.chambers;
-    teleportToChamber(spawn, true);
-    state.navIndex = graph.chambers.indexOf(spawn);
+    if (graph.kind !== "room") teleportToChamber(spawn, true);
+    else state.navIndex = Math.max(0, graph.chambers.indexOf(spawn));
     document.getElementById("ds-walk-minimap")?.removeAttribute("hidden");
     buildDeviceNav(graph.chambers);
     buildConnectedNav(spawn);
@@ -1464,6 +1466,50 @@
     return { dx: dx / len, dz: dz / len };
   }
 
+  function clampRoomStand(stand) {
+    const frame = state.graph?.semanticFrame;
+    if (state.graph?.kind !== "room" || !frame) return stand;
+    const minZ = (Number.isFinite(frame.frontZ) ? frame.frontZ : 0) + 0.75;
+    const maxZ = (Number.isFinite(frame.credenzaZ) ? frame.credenzaZ : 11) - 0.45;
+    const halfW = Math.max((frame.tableSpread || 5) * 0.6, 4.5) + 0.5;
+    const cx = Number.isFinite(frame.tableCx) ? frame.tableCx : stand.x;
+    stand.z = Math.max(minZ, Math.min(maxZ, stand.z));
+    stand.x = Math.max(cx - halfW, Math.min(cx + halfW, stand.x));
+    return stand;
+  }
+
+  function roomTableSpawn(graph) {
+    const frame = graph.semanticFrame || {};
+    const tcx = Number.isFinite(frame.tableCx) ? frame.tableCx : 0;
+    const tcz = Number.isFinite(frame.tableCz) ? frame.tableCz : 4.8;
+    const frontZ = Number.isFinite(frame.frontZ) ? frame.frontZ : 0;
+    const posZ = tcz - 0.55;
+    return {
+      pos: { x: tcx, y: EYE_HEIGHT, z: Math.max(frontZ + 0.85, posZ) },
+      yaw: Math.atan2(0, frontZ - posZ)
+    };
+  }
+
+  function spawnRoomAtTable(graph) {
+    const tableCh = graph.chambers.find(c =>
+      /touch/i.test(c.label || "") && (c.zone === "table" || c.zone === "desk"))
+      || graph.chambers.find(c => c.zone === "table" && /mic|touch|conf-table/i.test(`${c.label || ""} ${c.stencilId || ""}`))
+      || graph.chambers.find(c => c.zone === "table")
+      || graph.chambers[0];
+    const spawn = roomTableSpawn(graph);
+    state.pos = { ...spawn.pos };
+    state.vel = { x: 0, y: 0, z: 0 };
+    state.yaw = spawn.yaw;
+    state.facing = spawn.yaw;
+    state.pitch = -0.06;
+    state.fly = null;
+    state.navIndex = Math.max(0, graph.chambers.indexOf(tableCh));
+    highlightNavChip(tableCh?.id);
+    buildConnectedNav(tableCh);
+    setStatus(`At conference table · facing displays${tableCh?.pid ? " · " + tableCh.pid : ""}`);
+    return tableCh;
+  }
+
   function chamberStandPos(ch) {
     const p = chamberWorldPos(ch);
     const pad = state.topology?.pads?.find(pad => pad.id === ch.id);
@@ -1482,6 +1528,7 @@
     const safe = resolveCollision(stand.x, stand.z);
     stand.x = safe.x;
     stand.z = safe.z;
+    clampRoomStand(stand);
     stand.y = EYE_HEIGHT;
     return stand;
   }
@@ -2373,7 +2420,7 @@
     if (state.thirdPerson && state.avatar) {
       const room = state.graph?.kind === "room";
       // Room shell ceiling is ~3.4m — keep third-person cam below it (default cam ~4m clips through ceiling).
-      const dist = room ? 3.5 : 5.4;
+      const dist = room ? 4.0 : 5.4;
       const camLift = room ? 1.35 : 2.35;
       const camY = state.pos.y + camLift + bob * 0.4;
       const cx = state.pos.x - Math.sin(state.yaw) * dist;

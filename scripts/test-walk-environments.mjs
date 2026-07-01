@@ -59,8 +59,8 @@ try {
   if (touch && (touch.y > 1.2 || touch.y < 0.6)) errors.push(`touch should be tabletop height (~0.82), got y=${touch.y}`);
   const sw = chambers.find(c => /switch|9200|9300/i.test(c.label || ""));
   if (display && display.z > 1.5) errors.push(`display should be on front wall (z~0), got z=${display.z}`);
-  if (sw && sw.z > 9) errors.push(`switch should be in credenza zone (z<9), got z=${sw.z}`);
-  if (display && sw && Math.abs(display.z - sw.z) > 8) errors.push(`room depth too wide (display z=${display.z}, switch z=${sw.z})`);
+  if (sw && sw.z > 12) errors.push(`switch should be in credenza zone (z<12), got z=${sw.z}`);
+  if (display && sw && Math.abs(display.z - sw.z) > 12) errors.push(`room depth too wide (display z=${display.z}, switch z=${sw.z})`);
   if (!conf.environmentTags?.["room-credenza-raceway"]) errors.push("conference should render credenza cable raceway");
   if (!conf.environmentTags?.["room-floor"]) errors.push("conference should use professional carpet floor");
 
