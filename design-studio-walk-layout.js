@@ -57,9 +57,9 @@
       return { frontZ: 0, tableZ: 2.2, credenzaZ: 4.8, tableSpread: 3.0, tableDepth: 1.6 };
     }
     if (/boardroom|conference|medium|dual|divisible|teams|zoom|executive/.test(t)) {
-      return { frontZ: 0, tableZ: 3.6, credenzaZ: 7.0, tableSpread: 5.5, tableDepth: 2.5 };
+      return { frontZ: 0, tableZ: 4.8, credenzaZ: 11.0, tableSpread: 6.0, tableDepth: 2.8 };
     }
-    return { frontZ: 0, tableZ: 3.4, credenzaZ: 6.5, tableSpread: 5.0, tableDepth: 2.3 };
+    return { frontZ: 0, tableZ: 4.2, credenzaZ: 10.0, tableSpread: 5.5, tableDepth: 2.5 };
   }
 
   function buildRoomFrame(chambers, nodes, templateKey) {
@@ -191,7 +191,7 @@
 
       if (kind === "display") {
         ch.zone = "display";
-        ch.pos.z = frame.frontZ + 0.12;
+        ch.pos.z = frame.frontZ + 0.14;
         const aux = /aux|secondary|content display|confidence|people display/i.test(ch.label || "")
           || (/display-86|86/i.test(ch.stencilId || "") && !/primary|main|board|front/i.test(ch.label || ""));
         const panelH = aux ? 0.95 : 1.2;
@@ -204,7 +204,7 @@
         ch.faceYaw = 0;
       } else if (kind === "camera") {
         ch.zone = "display";
-        ch.pos.z = frame.frontZ + 0.18;
+        ch.pos.z = frame.frontZ + 0.2;
         ch.pos.y = 2.65;
         ch.pos.x = frame.tableCx + (rx - 0.5) * 3;
         ch.faceYaw = 0;
