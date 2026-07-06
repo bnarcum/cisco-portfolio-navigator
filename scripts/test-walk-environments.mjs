@@ -74,6 +74,9 @@ try {
   if (touch && touch.zone !== "table") errors.push(`touch should be table zone, got ${touch.zone}`);
   if (touch && (touch.y > 1.2 || touch.y < 0.6)) errors.push(`touch should be tabletop height (~0.82), got y=${touch.y}`);
   if (!conf.environmentTags?.["room-install-floor"]) errors.push("conference walk missing install-ready room shell");
+  if (!conf.environmentTags?.["room-device-pad"]) errors.push("conference walk missing device floor pads");
+  if (!conf.roomRacewayCables) errors.push("conference walk should use flat room raceway cables");
+  if ((conf.maxCableRadius || 0) > 0.04) errors.push(`conference cable radius too large: ${conf.maxCableRadius}`);
   if (!conf.environmentTags?.["room-recess-light"]) errors.push("conference walk missing ceiling recessed lights");
   if (conf.environmentTags?.["room-ceiling-grid"]) errors.push("conference should not render ceiling lattice");
   await page.evaluate(() => window.__DS_WALK?.close?.(true));
