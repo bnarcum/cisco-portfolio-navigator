@@ -1,15 +1,31 @@
 #!/usr/bin/env node
 /** Walk — semantic placement + adaptive venues (room + network). */
 import { chromium } from "playwright";
+import { spawn } from "child_process";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const URL = "http://127.0.0.1:8765/cisco-portfolio-navigator.html";
+const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const port = 9876 + Math.floor(Math.random() * 1000);
+const URL = `http://127.0.0.1:${port}/cisco-portfolio-navigator.html`;
 const errors = [];
+
+const server = spawn("python3", ["-m", "http.server", String(port)], {
+  cwd: root,
+  stdio: ["ignore", "pipe", "pipe"],
+});
+await new Promise((resolve, reject) => {
+  server.on("error", reject);
+  setTimeout(resolve, 400);
+});
+
+const WEBGL_ARGS = ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"];
 
 function near(a, b, eps = 1.2) {
   return Math.abs(a - b) <= eps;
 }
 
-const browser = await chromium.launch();
+const browser = await chromium.launch({ args: WEBGL_ARGS });
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   page.on("pageerror", e => errors.push(`pageerror: ${e.message}`));
@@ -57,6 +73,8 @@ try {
   if (display && camera && !near(display.z, camera.z, 0.6)) errors.push(`display/camera should share front wall (z ${display.z} vs ${camera.z})`);
   if (touch && touch.zone !== "table") errors.push(`touch should be table zone, got ${touch.zone}`);
   if (touch && (touch.y > 1.2 || touch.y < 0.6)) errors.push(`touch should be tabletop height (~0.82), got y=${touch.y}`);
+  if (!conf.environmentTags?.["room-install-floor"]) errors.push("conference walk missing install-ready room shell");
+  if (!conf.environmentTags?.["room-recess-light"]) errors.push("conference walk missing ceiling recessed lights");
   if (conf.environmentTags?.["room-ceiling-grid"]) errors.push("conference should not render ceiling lattice");
   await page.evaluate(() => window.__DS_WALK?.close?.(true));
 
@@ -103,4 +121,5 @@ try {
   console.log("OK test-walk-environments");
 } finally {
   await browser.close();
+  server.kill();
 }

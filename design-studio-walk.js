@@ -229,11 +229,12 @@
   }
 
 
-  function addVoxelEnvironment(THREE, scene, bright = true) {
+  function addVoxelEnvironment(THREE, scene, bright = true, kind = "network") {
     // Image-based lighting (added separately) carries most of the ambient now,
     // so the punch-in lights are tuned for ACES tone mapping.
-    scene.add(new THREE.AmbientLight(0xffffff, bright ? 0.42 : 0.3));
-    const sun = new THREE.DirectionalLight(0xfff4d0, bright ? 1.25 : 0.85);
+    const room = kind === "room";
+    scene.add(new THREE.AmbientLight(0xffffff, bright ? (room ? 0.48 : 0.42) : 0.3));
+    const sun = new THREE.DirectionalLight(room ? 0xfff8f0 : 0xfff4d0, bright ? (room ? 1.05 : 1.25) : 0.85);
     sun.position.set(22, 46, 16);
     if (THREE.PCFSoftShadowMap !== undefined) {
       sun.castShadow = true;
@@ -255,7 +256,7 @@
   // Procedural image-based lighting: a soft sky/ground "room" with a couple of
   // bright panels, prefiltered via PMREM. Gives all PBR (MeshStandard) device
   // models real reflections + ambient so metals read as metal, not flat paint.
-  function addImageBasedLighting(THREE, scene, renderer) {
+  function addImageBasedLighting(THREE, scene, renderer, kind = "network") {
     if (!THREE.PMREMGenerator || !renderer) return;
     try {
       const pmrem = new THREE.PMREMGenerator(renderer);
@@ -264,7 +265,8 @@
       const boxGeo = new THREE.BoxGeometry(24, 24, 24);
       const pos = boxGeo.attributes.position;
       const cols = [];
-      const top = new THREE.Color(0xcfe7ff), bot = new THREE.Color(0x223040);
+      const top = kind === "room" ? new THREE.Color(0xfff0e0) : new THREE.Color(0xcfe7ff);
+      const bot = kind === "room" ? new THREE.Color(0x3a3530) : new THREE.Color(0x223040);
       for (let i = 0; i < pos.count; i++) {
         const t = (pos.getY(i) + 12) / 24;
         const c = bot.clone().lerp(top, Math.max(0, Math.min(1, t)));
@@ -306,8 +308,13 @@
 
   function setupDiagramWorld(THREE, scene, bounds, graph) {
     const VOX = window.__DS_WALK_VOXEL;
-    if (!VOX || !bounds) return;
+    if (!bounds) return;
     state.environmentTags = {};
+    if (graph?.kind === "room") {
+      addInstallReadyRoomShell(THREE, scene, bounds, graph);
+      return;
+    }
+    if (!VOX) return;
     const sky = VOX.setBlockSky(THREE, scene);
     state.disposables.push(sky);
     VOX.addDiagramWorld(THREE, scene, bounds, graph, state.disposables);
@@ -635,10 +642,11 @@
 
     const shadow = new THREE.Mesh(
       new THREE.CircleGeometry(0.7 * scale, 32),
-      new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false })
+      new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: kind === "room" ? 0.36 : 0.28, depthWrite: false })
     );
     shadow.rotation.x = -Math.PI / 2;
     shadow.position.y = onTable ? lift + 0.02 : 0.02;
+    shadow.userData.noShadow = true;
     g.add(shadow);
 
     const hitbox = new THREE.Mesh(
@@ -785,6 +793,113 @@
     }, 512, 512);
   }
 
+  function setInstallRoomAtmosphere(THREE, scene) {
+    const tex = makeCanvasTexture(THREE, (ctx, w, h) => {
+      const g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, "#4a5568");
+      g.addColorStop(0.45, "#2a323c");
+      g.addColorStop(1, "#1a2028");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+    }, 4, 1024);
+    scene.background = tex;
+    scene.fog = new THREE.Fog(0x2a323c, 26, 68);
+    state.disposables.push(tex);
+  }
+
+  function addRoomCeilingLights(THREE, scene, bounds, ceilingH = 3.05) {
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    const cz = (bounds.minZ + bounds.maxZ) / 2;
+    const w = Math.max(bounds.maxX - bounds.minX + 8, 14);
+    const d = Math.max(bounds.maxZ - bounds.minZ + 8, 12);
+    const panelMat = new THREE.MeshStandardMaterial({
+      color: 0xf8fafc, emissive: 0xfff4e6, emissiveIntensity: 0.35,
+      roughness: 0.55, metalness: 0.1
+    });
+    const cols = 3;
+    const rows = 2;
+    for (let i = 0; i < cols; i++) {
+      for (let j = 0; j < rows; j++) {
+        const x = cx + (i / Math.max(1, cols - 1) - 0.5) * w * 0.62;
+        const z = cz + (j / Math.max(1, rows - 1) - 0.5) * d * 0.5;
+        box(THREE, scene, "room-recess-light", [1.1, 0.04, 0.55], [x, ceilingH - 0.03, z], panelMat);
+        const bulb = new THREE.PointLight(0xfff0dd, 0.38, 16, 2);
+        bulb.position.set(x, ceilingH - 0.12, z);
+        scene.add(bulb);
+      }
+    }
+  }
+
+  function addInstallReadyRoomShell(THREE, scene, bounds, graph) {
+    const pad = 10;
+    const w = Math.max(bounds.maxX - bounds.minX + pad * 2, 18);
+    const d = Math.max(bounds.maxZ - bounds.minZ + pad * 2, 14);
+    const h = 3.05;
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    const cz = (bounds.minZ + bounds.maxZ) / 2;
+    const frame = graph.semanticFrame || {};
+
+    setInstallRoomAtmosphere(THREE, scene);
+
+    const floorTex = makeCarpetTexture(THREE);
+    floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
+    floorTex.repeat.set(w / 4, d / 4);
+    state.disposables.push(floorTex);
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(w, d),
+      new THREE.MeshStandardMaterial({
+        map: floorTex, color: 0x9a948c, roughness: 0.88, metalness: 0.06
+      })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.set(cx, 0, cz);
+    floor.receiveShadow = true;
+    addTagged(scene, floor, "room-install-floor");
+
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x3a424c, roughness: 0.82, metalness: 0.12 });
+    const frontMat = new THREE.MeshStandardMaterial({ color: 0x323a44, roughness: 0.78, metalness: 0.15 });
+    const frontZ = Number.isFinite(frame.frontZ) ? frame.frontZ - 0.2 : cz - d / 2 + 0.25;
+    box(THREE, scene, "room-install-wall", [w, h, 0.22], [cx, h / 2, cz - d / 2 + 0.11], wallMat);
+    box(THREE, scene, "room-install-wall", [w, h, 0.22], [cx, h / 2, cz + d / 2 - 0.11], wallMat);
+    box(THREE, scene, "room-install-wall", [0.22, h, d], [cx - w / 2 + 0.11, h / 2, cz], wallMat);
+    box(THREE, scene, "room-install-wall", [0.22, h, d], [cx + w / 2 - 0.11, h / 2, cz], wallMat);
+    box(THREE, scene, "room-front-wall", [w * 0.72, h * 0.92, 0.14], [cx, h * 0.48, frontZ], frontMat);
+    graph.environmentHasShell = true;
+
+    const ceilMat = new THREE.MeshStandardMaterial({
+      color: 0xe8ecef, roughness: 0.92, metalness: 0.08, side: THREE.DoubleSide
+    });
+    const ceil = new THREE.Mesh(new THREE.PlaneGeometry(w - 0.5, d - 0.5), ceilMat);
+    ceil.rotation.x = Math.PI / 2;
+    ceil.position.set(cx, h, cz);
+    ceil.receiveShadow = true;
+    addTagged(scene, ceil, "room-install-ceiling");
+    addRoomCeilingLights(THREE, scene, bounds, h);
+
+    const credenzaZ = Number.isFinite(frame.credenzaZ) ? frame.credenzaZ : cz + d * 0.28;
+    const credMat = new THREE.MeshStandardMaterial({ color: 0x2a2420, roughness: 0.68, metalness: 0.18 });
+    box(THREE, scene, "room-credenza", [3.4, 0.88, 0.58], [cx + w * 0.22, 0.44, credenzaZ], credMat);
+
+    (graph?.chambers || []).forEach(ch => {
+      if (!Number.isFinite(ch.pos?.x) || !Number.isFinite(ch.pos?.z)) return;
+      const theme = zoneTheme(ch.zone);
+      const marker = new THREE.Mesh(
+        new THREE.RingGeometry(0.32, 0.4, 28),
+        new THREE.MeshBasicMaterial({
+          color: theme.accent, transparent: true, opacity: 0.07,
+          side: THREE.DoubleSide, depthWrite: false
+        })
+      );
+      marker.rotation.x = -Math.PI / 2;
+      marker.position.set(ch.pos.x, 0.012, ch.pos.z);
+      marker.userData.noShadow = true;
+      scene.add(marker);
+    });
+
+    addRoomVenue(THREE, scene, bounds, graph);
+    graph.environmentHasShell = true;
+  }
+
   function addRoomDecor(THREE, scene, bounds) {
     if (!bounds) return;
     const cx = (bounds.minX + bounds.maxX) / 2;
@@ -869,13 +984,14 @@
   function addConferenceFurniture(THREE, scene, bounds, graph) {
     const wood = new THREE.MeshStandardMaterial({ color: 0x4a3c30, roughness: 0.62, metalness: 0.08 });
     const chairMat = new THREE.MeshStandardMaterial({ color: 0x2a3238, roughness: 0.7, metalness: 0.2 });
+    const frame = graph?.semanticFrame || {};
     const tableChambers = (graph.chambers || []).filter(ch => /table|mic/i.test(ch.zone || "") || /table/i.test(ch.label || ""));
     const xs = tableChambers.length ? tableChambers.map(ch => ch.pos.x) : [bounds.minX + 4, bounds.maxX - 4];
     const zs = tableChambers.length ? tableChambers.map(ch => ch.pos.z) : [bounds.minZ + 5, bounds.maxZ - 5];
-    const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
-    const cz = (Math.min(...zs) + Math.max(...zs)) / 2;
-    const tw = Math.max(4.8, Math.min(12, Math.max(...xs) - Math.min(...xs) + 4));
-    const td = Math.max(2.0, Math.min(4.2, Math.max(...zs) - Math.min(...zs) + 2.2));
+    const cx = Number.isFinite(frame.tableCx) ? frame.tableCx : (Math.min(...xs) + Math.max(...xs)) / 2;
+    const cz = Number.isFinite(frame.tableCz) ? frame.tableCz : (Math.min(...zs) + Math.max(...zs)) / 2;
+    const tw = Math.max(4.8, Math.min(12, frame.tableSpread || Math.max(...xs) - Math.min(...xs) + 4));
+    const td = Math.max(2.0, Math.min(4.5, frame.tableDepth || Math.max(...zs) - Math.min(...zs) + 2.2));
     box(THREE, scene, "room-table", [tw, 0.12, td], [cx, 0.38, cz], wood);
     const seats = Math.max(4, Math.min(12, Math.round(tw / 1.2) * 2));
     for (let i = 0; i < seats / 2; i++) {
@@ -894,9 +1010,12 @@
     const cx = (bounds.minX + bounds.maxX) / 2;
     const frontZ = Number.isFinite(frame.frontZ) ? frame.frontZ - 0.35 : bounds.minZ - 2.5;
     const hasDisplayDevice = (graph.chambers || []).some(ch =>
-      /display/i.test(ch.stencilId || "") || ch.semantic?.kind === "display");
+      /display|board/i.test(ch.stencilId || "") || ch.semantic?.kind === "display");
     const wallH = hasDisplayDevice ? 3.5 : 3.2;
-    box(THREE, scene, "room-front-wall", [Math.max(bounds.maxX - bounds.minX + 8, 16), wallH, 0.18], [cx, wallH / 2, frontZ], wallMat);
+    if (!graph.environmentHasShell) {
+      box(THREE, scene, "room-front-wall", [Math.max(bounds.maxX - bounds.minX + 8, 16), wallH, 0.18], [cx, wallH / 2, frontZ], wallMat);
+    }
+    graph.environmentHasShell = true;
     if (/auditorium|training/i.test(template)) {
       box(THREE, scene, "room-stage", [Math.max(bounds.maxX - bounds.minX - 4, 8), 0.22, 1.8], [cx, 0.13, frontZ + 2.1], new THREE.MeshStandardMaterial({ color: 0x40362b, roughness: 0.7 }));
     }
@@ -1121,7 +1240,7 @@
     renderer.outputColorSpace = THREE.SRGBColorSpace || renderer.outputEncoding;
     if (THREE.ACESFilmicToneMapping) {
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.12;
+      renderer.toneMappingExposure = graph.kind === "room" ? 1.05 : 1.12;
     }
     if (THREE.PCFSoftShadowMap !== undefined) {
       renderer.shadowMap.enabled = true;
@@ -1131,8 +1250,8 @@
 
     const scene = new THREE.Scene();
     state.scene = scene;
-    addVoxelEnvironment(THREE, scene, true);
-    addImageBasedLighting(THREE, scene, renderer);
+    addVoxelEnvironment(THREE, scene, true, graph.kind);
+    addImageBasedLighting(THREE, scene, renderer, graph.kind);
     state.bounds = graph.layoutBounds || {
       minX: Math.min(...graph.chambers.map(c => c.pos.x)) - 8,
       maxX: Math.max(...graph.chambers.map(c => c.pos.x)) + 8,
