@@ -694,13 +694,87 @@
     return lift + 0.45;                        // table / rack / default: into the body
   }
 
+  /** Install-ready room links: flat raceway + short vertical drops (no overhead arches). */
+  function makeRoomCableRun(THREE, cor, color) {
+    let ax = cor.from.pos.x, az = cor.from.pos.z;
+    let bx = cor.to.pos.x, bz = cor.to.pos.z;
+    const dx = bx - ax, dz = bz - az;
+    const len = Math.hypot(dx, dz) || 0.1;
+    const g = new THREE.Group();
+    const ya = cablePortY(cor.from);
+    const yb = cablePortY(cor.to);
+    const highRun = Math.max(ya, yb) > 2.0;
+    const runY = highRun ? 2.82 : 0.055;
+
+    const pairKey = [cor.from.id, cor.to.id].sort().join("|");
+    const sib = _pairCount[pairKey] = (_pairCount[pairKey] || 0) + 1;
+    const perp = new THREE.Vector3(-dz, 0, dx).normalize();
+    const lateral = ((sib - 1) % 2 === 0 ? 1 : -1) * Math.ceil((sib - 1) / 2) * 0.1;
+    ax += perp.x * lateral; az += perp.z * lateral;
+    bx += perp.x * lateral; bz += perp.z * lateral;
+
+    const mat = new THREE.MeshStandardMaterial({
+      color, emissive: color, emissiveIntensity: 0.12,
+      metalness: 0.12, roughness: 0.78
+    });
+
+    const strip = new THREE.Mesh(
+      new THREE.BoxGeometry(len, highRun ? 0.022 : 0.026, highRun ? 0.09 : 0.11),
+      mat
+    );
+    strip.position.set((ax + bx) / 2, runY, (az + bz) / 2);
+    strip.rotation.y = Math.atan2(dx, dz);
+    g.add(strip);
+
+    function addLeg(x, z, yEnd) {
+      const h = Math.abs(yEnd - runY);
+      if (h < 0.025) return;
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, h, 6), mat);
+      leg.position.set(x, (runY + yEnd) / 2, z);
+      g.add(leg);
+    }
+    addLeg(ax, az, ya);
+    addLeg(bx, bz, yb);
+
+    const a = new THREE.Vector3(ax, ya, az);
+    const b = new THREE.Vector3(bx, yb, bz);
+    const curve = new THREE.CatmullRomCurve3([
+      a,
+      new THREE.Vector3(ax, runY, az),
+      new THREE.Vector3((ax + bx) / 2, runY, (az + bz) / 2),
+      new THREE.Vector3(bx, runY, bz),
+      b
+    ]);
+
+    const packetCount = Math.max(2, Math.min(4, Math.round(len / 6)));
+    for (let i = 0; i < packetCount; i++) {
+      const pkt = new THREE.Mesh(
+        new THREE.SphereGeometry(0.06, 8, 8),
+        new THREE.MeshBasicMaterial({ color: 0xffffff })
+      );
+      const halo = new THREE.Mesh(
+        new THREE.SphereGeometry(0.1, 8, 8),
+        new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.22 })
+      );
+      pkt.add(halo);
+      pkt.userData = { packet: true, t: i / packetCount };
+      g.add(pkt);
+    }
+
+    g.userData = { corridor: cor, curve, roomRaceway: true, maxRadius: 0.013 };
+    state.cables.push(g);
+    return g;
+  }
+
   function makeCableRun(THREE, cor) {
+    const color = cor.color ?? 0x02c8ff;
+    if (state.graph?.kind === "room") return makeRoomCableRun(THREE, cor, color);
+
     const ax = cor.from.pos.x, az = cor.from.pos.z;
     const bx = cor.to.pos.x, bz = cor.to.pos.z;
     const dx = bx - ax, dz = bz - az;
     const len = Math.hypot(dx, dz) || 0.1;
     const g = new THREE.Group();
-    const color = cor.color ?? 0x02c8ff;
 
     // Each end plugs in at its own device height so the cable visibly reaches
     // the device (ceiling mics sit ~3m up, table mics low, switches mid).
@@ -734,9 +808,9 @@
     );
     g.add(tube);
 
-    const roomWalk = state.graph?.kind === "room";
-    // Connector collars only in network walk — room devices are small; collars obscure product photos.
-    if (!roomWalk) {
+    const roomWalk = false;
+    // Connector collars on network links.
+    {
       const outA = new THREE.Vector3().subVectors(mid, a).normalize();
       const outB = new THREE.Vector3().subVectors(mid, b).normalize();
       [ { p: a, out: outA }, { p: b, out: outB } ].forEach(({ p, out }) => {
@@ -753,8 +827,8 @@
     }
 
     // Packets flow from source → target along the curve (data direction).
-    const pktR = roomWalk ? 0.16 : 0.12;
-    const haloR = roomWalk ? 0.3 : 0.22;
+    const pktR = 0.12;
+    const haloR = 0.22;
     const packetCount = Math.max(2, Math.min(5, Math.round(len / 5)));
     for (let i = 0; i < packetCount; i++) {
       const pkt = new THREE.Mesh(
@@ -770,7 +844,7 @@
       g.add(pkt);
     }
 
-    g.userData = { corridor: cor, curve };
+    g.userData = { corridor: cor, curve, maxRadius: 0.085 };
     state.cables.push(g);
     return g;
   }
@@ -803,7 +877,7 @@
       ctx.fillRect(0, 0, w, h);
     }, 4, 1024);
     scene.background = tex;
-    scene.fog = new THREE.Fog(0x2a323c, 26, 68);
+    scene.fog = new THREE.Fog(0x2a323c, 14, 40);
     state.disposables.push(tex);
   }
 
@@ -823,7 +897,7 @@
         const x = cx + (i / Math.max(1, cols - 1) - 0.5) * w * 0.62;
         const z = cz + (j / Math.max(1, rows - 1) - 0.5) * d * 0.5;
         box(THREE, scene, "room-recess-light", [1.1, 0.04, 0.55], [x, ceilingH - 0.03, z], panelMat);
-        const bulb = new THREE.PointLight(0xfff0dd, 0.38, 16, 2);
+        const bulb = new THREE.PointLight(0xfff0dd, 0.26, 14, 2);
         bulb.position.set(x, ceilingH - 0.12, z);
         scene.add(bulb);
       }
@@ -831,9 +905,9 @@
   }
 
   function addInstallReadyRoomShell(THREE, scene, bounds, graph) {
-    const pad = 10;
-    const w = Math.max(bounds.maxX - bounds.minX + pad * 2, 18);
-    const d = Math.max(bounds.maxZ - bounds.minZ + pad * 2, 14);
+    const pad = 6;
+    const w = Math.max(bounds.maxX - bounds.minX + pad * 2, 14);
+    const d = Math.max(bounds.maxZ - bounds.minZ + pad * 2, 11);
     const h = 3.05;
     const cx = (bounds.minX + bounds.maxX) / 2;
     const cz = (bounds.minZ + bounds.maxZ) / 2;
@@ -848,7 +922,7 @@
     const floor = new THREE.Mesh(
       new THREE.PlaneGeometry(w, d),
       new THREE.MeshStandardMaterial({
-        map: floorTex, color: 0x9a948c, roughness: 0.88, metalness: 0.06
+        map: floorTex, color: 0x847d74, roughness: 0.9, metalness: 0.04
       })
     );
     floor.rotation.x = -Math.PI / 2;
@@ -883,17 +957,25 @@
     (graph?.chambers || []).forEach(ch => {
       if (!Number.isFinite(ch.pos?.x) || !Number.isFinite(ch.pos?.z)) return;
       const theme = zoneTheme(ch.zone);
-      const marker = new THREE.Mesh(
-        new THREE.RingGeometry(0.32, 0.4, 28),
-        new THREE.MeshBasicMaterial({
-          color: theme.accent, transparent: true, opacity: 0.07,
-          side: THREE.DoubleSide, depthWrite: false
+      const padMesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.78, 0.78, 0.022, 24),
+        new THREE.MeshStandardMaterial({
+          color: theme.color, transparent: true, opacity: 0.42,
+          roughness: 0.88, metalness: 0.06, depthWrite: false
         })
       );
-      marker.rotation.x = -Math.PI / 2;
-      marker.position.set(ch.pos.x, 0.012, ch.pos.z);
-      marker.userData.noShadow = true;
-      scene.add(marker);
+      padMesh.position.set(ch.pos.x, 0.024, ch.pos.z);
+      addTagged(scene, padMesh, "room-device-pad");
+      const rim = new THREE.Mesh(
+        new THREE.TorusGeometry(0.78, 0.022, 8, 28),
+        new THREE.MeshStandardMaterial({
+          color: theme.accent, emissive: theme.accent, emissiveIntensity: 0.1,
+          roughness: 0.7, metalness: 0.15
+        })
+      );
+      rim.rotation.x = Math.PI / 2;
+      rim.position.set(ch.pos.x, 0.038, ch.pos.z);
+      scene.add(rim);
     });
 
     addRoomVenue(THREE, scene, bounds, graph);
@@ -1240,7 +1322,7 @@
     renderer.outputColorSpace = THREE.SRGBColorSpace || renderer.outputEncoding;
     if (THREE.ACESFilmicToneMapping) {
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = graph.kind === "room" ? 1.05 : 1.12;
+      renderer.toneMappingExposure = graph.kind === "room" ? 0.92 : 1.12;
     }
     if (THREE.PCFSoftShadowMap !== undefined) {
       renderer.shadowMap.enabled = true;
@@ -1271,6 +1353,7 @@
     state.topology = buildTopology(graph);
     Object.keys(_pairCount).forEach(k => delete _pairCount[k]);
     graph.corridors.forEach(cor => scene.add(makeCableRun(THREE, cor)));
+    applyPacketVisibility();
     populateLegend(graph);
 
     const spawn = graph.chambers.find(c => /switch|9200|9300/i.test(c.label)) || graph.chambers[0];
@@ -3099,6 +3182,11 @@
       ${hudPanelsHtml()}`;
     bindHud();
     loadPacketPrefs();
+    if (graph.kind === "room") {
+      try {
+        if (!sessionStorage.getItem(WALK_PACKETS_KEY)) state.packetsEnabled = false;
+      } catch (e) { state.packetsEnabled = false; }
+    }
     applyPacketVisibility();
     syncOutcomesHud();
     syncPacketsHud();
@@ -3188,12 +3276,18 @@
   }
 
   function debugStats() {
+    const cableMeta = state.cables.map(g => g.userData || {});
+    const maxCableRadius = cableMeta.reduce((m, u) => Math.max(m, u.maxRadius || 0), 0);
     return {
       mode: state.mode,
       graphKind: state.graph?.kind,
       pos: { x: state.pos.x, z: state.pos.z },
       pods: state.devicePods.length,
       cables: state.cables.length,
+      roomRacewayCables: state.graph?.kind === "room"
+        && state.cables.length > 0
+        && cableMeta.every(u => u.roomRaceway),
+      maxCableRadius,
       hasRenderer: !!state.renderer,
       photos: state.devicePods.filter(p => p.userData?.chamber?.photoUrl).length,
       outcomes: !!state.outcomes,
