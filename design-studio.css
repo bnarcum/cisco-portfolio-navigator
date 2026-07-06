@@ -663,6 +663,7 @@
 .ds-explore-ladder{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;margin:0 0 8px;font-size:9px;font-weight:700;color:var(--ds-cool);text-transform:uppercase;letter-spacing:.05em}
 .ds-explore-ladder span:nth-child(odd){color:var(--ds-explore-accent)}
 .ds-explore-badge--skill{color:#c4b5fd;border-color:rgba(196,181,253,.4);background:rgba(124,58,237,.15)}
+.ds-explore-badge--help{color:#86efac;border-color:rgba(134,239,172,.35);background:rgba(34,197,94,.12)}
 .ds-explore-card--skill:hover{border-color:rgba(196,181,253,.5)}
 .ds-explore-progress{font-size:9px;color:#7dd3a8;font-weight:700}
 

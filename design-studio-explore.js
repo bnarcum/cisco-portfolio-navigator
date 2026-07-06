@@ -75,7 +75,7 @@
     return window.learningRankEntries({
       familyIds: [...new Set([...(ctx.familyIds || []), ...bomFamilies])],
       productIds: bomProducts,
-      sources: ctx.skillSources || ["cisco-u", "webex-academy"],
+      sources: ctx.skillSources || ["cisco-u", "webex-academy", "webex-help"],
       limit,
       requireProductOrFamily: hasBom
     });
@@ -315,14 +315,16 @@
         </div>
       </div>`
     ).join("");
-    const skillCards = skills.map(s =>
-      `<a class="ds-explore-card ds-explore-card--skill" href="${esc(s.url)}" target="_blank" rel="noopener">
-        <span class="ds-explore-badge ds-explore-badge--skill">${esc((window.learningSourceMeta?.(s.source) || {}).label || "Skills")}</span>
+    const skillCards = skills.map(s => {
+      const src = window.learningSourceMeta?.(s.source) || {};
+      const badgeCls = s.source === "webex-help" ? "ds-explore-badge--help" : "ds-explore-badge--skill";
+      return `<a class="ds-explore-card ds-explore-card--skill" href="${esc(s.url)}" target="_blank" rel="noopener">
+        <span class="ds-explore-badge ${badgeCls}">${esc(src.label || "Skills")}</span>
         <strong>${esc(s.linkLabel || s.name || s.title)}</strong>
         ${s.duration ? `<span class="ds-explore-meta">${esc(s.duration)}${s.hint ? " · " + esc(s.hint.slice(0, 48)) + (s.hint.length > 48 ? "…" : "") : ""}</span>` : (s.hint ? `<span class="ds-explore-meta">${esc(s.hint.slice(0, 64))}${s.hint.length > 64 ? "…" : ""}</span>` : "")}
-        <span class="ds-explore-cta">${esc((window.learningSourceMeta?.(s.source) || {}).cta || "Open learning ↗")}</span>
-      </a>`
-    ).join("");
+        <span class="ds-explore-cta">${esc(src.cta || "Open learning ↗")}</span>
+      </a>`;
+    }).join("");
   return `<section class="ds-explore" aria-label="Learn more">
       ${compact
     ? `<header class="ds-explore-head ds-explore-head--compact"><span class="ds-explore-eyebrow">${esc(ctx.eyebrow || "Learn")}</span></header>`
