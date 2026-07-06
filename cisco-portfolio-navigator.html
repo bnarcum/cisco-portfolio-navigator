@@ -696,6 +696,7 @@
       padding:2px 6px;border-radius:4px;background:rgba(124,58,237,.15);color:#ddd6fe;border:1px solid rgba(167,139,250,.3)}
     .p-learn-chip--cu{background:rgba(0,212,255,.12);color:#b8f0ff;border-color:rgba(0,212,255,.35)}
     .p-learn-chip--wa{background:rgba(45,206,92,.15);color:#bbf7d0;border-color:rgba(45,206,92,.35)}
+    .p-learn-chip--wh{background:rgba(34,197,94,.12);color:#86efac;border-color:rgba(134,239,172,.35)}
     .p-learn-chip--bb{background:rgba(251,191,36,.12);color:#fde68a;border-color:rgba(251,191,36,.35)}
     .p-learn-entry-hint{font-size:11px;color:#c4e8f8;margin:0 0 6px;line-height:1.45}
     .la-learn{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:7px;
@@ -9634,7 +9635,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.79.27";
+const APP_VERSION   = "2.79.28";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -12946,7 +12947,7 @@ const COLLAB_LEARNING_FAMILIES = new Set([
   "webex-app", "webex-meetings", "webex-calling", "webex-cc", "room-systems",
   "desk-devices", "ip-phones", "conf-phones", "cisco-headsets", "webex-connect", "cloud-control"
 ]);
-const SKILLS_SOURCES = ["webex-academy", "cisco-u"];
+const SKILLS_SOURCES = ["webex-academy", "webex-help", "cisco-u"];
 const PARTNER_SOURCES = ["blackbelt"];
 
 function learningNormalizeEntry(e){
@@ -12981,6 +12982,7 @@ function learningEntryById(id){
 function learningSourceContextBonus(e, ctx){
   const collab = (ctx.familyIds || []).some(f => COLLAB_LEARNING_FAMILIES.has(f));
   if (collab && e.source === "webex-academy") return 14;
+  if (collab && e.source === "webex-help") return 12;
   if (!collab && e.source === "cisco-u") return 6;
   return 0;
 }
@@ -13045,6 +13047,7 @@ function learningSourceMeta(source){
 function learningEntryChipClass(source){
   if (source === "cisco-u") return "p-learn-chip--cu";
   if (source === "webex-academy") return "p-learn-chip--wa";
+  if (source === "webex-help") return "p-learn-chip--wh";
   if (source === "blackbelt") return "p-learn-chip--bb";
   return "";
 }

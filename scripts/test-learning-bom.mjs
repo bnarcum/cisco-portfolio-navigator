@@ -36,14 +36,17 @@ try {
   const ranked = await page.evaluate(() => window.learningRankEntries({
     productIds: ["board-pro-g2", "ceiling-mic-pro", "room-navigator"],
     familyIds: ["room-systems"],
-    sources: ["webex-academy", "cisco-u"],
+    sources: ["webex-academy", "webex-help", "cisco-u"],
     limit: 5,
     requireProductOrFamily: true
   }));
   const ids = ranked.map(e => e.id);
-  if (!ids.includes("wa-board-pro-g2")) errors.push(`expected wa-board-pro-g2 in ranked skills, got ${ids.join(", ")}`);
-  if (!ids.includes("wa-ceiling-mic-pro")) errors.push(`expected wa-ceiling-mic-pro in ranked skills, got ${ids.join(", ")}`);
-  if (!ids.includes("wa-room-navigator")) errors.push(`expected wa-room-navigator in ranked skills, got ${ids.join(", ")}`);
+  if (!ids.includes("wh-board-pro-g2")) errors.push(`expected wh-board-pro-g2 in ranked skills, got ${ids.join(", ")}`);
+  if (!ids.includes("wh-ceiling-mic-pro")) errors.push(`expected wh-ceiling-mic-pro in ranked skills, got ${ids.join(", ")}`);
+  if (!ids.includes("wh-room-navigator")) errors.push(`expected wh-room-navigator in ranked skills, got ${ids.join(", ")}`);
+
+  const badUrls = ranked.filter(e => /catalog\?search=/i.test(e.url || ""));
+  if (badUrls.length) errors.push(`ranked entries contain catalog search URLs: ${badUrls.map(e => e.id).join(", ")}`);
 
   await page.evaluate(() => {
     window.DesignStudio.open();
@@ -76,8 +79,10 @@ try {
 
   const dockHtml = await page.evaluate(() => document.getElementById("ds-explore-dock")?.innerHTML || "");
   if (!dockHtml.includes("ds-explore-card--skill")) errors.push("learn dock missing skill cards");
-  if (!/Learn for your design|device type/i.test(dockHtml))
-    errors.push("learn dock missing BOM-matched headline");
+  if (!/Install guide|Webex Academy/i.test(dockHtml))
+    errors.push("learn dock missing source-specific badges");
+  if (/catalog\?search=/i.test(dockHtml))
+    errors.push("learn dock still contains catalog search URLs");
 
   if (errors.length) {
     console.error("FAIL test-learning-bom:");
