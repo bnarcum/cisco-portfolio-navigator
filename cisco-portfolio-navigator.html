@@ -421,7 +421,7 @@
     #pbody .p-desc{color:var(--muted)}
     #pbody .rt{color:var(--muted)}
     #pbody .p-tier-note{color:var(--muted)}
-    #pbody .la>span:not(.la-dcloud-main):not(.la-dcloud-meta):not(.la-matrix-main):not(.la-matrix-meta){color:var(--muted)}
+    #pbody .la>span:not(.la-dcloud-main):not(.la-dcloud-meta):not(.la-matrix-main):not(.la-matrix-meta):not(.la-learn-main):not(.la-learn-meta){color:var(--muted)}
     .tr{display:flex;flex-wrap:wrap;gap:5px}
     .tg{padding:3px 9px;background:var(--surface2);border:1px solid var(--border);
       border-radius:5px;font-size:11px;cursor:pointer;transition:all .12s;user-select:none}
@@ -716,8 +716,8 @@
     .la-learn-main{font-weight:700;flex:1;min-width:0;padding-right:8px;color:#fff;font-size:12.5px}
     .la-learn-meta{font-size:10px;font-weight:700;padding:4px 8px;border-radius:5px;background:rgba(124,58,237,.85);color:#fff;white-space:nowrap;flex-shrink:0}
     .la-learn:hover .la-learn-meta{background:#fff;color:#4c1d95}
-    .p-learn-partner .la-learn-meta{background:rgba(251,191,36,.85);color:#422006}
-    .p-learn-partner .la-learn:hover .la-learn-meta{background:#fff;color:#78350f}
+    .p-learn-partner .la-learn-meta{background:#fbbf24;color:#1c0a00;border:1px solid rgba(120,53,15,.35)}
+    .p-learn-partner .la-learn:hover .la-learn-meta{background:#fff;color:#78350f;border-color:#fbbf24}
     .p-learn-note{font-size:10px;color:#94c8e0;margin-top:10px;line-height:1.45;display:flex;gap:6px;align-items:flex-start}
     .p-learn-note::before{content:"ℹ";font-size:10px;font-weight:700;color:#a78bfa;flex-shrink:0;margin-top:1px}
     .p-learn-partner .p-learn-note::before{color:#fbbf24}
@@ -9730,7 +9730,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.81.4";
+const APP_VERSION   = "2.81.5";
 const DATA_UPDATED  = "2026-07-08";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",

@@ -75,7 +75,7 @@
 [data-theme="light"] #pbody .p-sec-t,
 [data-theme="light"] #pbody .p-tier-note,
 [data-theme="light"] #pbody .rt,
-[data-theme="light"] #pbody .la > span:not(.la-dcloud-main):not(.la-dcloud-meta):not(.la-matrix-main):not(.la-matrix-meta) {
+[data-theme="light"] #pbody .la > span:not(.la-dcloud-main):not(.la-dcloud-meta):not(.la-matrix-main):not(.la-matrix-meta):not(.la-learn-main):not(.la-learn-meta) {
   color: var(--muted);
 }
 [data-theme="light"] #pbody .p-desc {
