@@ -1369,6 +1369,30 @@ const CATS = {
   observability: {label:"Observability", color:"#FF9000"}
 };
 
+// ── Tooltip (early — applyViewLevel / bootViewLevel call hideTip before graph init completes)
+const tipEl = document.getElementById("tip");
+function showNodeTip(ev, d){
+  document.getElementById("tn").textContent = d.name;
+  const tc = d._kind === "pillar" ? (d.promise || PILLAR_BY_ID[d._pillarId]?.label)
+    : (nodeById[d.id] ? (pillarMeta(familyPillar(d.id))?.label || CATS[d.category].label) : CATS[d.category].label);
+  document.getElementById("tc").textContent = tc;
+  if (tipEl) tipEl.style.display = "block";
+  moveTip(ev);
+}
+function moveTip(ev){
+  if (!tipEl) return;
+  const { w } = getDims();
+  const x = ev.clientX + 14, y = ev.clientY - 10;
+  tipEl.style.left = (x + 240 > w ? x - 254 : x) + "px";
+  tipEl.style.top = y + "px";
+}
+function hideTip(){
+  if (!tipEl) return;
+  tipEl.style.display = "none";
+  tipEl.classList.remove("tip-interactive");
+  tipEl.style.pointerEvents = "none";
+}
+
 // ── One Cisco 3-pillar strategy (Dec 2025 deck) ─────────────────────────────
 const ONE_CISCO = {
   headline: "Cisco powers how people and technology work together across the physical and digital worlds",
@@ -8907,18 +8931,6 @@ function resetAll() {
   if (typeof showToast === "function") showToast("Reset — fresh start");
 }
 
-// ── Tooltip
-const tipEl=document.getElementById("tip");
-function showNodeTip(ev,d){
-  document.getElementById("tn").textContent = d.name;
-  const tc = d._kind === "pillar" ? (d.promise || PILLAR_BY_ID[d._pillarId]?.label)
-    : (nodeById[d.id] ? (pillarMeta(familyPillar(d.id))?.label || CATS[d.category].label) : CATS[d.category].label);
-  document.getElementById("tc").textContent = tc;
-  tipEl.style.display = "block"; moveTip(ev);
-}
-function moveTip(ev){ const {w}=getDims(),x=ev.clientX+14,y=ev.clientY-10; tipEl.style.left=(x+240>w?x-254:x)+"px"; tipEl.style.top=y+"px"; }
-function hideTip(){ tipEl.style.display="none"; tipEl.classList.remove("tip-interactive"); tipEl.style.pointerEvents="none"; }
-
 // ══════════════════════════════════════
 // SEARCH — nodes + specific products
 // ══════════════════════════════════════
@@ -10072,7 +10084,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.83.1";
+const APP_VERSION   = "2.83.2";
 const DATA_UPDATED  = "2026-07-08";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
