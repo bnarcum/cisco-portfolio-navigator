@@ -5107,6 +5107,11 @@ function runViewTransition(callback, from, to){
   }, from === "spatial" || to === "spatial" ? 200 : 160);
 }
 
+function compositionSpokeColor(){
+  const fam = viewFocus ? nodeById[viewFocus] : null;
+  return fam ? catColor(fam.category) : "#02C8FF";
+}
+
 function updateCompositionOrbitGuide(){
   let g = lyr.select("g.comp-orbit");
   if (viewMode !== "composition" || !compositionOrbitR){
@@ -5114,12 +5119,14 @@ function updateCompositionOrbitGuide(){
     return;
   }
   if (g.empty()) g = lyr.insert("g", ":first-child").attr("class", "comp-orbit").style("pointer-events", "none");
+  const accent = compositionSpokeColor();
   const radii = [compositionOrbitR * 0.55, compositionOrbitR, compositionOrbitR * 1.35].filter(r => r > 20);
   g.selectAll("circle").data(radii).join("circle")
     .attr("cx", 0).attr("cy", 0).attr("r", d => d)
     .attr("fill", "none")
-    .attr("stroke", (d, i) => i === 1 ? "rgba(148,163,184,0.28)" : "rgba(148,163,184,0.14)")
-    .attr("stroke-width", (d, i) => i === 1 ? 1.2 : 0.8)
+    .attr("stroke", accent)
+    .attr("stroke-opacity", (d, i) => i === 1 ? 0.42 : 0.22)
+    .attr("stroke-width", (d, i) => i === 1 ? 1.6 : 1)
     .attr("stroke-dasharray", (d, i) => i === 1 ? "5 7" : "3 9");
 }
 
@@ -5176,11 +5183,11 @@ function applyCompositionInteractionStyles(selectedNode){
   });
   if (lviz){
     lviz.attr("stroke-opacity", l => {
-      if (!selectedNode) return l.type === "succession" ? 0.62 : 0.28;
+      if (!selectedNode) return l.type === "succession" ? 0.72 : (l.type === "composition" ? 0.58 : 0.28);
       const s = sid(l), t = tid(l);
       const lit = related.has(s) && related.has(t);
-      if (l.type === "succession") return lit ? 0.78 : 0.1;
-      return lit ? 0.42 : 0.08;
+      if (l.type === "succession") return lit ? 0.85 : 0.15;
+      return lit ? 0.65 : 0.22;
     });
   }
 }
@@ -5221,9 +5228,14 @@ function applyCompositionNodeStyles(){
   ndEl.selectAll("rect.nl-bg").remove();
   labelText.style("dominant-baseline", null);
   if (lviz){
-    lviz.attr("stroke", d => d.type === "succession" ? "#c084fc" : "#64748b")
-      .attr("stroke-opacity", d => d.type === "succession" ? 0.62 : 0.28)
-      .attr("stroke-width", d => d.type === "succession" ? 1.85 : 0.9)
+    const spoke = compositionSpokeColor();
+    lviz.attr("stroke", d => {
+      if (d.type === "succession") return "#c084fc";
+      if (d.type === "composition") return spoke;
+      return "#64748b";
+    })
+      .attr("stroke-opacity", d => d.type === "succession" ? 0.72 : (d.type === "composition" ? 0.58 : 0.28))
+      .attr("stroke-width", d => d.type === "succession" ? 2 : (d.type === "composition" ? 1.75 : 1))
       .attr("stroke-dasharray", d => d.type === "succession" ? "5 4" : null);
   }
   updateCompositionOrbitGuide();
@@ -9718,7 +9730,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.81.3";
+const APP_VERSION   = "2.81.4";
 const DATA_UPDATED  = "2026-07-08";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
