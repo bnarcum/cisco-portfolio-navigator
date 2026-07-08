@@ -16,7 +16,7 @@
   </script>
   <link rel="stylesheet" href="assets/cpn-ui.css?v=2.81.2"/>
   <link rel="stylesheet" href="assets/cpn-light.css?v=2.81.2"/>
-  <link rel="stylesheet" href="assets/cpn-iq-theme.css?v=2.81.3"/>
+  <link rel="stylesheet" href="assets/cpn-iq-theme.css?v=2.82.0"/>
   <link rel="stylesheet" href="design-studio.css?v=2.81.2"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -135,6 +135,19 @@
       -webkit-backdrop-filter:blur(var(--glass-blur));border-bottom:1px solid var(--border)}
     .actionbar-primary{display:flex;align-items:center;justify-content:space-between;
       gap:10px;flex-wrap:wrap;width:100%;min-width:0}
+    .actionbar-industries{display:flex;align-items:center;gap:8px;width:100%;min-width:0}
+    .ind-bar-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+      color:var(--subtle);white-space:nowrap;flex-shrink:0}
+    .ind-chip-scroll{display:flex;align-items:center;gap:6px;flex:1 1 auto;min-width:0;
+      overflow-x:auto;overflow-y:hidden;padding:2px 0;scrollbar-width:thin}
+    .ind-chip{flex-shrink:0;display:inline-flex;align-items:center;gap:5px;padding:4px 10px 4px 8px;
+      border-radius:20px;border:1px solid var(--border);background:var(--surface2);
+      color:var(--text);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;
+      font-family:inherit;white-space:nowrap}
+    .ind-chip:hover{border-color:var(--accent);transform:translateY(-1px)}
+    .ind-chip.sel{box-shadow:0 0 0 2px rgba(255,255,255,.25),0 4px 14px rgba(0,0,0,.25)}
+    .ind-chip-ico{width:16px;height:16px;display:flex;align-items:center;justify-content:center;opacity:.95}
+    .ind-chip-ico svg{width:14px;height:14px;display:block}
     .actionbar-filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
       width:100%;min-width:0}
     .actionbar-end{display:flex;align-items:center;gap:8px;margin-left:auto;
@@ -728,6 +741,49 @@
       box-shadow:0 8px 32px rgba(0,0,0,.35);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
       color:#e8f6ff;font-size:12px;line-height:1.45;pointer-events:auto}
     #learn-path-banner.show{display:block}
+    #industry-banner{position:relative;left:auto;transform:none;display:none;width:100%;
+      max-width:min(920px,calc(100vw - 40px));padding:10px 14px;border-radius:10px;
+      background:rgba(10,34,64,.94);border:1px solid rgba(2,200,255,.4);
+      box-shadow:0 8px 32px rgba(0,0,0,.35);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+      color:#e8f6ff;font-size:12px;line-height:1.45;pointer-events:auto}
+    #industry-banner.show{display:block}
+    .ib-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+    .ib-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+      flex-shrink:0;background:linear-gradient(135deg,var(--ib-from),var(--ib-to));color:#fff}
+    .ib-ico svg{width:20px;height:20px}
+    .ib-title{font-size:13px;font-weight:700;color:#fff}
+    .ib-desc{font-size:11px;color:#b8e8ff;margin-top:3px;line-height:1.4}
+    .ib-meta{font-size:10px;color:#94c8e0;margin-top:4px}
+    .ib-close{margin-left:auto;background:none;border:none;color:#94a3b8;font-size:18px;line-height:1;cursor:pointer;padding:0 2px}
+    .ib-actions{display:flex;flex-wrap:wrap;gap:6px}
+    .ib-btn{background:rgba(2,200,255,.12);border:1px solid rgba(2,200,255,.35);border-radius:6px;
+      color:#fff;font-size:10.5px;font-weight:700;padding:5px 10px;cursor:pointer;font-family:inherit}
+    .ib-btn:hover{background:rgba(2,200,255,.22);border-color:#02c8ff}
+    .ib-btn.primary{background:#02c8ff;color:#001824;border-color:#02c8ff}
+    .ib-btn.primary:hover{background:#fff}
+    #industry-dock{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);z-index:4;
+      width:min(980px,calc(100% - 28px));pointer-events:auto;display:none}
+    #industry-dock.show{display:block}
+    .ind-dock-panel{background:var(--glass-bg);border:1px solid var(--border);border-radius:14px;
+      padding:12px 14px 14px;box-shadow:var(--chrome-shadow);backdrop-filter:blur(var(--glass-blur));
+      -webkit-backdrop-filter:blur(var(--glass-blur))}
+    .ind-dock-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .ind-dock-title{font-size:13px;font-weight:700;color:var(--text)}
+    .ind-dock-sub{font-size:11px;color:var(--muted);margin-top:2px}
+    .ind-dock-hint{font-size:10px;color:var(--subtle);white-space:nowrap}
+    .ind-dock-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+    @media (max-width: 820px){.ind-dock-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media (max-width: 520px){.ind-dock-grid{grid-template-columns:1fr}}
+    .ind-dock-card{display:flex;align-items:flex-start;gap:8px;text-align:left;padding:10px 10px;
+      border-radius:10px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;
+      transition:transform .15s,box-shadow .15s,border-color .15s;font-family:inherit;color:var(--text)}
+    .ind-dock-card:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 6px 18px rgba(0,0,0,.28)}
+    .ind-dock-ico{width:32px;height:32px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;
+      justify-content:center;background:linear-gradient(135deg,var(--id-from),var(--id-to));color:#fff}
+    .ind-dock-ico svg{width:18px;height:18px}
+    .ind-dock-lbl{font-size:11px;font-weight:700;line-height:1.25}
+    .ind-dock-desc{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.35;display:-webkit-box;
+      -webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
     .lpb-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
     .lpb-title{font-size:13px;font-weight:700;color:#fff}
     .lpb-tagline{font-size:11px;color:#b8e8ff;margin-top:2px}
@@ -1162,6 +1218,10 @@
   </button>
   </div>
   </div>
+  <div class="actionbar-industries" id="industry-chips-wrap">
+    <span class="ind-bar-lbl">Industry</span>
+    <div class="ind-chip-scroll" id="industry-chips" role="list" aria-label="Industry scenarios"></div>
+  </div>
   <div class="actionbar-filters">
   <div class="fr" id="cpills"></div>
   <select class="tbs" id="ucs"><option value="">All Use Cases</option></select>
@@ -1186,6 +1246,7 @@
     <div class="bg-grid"></div>
   </div>
   <svg id="gs"></svg>
+  <div id="industry-dock" hidden aria-label="Start by industry scenario"></div>
 </div>
 <div id="tip"><div id="tn"></div><div id="tc"></div></div>
 <div id="link-why-card" aria-hidden="true">
@@ -3830,6 +3891,8 @@ const allInds  = [...new Set(NODES.flatMap(n => n.industries))].sort();
 
 let activeCats  = new Set(Object.keys(CATS));
 let activeUC    = "", activeInd = "";
+let activeIndustryTemplate = null;
+const INDUSTRY_TEMPLATE_KEY = "cpn-industry-template-v1";
 let activePillars = new Set();
 let pillarHoverId = null;
 let pillarZoneLayout = {};
@@ -3861,7 +3924,14 @@ const ucEl = document.getElementById("ucs"), indEl = document.getElementById("in
 allUCs.forEach(u  => { const o = document.createElement("option"); o.value = o.textContent = u;   ucEl.appendChild(o); });
 allInds.forEach(i => { const o = document.createElement("option"); o.value = o.textContent = i; indEl.appendChild(o); });
 ucEl.addEventListener("change",  () => { activeUC  = ucEl.value;  applyFilters(); });
-indEl.addEventListener("change", () => { activeInd = indEl.value; applyFilters(); });
+indEl.addEventListener("change", () => {
+  activeInd = indEl.value;
+  if (activeIndustryTemplate) {
+    const expected = WIZARD_INDUSTRY_VERTICAL[activeIndustryTemplate] || "";
+    if (activeInd !== expected) clearIndustryTemplate({ keepStack: true });
+  }
+  applyFilters();
+});
 document.getElementById("rst").addEventListener("click", resetAll);
 
 // Legend removed in v2.1 — category colors are evident in the top filter pills.
@@ -7864,14 +7934,21 @@ function updateViewModeUI(){
   const pills = document.getElementById("cpills");
   const ucs = document.getElementById("ucs");
   const inds = document.getElementById("inds");
+  const indWrap = document.getElementById("industry-chips-wrap");
   const muted = !(viewMode === "families" || viewMode === "all-products" || viewMode === "spatial");
   [pills, ucs, inds].forEach(el => {
     if (!el) return;
     el.style.opacity = muted ? 0.45 : 1;
     el.style.pointerEvents = muted ? "none" : "auto";
   });
+  if (indWrap) {
+    indWrap.style.opacity = 1;
+    indWrap.style.pointerEvents = "auto";
+  }
   document.body.classList.toggle("families-mode", viewMode === "families");
   document.body.classList.toggle("overview-mode", viewMode === "overview");
+  document.body.classList.toggle("industry-scenario-active", !!activeIndustryTemplate);
+  updateIndustryDockVisibility();
 }
 
 // ── Breadcrumb chip rendering (used by Phase-3 polish; built in now so
@@ -8435,6 +8512,7 @@ function applyFilters() {
     const badge = document.getElementById("fbadge"); if (badge) badge.style.display = "none";
     refreshTimelineIfOpen();
     updateCanvasFocusState();
+    updateIndustryDockVisibility();
     return;
   }
   if (viewMode === "spatial"){
@@ -8538,6 +8616,7 @@ function resetAll() {
   if (window.__cpnV2?.phases?.clearPlanSession) window.__cpnV2.phases.clearPlanSession();
 
   activeCats=new Set(Object.keys(CATS)); activeUC=""; activeInd=""; clearPillarFilter();
+  clearIndustryTemplate();
   ucEl.value=""; indEl.value="";
   facetState.status = new Set(["current"]);
   facetState.tier.clear();
@@ -9718,7 +9797,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.81.3";
+const APP_VERSION   = "2.82.0";
 const DATA_UPDATED  = "2026-07-08";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -10778,7 +10857,8 @@ function readState(){
     profile:  lsGet(STORAGE_KEYS.profile, {vertical:"", size:"", mode:""}),
     cats:     [...activeCats],
     uc:       activeUC,
-    ind:      activeInd
+    ind:      activeInd,
+    industryTemplate: activeIndustryTemplate
   };
 }
 function applyState(s){
@@ -10792,6 +10872,15 @@ function applyState(s){
   if (s.cats && Array.isArray(s.cats)) { activeCats = new Set(s.cats); }
   if (typeof s.uc === "string")  { activeUC  = s.uc;  $("#ucs").value  = s.uc; }
   if (typeof s.ind === "string") { activeInd = s.ind; $("#inds").value = s.ind; }
+  if (s.industryTemplate) {
+    activeIndustryTemplate = s.industryTemplate;
+    lsSet(INDUSTRY_TEMPLATE_KEY, s.industryTemplate);
+  } else {
+    activeIndustryTemplate = null;
+    lsDel(INDUSTRY_TEMPLATE_KEY);
+  }
+  syncIndustryChipSelection();
+  renderIndustryBanner();
   $$(".cp").forEach(b => b.classList.toggle("off", !activeCats.has(b.dataset.cat)));
   renderChips(); updateAB();
   applyFilters();
@@ -11785,15 +11874,7 @@ function buildQuickStartSection(){
     });
   });
   body.querySelectorAll(".tpl-chip").forEach(c => c.addEventListener("click", () => {
-    const t = INDUSTRY_TEMPLATES.find(x => x.id === c.dataset.id);
-    if (!t) return;
-    if (stack.size > 0 && !confirm(`Replace their current product list with the "${t.name}" starter (${t.products.length} products)?`)) return;
-    stack.clear(); stackItems.clear();
-    t.products.forEach(p => { if (nodeById[p]) { stack.add(p); stackItems.set(p, "node"); } });
-    renderChips(); updateAB(); highlightStack();
-    if (analyzed) window.runAnalysis();
-    scheduleAutoSave();
-    showToast(`Loaded ${t.name} starter`);
+    applyIndustryTemplate(c.dataset.id);
   }));
 }
 
@@ -11848,6 +11929,173 @@ const WIZARD_STEP_META = {
 function wizardIndustryTheme(id) {
   return WIZARD_INDUSTRY_THEME[id] || { short: id, from: "#64748B", to: "#475569", icon: WIZ_SVG.default };
 }
+
+/* ── Industry scenarios — prominent discovery + shared loader ───────────── */
+function industryTemplateById(id) {
+  return INDUSTRY_TEMPLATES.find(x => x.id === id) || null;
+}
+function syncIndustryChipSelection() {
+  $$(".ind-chip").forEach(b => b.classList.toggle("sel", b.dataset.id === activeIndustryTemplate));
+  $$(".ind-dock-card").forEach(b => b.classList.toggle("sel", b.dataset.id === activeIndustryTemplate));
+}
+function loadIndustryStack(t, replace) {
+  if (!t || !replace) return;
+  stack.clear(); stackItems.clear();
+  t.products.forEach(p => { if (nodeById[p]) { stack.add(p); stackItems.set(p, "node"); } });
+  renderChips(); updateAB(); highlightStack();
+}
+function applyIndustryTemplate(templateId, opts = {}) {
+  const t = industryTemplateById(templateId);
+  if (!t) return;
+  const replace = opts.replace !== false;
+  if (replace && stack.size > 0 && !opts.skipConfirm
+      && !confirm(`Replace their current product list with the "${t.name}" starter (${t.products.length} products)?`)) return;
+  if (replace) loadIndustryStack(t, true);
+  activeIndustryTemplate = templateId;
+  lsSet(INDUSTRY_TEMPLATE_KEY, templateId);
+  const vert = WIZARD_INDUSTRY_VERTICAL[templateId];
+  if (vert) { activeInd = vert; if ($("#inds")) $("#inds").value = vert; }
+  syncIndustryChipSelection();
+  renderIndustryBanner();
+  document.body.classList.toggle("industry-scenario-active", true);
+  updateIndustryDockVisibility();
+  const targetView = opts.view || "families";
+  if (viewMode !== targetView) applyViewLevel(targetView);
+  else applyFilters();
+  scheduleAutoSave();
+  if (analyzed && typeof window.runAnalysis === "function") window.runAnalysis();
+  if (opts.toast !== false) showToast(`Loaded ${t.name} scenario`);
+}
+function clearIndustryTemplate(opts = {}) {
+  activeIndustryTemplate = null;
+  lsDel(INDUSTRY_TEMPLATE_KEY);
+  syncIndustryChipSelection();
+  hideIndustryBanner();
+  document.body.classList.remove("industry-scenario-active");
+  updateIndustryDockVisibility();
+  if (!opts.keepFilter) {
+    activeInd = "";
+    if ($("#inds")) $("#inds").value = "";
+    applyFilters();
+  }
+}
+function buildIndustryChipsBar() {
+  const host = $("#industry-chips"); if (!host || host.dataset.ready) return;
+  host.dataset.ready = "1";
+  INDUSTRY_TEMPLATES.forEach(t => {
+    const th = wizardIndustryTheme(t.id);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "ind-chip";
+    btn.dataset.id = t.id;
+    btn.title = t.desc;
+    btn.style.background = `linear-gradient(135deg, color-mix(in srgb, ${th.from} 22%, var(--surface2)), var(--surface2))`;
+    btn.style.borderColor = `color-mix(in srgb, ${th.from} 45%, var(--border))`;
+    btn.innerHTML = `<span class="ind-chip-ico">${th.icon}</span><span>${escapeHtml(th.short)}</span>`;
+    btn.addEventListener("click", () => {
+      if (activeIndustryTemplate === t.id) {
+        clearIndustryTemplate();
+        showToast("Industry scenario cleared");
+        return;
+      }
+      applyIndustryTemplate(t.id);
+    });
+    host.appendChild(btn);
+  });
+  syncIndustryChipSelection();
+}
+function buildIndustryDock() {
+  const dock = $("#industry-dock"); if (!dock || dock.dataset.ready) return;
+  dock.dataset.ready = "1";
+  dock.innerHTML = `
+    <div class="ind-dock-panel">
+      <div class="ind-dock-head">
+        <div>
+          <div class="ind-dock-title">Start by industry</div>
+          <div class="ind-dock-sub">Pick a scenario to load a starter stack and highlight relevant families</div>
+        </div>
+        <span class="ind-dock-hint">or use chips in the bar above</span>
+      </div>
+      <div class="ind-dock-grid" id="ind-dock-grid"></div>
+    </div>`;
+  const grid = $("#ind-dock-grid");
+  INDUSTRY_TEMPLATES.forEach(t => {
+    const th = wizardIndustryTheme(t.id);
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "ind-dock-card";
+    card.dataset.id = t.id;
+    card.style.setProperty("--id-from", th.from);
+    card.style.setProperty("--id-to", th.to);
+    card.innerHTML = `
+      <span class="ind-dock-ico">${th.icon}</span>
+      <span>
+        <div class="ind-dock-lbl">${escapeHtml(t.name)}</div>
+        <div class="ind-dock-desc">${escapeHtml(t.desc)}</div>
+      </span>`;
+    card.addEventListener("click", () => applyIndustryTemplate(t.id));
+    grid.appendChild(card);
+  });
+  updateIndustryDockVisibility();
+}
+function buildIndustryBanner() {
+  const host = $("#top-chips") || document.body;
+  if ($("#industry-banner")) return;
+  const b = document.createElement("div");
+  b.id = "industry-banner";
+  b.setAttribute("role", "region");
+  b.setAttribute("aria-label", "Active industry scenario");
+  const learn = $("#learn-path-banner");
+  if (learn && host === $("#top-chips")) host.insertBefore(b, learn);
+  else host.appendChild(b);
+  b.addEventListener("click", e => {
+    if (e.target.closest(".ib-close")) clearIndustryTemplate();
+    if (e.target.closest("[data-ib-planner]")) {
+      const pn = $("#planner");
+      if (pn && !pn.classList.contains("open")) $("#planner-btn")?.click();
+    }
+    if (e.target.closest("[data-ib-guided]")) {
+      if (activeIndustryTemplate) { wizardState.industry = activeIndustryTemplate; markWizardDirty?.(); }
+      window.openGuidedWizard?.();
+    }
+    if (e.target.closest("[data-ib-families]")) applyViewLevel("families");
+  });
+}
+function renderIndustryBanner() {
+  const el = $("#industry-banner"); if (!el) return;
+  const t = activeIndustryTemplate ? industryTemplateById(activeIndustryTemplate) : null;
+  if (!t) { hideIndustryBanner(); return; }
+  const th = wizardIndustryTheme(t.id);
+  const vert = WIZARD_INDUSTRY_VERTICAL[t.id];
+  const inStack = t.products.filter(p => stack.has(p)).length;
+  el.style.setProperty("--ib-from", th.from);
+  el.style.setProperty("--ib-to", th.to);
+  el.innerHTML = `
+    <div class="ib-head">
+      <div class="ib-ico">${th.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div class="ib-title">${escapeHtml(t.name)}</div>
+        <div class="ib-desc">${escapeHtml(t.desc)}</div>
+        <div class="ib-meta">${inStack} of ${t.products.length} starter products in stack${vert ? ` · Filter: ${escapeHtml(vert)}` : ""}</div>
+      </div>
+      <button type="button" class="ib-close" aria-label="Clear industry scenario">×</button>
+    </div>
+    <div class="ib-actions">
+      <button type="button" class="ib-btn primary" data-ib-families>View families</button>
+      <button type="button" class="ib-btn" data-ib-planner>Open planner</button>
+      <button type="button" class="ib-btn" data-ib-guided>Refine in Guided Plan</button>
+    </div>`;
+  el.classList.add("show");
+}
+function hideIndustryBanner() { $("#industry-banner")?.classList.remove("show"); }
+function updateIndustryDockVisibility() {
+  const dock = $("#industry-dock"); if (!dock) return;
+  const show = viewMode === "overview" && !activeIndustryTemplate;
+  dock.hidden = !show;
+  dock.classList.toggle("show", show);
+}
+window.applyIndustryTemplate = applyIndustryTemplate;
+window.clearIndustryTemplate = clearIndustryTemplate;
 function wizardUpdateHeader() {
   const panel = $("#gw-panel");
   const meta = WIZARD_STEP_META[wizardState.step] || WIZARD_STEP_META.default;
@@ -15680,6 +15928,9 @@ function boot(){
   buildComparePanel();
   buildRecentPinned();
   buildLearningPathBanner();
+  buildIndustryBanner();
+  buildIndustryChipsBar();
+  buildIndustryDock();
   buildRefArchBadge();
   buildContextMenu();
   buildTimelineView();
@@ -15709,6 +15960,11 @@ function boot(){
 
   // Restore prior state (URL hash > current plan > autosave)
   bootRestore();
+  if (activeIndustryTemplate) {
+    syncIndustryChipSelection();
+    renderIndustryBanner();
+    updateIndustryDockVisibility();
+  }
   if (typeof updatePlannerUI === "function") updatePlannerUI();
   if (typeof initDesignStudio === "function") initDesignStudio();
   if (typeof NODES !== "undefined") {
