@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Cisco Portfolio Navigator</title>
   <link rel="icon" type="image/svg+xml" href="assets/cpn-favicon.svg"/>
-  <meta name="theme-color" content="#07182D"/>
+  <meta name="theme-color" content="#07070f"/>
   <script type="importmap">
   {"imports":{"three":"./vendor/three.module.min.js"}}
   </script>
@@ -14,9 +14,10 @@
   import * as THREE from "three";
   window.__cpnWalkTHREE = THREE;
   </script>
-  <link rel="stylesheet" href="assets/cpn-ui.css?v=2.79.24"/>
-  <link rel="stylesheet" href="assets/cpn-light.css?v=2.79.24"/>
-  <link rel="stylesheet" href="design-studio.css?v=2.79.24"/>
+  <link rel="stylesheet" href="assets/cpn-ui.css?v=2.80.0"/>
+  <link rel="stylesheet" href="assets/cpn-light.css?v=2.80.0"/>
+  <link rel="stylesheet" href="assets/cpn-iq-theme.css?v=2.80.0"/>
+  <link rel="stylesheet" href="design-studio.css?v=2.80.0"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     @font-face{
@@ -73,11 +74,11 @@
     /* AMBIENT BACKGROUND — graph canvas backdrop */
     #gw{position:fixed;top:var(--topbar-h);left:0;right:0;bottom:0;z-index:1}
     #bg-ambient{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;
-      background:linear-gradient(165deg,#04101f 0%,#07182d 42%,#0b2a4a 100%)}
+      background:linear-gradient(165deg,#07070f 0%,#0f0f1a 42%,#12122a 100%)}
     .bg-pillar-tint{position:absolute;inset:-20%;opacity:0;transition:opacity 2.2s ease;pointer-events:none}
-    .bg-pillar-tint--ai{background:radial-gradient(ellipse 55% 50% at 22% 38%, rgba(10,96,255,.32), transparent 68%)}
-    .bg-pillar-tint--wp{background:radial-gradient(ellipse 50% 45% at 78% 38%, rgba(45,206,92,.22), transparent 65%)}
-    .bg-pillar-tint--res{background:radial-gradient(ellipse 48% 42% at 50% 82%, rgba(255,144,0,.18), transparent 62%)}
+    .bg-pillar-tint--ai{background:radial-gradient(ellipse 55% 50% at 22% 38%, rgba(59,130,246,.34), transparent 68%)}
+    .bg-pillar-tint--wp{background:radial-gradient(ellipse 50% 45% at 78% 38%, rgba(99,102,241,.26), transparent 65%)}
+    .bg-pillar-tint--res{background:radial-gradient(ellipse 48% 42% at 50% 82%, rgba(192,38,211,.2), transparent 62%)}
     #bg-ambient{--ambient-intensity:0}
     #bg-ambient[data-pillar="ai-dc"] .bg-pillar-tint--ai{opacity:var(--ambient-intensity,1)}
     #bg-ambient[data-pillar="workplaces"] .bg-pillar-tint--wp{opacity:var(--ambient-intensity,1)}
@@ -91,17 +92,17 @@
     /* Bottom band — pinned static so drift/beams never shimmer the lower canvas */
     .bg-glow-floor{position:absolute;inset:0;pointer-events:none;
       background:
-        radial-gradient(ellipse 52% 44% at 78% 68%, rgba(2,200,255,.22) 0%, transparent 65%),
-        radial-gradient(ellipse 46% 38% at 50% 88%, rgba(255,144,0,.12) 0%, transparent 62%)}
+        radial-gradient(ellipse 52% 44% at 78% 68%, rgba(91,140,255,.2) 0%, transparent 65%),
+        radial-gradient(ellipse 46% 38% at 50% 88%, rgba(139,92,246,.14) 0%, transparent 62%)}
     .bg-glow{position:absolute;inset:-20%;opacity:1;
       background:
-        radial-gradient(ellipse 58% 48% at 22% 32%, rgba(10,96,255,.28) 0%, transparent 68%),
-        radial-gradient(ellipse 40% 35% at 50% 42%, rgba(2,200,255,.10) 0%, transparent 70%)}
+        radial-gradient(ellipse 58% 48% at 22% 32%, rgba(59,130,246,.26) 0%, transparent 68%),
+        radial-gradient(ellipse 40% 35% at 50% 42%, rgba(139,92,246,.14) 0%, transparent 70%)}
     .bg-grid{position:absolute;inset:0;opacity:1;
       background-image:
-        linear-gradient(rgba(2,200,255,.06) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(2,200,255,.06) 1px, transparent 1px),
-        radial-gradient(circle, rgba(2,200,255,.22) 1px, transparent 1px);
+        linear-gradient(rgba(91,140,255,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(91,140,255,.05) 1px, transparent 1px),
+        radial-gradient(circle, rgba(139,92,246,.18) 1px, transparent 1px);
       background-size:72px 72px, 72px 72px, 36px 36px;
       background-position:0 0, 0 0, 18px 18px;
       animation:bg-grid-pan 58.33s linear infinite}
@@ -4979,6 +4980,7 @@ function setAmbientPillarTint(pillarId){
 function updateCanvasFocusState(){
   document.body.classList.remove("canvas-focus");
   document.body.classList.toggle("pillar-focus", usePillarLayout() && singlePillarFocused());
+  document.body.classList.toggle("graph-focus", !!selected);
   if (viewMode === "families" && singlePillarFocused()) setAmbientPillarTint(focusedPillarId());
   else if (viewMode === "families" && selected && usePillarLayout()) setAmbientPillarTint(familyPillar(selected.id));
   else setAmbientPillarTint(null);
@@ -9632,7 +9634,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.79.33";
+const APP_VERSION   = "2.80.0";
 const DATA_UPDATED  = "2026-06-20";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -15437,8 +15439,11 @@ function initAmbientBackground(){
         const dx = a.x - b.x, dy = a.y - b.y;
         const dist = Math.hypot(dx, dy);
         if (dist < LINK_DIST){
-          const alpha = 0.15;
-          ctx.strokeStyle = `rgba(2,200,255,${alpha})`;
+          const alpha = 0.12;
+          const violet = (i + j) % 5 === 0;
+          ctx.strokeStyle = violet
+            ? `rgba(139,92,246,${alpha * 0.75})`
+            : `rgba(91,140,255,${alpha})`;
           ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.moveTo(a.x, a.y);
@@ -15449,9 +15454,9 @@ function initAmbientBackground(){
     }
 
     for (const n of nodes){
-      const alpha = 0.32;
+      const alpha = 0.3;
       const radius = 1.65;
-      ctx.fillStyle = `rgba(2,200,255,${alpha})`;
+      ctx.fillStyle = `rgba(91,140,255,${alpha})`;
       ctx.beginPath();
       ctx.arc(n.x, n.y, radius, 0, Math.PI * 2);
       ctx.fill();
