@@ -307,7 +307,12 @@
     .holo-projector{pointer-events:none;position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);
       width:42px;height:6px;border-radius:50%;background:radial-gradient(ellipse,rgba(0,212,255,.55),transparent 70%)}
     .holo-media{position:relative;aspect-ratio:16/9;background:#020810}
-    .holo-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+    .holo-media.holo-media--chrome{
+      background:linear-gradient(145deg,rgba(0,28,48,.92),rgba(0,12,24,.98));
+      border-bottom:1px solid rgba(0,212,255,.15)}
+    .holo-media.holo-media--chrome::before{content:"";position:absolute;inset:0;opacity:.2;
+      background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,212,255,.06) 3px,rgba(0,212,255,.06) 6px)}
+    .holo-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;background:#020810}
     .holo-embed,.holo-video{position:absolute;inset:0;width:100%;height:100%;border:0;display:none;background:#000}
     .holo-embed.is-playing,.holo-video.is-playing{display:block}
     .holo-poster.is-hidden{display:none}
@@ -335,8 +340,9 @@
     .p-video-hint{font-size:11px;color:#d8ecfa;margin-bottom:10px;line-height:1.45}
     .p-video-entry{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(0,212,255,.12)}
     .p-video-entry:last-child{border-bottom:none;padding-bottom:0}
-    .p-video-thumb{width:96px;height:54px;border-radius:6px;object-fit:cover;flex-shrink:0;
-      border:1px solid rgba(0,212,255,.25)}
+    .p-video-thumb{width:96px;height:54px;border-radius:6px;object-fit:contain;flex-shrink:0;
+      border:1px solid rgba(0,212,255,.25);background:rgba(0,12,24,.9)}
+    .p-video-thumb--chrome{background:linear-gradient(145deg,rgba(0,28,48,.9),rgba(0,12,24,.95))}
     .p-video-entry-title{font-size:12px;font-weight:600;color:#e8f6ff;line-height:1.35}
     .p-video-entry-meta{font-size:10px;color:#7dd3fc;margin-top:3px}
     .p-video-entry-link{font-size:10px;color:#00d4ff;margin-top:4px;display:inline-block}
@@ -5754,11 +5760,16 @@ const videoByProduct = new Map();
 const videoByFamily = new Map();
 const HOLO_PREVIEW_DELAY = 520;
 const HOLO_SHORT_MAX_SEC = 60;
+const HOLO_HIDE_DELAY = 240;
 let holoPinned = false;
 let holoHoverTimer = null;
 let holoPreviewTimer = null;
+let holoHideTimer = null;
+let holoCardHover = false;
+let holoNodeHover = false;
 let holoCurrentEntry = null;
 let holoCurrentNodeId = null;
+let holoCurrentNode = null;
 const holoEl = document.getElementById("holo-player");
 const holoPoster = holoEl?.querySelector(".holo-poster");
 const holoEmbed = holoEl?.querySelector(".holo-embed");
@@ -5784,6 +5795,30 @@ function rebuildVideoIndex(){
       if (!cur || rank > cur._rank) videoByFamily.set(f, Object.assign({}, e, { _rank: rank }));
     }
   }
+}
+
+function holoNodeProductId(d){
+  if (!d) return null;
+  if (d._kind === "product") return d.id || d._productRef?.id || null;
+  if (prodById[d.id]) return d.id;
+  return null;
+}
+
+function holoPosterUrl(d, entry){
+  if (entry?.poster === "none") return null;
+  if (entry?.poster && entry.poster !== "matrix") return entry.poster;
+  const pid = holoNodeProductId(d);
+  if (pid && typeof matrixImageUrl === "function"){
+    const url = matrixImageUrl(pid);
+    if (url) return url;
+  }
+  if (entry?.products?.length && typeof matrixImageUrl === "function"){
+    for (const p of entry.products){
+      const url = matrixImageUrl(p);
+      if (url) return url;
+    }
+  }
+  return null;
 }
 
 function holoEnabledForView(){
@@ -5845,15 +5880,25 @@ function holoStartPlayback(entry){
   }
 }
 
-function holoRenderEntry(entry){
+function holoRenderEntry(entry, d){
   if (!entry || !holoEl) return;
   holoCurrentEntry = entry;
+  holoCurrentNode = d || holoCurrentNode;
   holoTitle.textContent = entry.linkLabel || entry.name || "Product video";
   holoDur.textContent = entry.duration ? `▶ ${entry.duration}` : "";
+  const media = holoEl.querySelector(".holo-media");
+  const poster = holoPosterUrl(holoCurrentNode, entry);
   if (holoPoster){
-    holoPoster.src = entry.thumbnail || "";
-    holoPoster.alt = entry.linkLabel || entry.name || "";
-    holoPoster.classList.remove("is-hidden");
+    if (poster){
+      holoPoster.src = poster;
+      holoPoster.alt = holoCurrentNode?.name || entry.linkLabel || entry.name || "";
+      holoPoster.classList.remove("is-hidden");
+      media?.classList.remove("holo-media--chrome");
+    } else {
+      holoPoster.removeAttribute("src");
+      holoPoster.classList.add("is-hidden");
+      media?.classList.add("holo-media--chrome");
+    }
   }
   if (holoExt){
     holoExt.href = entry.url || "#";
@@ -5881,16 +5926,34 @@ function clearHoloTimers(){
   if (holoPreviewTimer){ clearTimeout(holoPreviewTimer); holoPreviewTimer = null; }
 }
 
+function cancelHideHolo(){
+  if (holoHideTimer){ clearTimeout(holoHideTimer); holoHideTimer = null; }
+}
+
+function scheduleHideHolo(){
+  if (holoPinned || holoCardHover || holoNodeHover) return;
+  cancelHideHolo();
+  holoHideTimer = setTimeout(() => {
+    holoHideTimer = null;
+    if (!holoPinned && !holoCardHover && !holoNodeHover) hideHolo();
+  }, HOLO_HIDE_DELAY);
+}
+
 function hideHolo(force){
   if (holoPinned && !force) return;
   clearHoloTimers();
+  cancelHideHolo();
   holoEl?.classList.remove("is-visible", "is-pinned");
   holoEl?.setAttribute("aria-hidden", "true");
   holoStopPlayback();
   holoCurrentEntry = null;
   holoCurrentNodeId = null;
+  holoCurrentNode = null;
   holoPinned = false;
+  holoCardHover = false;
+  holoNodeHover = false;
   if (holoPlayBtn) holoPlayBtn.textContent = "▶ Preview";
+  holoEl?.querySelector(".holo-media")?.classList.remove("holo-media--chrome");
 }
 
 function scheduleHoloPreview(entry){
@@ -5906,9 +5969,12 @@ function showHolo(ev, d){
   const entry = holoForNode(d);
   if (!entry) return false;
   if (typeof hideTip === "function") hideTip();
+  holoNodeHover = true;
+  cancelHideHolo();
   if (holoCurrentNodeId === d.id && holoVisible()){ moveHolo(ev); return true; }
   holoCurrentNodeId = d.id;
-  holoRenderEntry(entry);
+  holoCurrentNode = d;
+  holoRenderEntry(entry, d);
   holoEl.classList.add("is-visible");
   holoEl.setAttribute("aria-hidden", "false");
   moveHolo(ev);
@@ -5921,6 +5987,7 @@ function pinHolo(){
   holoPinned = true;
   holoEl?.classList.add("is-pinned");
   clearHoloTimers();
+  cancelHideHolo();
   holoStartPlayback(holoCurrentEntry);
   if (holoPlayBtn) holoPlayBtn.textContent = "▶ Playing";
 }
@@ -5932,6 +5999,13 @@ function applyVideoNodeBadges(){
 
 if (holoPlayBtn) holoPlayBtn.addEventListener("click", e => { e.stopPropagation(); pinHolo(); });
 if (holoCloseBtn) holoCloseBtn.addEventListener("click", e => { e.stopPropagation(); hideHolo(true); });
+if (holoEl){
+  holoEl.addEventListener("mouseenter", () => { holoCardHover = true; cancelHideHolo(); });
+  holoEl.addEventListener("mouseleave", () => {
+    holoCardHover = false;
+    if (!holoPinned) scheduleHideHolo();
+  });
+}
 document.addEventListener("keydown", e => {
   if (e.key === "Escape" && holoVisible()) hideHolo(true);
 });
@@ -6069,7 +6143,8 @@ function rebindGraph(opts){
             if (holoVisible()) moveHolo(ev);
             else if (hoverCardsEnabled()) moveTip(ev);
           })
-          .on("mouseout", ()=>{
+          .on("mouseout", (ev)=>{
+            if (holoEl?.contains(ev.relatedTarget)) return;
             if (viewMode === "composition"){
               compositionHoverId = null;
               applyCompositionInteractionStyles(selected);
@@ -6081,7 +6156,8 @@ function rebindGraph(opts){
               pillarHoverId = null;
               applyAllProductsNodeStyles(selected);
             }
-            if (!holoPinned) hideHolo();
+            holoNodeHover = false;
+            if (!holoPinned) scheduleHideHolo();
             hideTip();
           });
         buildNodeGroup(g);
@@ -9996,7 +10072,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.83.0";
+const APP_VERSION   = "2.83.1";
 const DATA_UPDATED  = "2026-07-08";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -13421,15 +13497,25 @@ function videoLinksFor({ familyId, productId, kind = "node", limit } = {}){
   });
 }
 
-function renderVideoPanelEntries(entries){
-  return entries.map(e => `<div class="p-video-entry">
-    <img class="p-video-thumb" src="${escapeHtml(e.thumbnail || "")}" alt="" loading="lazy" decoding="async">
+function renderVideoPanelEntries(entries, productId){
+  return entries.map(e => {
+    let thumb = null;
+    if (productId && typeof matrixImageUrl === "function") thumb = matrixImageUrl(productId);
+    if (!thumb && e.products?.length && typeof matrixImageUrl === "function"){
+      for (const p of e.products){ thumb = matrixImageUrl(p); if (thumb) break; }
+    }
+    const thumbHtml = thumb
+      ? `<img class="p-video-thumb" src="${escapeHtml(thumb)}" alt="" loading="lazy" decoding="async">`
+      : `<div class="p-video-thumb p-video-thumb--chrome" aria-hidden="true"></div>`;
+    return `<div class="p-video-entry">
+    ${thumbHtml}
     <div>
       <div class="p-video-entry-title">${escapeHtml(e.linkLabel || e.name)}</div>
       <div class="p-video-entry-meta">${escapeHtml(e.duration || "")}${e.hint ? ` · ${escapeHtml(e.hint)}` : ""}</div>
       <a class="p-video-entry-link" href="${escapeHtml(e.url || "#")}" target="_blank" rel="noopener noreferrer">Watch on YouTube ↗</a>
     </div>
-  </div>`).join("");
+  </div>`;
+  }).join("");
 }
 
 function insertVideoSection(id, kind){
@@ -13451,7 +13537,7 @@ function insertVideoSection(id, kind){
   sec.innerHTML = `<div class="p-video-card">
     <div class="p-video-tagline">${escapeHtml(VIDEO_DEFAULTS.sectionTitle || "Watch first")}</div>
     ${hint ? `<div class="p-video-hint">${escapeHtml(hint)}</div>` : ""}
-    ${renderVideoPanelEntries(entries)}
+    ${renderVideoPanelEntries(entries, kind === "product" ? id : null)}
     ${VIDEO_DEFAULTS.hoverNote ? `<div class="p-video-hint" style="margin-top:8px;margin-bottom:0;font-size:10px;opacity:.85">${escapeHtml(VIDEO_DEFAULTS.hoverNote)}</div>` : ""}
   </div>`;
   const matrix = pb.querySelector(".p-matrix-link");
