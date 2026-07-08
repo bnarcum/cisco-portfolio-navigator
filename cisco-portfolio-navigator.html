@@ -14,10 +14,10 @@
   import * as THREE from "three";
   window.__cpnWalkTHREE = THREE;
   </script>
-  <link rel="stylesheet" href="assets/cpn-ui.css?v=2.81.0"/>
-  <link rel="stylesheet" href="assets/cpn-light.css?v=2.81.0"/>
-  <link rel="stylesheet" href="assets/cpn-iq-theme.css?v=2.81.0"/>
-  <link rel="stylesheet" href="design-studio.css?v=2.81.0"/>
+  <link rel="stylesheet" href="assets/cpn-ui.css?v=2.81.1"/>
+  <link rel="stylesheet" href="assets/cpn-light.css?v=2.81.1"/>
+  <link rel="stylesheet" href="assets/cpn-iq-theme.css?v=2.81.1"/>
+  <link rel="stylesheet" href="design-studio.css?v=2.81.1"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     @font-face{
@@ -8500,16 +8500,48 @@ function applyFilters() {
 }
 
 function resetAll() {
+  stack.clear();
+  stackItems.clear();
+  legacySel.clear();
+  analyzed = false;
+  plannerSetupExpanded = false;
+  const acctEl = document.getElementById("acct-name");
+  if (acctEl) acctEl.value = "";
+  document.querySelectorAll(".lc").forEach(c => c.classList.remove("sel"));
+  const noAnalysis = document.getElementById("no-analysis");
+  const stackHint = document.getElementById("stack-hint");
+  const analysisResults = document.getElementById("analysis-results");
+  if (noAnalysis) noAnalysis.style.display = "none";
+  if (stackHint) stackHint.style.display = "block";
+  if (analysisResults) analysisResults.style.display = "none";
+  if (typeof renderChips === "function") renderChips();
+  if (typeof updateAB === "function") updateAB();
+
+  try {
+    localStorage.removeItem("cpn-autosave-v2");
+    localStorage.removeItem("cpn-current-v2");
+    localStorage.setItem(VIEW_MODE_KEY, "overview");
+    localStorage.setItem(VIEW_FOCUS_KEY, "");
+  } catch (e) {}
+  if (/[#&]s=/.test(location.hash || "")) {
+    history.replaceState(null, "", location.pathname + location.search);
+  }
+  if (window.__cpnV2?.phases?.clearPlanSession) window.__cpnV2.phases.clearPlanSession();
+
   activeCats=new Set(Object.keys(CATS)); activeUC=""; activeInd=""; clearPillarFilter();
   ucEl.value=""; indEl.value="";
   facetState.status = new Set(["current"]);
   facetState.tier.clear();
   document.querySelectorAll(".cp").forEach(b=>b.classList.remove("off"));
+  if (typeof renderFacets === "function") renderFacets();
   selected=null; resetHL(); closePanel();
   if (viewMode !== "overview") applyViewLevel("overview");
   else applyFilters();
   const {w,h}=getDims();
   svg.transition().duration(600).call(zoom.transform,d3.zoomIdentity.translate(w/2,h/2).scale(0.78));
+  if (typeof updatePlannerUI === "function") updatePlannerUI();
+  if (typeof refreshPlansBtn === "function") refreshPlansBtn();
+  if (typeof showToast === "function") showToast("Reset — fresh start");
 }
 
 // ── Tooltip
@@ -9677,7 +9709,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.81.0";
+const APP_VERSION   = "2.81.1";
 const DATA_UPDATED  = "2026-07-08";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -11074,6 +11106,11 @@ function watchDirectNodeClicks(){
 }
 
 /* On page load: hash > autosave > nothing */
+function clearPlanSession(){
+  currentPlanId = null;
+  lsDel(STORAGE_KEYS.current);
+  lsDel("cpn-autosave-v2");
+}
 function bootRestore(){
   const fromHash = decodeShareableUrl();
   if (fromHash){
@@ -15683,7 +15720,7 @@ window.__cpnV2 = {
   applyCpnTheme, toggleCpnTheme, syncCpnThemeButtons,
   REF_ARCH, INDUSTRY_TEMPLATES, FIELD_NOTICES, FIELD_NOTICE_BY_PROD,
   helpers: { $, $$, lsGet, lsSet, lsDel, nameOf, catOf, downloadBlob, escapeHtml, relTime },
-  phases: { readState, applyState, encodeShareableUrl, decodeShareableUrl,
+  phases: { readState, applyState, clearPlanSession, encodeShareableUrl, decodeShareableUrl,
     exportMarkdown, exportCSV, exportJSON, exportPDF, exportPPTX, exportText,
     addToCompare, closeCompare, clearCompareList, renderCompare, enhanceDetailPanel, renderMigratePlan, renderCompatWarnings,
     pushBreadcrumb, navHistory, bootRestore, buildPlansMenu, buildExportMenu,
