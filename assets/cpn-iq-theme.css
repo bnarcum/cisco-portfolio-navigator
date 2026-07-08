@@ -1,0 +1,173 @@
+/**
+ * Cisco IQ–inspired dark theme overlay.
+ * Keeps animated grid/mesh; applies violet/blue chrome and surfaces.
+ */
+:root:not([data-theme="light"]) {
+  --iq-blue: #5b8cff;
+  --iq-violet: #8b5cf6;
+  --iq-magenta: #c026d3;
+  --iq-gradient: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 55%, #c026d3 100%);
+  --iq-gradient-soft: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+
+  --bg: #07070f;
+  --surface: #11111c;
+  --surface2: #18182a;
+  --surface3: #222238;
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #f4f4f8;
+  --muted: #a8a8b8;
+  --subtle: #6b6b7d;
+  --accent: var(--iq-blue);
+  --glass-bg: rgba(17, 17, 28, 0.92);
+  --glass-bg2: rgba(24, 24, 42, 0.9);
+  --glass-edge: rgba(139, 92, 246, 0.22);
+  --chrome-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* Chrome */
+:root:not([data-theme="light"]) #topbar,
+:root:not([data-theme="light"]) #actionbar {
+  background: var(--glass-bg);
+}
+:root:not([data-theme="light"]) #topbar::before {
+  background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.35), transparent);
+}
+
+:root:not([data-theme="light"]) #search {
+  background: var(--surface2);
+  border-color: var(--border);
+}
+:root:not([data-theme="light"]) #search:focus {
+  border-color: var(--iq-violet);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.18);
+}
+
+/* IQ gradient pill for active view tab */
+:root:not([data-theme="light"]) .vm-seg {
+  border-radius: 10px;
+  background: var(--surface2);
+}
+:root:not([data-theme="light"]) .vm-seg button {
+  border-radius: 8px;
+}
+:root:not([data-theme="light"]) .vm-seg button.active {
+  background: var(--iq-gradient);
+  color: #fff;
+  box-shadow: 0 4px 18px rgba(139, 92, 246, 0.35);
+}
+
+/* Category pills — muted chips */
+:root:not([data-theme="light"]) .cp.off {
+  background: var(--surface2) !important;
+  border-color: var(--border) !important;
+  color: var(--muted) !important;
+}
+:root:not([data-theme="light"]) .pn { background: rgba(91, 140, 255, 0.18); color: #c7d7ff; border: 1px solid rgba(91, 140, 255, 0.35); }
+:root:not([data-theme="light"]) .ps { background: rgba(192, 38, 211, 0.14); color: #f0abfc; border: 1px solid rgba(192, 38, 211, 0.3); }
+:root:not([data-theme="light"]) .pc { background: rgba(99, 102, 241, 0.16); color: #c7d2fe; border: 1px solid rgba(99, 102, 241, 0.32); }
+:root:not([data-theme="light"]) .po { background: rgba(59, 130, 246, 0.16); color: #bfdbfe; border: 1px solid rgba(59, 130, 246, 0.32); }
+:root:not([data-theme="light"]) .pb { background: rgba(139, 92, 246, 0.14); color: #ddd6fe; border: 1px solid rgba(139, 92, 246, 0.3); }
+
+/* Buttons */
+:root:not([data-theme="light"]) #design-studio-btn {
+  background: var(--iq-gradient-soft) !important;
+  color: #fff !important;
+  border: none !important;
+  box-shadow: 0 4px 18px rgba(91, 140, 255, 0.32) !important;
+}
+:root:not([data-theme="light"]) #design-studio-btn:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 6px 24px rgba(139, 92, 246, 0.38) !important;
+}
+:root:not([data-theme="light"]) #planner-btn {
+  background: transparent !important;
+  color: var(--iq-blue) !important;
+  border: 1px solid rgba(91, 140, 255, 0.45) !important;
+  box-shadow: none !important;
+}
+:root:not([data-theme="light"]) #planner-btn:hover {
+  background: rgba(91, 140, 255, 0.1) !important;
+  filter: none !important;
+}
+:root:not([data-theme="light"]) #ai-btn {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.22), rgba(192, 38, 211, 0.12)) !important;
+  color: #f5f3ff !important;
+  border-color: rgba(139, 92, 246, 0.45) !important;
+  box-shadow: 0 0 16px rgba(139, 92, 246, 0.15) !important;
+}
+:root:not([data-theme="light"]) #ai-btn:hover {
+  border-color: var(--iq-violet) !important;
+  box-shadow: 0 0 22px rgba(139, 92, 246, 0.28) !important;
+}
+:root:not([data-theme="light"]) #guided-btn {
+  color: var(--iq-blue);
+  border-color: rgba(91, 140, 255, 0.45);
+}
+:root:not([data-theme="light"]) #guided-btn:hover {
+  background: rgba(91, 140, 255, 0.1);
+}
+
+/* Panels — solid IQ cards */
+:root:not([data-theme="light"]) #panel,
+:root:not([data-theme="light"]) #planner {
+  background: var(--surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-left-color: var(--border);
+  border-radius: 14px 0 0 14px;
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.5);
+}
+:root:not([data-theme="light"]) #panel::before,
+:root:not([data-theme="light"]) #planner::before {
+  background: var(--iq-gradient);
+  opacity: 0.55;
+}
+:root:not([data-theme="light"]) #sr {
+  background: var(--surface);
+  border-color: rgba(139, 92, 246, 0.25);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
+}
+:root:not([data-theme="light"]) .sri:hover,
+:root:not([data-theme="light"]) .sri.active {
+  background: rgba(139, 92, 246, 0.1);
+  border-left-color: var(--iq-violet);
+}
+
+:root:not([data-theme="light"]) .cpn-btn.primary,
+:root:not([data-theme="light"]) .ds-btn.primary {
+  background: var(--iq-gradient-soft);
+  color: #fff;
+  box-shadow: 0 4px 18px rgba(91, 140, 255, 0.3);
+}
+
+/* Animated background — idle calm, bloom on focus */
+:root:not([data-theme="light"]) .bg-grid {
+  opacity: 0.72;
+}
+:root:not([data-theme="light"]) #bg-mesh {
+  opacity: 0.55;
+}
+:root:not([data-theme="light"]) .bg-glow {
+  opacity: 0.85;
+}
+:root:not([data-theme="light"]) body.pillar-focus .bg-grid,
+:root:not([data-theme="light"]) body.graph-focus .bg-grid {
+  opacity: 1;
+}
+:root:not([data-theme="light"]) body.pillar-focus #bg-mesh,
+:root:not([data-theme="light"]) body.graph-focus #bg-mesh {
+  opacity: 0.82;
+}
+:root:not([data-theme="light"]) body.pillar-focus .bg-glow,
+:root:not([data-theme="light"]) body.graph-focus .bg-glow {
+  opacity: 1;
+}
+
+:root:not([data-theme="light"]) body.graph-focus #gs .nd:not(.nd-selected):not(.nd-hover) {
+  opacity: 0.45;
+  transition: opacity 0.25s ease;
+}
+:root:not([data-theme="light"]) body.graph-focus #gs .lv {
+  opacity: 0.38;
+  transition: opacity 0.25s ease;
+}
