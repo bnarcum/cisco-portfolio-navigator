@@ -31,7 +31,11 @@ must(/function addExecutiveWorld/.test(walk), "professional executive world is m
 must(!/ds-walk-presentation/.test(css), "Presentation CSS should be removed");
 must(/ds-walk-explore/.test(css), "Explore CSS class is missing");
 must(/ds-walk-lab/.test(css), "Lab CSS class is missing");
-must(/#ds-walk-overlay\.ds-walk-lab/.test(css), "Lab mode style must keep the playful skin");
+must(/ds-walk-hud-glass/.test(walk), "Lab glass HUD markup is missing");
+must(/data-action="hud-more-toggle"/.test(walk), "Lab HUD more menu toggle is missing");
+must(/function updateContextHud/.test(walk), "Lab HUD context line updater is missing");
+must(/#ds-walk-overlay\.ds-walk-lab[\s\S]*ds-walk-btn-primary/.test(css), "Lab glass primary button styles are missing");
+must(/#ds-walk-overlay\.ds-walk-lab[\s\S]*ds-walk-link-chip/.test(css), "Lab inline link chip styles are missing");
 
 must(/Generate sample walkthrough/.test(studio), "Quickstart copy should say walkthrough, not 3D walk");
 must(/id="ds-walk-corridor"[\s\S]*>Present</.test(studio), "Toolbar should use Present label");

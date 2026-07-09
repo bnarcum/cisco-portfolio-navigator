@@ -54,8 +54,8 @@
     lab: {
       label: "Lab",
       title: "Explorer Lab",
-      hint: "WASD move · drag look · E inspect · Esc exit",
-      className: "ds-walk-lab ds-walk-tour",
+      hint: "WASD move · drag look · Esc exit",
+      className: "ds-walk-lab",
       features: { manualMove: true, quest: true, avatar: true, voxel: true, dpad: true, pointerLock: true, viewmodel: true }
     }
   };
@@ -93,7 +93,9 @@
     semanticFrame: null, layerFilter: "all",
     packetsEnabled: true, packetSpeedIdx: 1,
     quest: null,
-    walkStyle: "lab"
+    walkStyle: "lab",
+    linksExpanded: false,
+    hudMoreOpen: false
   };
 
   function savedWalkStyle() {
@@ -1900,33 +1902,88 @@
     });
   }
 
-  function buildConnectedNav(ch) {
+  function mediaHex(media) {
+    const col = MEDIA_COLORS[media] || MEDIA_COLORS.cat6;
+    return `#${col.toString(16).padStart(6, "0")}`;
+  }
+
+  function buildConnectedNav(ch, keepExpanded = false) {
     const bar = document.getElementById("ds-walk-links");
     if (!bar) return;
+    if (!keepExpanded) state.linksExpanded = false;
     if (!ch || !state.topology?.segments?.length) {
       bar.innerHTML = "";
       bar.hidden = true;
+      updateContextHud();
       return;
     }
     const links = state.topology.segments.filter(s => s.cor.from.id === ch.id || s.cor.to.id === ch.id);
     if (!links.length) {
       bar.innerHTML = "";
       bar.hidden = true;
+      updateContextHud();
       return;
     }
     bar.hidden = false;
-    bar.innerHTML = `<span class="ds-walk-links-label">Connected — tap a link to walk there:</span>` + links.map(s => {
+    const glass = currentWalkStyle() === "lab";
+    const maxVisible = glass ? 3 : links.length;
+    const visible = state.linksExpanded ? links : links.slice(0, maxVisible);
+    const hiddenCount = links.length - maxVisible;
+    const chipHtml = visible.map(s => {
       const other = s.cor.from.id === ch.id ? s.cor.to : s.cor.from;
+      const mediaKey = s.cor.media || "cat6";
       const media = (s.cor.media || s.cor.label || "link").toUpperCase();
-      return `<button type="button" class="ds-walk-link" data-hop="${other.id}" title="${esc(s.cor.label || media)}">
-        ${esc(media)} → ${esc(other.label.slice(0, 18))}</button>`;
+      const dot = glass
+        ? `<i class="ds-walk-link-dot" style="background:${mediaHex(mediaKey)}"></i>`
+        : "";
+      return `<button type="button" class="ds-walk-link${glass ? " ds-walk-link-chip" : ""}" data-hop="${other.id}" title="${esc(s.cor.label || media)}">
+        ${dot}${esc(media)} → ${esc(other.label.slice(0, 18))}</button>`;
     }).join("");
+    const moreBtn = glass && !state.linksExpanded && hiddenCount > 0
+      ? `<button type="button" class="ds-walk-link ds-walk-link-chip ds-walk-link-more" data-action="links-expand">+${hiddenCount} more</button>`
+      : "";
+    const label = glass
+      ? ""
+      : `<span class="ds-walk-links-label">Connected — tap a link to walk there:</span>`;
+    bar.innerHTML = label + chipHtml + moreBtn;
     bar.querySelectorAll("[data-hop]").forEach(btn => {
       btn.addEventListener("click", () => {
         const target = state.chambers.find(c => c.id === btn.dataset.hop);
         if (target) teleportToChamber(target, false);
       });
     });
+    updateContextHud();
+  }
+
+  function updateContextHud() {
+    const el = document.getElementById("ds-walk-context");
+    if (!el || currentWalkStyle() !== "lab") return;
+    const ch = state.chambers[state.navIndex] || state.chambers[0];
+    if (!ch) {
+      el.textContent = "WASD · Esc exit";
+      return;
+    }
+    const nLinks = state.topology?.segments?.filter(s =>
+      s.cor.from.id === ch.id || s.cor.to.id === ch.id
+    ).length || 0;
+    const conn = `${nLinks} connection${nLinks === 1 ? "" : "s"}`;
+    el.textContent = `${ch.label} · ${conn} · WASD · Esc exit`;
+  }
+
+  function closeHudMoreMenu() {
+    state.hudMoreOpen = false;
+    const menu = document.getElementById("ds-walk-more-menu");
+    const btn = state.overlay?.querySelector('[data-action="hud-more-toggle"]');
+    if (menu) menu.hidden = true;
+    btn?.setAttribute("aria-expanded", "false");
+  }
+
+  function toggleHudMoreMenu() {
+    state.hudMoreOpen = !state.hudMoreOpen;
+    const menu = document.getElementById("ds-walk-more-menu");
+    const btn = state.overlay?.querySelector('[data-action="hud-more-toggle"]');
+    if (menu) menu.hidden = !state.hudMoreOpen;
+    btn?.setAttribute("aria-expanded", state.hudMoreOpen ? "true" : "false");
   }
 
   function highlightNavChip(id) {
@@ -2203,7 +2260,9 @@
     }
     const el = document.getElementById("ds-walk-focus");
     if (el) {
-      if (ch) {
+      if (currentWalkStyle() === "lab") {
+        el.hidden = true;
+      } else if (ch) {
         el.hidden = false;
         el.innerHTML = `<strong>${esc(ch.label)}</strong>${ch.pid ? `<span>${esc(ch.pid)}</span>` : ""}`;
       } else el.hidden = true;
@@ -2293,6 +2352,10 @@
   function populateLegend(graph) {
     const el = document.getElementById("ds-walk-legend");
     if (!el) return;
+    if (currentWalkStyle() === "lab") {
+      el.hidden = true;
+      return;
+    }
     const seen = new Map();
     (graph?.corridors || []).forEach(c => {
       const m = c.media || "cat6";
@@ -2768,12 +2831,15 @@
     const btn = state.overlay?.querySelector('[data-action="packets"]');
     const spd = state.overlay?.querySelector('[data-action="packet-speed"]');
     const preset = PACKET_SPEEDS[state.packetSpeedIdx] || PACKET_SPEEDS[1];
+    const glass = currentWalkStyle() === "lab";
     if (btn) {
       btn.classList.toggle("active", !!state.packetsEnabled);
-      btn.textContent = state.packetsEnabled ? "Packets: on" : "Packets";
+      btn.textContent = glass
+        ? (state.packetsEnabled ? "Packets · on" : "Packets")
+        : (state.packetsEnabled ? "Packets: on" : "Packets");
     }
     if (spd) {
-      spd.textContent = preset.label;
+      spd.textContent = glass ? `Speed · ${preset.label}` : preset.label;
       spd.disabled = !state.packetsEnabled;
       spd.title = state.packetsEnabled
         ? `Packet speed — ${preset.label} (click to change)`
@@ -2799,8 +2865,53 @@
     setStatus(`Packet speed · ${PACKET_SPEEDS[state.packetSpeedIdx].label}`);
   }
 
-  function hudHtml(tab) {
-    const style = activeWalkStyle();
+  function hudHtmlGlass(tab, style) {
+    const outcomesBtn = tab === "room"
+      ? `<button type="button" class="ds-walk-more-item" data-action="outcomes">Insights</button>`
+      : "";
+    const styleBtns = Object.entries(WALK_STYLES).map(([key, cfg]) =>
+      `<button type="button" class="ds-walk-style${key === currentWalkStyle() ? " active" : ""}" data-action="walk-style" data-style="${key}" title="${esc(cfg.hint)}">${esc(cfg.label.toUpperCase())}</button>`
+    ).join("");
+    return `<div class="ds-walk-hud ds-walk-hud-glass">
+      <div class="ds-walk-hud-row1">
+        <strong class="ds-walk-title">${esc(style.title)}</strong>
+        <div class="ds-walk-style-switch" aria-label="Walkthrough mode">${styleBtns}</div>
+        <button type="button" class="ds-walk-close" title="Exit walkthrough" aria-label="Close">✕</button>
+      </div>
+      <p class="ds-walk-context" id="ds-walk-context">WASD · Esc exit</p>
+      <div class="ds-walk-hud-row2">
+        <button type="button" class="ds-walk-btn ds-walk-btn-primary" data-action="prev-dev" title="Previous device">‹ Prev</button>
+        <button type="button" class="ds-walk-btn ds-walk-btn-primary" data-action="next-dev" title="Next device">Next ›</button>
+        <button type="button" class="ds-walk-btn ds-walk-btn-ghost" data-action="wayfind-open" title="Where to? — get directions">
+          <span class="ds-walk-btn-ico" aria-hidden="true">◎</span> Where to?
+        </button>
+        <div class="ds-walk-more-wrap">
+          <button type="button" class="ds-walk-btn ds-walk-btn-ghost" data-action="hud-more-toggle" aria-expanded="false" aria-haspopup="true" title="More tools">⋯ More</button>
+          <div class="ds-walk-more-menu" id="ds-walk-more-menu" hidden>
+            ${outcomesBtn}
+            <button type="button" class="ds-walk-more-item" data-action="packets">Packets</button>
+            <button type="button" class="ds-walk-more-item" data-action="packet-speed">Speed · Normal</button>
+          </div>
+        </div>
+      </div>
+      ${layerFilterHtml(tab)}
+      <div class="ds-walk-outcomes" id="ds-walk-outcomes" hidden></div>
+      <div class="ds-walk-quest" id="ds-walk-quest" hidden>
+        <div class="ds-walk-quest-head">
+          <strong id="ds-walk-quest-title">Cable Quest</strong>
+          <button type="button" class="ds-walk-quest-x" data-action="cable-quest-cancel" title="Cancel quest">✕</button>
+        </div>
+        <p id="ds-walk-quest-step" class="ds-walk-quest-step"></p>
+      </div>
+      <div class="ds-walk-wayfind" id="ds-walk-wayfind" hidden></div>
+      <div class="ds-walk-links ds-walk-link-chips" id="ds-walk-links" hidden></div>
+      <div class="ds-walk-legend" id="ds-walk-legend" hidden></div>
+      <div class="ds-walk-focus" id="ds-walk-focus" hidden></div>
+      <div class="ds-walk-status" id="ds-walk-status">Loading…</div>
+    </div>`;
+  }
+
+  function hudHtmlClassic(tab, style) {
     const outcomesBtn = tab === "room"
       ? `<button type="button" class="ds-walk-btn ds-walk-btn-spaces" data-action="outcomes" title="Simulated occupancy, location &amp; IoT overlay — room walks only">Insights</button>`
       : "";
@@ -2838,13 +2949,20 @@
     </div>`;
   }
 
+  function hudHtml(tab) {
+    const style = activeWalkStyle();
+    if (currentWalkStyle() === "lab") return hudHtmlGlass(tab, style);
+    return hudHtmlClassic(tab, style);
+  }
+
   // The device hotbar lives as a direct child of the overlay (not inside the
   // compact, absolutely-positioned top bar) so it anchors to the bottom-center
   // of the full screen instead of floating over the HUD.
   function hudPanelsHtml() {
-    return `<button type="button" class="ds-wf-fab" data-action="wayfind-open" title="Where to? — get directions">
+    const fab = currentWalkStyle() === "lab" ? "" : `<button type="button" class="ds-wf-fab" data-action="wayfind-open" title="Where to? — get directions">
         <span class="ds-wf-fab-ico">◎</span><span class="ds-wf-fab-txt">Where to?</span>
-      </button>
+      </button>`;
+    return `${fab}
       <div class="ds-walk-devices" id="ds-walk-devices"></div>`;
   }
 
@@ -2868,12 +2986,26 @@
     bindDpad();
     state.overlay?.querySelector(".ds-walk-close")?.addEventListener("click", () => close());
     state.overlay?.addEventListener("click", e => {
+      if (state.hudMoreOpen && !e.target.closest(".ds-walk-more-wrap")) closeHudMoreMenu();
+    });
+    state.overlay?.addEventListener("click", e => {
       const btn = e.target.closest("[data-action]");
       if (!btn) return;
       const a = btn.dataset.action;
-      if (a === "outcomes") { e.preventDefault(); e.stopPropagation(); toggleOutcomes(); }
+      if (a === "outcomes") { e.preventDefault(); e.stopPropagation(); closeHudMoreMenu(); toggleOutcomes(); }
       else if (a === "packets") { e.preventDefault(); e.stopPropagation(); togglePackets(); }
       else if (a === "packet-speed") { e.preventDefault(); e.stopPropagation(); cyclePacketSpeed(); }
+      else if (a === "hud-more-toggle") {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleHudMoreMenu();
+      }
+      else if (a === "links-expand") {
+        e.preventDefault();
+        e.stopPropagation();
+        state.linksExpanded = true;
+        buildConnectedNav(state.chambers[state.navIndex], true);
+      }
       else if (a === "walk-style") {
         e.preventDefault();
         e.stopPropagation();
@@ -2884,7 +3016,7 @@
         close(true);
         open(studio);
       }
-      else if (a === "wayfind-open") openWayfindMenu();
+      else if (a === "wayfind-open") { closeHudMoreMenu(); openWayfindMenu(); }
       else if (a === "wayfind-close") closeWayfindMenu();
       else if (a === "wayfind-stop") { clearWayfinding(); setStatus("Wayfinding stopped"); }
       else if (a === "prev-dev") cycleDevice(-1);
