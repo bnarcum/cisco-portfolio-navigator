@@ -122,6 +122,11 @@
     return WALK_STYLES[currentWalkStyle()] || WALK_STYLES.lab;
   }
 
+  function usesGlassHud() {
+    const key = currentWalkStyle();
+    return key === "lab" || key === "explore";
+  }
+
   function esc(s) {
     return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;");
   }
@@ -1925,7 +1930,7 @@
       return;
     }
     bar.hidden = false;
-    const glass = currentWalkStyle() === "lab";
+    const glass = usesGlassHud();
     const maxVisible = glass ? 3 : links.length;
     const visible = state.linksExpanded ? links : links.slice(0, maxVisible);
     const hiddenCount = links.length - maxVisible;
@@ -1957,17 +1962,18 @@
 
   function updateContextHud() {
     const el = document.getElementById("ds-walk-context");
-    if (!el || currentWalkStyle() !== "lab") return;
+    if (!el || !usesGlassHud()) return;
     const ch = state.chambers[state.navIndex] || state.chambers[0];
     if (!ch) {
-      el.textContent = "WASD · Esc exit";
+      el.textContent = currentWalkStyle() === "explore" ? "Drag look · Esc exit" : "WASD · Esc exit";
       return;
     }
     const nLinks = state.topology?.segments?.filter(s =>
       s.cor.from.id === ch.id || s.cor.to.id === ch.id
     ).length || 0;
     const conn = `${nLinks} connection${nLinks === 1 ? "" : "s"}`;
-    el.textContent = `${ch.label} · ${conn} · WASD · Esc exit`;
+    const controls = currentWalkStyle() === "explore" ? "drag look · Esc exit" : "WASD · Esc exit";
+    el.textContent = `${ch.label} · ${conn} · ${controls}`;
   }
 
   function closeHudMoreMenu() {
@@ -2260,7 +2266,7 @@
     }
     const el = document.getElementById("ds-walk-focus");
     if (el) {
-      if (currentWalkStyle() === "lab") {
+      if (usesGlassHud()) {
         el.hidden = true;
       } else if (ch) {
         el.hidden = false;
@@ -2352,7 +2358,7 @@
   function populateLegend(graph) {
     const el = document.getElementById("ds-walk-legend");
     if (!el) return;
-    if (currentWalkStyle() === "lab") {
+    if (usesGlassHud()) {
       el.hidden = true;
       return;
     }
@@ -2831,7 +2837,7 @@
     const btn = state.overlay?.querySelector('[data-action="packets"]');
     const spd = state.overlay?.querySelector('[data-action="packet-speed"]');
     const preset = PACKET_SPEEDS[state.packetSpeedIdx] || PACKET_SPEEDS[1];
-    const glass = currentWalkStyle() === "lab";
+    const glass = usesGlassHud();
     if (btn) {
       btn.classList.toggle("active", !!state.packetsEnabled);
       btn.textContent = glass
@@ -2911,55 +2917,15 @@
     </div>`;
   }
 
-  function hudHtmlClassic(tab, style) {
-    const outcomesBtn = tab === "room"
-      ? `<button type="button" class="ds-walk-btn ds-walk-btn-spaces" data-action="outcomes" title="Simulated occupancy, location &amp; IoT overlay — room walks only">Insights</button>`
-      : "";
-    const styleBtns = Object.entries(WALK_STYLES).map(([key, cfg]) =>
-      `<button type="button" class="ds-walk-style${key === currentWalkStyle() ? " active" : ""}" data-action="walk-style" data-style="${key}" title="${esc(cfg.hint)}">${esc(cfg.label)}</button>`
-    ).join("");
-    return `<div class="ds-walk-hud">
-      <div class="ds-walk-hud-top">
-        <strong class="ds-walk-title">${esc(style.title)}</strong>
-        <span class="ds-walk-hint">${esc(style.hint)}</span>
-        <button type="button" class="ds-walk-close" title="Exit walkthrough">✕</button>
-      </div>
-      <div class="ds-walk-style-switch" aria-label="Walkthrough mode">${styleBtns}</div>
-      <div class="ds-walk-hud-mid">
-        <button type="button" class="ds-walk-btn" data-action="prev-dev" title="Previous device">‹ Prev</button>
-        <button type="button" class="ds-walk-btn" data-action="next-dev" title="Next device">Next ›</button>
-        ${outcomesBtn}
-        <button type="button" class="ds-walk-btn ds-walk-pkt-toggle" data-action="packets" title="Show or hide data packets on links">Packets</button>
-        <button type="button" class="ds-walk-btn ds-walk-pkt-speed" data-action="packet-speed" title="Packet speed">Normal</button>
-      </div>
-      ${layerFilterHtml(tab)}
-      <div class="ds-walk-outcomes" id="ds-walk-outcomes" hidden></div>
-      <div class="ds-walk-quest" id="ds-walk-quest" hidden>
-        <div class="ds-walk-quest-head">
-          <strong id="ds-walk-quest-title">Cable Quest</strong>
-          <button type="button" class="ds-walk-quest-x" data-action="cable-quest-cancel" title="Cancel quest">✕</button>
-        </div>
-        <p id="ds-walk-quest-step" class="ds-walk-quest-step"></p>
-      </div>
-      <div class="ds-walk-wayfind" id="ds-walk-wayfind" hidden></div>
-      <div class="ds-walk-links" id="ds-walk-links" hidden></div>
-      <div class="ds-walk-legend" id="ds-walk-legend" hidden></div>
-      <div class="ds-walk-focus" id="ds-walk-focus" hidden></div>
-      <div class="ds-walk-status" id="ds-walk-status">Follow a connected link below, or use ‹ Prev / Next ›</div>
-    </div>`;
-  }
-
   function hudHtml(tab) {
-    const style = activeWalkStyle();
-    if (currentWalkStyle() === "lab") return hudHtmlGlass(tab, style);
-    return hudHtmlClassic(tab, style);
+    return hudHtmlGlass(tab, activeWalkStyle());
   }
 
   // The device hotbar lives as a direct child of the overlay (not inside the
   // compact, absolutely-positioned top bar) so it anchors to the bottom-center
   // of the full screen instead of floating over the HUD.
   function hudPanelsHtml() {
-    const fab = currentWalkStyle() === "lab" ? "" : `<button type="button" class="ds-wf-fab" data-action="wayfind-open" title="Where to? — get directions">
+    const fab = usesGlassHud() ? "" : `<button type="button" class="ds-wf-fab" data-action="wayfind-open" title="Where to? — get directions">
         <span class="ds-wf-fab-ico">◎</span><span class="ds-wf-fab-txt">Where to?</span>
       </button>`;
     return `${fab}
