@@ -47,9 +47,9 @@
     explore: {
       label: "Explore",
       title: "Solution Explore",
-      hint: "Drag to look · WASD optional · select devices or follow links",
+      hint: "WASD move · drag look · E inspect · Esc exit",
       className: "ds-walk-explore",
-      features: { manualMove: true, quest: false, avatar: false, voxel: false, dpad: true, pointerLock: false, viewmodel: false }
+      features: { manualMove: true, quest: false, avatar: true, voxel: false, dpad: true, pointerLock: true, viewmodel: true }
     },
     lab: {
       label: "Lab",
@@ -1964,15 +1964,14 @@
     if (!el || !usesGlassHud()) return;
     const ch = state.chambers[state.navIndex] || state.chambers[0];
     if (!ch) {
-      el.textContent = currentWalkStyle() === "explore" ? "Drag look · Esc exit" : "WASD · Esc exit";
+      el.textContent = "WASD · Esc exit";
       return;
     }
     const nLinks = state.topology?.segments?.filter(s =>
       s.cor.from.id === ch.id || s.cor.to.id === ch.id
     ).length || 0;
     const conn = `${nLinks} connection${nLinks === 1 ? "" : "s"}`;
-    const controls = currentWalkStyle() === "explore" ? "drag look · Esc exit" : "WASD · Esc exit";
-    el.textContent = `${ch.label} · ${conn} · ${controls}`;
+    el.textContent = `${ch.label} · ${conn} · WASD · Esc exit`;
   }
 
   function highlightNavChip(id) {

@@ -25,7 +25,9 @@ must(/data-action="walk-style"/.test(walk), "walk style HUD buttons are missing"
 must(/style\.features\.manualMove/.test(walk), "manual movement must be gated by style features");
 must(/\.features\.quest/.test(walk), "Cable Quest must be gated by style features");
 must(/style\.features\.avatar/.test(walk), "avatar must be gated by style features");
-must(/if \(style\.features\.avatar\) state\.thirdPerson = true;/.test(walk), "Lab avatar mode must restore third-person avatar visibility");
+must(/if \(style\.features\.avatar\) state\.thirdPerson = true;/.test(walk), "Avatar walk styles must restore third-person visibility");
+must(/explore:[\s\S]*pointerLock:\s*true/.test(walk), "Explore must use pointer-lock navigation like Lab");
+must(/explore:[\s\S]*avatar:\s*true/.test(walk), "Explore must show the walk avatar like Lab");
 
 must(/function addExecutiveWorld/.test(walk), "professional executive world is missing");
 must(!/ds-walk-presentation/.test(css), "Presentation CSS should be removed");
