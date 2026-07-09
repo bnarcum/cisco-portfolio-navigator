@@ -318,6 +318,11 @@
     line.lv.link-hot{stroke-opacity:1!important;stroke-width:3!important;
       animation:link-flow 1.1s linear infinite;stroke-dasharray:8 5}
     @media (prefers-reduced-motion:reduce){line.lv.link-hot{animation:none}}
+    @keyframes comp-orbit-pulse{0%,100%{stroke-opacity:.22;stroke-dashoffset:0}50%{stroke-opacity:.5;stroke-dashoffset:14}}
+    g.comp-orbit circle.comp-orbit-main{animation:comp-orbit-pulse 4.2s ease-in-out infinite}
+    g.comp-orbit .comp-orbit-hit{cursor:grab}
+    g.comp-orbit.comp-orbit-dragging .comp-orbit-hit{cursor:grabbing}
+    @media (prefers-reduced-motion:reduce){g.comp-orbit circle.comp-orbit-main{animation:none}}
 
     /* DETAIL PANEL */
     #panel{position:fixed;top:var(--topbar-h);right:0;bottom:0;width:390px;
@@ -4185,6 +4190,10 @@ function compositionMatrixKey(p){
 const MATRIX_IMG_INSET = 0.72;
 let compositionHoverId = null;
 let compositionOrbitR = 0;
+let compositionOrbitAngle = 0;
+let compositionBloomT = 1;
+let compositionAnimRaf = null;
+let compositionSnapTimer = null;
 let nodeClickTimer = null;
 
 const MATRIX_SITE = "https://bnarcum.github.io/collaboration-device-matrix/";
@@ -4808,14 +4817,128 @@ function applyGraphTransform(cx, cy, k, immediate, opts){
   }
 }
 
-function syncCompositionPositions(){
+function compositionReducedMotion(){
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+function stopCompositionOrbitAnim(){
+  if (compositionAnimRaf){ cancelAnimationFrame(compositionAnimRaf); compositionAnimRaf = null; }
+}
+function applyCompositionOrbitPositions(bloomScale){
   if (viewMode !== "composition") return;
+  const bloom = bloomScale != null ? bloomScale
+    : (compositionReducedMotion() ? 1 : compositionBloomT);
   viewNodes.forEach(n => {
-    if (n.fx != null) n.x = n.fx;
-    if (n.fy != null) n.y = n.fy;
+    if (n._kind === "family"){
+      n.fx = 0; n.fy = 0; n.x = 0; n.y = 0;
+      n.vx = 0; n.vy = 0;
+      return;
+    }
+    if (n._orbitFixed && n._baseAngle != null){
+      const r = (n._radius || 0) * bloom;
+      const angle = n._baseAngle + compositionOrbitAngle;
+      const fx = Math.cos(angle) * r;
+      const fy = Math.sin(angle) * r;
+      n.fx = fx; n.fy = fy; n.x = fx; n.y = fy;
+      n._ox = fx; n._oy = fy;
+    } else if (n.fx != null){
+      n.x = n.fx;
+      if (n.fy != null) n.y = n.fy;
+    }
     n.vx = 0;
     n.vy = 0;
   });
+}
+function animateCompositionOrbitTo(targetAngle, duration){
+  stopCompositionOrbitAnim();
+  if (compositionReducedMotion()){
+    compositionOrbitAngle = targetAngle;
+    applyCompositionOrbitPositions();
+    applyCompositionLayout();
+    applyCompositionInteractionStyles(selected);
+    return;
+  }
+  const start = compositionOrbitAngle;
+  let delta = targetAngle - start;
+  delta = ((delta + Math.PI) % (2 * Math.PI)) - Math.PI;
+  const end = start + delta;
+  const t0 = performance.now();
+  const dur = duration || 380;
+  const frame = now => {
+    const u = Math.min(1, (now - t0) / dur);
+    const ease = 1 - Math.pow(1 - u, 3);
+    compositionOrbitAngle = start + (end - start) * ease;
+    applyCompositionOrbitPositions();
+    applyCompositionLayout();
+    applyCompositionInteractionStyles(selected);
+    if (u < 1) compositionAnimRaf = requestAnimationFrame(frame);
+    else compositionAnimRaf = null;
+  };
+  compositionAnimRaf = requestAnimationFrame(frame);
+}
+function snapCompositionFocusTo(nodeId){
+  if (viewMode !== "composition") return;
+  const n = viewNodes.find(x => x.id === nodeId && x._kind === "product");
+  if (!n || n._baseAngle == null) return;
+  animateCompositionOrbitTo(-Math.PI / 2 - n._baseAngle);
+}
+function scheduleCompositionFocusSnap(nodeId){
+  clearTimeout(compositionSnapTimer);
+  compositionSnapTimer = setTimeout(() => {
+    compositionSnapTimer = null;
+    snapCompositionFocusTo(nodeId);
+  }, 260);
+}
+function startCompositionBloom(){
+  stopCompositionOrbitAnim();
+  applyCompositionOrbitPositions(0);
+  applyCompositionLayout();
+  if (compositionReducedMotion()){
+    compositionBloomT = 1;
+    applyCompositionOrbitPositions(1);
+    applyCompositionLayout();
+    return;
+  }
+  compositionBloomT = 0;
+  const t0 = performance.now();
+  const dur = 400;
+  const frame = now => {
+    const u = Math.min(1, (now - t0) / dur);
+    compositionBloomT = 1 - Math.pow(1 - u, 3);
+    applyCompositionOrbitPositions(compositionBloomT);
+    applyCompositionLayout();
+    if (u < 1) compositionAnimRaf = requestAnimationFrame(frame);
+    else { compositionBloomT = 1; compositionAnimRaf = null; }
+  };
+  compositionAnimRaf = requestAnimationFrame(frame);
+}
+function compositionAbbrevLabel(d){
+  const s = d._shortName || d.name || "";
+  if (s.length <= 14) return s;
+  const parts = s.split(/\s+/);
+  if (parts.length > 1 && parts[0].length <= 12) return parts[0];
+  return s.slice(0, 11) + "…";
+}
+function compositionLabelHotSet(selectedNode){
+  const hot = new Set();
+  if (viewFocus) hot.add(viewFocus);
+  const focusId = compositionHoverId
+    || (selectedNode?._kind === "product" ? selectedNode.id : null);
+  if (!focusId) return hot;
+  hot.add(focusId);
+  const focus = viewNodes.find(n => n.id === focusId);
+  if (focus?._kind === "product"){
+    const ring = viewNodes.filter(n => n._kind === "product" && n._baseAngle != null)
+      .sort((a, b) => a._baseAngle - b._baseAngle);
+    const i = ring.findIndex(n => n.id === focusId);
+    if (i >= 0){
+      hot.add(ring[(i - 1 + ring.length) % ring.length].id);
+      hot.add(ring[(i + 1) % ring.length].id);
+    }
+  }
+  return hot;
+}
+function syncCompositionPositions(){
+  applyCompositionOrbitPositions();
 }
 
 function applyCompositionLayout(){
@@ -4978,7 +5101,14 @@ function compositionInteractionSet(selectedNode){
 
 function updateCompositionLabelVisibility(_k){
   if (viewMode !== "composition" || !ndEl) return;
-  ndEl.select("text.nl").style("opacity", 1);
+  const hot = compositionLabelHotSet(selected);
+  const hasFocus = compositionHoverId || (selected?._kind === "product");
+  ndEl.select("text.nl").each(function(d){
+    const full = d._kind === "family" || hot.has(d.id) || !hasFocus;
+    const sel = d3.select(this);
+    sel.text(full ? (d._shortName || d.name) : compositionAbbrevLabel(d))
+      .style("opacity", full ? 1 : 0.38);
+  });
 }
 
 function pillarZoneStats(items){
@@ -5118,16 +5248,51 @@ function updateCompositionOrbitGuide(){
     if (!g.empty()) g.remove();
     return;
   }
-  if (g.empty()) g = lyr.insert("g", ":first-child").attr("class", "comp-orbit").style("pointer-events", "none");
+  if (g.empty()) g = lyr.insert("g", ":first-child").attr("class", "comp-orbit");
   const accent = compositionSpokeColor();
   const radii = [compositionOrbitR * 0.55, compositionOrbitR, compositionOrbitR * 1.35].filter(r => r > 20);
-  g.selectAll("circle").data(radii).join("circle")
+  g.selectAll("circle.comp-orbit-guide").data(radii).join("circle")
+    .attr("class", (d, i) => `comp-orbit-guide${i === 1 ? " comp-orbit-main" : ""}`)
     .attr("cx", 0).attr("cy", 0).attr("r", d => d)
     .attr("fill", "none")
     .attr("stroke", accent)
     .attr("stroke-opacity", (d, i) => i === 1 ? 0.42 : 0.22)
     .attr("stroke-width", (d, i) => i === 1 ? 1.6 : 1)
-    .attr("stroke-dasharray", (d, i) => i === 1 ? "5 7" : "3 9");
+    .attr("stroke-dasharray", (d, i) => i === 1 ? "5 7" : "3 9")
+    .style("pointer-events", "none");
+  g.selectAll("circle.comp-orbit-hit").data([compositionOrbitR]).join("circle")
+    .attr("class", "comp-orbit-hit")
+    .attr("cx", 0).attr("cy", 0)
+    .attr("r", d => d + 36)
+    .attr("fill", "transparent")
+    .attr("stroke", "none")
+    .style("pointer-events", "all");
+  if (!g.attr("data-drag-wired")){
+    g.attr("data-drag-wired", "1");
+    let lastAngle = 0;
+    g.select(".comp-orbit-hit").call(d3.drag()
+      .on("start", ev => {
+        stopCompositionOrbitAnim();
+        clearTimeout(compositionSnapTimer);
+        const [x, y] = d3.pointer(ev, root.node());
+        lastAngle = Math.atan2(y, x);
+        g.classed("comp-orbit-dragging", true);
+      })
+      .on("drag", ev => {
+        const [x, y] = d3.pointer(ev, root.node());
+        const a = Math.atan2(y, x);
+        let da = a - lastAngle;
+        if (da > Math.PI) da -= 2 * Math.PI;
+        if (da < -Math.PI) da += 2 * Math.PI;
+        compositionOrbitAngle += da;
+        lastAngle = a;
+        applyCompositionOrbitPositions();
+        applyCompositionLayout();
+        applyCompositionInteractionStyles(selected);
+      })
+      .on("end", () => { g.classed("comp-orbit-dragging", false); })
+    );
+  }
 }
 
 function showCompositionNodeTip(ev, d){
@@ -5178,10 +5343,16 @@ function applyCompositionInteractionStyles(selectedNode){
     });
     const labelStyle = compositionLabelStyle(nd);
     const GL = graphLabels();
-    g.select("text.nl").style("opacity", dim ? 0.4 : 1)
-      .style("fill", isSel || isHov ? GL.active : labelStyle.fill);
+    g.select("text.nl").style("fill", isSel || isHov ? GL.active : labelStyle.fill);
   });
   if (lviz){
+    const spokeHot = !!(compositionHoverId || (selectedNode && selectedNode._kind === "product"));
+    lviz.each(function(l){
+      const el = d3.select(this);
+      const s = sid(l), t = tid(l);
+      const lit = related.has(s) && related.has(t);
+      el.classed("link-hot", l.type === "composition" && lit && spokeHot);
+    });
     lviz.attr("stroke-opacity", l => {
       if (!selectedNode) return l.type === "succession" ? 0.72 : (l.type === "composition" ? 0.58 : 0.28);
       const s = sid(l), t = tid(l);
@@ -5190,6 +5361,7 @@ function applyCompositionInteractionStyles(selectedNode){
       return lit ? 0.65 : 0.22;
     });
   }
+  updateCompositionLabelVisibility();
 }
 
 function applyCompositionNodeStyles(){
@@ -5253,7 +5425,7 @@ function updateCompositionHint(){
   const prods = PRODUCTS.filter(p => p.family === viewFocus && productMatchesFilters(p));
   const cur = prods.filter(p => p.status === "current").length;
   const leg = prods.filter(p => p.status === "eol").length;
-  hint.textContent = `${cur} current${leg ? ` · ${leg} EoL` : ""} · Click a product for details · Purple dashed = upgrade path · Esc to go back`;
+  hint.textContent = `${cur} current${leg ? ` · ${leg} EoL` : ""} · Drag ring to rotate · Hover/click product to focus · Purple dashed = upgrade path · Esc to go back`;
 }
 
 function pillarGuidesTheme(){
@@ -5744,7 +5916,7 @@ function rebindGraph(opts){
             .on("end",(ev,d)=>{
               if(!ev.active) sim.alphaTarget(0);
               if (d._pinned) { d.fx = 0; d.fy = 0; }
-              else if (d._orbitFixed && viewMode === "composition") { d.fx = d._ox; d.fy = d._oy; d.x = d._ox; d.y = d._oy; }
+              else if (d._orbitFixed && viewMode === "composition") applyCompositionOrbitPositions();
               else if (usePillarLayout() && nodeById[d.id]){
                 const vis = new Set();
                 NODES.forEach(n => { if (familyNodeVisible(n)) vis.add(n.id); });
@@ -5759,6 +5931,10 @@ function rebindGraph(opts){
             } else if (d._kind === "category"){
               applyViewLevel("families", { focusCategory: d.category });
             } else if (d._kind === "product"){
+              if (viewMode === "composition"){
+                clearTimeout(compositionSnapTimer);
+                snapCompositionFocusTo(d.id);
+              }
               window.showProductDetail(d.id);
             } else if (d._kind === "family" && viewMode === "composition" && viewFocus === d.id){
               clearTimeout(nodeClickTimer);
@@ -5792,6 +5968,7 @@ function rebindGraph(opts){
           .on("mouseover",(ev,d)=>{
             if (viewMode === "composition"){
               compositionHoverId = d.id;
+              if (d._kind === "product") scheduleCompositionFocusSnap(d.id);
               applyCompositionInteractionStyles(selected);
             } else {
               if (usePillarLayout()){
@@ -5810,6 +5987,7 @@ function rebindGraph(opts){
           .on("mouseout", ()=>{
             if (viewMode === "composition"){
               compositionHoverId = null;
+              clearTimeout(compositionSnapTimer);
               applyCompositionInteractionStyles(selected);
             } else if (usePillarLayout()){
               pillarHoverId = null;
@@ -6307,6 +6485,8 @@ function buildCompositionView(familyId){
         _hasImage: hasImg,
         _hasSuccessor: successorIds.has(p.id) || !!p.successor,
         _orbitFixed: true,
+        _baseAngle: angle,
+        _radius: radius,
         _ox: fx, _oy: fy,
         fx, fy, x: fx, y: fy
       });
@@ -7681,6 +7861,7 @@ function applyViewLevel(mode, opts){
   const prev = viewMode;
 
   const applySwitch = () => {
+  const savedViewFocus = viewFocus;
   if (prev === "spatial" && mode !== "spatial"){
     if (mode === "composition" && !opts.focusFamily && spatialState.focusFamily){
       opts.focusFamily = spatialState.focusFamily;
@@ -7727,7 +7908,15 @@ function applyViewLevel(mode, opts){
   }
   if (mode !== "composition") viewFocus = null;
   viewMode = mode;
-  if (mode !== "composition"){ compositionHoverId = null; compositionOrbitR = 0; pillarHoverId = null; }
+  if (mode !== "composition"){
+    compositionHoverId = null;
+    compositionOrbitR = 0;
+    pillarHoverId = null;
+    stopCompositionOrbitAnim();
+    clearTimeout(compositionSnapTimer);
+    compositionOrbitAngle = 0;
+    compositionBloomT = 1;
+  }
 
   // Build the data set for the new mode.
   if (mode === "overview"){
@@ -7741,8 +7930,13 @@ function applyViewLevel(mode, opts){
     closePanel();
     hideTip();
     clearLinkSelection();
+    if (prev !== "composition" || viewFocus !== savedViewFocus){
+      compositionOrbitAngle = 0;
+      compositionBloomT = 0;
+    }
     const v = buildCompositionView(viewFocus);
     viewNodes = v.nodes; viewLinks = v.links;
+    applyCompositionOrbitPositions(compositionBloomT);
   } else if (mode === "all-products"){
     const v = buildAllProductsView();
     viewNodes = v.nodes; viewLinks = v.links;
@@ -7785,6 +7979,13 @@ function applyViewLevel(mode, opts){
   if (mode !== "spatial") applyFilters();
 
   if (mode === "composition") fitCompositionView();
+  if (mode === "composition"){
+    if (prev !== "composition" || viewFocus !== savedViewFocus) startCompositionBloom();
+    else {
+      applyCompositionOrbitPositions();
+      applyCompositionLayout();
+    }
+  }
   if (mode === "composition" && viewFocus && !opts.initial){
     openFamilyProductDrawer(viewFocus);
   }
@@ -8096,9 +8297,12 @@ function selectNode(d, opts = {}) {
   if (viewMode === "composition"){
     if (d._kind === "family") fitCompositionView();
     else {
+      clearTimeout(compositionSnapTimer);
+      snapCompositionFocusTo(d.id);
       const t = d3.zoomTransform(svgEl);
       applyGraphTransform(d.x, d.y, Math.max(t.k, 0.85), true);
     }
+    applyCompositionInteractionStyles(d);
     return;
   }
   const {w,h}=getDims(), t=d3.zoomTransform(svgEl);
@@ -8432,6 +8636,8 @@ function applyFilters() {
     viewNodes = v.nodes;
     viewLinks = v.links;
     rebindGraph();
+    applyCompositionOrbitPositions();
+    applyCompositionLayout();
     if (ndEl) ndEl.style("display", null);
     if (lviz) lviz.style("display", null);
     if (lhit) lhit.style("display", null);
@@ -9730,7 +9936,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.81.5";
+const APP_VERSION   = "2.82.0";
 const DATA_UPDATED  = "2026-07-08";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
