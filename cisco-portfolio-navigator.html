@@ -412,11 +412,12 @@
       border-radius:8px;padding:10px 12px;margin-bottom:14px}
     .p-banner-title{font-size:12px;font-weight:700;margin-bottom:3px}
     .p-banner-body{font-size:11px;color:var(--muted);line-height:1.5}
-    .p-name{font-size:20px;font-weight:700;line-height:1.2;margin-bottom:10px}
-    .p-desc{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:16px}
-    .p-sec{margin-bottom:16px}
-    .p-sec-t{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
-      color:var(--subtle);margin-bottom:7px}
+    .p-name{font-size:22px;font-weight:700;line-height:1.22;margin-bottom:6px;letter-spacing:-.02em;color:var(--text)}
+    .p-meta{font-size:11px;font-weight:600;color:var(--subtle);margin-bottom:12px;line-height:1.4}
+    .p-desc{font-size:13.5px;color:var(--muted);line-height:1.62;margin-bottom:18px}
+    .p-sec{margin-bottom:18px}
+    .p-sec-t{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;
+      color:var(--subtle);margin-bottom:8px}
     #pbody .p-sec-t{color:var(--subtle)}
     #pbody .p-desc{color:var(--muted)}
     #pbody .rt{color:var(--muted)}
@@ -443,8 +444,51 @@
       background:var(--cpn-hover);color:var(--accent);margin-left:6px;vertical-align:1px}
     .rd{width:9px;height:9px;border-radius:50%;flex-shrink:0}
     .rif{flex:1;min-width:0}
-    .rn{font-size:12px;font-weight:500}
-    .rt{font-size:11px;color:var(--muted);margin-top:1px}
+    .rn{font-size:12.5px;font-weight:600;color:var(--text)}
+    .rt{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.45;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+    .link-chip{display:inline-flex;align-items:center;font-size:9px;font-weight:800;text-transform:uppercase;
+      letter-spacing:.06em;padding:2px 7px;border-radius:999px;border:1px solid transparent;flex-shrink:0}
+    .link-chip--direct{color:#02C8FF;background:rgba(2,200,255,.12);border-color:rgba(2,200,255,.35)}
+    .link-chip--adjacent{color:#FF9000;background:rgba(255,144,0,.12);border-color:rgba(255,144,0,.35)}
+    .link-chip--succession{color:#c084fc;background:rgba(192,132,252,.12);border-color:rgba(192,132,252,.35)}
+    .link-chip--composition{color:#94a3b8;background:rgba(148,163,184,.12);border-color:rgba(148,163,184,.3)}
+    [data-theme="light"] .link-chip--direct{color:#006e8f;background:rgba(0,110,143,.1);border-color:rgba(0,110,143,.28)}
+    [data-theme="light"] .link-chip--adjacent{color:#b45309;background:rgba(180,83,9,.1);border-color:rgba(180,83,9,.25)}
+    .corr-lens{margin-bottom:14px;padding:12px 14px;border-radius:12px;
+      background:linear-gradient(145deg,rgba(2,200,255,.08) 0%,rgba(10,34,64,.55) 100%);
+      border:1px solid rgba(2,200,255,.22)}
+    [data-theme="light"] .corr-lens{background:linear-gradient(145deg,rgba(0,110,143,.06) 0%,#fff 100%);border-color:rgba(0,110,143,.2)}
+    .corr-lens--panel{margin:0 0 16px;padding:10px 12px}
+    .corr-lens-eyebrow{display:block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:4px}
+    .corr-lens-title{margin:0 0 8px;font-size:14px;font-weight:700;line-height:1.25;color:var(--text)}
+    .corr-lens-story{margin:0 0 10px;font-size:12px;line-height:1.55;color:var(--muted)}
+    .corr-fams{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+    .corr-fam-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 9px 4px 6px;border-radius:999px;
+      border:1px solid color-mix(in srgb, var(--fc) 40%, var(--border));background:color-mix(in srgb, var(--fc) 10%, transparent);
+      font-size:10px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit;transition:border-color .12s,background .12s}
+    .corr-fam-chip i{width:7px;height:7px;border-radius:50%;background:var(--fc);flex-shrink:0}
+    .corr-fam-chip:hover{border-color:var(--fc);background:color-mix(in srgb, var(--fc) 18%, transparent)}
+    .corr-links{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+    .corr-link-row{display:grid;grid-template-columns:auto 1fr;gap:4px 8px;align-items:start;padding:8px 10px;
+      border-radius:8px;background:var(--surface2);border:1px solid var(--border)}
+  .corr-link-pair{grid-column:2;font-size:11.5px;font-weight:600;color:var(--text);line-height:1.35}
+    .corr-link-arr{color:var(--subtle);font-weight:400}
+    .corr-link-label{grid-column:2;font-size:10.5px;color:var(--muted);line-height:1.4}
+    .corr-more{font-size:10px;color:var(--subtle);padding:2px 2px 0}
+    .corr-empty{font-size:11px;color:var(--muted);margin:0 0 10px}
+    .corr-compat{margin:0 0 10px;display:flex;flex-direction:column;gap:6px}
+    .corr-compat-row{font-size:10.5px;line-height:1.45;color:var(--muted);padding:7px 9px;border-radius:7px;
+      background:rgba(255,144,0,.08);border:1px solid rgba(255,144,0,.2)}
+    .corr-compat-row strong{color:var(--text);font-weight:700}
+    .corr-actions{display:flex;flex-wrap:wrap;gap:6px}
+    .corr-btn{padding:7px 11px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;
+      border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .12s}
+    .corr-btn:hover{border-color:var(--accent);color:var(--text)}
+    .corr-btn.prim{background:var(--accent);border-color:var(--accent);color:#000}
+    .corr-btn.prim:hover{filter:brightness(1.06)}
+    #planner-corr-lens{margin:0 18px 10px}
+    #planner-corr-lens[hidden]{display:none!important}
+    .cmp-corr-wrap{margin-bottom:4px}
     .ra{color:var(--subtle);font-size:16px;flex-shrink:0}
     .lb{display:flex;flex-direction:column;gap:7px}
     .la{display:flex;align-items:center;justify-content:space-between;
@@ -1239,6 +1283,7 @@
         <div class="pln-acc-body" id="quick-start-body"></div>
       </details>
     </div>
+    <div id="planner-corr-lens" hidden></div>
     <div id="pb">
       <div id="stack-hint">Add products, then analyze.</div>
       <div id="no-analysis" class="empty" style="display:none" aria-hidden="true"></div>
@@ -5946,6 +5991,142 @@ function connectionTypeDesc(type){
     composition: "Product belongs to this portfolio family"
   })[type] || "Mapped relationship in the Cisco portfolio graph";
 }
+function linkTypeChipHtml(type){
+  const t = type || "adjacent";
+  return `<span class="link-chip link-chip--${t}" title="${escapeHtml(connectionTypeDesc(t))}">${escapeHtml(connectionTypeLabel(t))}</span>`;
+}
+function toFamilyId(id){
+  if (nodeById[id]) return id;
+  if (prodById[id]) return prodById[id].family;
+  return null;
+}
+function uniqueFamilyIds(ids){
+  return [...new Set(ids.map(toFamilyId).filter(Boolean))];
+}
+function getStackFamilyIds(){ return uniqueFamilyIds([...stack]); }
+function getCompareFamilyIds(){ return uniqueFamilyIds(compareItems()); }
+function buildCorrelationData(familyIds){
+  const set = new Set(familyIds);
+  const families = familyIds.map(id => nodeById[id]).filter(Boolean);
+  const links = LINKS.filter(l => set.has(sid(l)) && set.has(tid(l))).map(l => ({
+    source: sid(l), target: tid(l),
+    sourceName: linkNodeName(sid(l)), targetName: linkNodeName(tid(l)),
+    type: l.type, label: l.label,
+    useCaseOverlap: linkUseCaseOverlap(l)
+  }));
+  const direct = links.filter(l => l.type === "direct").length;
+  const adjacent = links.filter(l => l.type === "adjacent").length;
+  let story = "";
+  let bestArch = null, bestScore = 0;
+  for (const [uc, arch] of Object.entries(REF_ARCH)){
+    const archSet = new Set(arch.products);
+    const overlap = familyIds.filter(id => archSet.has(id)).length;
+    if (overlap >= 2 && overlap > bestScore){ bestScore = overlap; bestArch = { uc, arch, overlap }; }
+  }
+  if (bestArch && bestArch.overlap === familyIds.length){
+    story = bestArch.arch.desc;
+  } else if (bestArch){
+    const bits = [];
+    if (direct) bits.push(`${direct} direct integration${direct !== 1 ? "s" : ""}`);
+    if (adjacent) bits.push(`${adjacent} complementary pairing${adjacent !== 1 ? "s" : ""}`);
+    story = `${bestArch.overlap} of ${familyIds.length} families align with ${bestArch.uc}. ${bits.join(" and ")} connect this set.`;
+  } else if (links.length){
+    story = `${links.length} mapped relationship${links.length !== 1 ? "s" : ""} across this set (${direct} direct, ${adjacent} adjacent).`;
+  } else {
+    story = "No pairwise graph links yet — use Suggestions to find complementary families.";
+  }
+  const compatHints = COMPAT_RULES.filter(r =>
+    r.has.every(h => set.has(h)) && r.anyMissing.some(m => !set.has(m))
+  ).slice(0, 2);
+  return { families, links, story, compatHints, direct, adjacent };
+}
+function renderCorrelationLensHtml(data, context){
+  if (!data || data.families.length < 2) return "";
+  const n = data.families.length;
+  const ctxLabel = context === "compare" ? "Compare list" : context === "planner" ? "Account stack" : "Selection";
+  const panelCls = context === "panel" ? " corr-lens--panel" : "";
+  const famChips = data.families.map(f => {
+    const cat = CATS[f.category];
+    return `<button type="button" class="corr-fam-chip" data-jump="${f.id}" style="--fc:${cat?.color || "#64748b"}">
+      <i></i><span>${escapeHtml(f.name)}</span></button>`;
+  }).join("");
+  const linkRows = data.links.slice(0, 8).map(l => `
+    <div class="corr-link-row">
+      ${linkTypeChipHtml(l.type)}
+      <span class="corr-link-pair">${escapeHtml(l.sourceName)} <span class="corr-link-arr">↔</span> ${escapeHtml(l.targetName)}</span>
+      <span class="corr-link-label">${escapeHtml(l.label)}</span>
+    </div>`).join("");
+  const more = data.links.length > 8 ? `<div class="corr-more">+${data.links.length - 8} more connections</div>` : "";
+  const compat = data.compatHints.length ? `<div class="corr-compat">${data.compatHints.map(h =>
+    `<div class="corr-compat-row"><strong>${escapeHtml(h.title)}</strong> — ${escapeHtml(h.detail)}</div>`
+  ).join("")}</div>` : "";
+  const actions = context === "panel" ? "" : `
+    <div class="corr-actions">
+      <button type="button" class="corr-btn prim" data-corr-ai>Ask AI about this set</button>
+      <button type="button" class="corr-btn" data-corr-graph>Focus on graph</button>
+    </div>`;
+  return `<div class="corr-lens${panelCls}" data-context="${context}">
+    <div class="corr-lens-head">
+      <span class="corr-lens-eyebrow">Correlation lens</span>
+      <h3 class="corr-lens-title">${n} families · ${escapeHtml(ctxLabel)}</h3>
+    </div>
+    <p class="corr-lens-story">${escapeHtml(data.story)}</p>
+    <div class="corr-fams">${famChips}</div>
+    ${data.links.length ? `<div class="corr-links">${linkRows}${more}</div>` : `<p class="corr-empty">No direct pairwise links in this set.</p>`}
+    ${compat}
+    ${actions}
+  </div>`;
+}
+function wireCorrelationLens(container, familyIds){
+  if (!container) return;
+  container.querySelectorAll("[data-jump]").forEach(btn => {
+    btn.addEventListener("click", () => jumpTo(btn.dataset.jump));
+  });
+  container.querySelector("[data-corr-ai]")?.addEventListener("click", () => {
+    const names = familyIds.map(id => nameOf(id)).join(", ");
+    openAiWithPrompt(`Explain how these Cisco portfolio families work together for a customer: ${names}. What integrates natively, what is often missing, and what is a concise SE talk track?`);
+  });
+  container.querySelector("[data-corr-graph]")?.addEventListener("click", () => {
+    closeCompare();
+    document.getElementById("panel")?.classList.remove("open");
+    if (familyIds[0]) jumpTo(familyIds[0]);
+    showToast(`Focused graph on ${nameOf(familyIds[0])} — connected families highlighted`);
+  });
+}
+function refreshPlannerCorrelationLens(){
+  const el = document.getElementById("planner-corr-lens");
+  if (!el) return;
+  const ids = getStackFamilyIds();
+  if (ids.length < 2){ el.hidden = true; el.innerHTML = ""; return; }
+  const data = buildCorrelationData(ids);
+  el.innerHTML = renderCorrelationLensHtml(data, "planner");
+  el.hidden = false;
+  wireCorrelationLens(el, ids);
+}
+function refreshPanelCorrelationIfOpen(){
+  const pb = $("#pbody");
+  const id = pb?.dataset?.lastId;
+  if (!id || !$("#panel")?.classList.contains("open")) return;
+  insertPanelCorrelation(id);
+}
+function insertPanelCorrelation(id){
+  const pb = $("#pbody"); if (!pb) return;
+  pb.querySelector(".corr-lens--panel")?.remove();
+  const famId = toFamilyId(id);
+  const stackIds = getStackFamilyIds();
+  const cmpIds = getCompareFamilyIds();
+  const ids = stackIds.length >= 2 ? stackIds : (cmpIds.length >= 2 ? cmpIds : []);
+  if (ids.length < 2 || !ids.includes(famId)) return;
+  const data = buildCorrelationData(ids);
+  const wrap = document.createElement("div");
+  wrap.innerHTML = renderCorrelationLensHtml(data, "panel");
+  const lens = wrap.firstElementChild;
+  if (!lens) return;
+  const anchor = pb.querySelector(".p-desc");
+  if (anchor?.parentNode) anchor.parentNode.insertBefore(lens, anchor.nextSibling);
+  else pb.prepend(lens);
+  wireCorrelationLens(lens, ids);
+}
 function nodeUseCases(id){
   const fam = nodeById[id];
   if (fam?.useCases?.length) return fam.useCases;
@@ -6157,14 +6338,15 @@ function escapeHtml(s){
 }
 
 function renderConnectionRow(r){
+  const chip = linkTypeChipHtml(r.type);
   const sub = r.depth === 1
-    ? `${r.type === "direct" ? "Direct integration" : "Adjacent / complementary"} · ${escapeHtml(r.label)}`
+    ? `<span class="corr-link-label">${escapeHtml(r.label)}</span>`
     : `Via ${escapeHtml(r.via?.name || "?")} · ${escapeHtml(r.label)}`;
   const hop = r.depth > 1 ? `<span class="conn-hop">${r.depth} hops</span>` : "";
   return `<div class="ri${r.depth > 1 ? " ri-ext" : ""}" onclick="jumpTo('${r.node.id}')">
     <div class="rd" style="background:${catColor(r.node.category)}"></div>
     <div class="rif"><div class="rn">${escapeHtml(r.node.name)}${hop}</div>
-    <div class="rt">${sub}</div></div>
+    <div class="rt">${chip}${sub}</div></div>
     <div class="ra">›</div></div>`;
 }
 
@@ -8273,6 +8455,7 @@ function showDetailPanel(d) {
       ${pm ? `<div class="p-pillar" style="--pc:${pm.color}">${pm.shortLabel || pm.label}</div>` : ""}
     </div>
     <div class="p-name">${d.name}</div>
+    ${pm ? `<div class="p-meta">${escapeHtml(pm.label)} · ${famProds.length} product${famProds.length !== 1 ? "s" : ""} in family</div>` : `<div class="p-meta">${famProds.length} product${famProds.length !== 1 ? "s" : ""} in this family</div>`}
     <p class="p-desc">${d.desc}</p>
     ${prodsHtml}
     <div class="p-sec"><div class="p-sec-t">Use Cases</div><div class="tr">${d.useCases.map(u=>`<span class="tg" onclick="filterTagUC('${u}')">${u}</span>`).join("")}</div></div>
@@ -8338,6 +8521,7 @@ window.showProductDetail = function(id) {
     </div>
     ${eolBanner}
     <div class="p-name">${p.name}</div>
+    <div class="p-meta">${node ? escapeHtml(node.name) + " · " : ""}${statusLabel}${p.eosDate ? " · EOS " + escapeHtml(p.eosDate) : ""}</div>
     <p class="p-desc">${p.desc}</p>
     ${node?`<div class="p-sec"><div class="p-sec-t">Part of Portfolio Family</div>
       <div class="ri" onclick="jumpTo('${node.id}', {connectionDepth: 2}); closePanel()">
@@ -8837,6 +9021,8 @@ function updatePlannerUI(){
   }
 
   updateAB();
+  refreshPlannerCorrelationLens();
+  refreshPanelCorrelationIfOpen();
 }
 
 // Planner search
@@ -9730,7 +9916,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.81.5";
+const APP_VERSION   = "2.82.0";
 const DATA_UPDATED  = "2026-07-08";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -13684,6 +13870,7 @@ function enhanceNodePanel(id){
     renderBreadcrumbs();
     insertPhotoPlaceholder(id, "node");
     insertTierBadge(id);
+    insertPanelCorrelation(id);
     insertDcloudLinks(id, "node");
     insertPinAndCompareBtns(id, "node");
   }, 0);
@@ -13697,6 +13884,7 @@ function enhanceProductPanel(id){
     insertDcloudLinks(id, "product");
     const p = prodById[id];
     if (p) insertTierBadge(p.family);
+    insertPanelCorrelation(p?.family || id);
     insertFieldNotice(id);
     insertPinAndCompareBtns(id, "product");
   }, 0);
@@ -13919,6 +14107,7 @@ function addToCompare(id){
   renderCompare();
   openComparePanel();
   refreshDetailPinButtons(id);
+  refreshPanelCorrelationIfOpen();
   if (!had) showToast(`Added to Compare (${list.length}/${COMPARE_LIMIT})`);
   else if (prev.indexOf(id) > 0) showToast("Moved to front of Compare list");
   else showToast("Shown in Compare");
@@ -13928,6 +14117,7 @@ function removeFromCompare(id){
   setCompareList(getCompareList().filter(x => x !== id));
   renderCompare();
   refreshDetailPinButtons(id);
+  refreshPanelCorrelationIfOpen();
   if (!compareItems().length) closeCompare();
 }
 
@@ -14003,6 +14193,9 @@ function renderCompare(){
     body.innerHTML = `<div id="cmp-empty">Compare list is empty. Click <strong>⇆ Show in Compare</strong> on any detail panel to add items here (up to ${COMPARE_LIMIT}). ★ Pin saves favorites separately.</div>`;
     return;
   }
+  const famIds = getCompareFamilyIds();
+  const corrData = famIds.length >= 2 ? buildCorrelationData(famIds) : null;
+  const corrHtml = corrData ? `<div class="cmp-corr-wrap">${renderCorrelationLensHtml(corrData, "compare")}</div>` : "";
   const chips = items.map(id => {
     const it = nodeById[id] || prodById[id];
     if (!it) return "";
@@ -14016,6 +14209,7 @@ function renderCompare(){
   const cols = items.map(renderCompareColumn).filter(Boolean).join("");
   body.innerHTML = `
     <div class="cmp-layout">
+      ${corrHtml}
       <div class="cmp-chips-wrap">
         <div class="cmp-chips-lbl">Compare list (${items.length}/${COMPARE_LIMIT})</div>
         <div class="cmp-chips">${chips}</div>
@@ -14026,6 +14220,7 @@ function renderCompare(){
     ev.stopPropagation();
     removeFromCompare(b.dataset.r);
   }));
+  if (corrData) wireCorrelationLens(body.querySelector(".corr-lens"), famIds);
 }
 
 /* ════════════════════════════════════════════════════════════════════════
