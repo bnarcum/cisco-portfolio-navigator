@@ -687,7 +687,7 @@
                 </div>
                 <div class="ds-intent-actions">
                   <button type="button" class="ds-btn primary" id="ds-generate">Generate Draft</button>
-                  <button type="button" class="ds-btn ds-btn-quickstart" id="ds-quickstart" title="Generate a sample workspace and step straight into the live 3D walk">✨ Quickstart — 3D walk</button>
+                  <button type="button" class="ds-btn ds-btn-quickstart" id="ds-quickstart" title="Generate a sample workspace and open the guided solution walkthrough">Generate sample walkthrough</button>
                 </div>
                 <div id="ds-intent-rationale" hidden></div>
               </div>
@@ -797,7 +797,7 @@
         <div id="ds-cmdk" hidden>
           <div class="ds-cmdk-backdrop"></div>
           <div class="ds-cmdk-panel" role="dialog" aria-label="Command palette">
-            <input id="ds-cmdk-input" type="text" placeholder="Type a command… (devices, layout, wire, validate, export, 3D walk)" autocomplete="off" spellcheck="false"/>
+            <input id="ds-cmdk-input" type="text" placeholder="Type a command… (devices, layout, wire, validate, export, walkthrough)" autocomplete="off" spellcheck="false"/>
             <ul id="ds-cmdk-list"></ul>
             <div class="ds-cmdk-foot"><kbd>↑</kbd><kbd>↓</kbd> navigate · <kbd>↵</kbd> run · <kbd>esc</kbd> close</div>
           </div>
@@ -836,7 +836,7 @@
         <button type="button" id="ds-floor-upload">Floor plan</button>
         <button type="button" id="ds-fit">Fit</button>
         <button type="button" id="ds-cmdk-btn" title="Command palette (⌘K / Ctrl+K)">⌘K</button>
-        <button type="button" id="ds-walk-corridor" class="ds-walk-toolbar" hidden title="3D walkthrough along your diagram">Walk</button>
+        <button type="button" id="ds-walk-corridor" class="ds-walk-toolbar" hidden title="Open guided solution walkthrough">Present</button>
         <input type="file" id="ds-floor-input" accept="image/*" hidden/>`;
       LAYERS.forEach(l => { const o = document.createElement("option"); o.value = l; o.textContent = LAYER_LABELS[l]; document.getElementById("ds-layer-filter").appendChild(o); });
       MEDIA_TYPES.forEach(m => { const o = document.createElement("option"); o.value = m.id; o.textContent = m.label; document.getElementById("ds-link-media").appendChild(o); });
@@ -1518,7 +1518,7 @@
     }
 
     // "Wow in 10 seconds": generate a sample workspace, then drop straight into
-    // the 3D walk with the Cisco Spaces outcome overlay already playing.
+    // the guided walkthrough with the Cisco Spaces outcome overlay already playing.
     quickstart() {
       const ta = document.getElementById("ds-intent-text");
       if (ta && !ta.value.trim())
@@ -2490,7 +2490,7 @@ Account: ${this.design.account}`;
         { id: "auto-layout", label: "Auto-layout diagram", run: () => document.getElementById("ds-auto-layout")?.click() },
         { id: "auto-wire", label: "Auto-wire connections", run: () => document.getElementById("ds-auto-wire")?.click() },
         { id: "validate", label: "Validate design", run: () => this.setPanel?.("validate") || document.querySelector('#ds-panel-tabs [data-panel="validate"]')?.click() },
-        { id: "walk", label: "Open 3D walkthrough", run: () => this.openWalk() },
+        { id: "walk", label: "Open solution walkthrough", run: () => this.openWalk() },
         { id: "tab-network", label: "Go to Network diagram", run: () => this.setTab("network") },
         { id: "tab-room", label: "Go to Room diagram", run: () => this.setTab("room") },
         { id: "tab-intent", label: "Go to Intent", run: () => this.setTab("intent") },

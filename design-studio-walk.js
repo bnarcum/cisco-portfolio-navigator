@@ -42,6 +42,30 @@
   const WALK_ONBOARD_KEY = "cpn-ds-walk-onboarded";
   const WALK_INSIGHTS_OFF_KEY = "cpn-ds-walk-insights-off";
   const WALK_PACKETS_KEY = "cpn-ds-walk-packets";
+  const WALK_STYLE_KEY = "cpn-ds-walk-style";
+  const WALK_STYLES = {
+    presentation: {
+      label: "Presentation",
+      title: "Solution Walkthrough",
+      hint: "Select a device, follow a link, or use Where to? — camera glides through the design",
+      className: "ds-walk-presentation",
+      features: { manualMove: false, quest: false, avatar: false, voxel: false, dpad: false, pointerLock: false, viewmodel: false }
+    },
+    explore: {
+      label: "Explore",
+      title: "Solution Explore",
+      hint: "Drag to look · WASD optional · select devices or follow links",
+      className: "ds-walk-explore",
+      features: { manualMove: true, quest: false, avatar: false, voxel: false, dpad: true, pointerLock: false, viewmodel: false }
+    },
+    lab: {
+      label: "Lab",
+      title: "Explorer Lab",
+      hint: "WASD move · drag look · Cable Quest · E inspect · Esc exit",
+      className: "ds-walk-lab ds-walk-tour",
+      features: { manualMove: true, quest: true, avatar: true, voxel: true, dpad: true, pointerLock: true, viewmodel: true }
+    }
+  };
   const PACKET_SPEEDS = [
     { mult: 0.5, label: "Slow" },
     { mult: 1, label: "Normal" },
@@ -75,8 +99,33 @@
     topology: null, easyNav: true, route: null, environmentTags: {},
     semanticFrame: null, layerFilter: "all",
     packetsEnabled: true, packetSpeedIdx: 1,
-    quest: null
+    quest: null,
+    walkStyle: "presentation"
   };
+
+  function savedWalkStyle() {
+    try {
+      const saved = localStorage.getItem(WALK_STYLE_KEY);
+      if (WALK_STYLES[saved]) return saved;
+    } catch (e) { /* ignore */ }
+    return "presentation";
+  }
+
+  function setWalkStyle(key) {
+    state.walkStyle = WALK_STYLES[key] ? key : "presentation";
+    try { localStorage.setItem(WALK_STYLE_KEY, state.walkStyle); } catch (e) { /* ignore */ }
+  }
+
+  function currentWalkStyle() {
+    if (WALK_STYLES[state.walkStyle]) return state.walkStyle;
+    state.walkStyle = savedWalkStyle();
+    if (WALK_STYLES[state.walkStyle]) return state.walkStyle;
+    return "presentation";
+  }
+
+  function activeWalkStyle() {
+    return WALK_STYLES[currentWalkStyle()] || WALK_STYLES.presentation;
+  }
 
   function esc(s) {
     return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;");
@@ -304,7 +353,100 @@
     });
   }
 
-  function setupDiagramWorld(THREE, scene, bounds, graph) {
+  function makeGridTexture(THREE) {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 512;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#071120";
+    ctx.fillRect(0, 0, 512, 512);
+    for (let i = 0; i <= 512; i += 32) {
+      ctx.strokeStyle = i % 128 === 0 ? "rgba(2,200,255,.26)" : "rgba(126,234,255,.09)";
+      ctx.lineWidth = i % 128 === 0 ? 1.4 : 1;
+      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 512); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(512, i); ctx.stroke();
+    }
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(8, 8);
+    if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+    state.disposables.push(tex);
+    return tex;
+  }
+
+  function addExecutiveWorld(THREE, scene, bounds, graph) {
+    state.environmentTags = {};
+    scene.background = new THREE.Color(0x030a14);
+    const pad = 7;
+    const w = Math.max(bounds.maxX - bounds.minX + pad * 2, 18);
+    const d = Math.max(bounds.maxZ - bounds.minZ + pad * 2, 18);
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    const cz = (bounds.minZ + bounds.maxZ) / 2;
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(w, d),
+      new THREE.MeshStandardMaterial({
+        color: 0x081421,
+        map: makeGridTexture(THREE),
+        metalness: 0.18,
+        roughness: 0.62,
+        emissive: 0x001018,
+        emissiveIntensity: 0.2
+      })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.set(cx, 0, cz);
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    const edge = new THREE.Mesh(
+      new THREE.RingGeometry(Math.max(w, d) * 0.38, Math.max(w, d) * 0.385, 96),
+      new THREE.MeshBasicMaterial({ color: 0x02c8ff, transparent: true, opacity: 0.08, side: THREE.DoubleSide })
+    );
+    edge.rotation.x = -Math.PI / 2;
+    edge.position.set(cx, 0.035, cz);
+    scene.add(edge);
+
+    (graph?.chambers || []).forEach(ch => {
+      const theme = zoneTheme(ch.zone);
+      const pedestal = new THREE.Mesh(
+        new THREE.CylinderGeometry(1.45, 1.65, 0.16, 36),
+        new THREE.MeshStandardMaterial({
+          color: theme.color,
+          emissive: theme.accent,
+          emissiveIntensity: 0.08,
+          metalness: 0.35,
+          roughness: 0.5
+        })
+      );
+      pedestal.position.set(ch.pos.x, 0.08, ch.pos.z);
+      scene.add(pedestal);
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(1.68, 0.025, 8, 48),
+        new THREE.MeshBasicMaterial({ color: theme.accent, transparent: true, opacity: 0.55 })
+      );
+      ring.rotation.x = Math.PI / 2;
+      ring.position.set(ch.pos.x, 0.18, ch.pos.z);
+      ring.userData.noShadow = true;
+      scene.add(ring);
+    });
+    addAdaptiveVenue(THREE, scene, bounds, graph);
+  }
+
+  function setupDiagramWorld(THREE, scene, bounds, graph, style) {
+    style = WALK_STYLES[style] || activeWalkStyle();
+    if (style.features.voxel) {
+      const VOX = window.__DS_WALK_VOXEL;
+      if (!VOX || !bounds) return;
+      state.environmentTags = {};
+      const sky = VOX.setBlockSky(THREE, scene);
+      state.disposables.push(sky);
+      VOX.addDiagramWorld(THREE, scene, bounds, graph, state.disposables);
+      addAdaptiveVenue(THREE, scene, bounds, graph);
+      return;
+    }
+    if (bounds) addExecutiveWorld(THREE, scene, bounds, graph);
+  }
+
+  function setupVoxelDiagramWorld(THREE, scene, bounds, graph) {
     const VOX = window.__DS_WALK_VOXEL;
     if (!VOX || !bounds) return;
     state.environmentTags = {};
@@ -314,9 +456,17 @@
     addAdaptiveVenue(THREE, scene, bounds, graph);
   }
 
-  function setupAvatar(THREE, scene) {
+  function setupAvatar(THREE, scene, style) {
+    style = WALK_STYLES[style] || activeWalkStyle();
+    if (!style.features.avatar) {
+      if (state.avatar) scene.remove(state.avatar);
+      state.avatar = null;
+      state.thirdPerson = false;
+      return;
+    }
     const VOX = window.__DS_WALK_VOXEL;
     if (!VOX) return;
+    if (style.features.avatar) state.thirdPerson = true;
     if (state.avatar) scene.remove(state.avatar);
     state.avatar = VOX.makeAvatar(THREE);
     scene.add(state.avatar);
@@ -1079,7 +1229,15 @@
     });
   }
 
-  function makeViewmodel(THREE, camera) {
+  function makeViewmodel(THREE, camera, style) {
+    style = WALK_STYLES[style] || activeWalkStyle();
+    if (!style.features.viewmodel) {
+      const g = new THREE.Group();
+      g.userData.kind = "viewmodel";
+      g.visible = false;
+      camera.add(g);
+      return g;
+    }
     const VOX = window.__DS_WALK_VOXEL;
     if (VOX?.makeBlockViewmodel) {
       const vm = VOX.makeBlockViewmodel(THREE, camera);
@@ -1110,6 +1268,7 @@
   async function initCorridor(studio, canvas, graph) {
     const THREE = await loadThree();
     if (!graph?.chambers.length) throw new Error("no-graph");
+    const style = activeWalkStyle();
     state.graph = graph;
     state.devicePods = [];
     state.cables = [];
@@ -1117,7 +1276,7 @@
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: "high-performance" });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setClearColor(0x8ec8f8, 1);
+    renderer.setClearColor(style.features.voxel ? 0x8ec8f8 : 0x030a14, 1);
     renderer.outputColorSpace = THREE.SRGBColorSpace || renderer.outputEncoding;
     if (THREE.ACESFilmicToneMapping) {
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -1131,7 +1290,7 @@
 
     const scene = new THREE.Scene();
     state.scene = scene;
-    addVoxelEnvironment(THREE, scene, true);
+    addVoxelEnvironment(THREE, scene, style.features.voxel);
     addImageBasedLighting(THREE, scene, renderer);
     state.bounds = graph.layoutBounds || {
       minX: Math.min(...graph.chambers.map(c => c.pos.x)) - 8,
@@ -1139,14 +1298,15 @@
       minZ: Math.min(...graph.chambers.map(c => c.pos.z)) - 8,
       maxZ: Math.max(...graph.chambers.map(c => c.pos.z)) + 8
     };
-    setupDiagramWorld(THREE, scene, state.bounds, graph);
+    const bounds = state.bounds;
+    setupDiagramWorld(THREE, scene, bounds, graph, currentWalkStyle());
 
     const camera = new THREE.PerspectiveCamera(76, 1, 0.1, 220);
     camera.rotation.order = "YXZ";
     state.camera = camera;
     scene.add(camera);
-    setupAvatar(THREE, scene);
-    state.viewmodel = makeViewmodel(THREE, camera);
+    setupAvatar(THREE, scene, currentWalkStyle());
+    state.viewmodel = makeViewmodel(THREE, camera, currentWalkStyle());
     state.raycaster = new THREE.Raycaster();
 
     state.topology = buildTopology(graph);
@@ -1171,7 +1331,7 @@
         window.__cpnAutoOutcomes = false;
         toggleOutcomes();
       }
-      if (state.mode) setStatus("Follow a connected link below, or use ‹ Prev / Next › to walk devices");
+      if (state.mode) setStatus("Follow a connected link below, or use ‹ Prev / Next › to tour devices");
       showWalkOnboardHint();
       window.__DS_WALK_QUEST?.syncQuestButton?.(studio);
     });
@@ -1918,6 +2078,7 @@
 
   function updatePlayer(dt) {
     if (updateFly(dt)) { applyCamera(); return; }
+    const style = activeWalkStyle();
 
     {
       state.vel.y = (state.vel.y ?? 0) - 30 * dt;
@@ -1929,6 +2090,13 @@
       } else {
         state.onGround = false;
       }
+    }
+
+    if (!style.features.manualMove) {
+      state.vel.x *= Math.exp(-12 * dt);
+      state.vel.z *= Math.exp(-12 * dt);
+      applyCamera();
+      return;
     }
 
     const maxSpd = state.keys["Shift"] ? 11 : 8;
@@ -2087,6 +2255,7 @@
   function applyCamera() {
     const cam = state.camera;
     if (!cam) return;
+    const style = activeWalkStyle();
     const spd = Math.hypot(state.vel.x, state.vel.z);
     if (spd > 0.25) state.bobPhase += 0.016 * 9;
     const bob = spd > 0.25 ? Math.sin(state.bobPhase) * 0.038 : 0;
@@ -2114,7 +2283,7 @@
       );
       if (state.avatar) state.avatar.visible = false;
       if (state.viewmodel) {
-        state.viewmodel.visible = true;
+        state.viewmodel.visible = !!style.features.viewmodel;
         const sway = spd > 0.25 ? Math.sin(state.bobPhase * 1.2) * 0.02 : 0;
         state.viewmodel.position.set(sway, 0, 0);
       }
@@ -2548,9 +2717,13 @@
     if (seen || !state.overlay) return;
     try { localStorage.setItem(WALK_ONBOARD_KEY, "1"); } catch (e) { /* ignore */ }
     const el = document.createElement("div");
+    const style = activeWalkStyle();
     el.className = "ds-walk-onboard";
-    el.innerHTML = `<strong>3D walk controls</strong>
-      <p>Drag to look · <kbd>WASD</kbd> move · Tap a <em>connected link</em> or use ‹ Prev / Next › · <kbd>E</kbd> inspect · <kbd>Esc</kbd> back to diagram</p>`;
+    el.innerHTML = style.features.manualMove
+      ? `<strong>${esc(style.label)} controls</strong>
+        <p>Drag to look · <kbd>WASD</kbd> move · Tap a <em>connected link</em> or use ‹ Prev / Next › · <kbd>E</kbd> inspect · <kbd>Esc</kbd> back to diagram</p>`
+      : `<strong>Presentation walkthrough</strong>
+        <p>Select a device, tap a <em>connected link</em>, use ‹ Prev / Next ›, or open <em>Where to?</em> for guided camera paths · <kbd>Esc</kbd> back to diagram</p>`;
     state.overlay.appendChild(el);
     setTimeout(() => el.classList.add("ds-walk-onboard-out"), 4800);
     setTimeout(() => el.remove(), 5600);
@@ -2634,18 +2807,23 @@
   }
 
   function hudHtml(tab) {
+    const style = activeWalkStyle();
     const outcomesBtn = tab === "room"
       ? `<button type="button" class="ds-walk-btn ds-walk-btn-spaces" data-action="outcomes" title="Simulated occupancy, location &amp; IoT overlay — room walks only">Insights</button>`
       : "";
-    const questBtn = tab === "room"
+    const questBtn = tab === "room" && style.features.quest
       ? `<button type="button" class="ds-walk-btn ds-walk-btn-quest" data-action="cable-quest" title="Mini-game: connect Room Bar or ceiling mic to the PoE switch">Cable Quest</button>`
       : "";
+    const styleBtns = Object.entries(WALK_STYLES).map(([key, cfg]) =>
+      `<button type="button" class="ds-walk-style${key === currentWalkStyle() ? " active" : ""}" data-action="walk-style" data-style="${key}" title="${esc(cfg.hint)}">${esc(cfg.label)}</button>`
+    ).join("");
     return `<div class="ds-walk-hud">
       <div class="ds-walk-hud-top">
-        <strong class="ds-walk-title">3D WALKTHROUGH</strong>
-        <span class="ds-walk-hint">WASD move · drag look · E inspect · Esc exit</span>
+        <strong class="ds-walk-title">${esc(style.title)}</strong>
+        <span class="ds-walk-hint">${esc(style.hint)}</span>
         <button type="button" class="ds-walk-close" title="Exit walkthrough">✕</button>
       </div>
+      <div class="ds-walk-style-switch" aria-label="Walkthrough mode">${styleBtns}</div>
       <div class="ds-walk-hud-mid">
         <button type="button" class="ds-walk-btn" data-action="prev-dev" title="Previous device">‹ Prev</button>
         <button type="button" class="ds-walk-btn" data-action="next-dev" title="Next device">Next ›</button>
@@ -2683,6 +2861,8 @@
   }
 
   function bindDpad() {
+    const style = activeWalkStyle();
+    if (!style.features.manualMove || !style.features.dpad) return;
     const map = { fwd: "w", back: "s", left: "a", right: "d" };
     state.overlay?.querySelectorAll("[data-move]").forEach(btn => {
       const key = map[btn.dataset.move];
@@ -2706,6 +2886,16 @@
       if (a === "outcomes") { e.preventDefault(); e.stopPropagation(); toggleOutcomes(); }
       else if (a === "packets") { e.preventDefault(); e.stopPropagation(); togglePackets(); }
       else if (a === "packet-speed") { e.preventDefault(); e.stopPropagation(); cyclePacketSpeed(); }
+      else if (a === "walk-style") {
+        e.preventDefault();
+        e.stopPropagation();
+        const key = btn.dataset.style;
+        if (!WALK_STYLES[key] || key === currentWalkStyle()) return;
+        const studio = state.studio;
+        setWalkStyle(key);
+        close(true);
+        open(studio);
+      }
       else if (a === "wayfind-open") openWayfindMenu();
       else if (a === "wayfind-close") closeWayfindMenu();
       else if (a === "wayfind-stop") { clearWayfinding(); setStatus("Wayfinding stopped"); }
@@ -2715,6 +2905,7 @@
       else if (a === "cable-quest") {
         e.preventDefault();
         e.stopPropagation();
+        if (!activeWalkStyle().features.quest) return;
         window.__DS_WALK_QUEST?.start?.(state.studio);
       }
       else if (a === "cable-quest-cancel") {
@@ -2768,12 +2959,16 @@
 
   function bindInput(canvas) {
     const onKey = e => {
+      const style = activeWalkStyle();
       const tag = (e.target.tagName || "").toLowerCase();
       if (tag === "input" || tag === "textarea" || tag === "select") return;
       const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
-      state.keys[k] = e.type === "keydown";
+      if (style.features.manualMove || !MOVE_KEYS.has(e.key)) state.keys[k] = e.type === "keydown";
       if (e.type === "keydown") {
-        if (MOVE_KEYS.has(e.key)) cancelMotion();
+        if (MOVE_KEYS.has(e.key)) {
+          if (!style.features.manualMove) return;
+          cancelMotion();
+        }
         if (e.key === "Escape") {
           e.preventDefault();
           e.stopPropagation();
@@ -2793,7 +2988,7 @@
         if (e.key === "]" || e.key === "}") { e.preventDefault(); cycleDevice(1); return; }
         if (e.key === "Tab") { e.preventDefault(); cycleDevice(e.shiftKey ? -1 : 1); return; }
         if (e.key === "e" || e.key === "E") { e.preventDefault(); interactNearby(); return; }
-        if (e.code === "Space" && !state.fly) {
+        if (style.features.manualMove && e.code === "Space" && !state.fly) {
           e.preventDefault();
           if (state.onGround) {
             state.vel.y = 10.5;
@@ -2801,7 +2996,7 @@
           }
           return;
         }
-        if (e.key === "v" || e.key === "V") { e.preventDefault(); toggleCameraMode(); return; }
+        if (style.features.avatar && (e.key === "v" || e.key === "V")) { e.preventDefault(); toggleCameraMode(); return; }
       }
     };
     const onLook = (dx, dy) => {
@@ -2810,6 +3005,7 @@
     };
     let downPos = null;
     const onDown = e => {
+      const style = activeWalkStyle();
       if (e.button !== 0 && e.button !== 2) return;
       const mm = e.target.closest("#ds-walk-minimap");
       if (mm) {
@@ -2821,7 +3017,7 @@
       }
       if (!canvas.contains(e.target) && e.target !== canvas) return;
       window.__DS_WALK_AUDIO?.start?.();
-      state.lookDrag = true;
+      state.lookDrag = !!style.features.manualMove;
       downPos = { x: e.clientX, y: e.clientY };
       state.lookLast = { x: e.clientX, y: e.clientY };
     };
@@ -2851,8 +3047,9 @@
       state.lookDrag = false;
       downPos = null;
     };
-    const onDbl = () => safePointerLock(canvas);
+    const onDbl = () => { if (activeWalkStyle().features.pointerLock) safePointerLock(canvas); };
     const onWheel = e => {
+      if (!activeWalkStyle().features.manualMove) return;
       if (!canvas.matches(":hover")) return;
       e.preventDefault();
       const boost = e.deltaY < 0 ? 1.12 : 0.9;
@@ -2945,6 +3142,8 @@
     if (state.mode) close(true);
     state.studio = studio;
     state.mode = "walk";
+    state.walkStyle = savedWalkStyle();
+    const style = activeWalkStyle();
 
     let overlay = document.getElementById("ds-walk-overlay");
     const wrap = document.getElementById("ds-canvas-wrap");
@@ -2958,9 +3157,12 @@
     overlay.hidden = false;
     overlay.removeAttribute("hidden");
     overlay.setAttribute("aria-hidden", "false");
-    overlay.className = "ds-walk-overlay ds-walk-tour";
+    overlay.className = `ds-walk-overlay ${style.className}`;
     overlay.innerHTML = `${hudHtml(studio.tab)}
       <div class="ds-walk-stage">
+        <div class="ds-walk-vignette" aria-hidden="true"></div>
+        <div class="ds-walk-letterbox ds-walk-letterbox-top" aria-hidden="true"></div>
+        <div class="ds-walk-letterbox ds-walk-letterbox-bottom" aria-hidden="true"></div>
         <div class="ds-walk-panel-backdrop" id="ds-walk-panel-backdrop" hidden data-action="fp-close" title="Click to keep walking" aria-label="Close panel"></div>
         <div class="ds-walk-crosshair ds-walk-crosshair-plus" aria-hidden="true"></div>
         <div class="ds-walk-prompt" id="ds-walk-prompt" hidden>Press E to inspect</div>
