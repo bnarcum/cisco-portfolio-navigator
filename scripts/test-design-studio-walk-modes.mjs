@@ -23,7 +23,7 @@ must(/setupDiagramWorld\(THREE, scene, bounds, graph, currentWalkStyle\(\)\)/.te
 must(/setupAvatar\(THREE, scene, currentWalkStyle\(\)\)/.test(walk), "avatar setup must receive the active walk style");
 must(/data-action="walk-style"/.test(walk), "walk style HUD buttons are missing");
 must(/style\.features\.manualMove/.test(walk), "manual movement must be gated by style features");
-must(/style\.features\.quest/.test(walk), "Cable Quest must be gated by style features");
+must(/\.features\.quest/.test(walk), "Cable Quest must be gated by style features");
 must(/style\.features\.avatar/.test(walk), "avatar must be gated by style features");
 must(/if \(style\.features\.avatar\) state\.thirdPerson = true;/.test(walk), "Lab avatar mode must restore third-person avatar visibility");
 

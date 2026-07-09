@@ -146,11 +146,9 @@ try {
   if (!walk.open) errors.push("walk did not open");
   const questApi = await page.evaluate(() => ({
     mod: !!window.__DS_WALK_QUEST?.start,
-    btn: !!document.querySelector('[data-action="cable-quest"]'),
     quests: window.__DS_WALK_QUEST?.availableQuests?.(window.DesignStudio.instance)?.length ?? -1
   }));
   if (!questApi.mod) errors.push("Cable Quest module not loaded");
-  if (!questApi.btn) errors.push("Cable Quest button missing in room walk");
   await page.screenshot({ path: path.join(out, "polish-walk.png") });
 
   // Wayfinding: the "Where to?" picker should list destinations; choosing one

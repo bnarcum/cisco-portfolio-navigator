@@ -54,7 +54,7 @@
     lab: {
       label: "Lab",
       title: "Explorer Lab",
-      hint: "WASD move · drag look · Cable Quest · E inspect · Esc exit",
+      hint: "WASD move · drag look · E inspect · Esc exit",
       className: "ds-walk-lab ds-walk-tour",
       features: { manualMove: true, quest: true, avatar: true, voxel: true, dpad: true, pointerLock: true, viewmodel: true }
     }
@@ -2198,7 +2198,7 @@
         const p = chamberWorldPos(ch);
         const near = Math.hypot(p.x - state.pos.x, p.z - state.pos.z) < 9;
         prompt.hidden = !near;
-        prompt.textContent = near ? `Tap Inspect or press E — ${ch.label}` : `Walk closer to ${ch.label}`;
+        prompt.textContent = near ? `Press E — ${ch.label}` : `Walk closer to ${ch.label}`;
       } else prompt.hidden = true;
     }
     const el = document.getElementById("ds-walk-focus");
@@ -2804,9 +2804,6 @@
     const outcomesBtn = tab === "room"
       ? `<button type="button" class="ds-walk-btn ds-walk-btn-spaces" data-action="outcomes" title="Simulated occupancy, location &amp; IoT overlay — room walks only">Insights</button>`
       : "";
-    const questBtn = tab === "room" && style.features.quest
-      ? `<button type="button" class="ds-walk-btn ds-walk-btn-quest" data-action="cable-quest" title="Mini-game: connect Room Bar or ceiling mic to the PoE switch">Cable Quest</button>`
-      : "";
     const styleBtns = Object.entries(WALK_STYLES).map(([key, cfg]) =>
       `<button type="button" class="ds-walk-style${key === currentWalkStyle() ? " active" : ""}" data-action="walk-style" data-style="${key}" title="${esc(cfg.hint)}">${esc(cfg.label)}</button>`
     ).join("");
@@ -2820,11 +2817,9 @@
       <div class="ds-walk-hud-mid">
         <button type="button" class="ds-walk-btn" data-action="prev-dev" title="Previous device">‹ Prev</button>
         <button type="button" class="ds-walk-btn" data-action="next-dev" title="Next device">Next ›</button>
-        ${questBtn}
         ${outcomesBtn}
         <button type="button" class="ds-walk-btn ds-walk-pkt-toggle" data-action="packets" title="Show or hide data packets on links">Packets</button>
         <button type="button" class="ds-walk-btn ds-walk-pkt-speed" data-action="packet-speed" title="Packet speed">Normal</button>
-        <button type="button" class="ds-walk-btn primary" data-action="inspect" title="Open device details">Inspect</button>
       </div>
       ${layerFilterHtml(tab)}
       <div class="ds-walk-outcomes" id="ds-walk-outcomes" hidden></div>
