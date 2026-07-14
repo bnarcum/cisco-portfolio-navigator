@@ -125,10 +125,11 @@ if (PHOTOS?.STENCIL_MATRIX) {
   });
   const mustHavePhoto = {
     "touch-10": { bridgeKey: "touch-10", hash: "4b0fa15cf0" },
-    "ceiling-mic": { bridgeKey: "ceiling-mic-pro", hash: "5df84a40b4", image: "assets/design-studio/ceiling-mic-pro.webp" },
+    "ceiling-mic": { bridgeKey: "ceiling-mic-pro", image: "assets/design-studio/ceiling-mic-pro.webp" },
     "quad-cam": { bridgeKey: "quad-camera" }
   };
   const tableMicHashes = new Set(["e0e483ccb3", "3b82ce6285", "cbe669d0f2", "76da3a5033"]);
+  const wrongCeilingHashes = new Set(["5df84a40b4", ...tableMicHashes]);
   globalThis.MATRIX_BRIDGE = JSON.parse(fs.readFileSync(path.join(root, "matrix-bridge.json"), "utf8"));
   Object.entries(mustHavePhoto).forEach(([stencil, spec]) => {
     const mapped = PHOTOS.STENCIL_MATRIX[stencil];
@@ -149,9 +150,13 @@ if (PHOTOS?.STENCIL_MATRIX) {
       issues.push(`Photo: ${stencil} must not use table-mic hash ${hash}`);
   });
   ["ceiling-mic-pro", "ceiling-mic"].forEach(key => {
-    const h = globalThis.MATRIX_BRIDGE.products?.[key]?.hash;
-    if (h && tableMicHashes.has(h))
-      issues.push(`Photo: bridge ${key} must not use table-mic hash ${h}`);
+    const entry = globalThis.MATRIX_BRIDGE.products?.[key];
+    const h = entry?.hash;
+    const img = entry?.image || "";
+    if (!img.includes("assets/design-studio/ceiling-mic"))
+      issues.push(`Photo: bridge ${key} must use local ceiling-mic asset, got ${img || "none"}`);
+    if (h && wrongCeilingHashes.has(h))
+      issues.push(`Photo: bridge ${key} must not use wrong hash ${h}`);
   });
   if (PHOTOS.STENCIL_MATRIX["display-75"] || PHOTOS.STENCIL_MATRIX["display-86"])
     issues.push("Photo: display stencils must not map to Board Pro or any product photo");
