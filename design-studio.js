@@ -654,31 +654,38 @@
           <div id="ds-main">
             <div id="ds-intent" hidden>
               <div class="ds-intent-hero">${buildOneCiscoHeroHtml()}</div>
-              <div class="ds-intent-work">
-                <label class="ds-intent-label" for="ds-intent-text">Opportunity brief</label>
-                <div id="ds-intent-chips"></div>
-                <div id="ds-room-mix-editor" hidden></div>
-                <div id="ds-stale-hint" class="ds-stale-hint" hidden></div>
-                <textarea id="ds-intent-text" placeholder="e.g. SNRA campus + 12 conference rooms and 6 huddles — or AI-ready DC spine-leaf with GPU compute…"></textarea>
-                <div class="ds-intent-section ds-intent-starters">
-                  <div class="ds-intent-section-head"><strong>Start from a phrase</strong><span>Click to fill the brief</span></div>
-                  <div class="ds-templates" id="ds-templates"></div>
+              <div class="ds-brief-card">
+                <div class="ds-brief-head">
+                  <label for="ds-intent-text">Opportunity brief</label>
+                  <span id="ds-intent-chips" class="ds-brief-summary"></span>
                 </div>
-                <div class="ds-intent-actions">
-                  <button type="button" class="ds-btn primary" id="ds-generate">Generate Draft</button>
-                  <button type="button" class="ds-btn ds-btn-quickstart" id="ds-quickstart" title="Generate a sample workspace and open the guided solution walkthrough">Generate sample walkthrough</button>
+                <textarea id="ds-intent-text" class="ds-brief-input" placeholder="Describe the opportunity — e.g. SNRA campus + 12 conference rooms and 6 huddles, or AI-ready DC spine-leaf with GPU compute…"></textarea>
+                <div id="ds-room-mix-editor" class="ds-brief-rooms" hidden></div>
+                <div class="ds-brief-actions">
+                  <button type="button" class="ds-btn primary" id="ds-generate">Generate Draft <kbd class="ds-kbd">⌘↵</kbd></button>
+                  <button type="button" class="ds-btn ds-btn-quickstart" id="ds-quickstart" title="Generate a sample workspace and open the guided solution walkthrough">Sample walkthrough</button>
+                  <span id="ds-stale-hint" class="ds-brief-status" hidden aria-live="polite"></span>
                 </div>
                 <div id="ds-intent-rationale" hidden></div>
               </div>
-              <details class="ds-intent-fold" id="ds-intent-ref-fold">
-                <summary>Reference architectures <span class="ds-intent-fold-hint">or open Gallery</span></summary>
-                <div class="ds-intent-fold-body"><div class="ds-arch-row" id="ds-arch-presets"></div></div>
-              </details>
-              <div id="ds-compare" class="ds-compare-wrap"></div>
-              <details class="ds-intent-fold" id="ds-intent-explore-fold">
-                <summary>Guides &amp; dCloud labs <span class="ds-intent-fold-hint">matched to your brief</span></summary>
-                <div class="ds-intent-fold-body"><div id="ds-explore-intent"></div></div>
-              </details>
+              <div class="ds-intent-more">
+                <details class="ds-intent-fold" id="ds-intent-phrase-fold">
+                  <summary>Example phrases <span class="ds-intent-fold-hint">click to fill the brief</span></summary>
+                  <div class="ds-intent-fold-body"><div class="ds-templates" id="ds-templates"></div></div>
+                </details>
+                <details class="ds-intent-fold" id="ds-intent-compare-fold">
+                  <summary>Compare CVDs <span class="ds-intent-fold-hint">side-by-side options</span></summary>
+                  <div class="ds-intent-fold-body"><div id="ds-compare" class="ds-compare-wrap"></div></div>
+                </details>
+                <details class="ds-intent-fold" id="ds-intent-ref-fold">
+                  <summary>Reference architectures <span class="ds-intent-fold-hint">or open Gallery</span></summary>
+                  <div class="ds-intent-fold-body"><div class="ds-arch-row" id="ds-arch-presets"></div></div>
+                </details>
+                <details class="ds-intent-fold" id="ds-intent-explore-fold">
+                  <summary>Guides &amp; dCloud labs <span class="ds-intent-fold-hint">matched to your brief</span></summary>
+                  <div class="ds-intent-fold-body"><div id="ds-explore-intent"></div></div>
+                </details>
+              </div>
             </div>
             <div id="ds-canvas-wrap" class="network-mode">
               <div id="ds-walk-overlay" hidden aria-hidden="true"></div>
@@ -869,6 +876,9 @@
       $("ds-intent-text")?.addEventListener("input", () => {
         clearTimeout(intentPreviewTimer);
         intentPreviewTimer = setTimeout(() => this.previewIntent(), 180);
+      });
+      $("ds-intent-text")?.addEventListener("keydown", e => {
+        if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); this.runGenerate(); }
       });
       $("ds-start-over").onclick = () => this.startOver();
       $("ds-export-ccw").onclick = () => this.exportCcw();
@@ -1447,17 +1457,22 @@
       if (!INT || !chips) return;
       const text = document.getElementById("ds-intent-text")?.value?.trim() || "";
       const parsed = INT.parseIntent(text);
-      chips.innerHTML = INT.renderChipsHtml(parsed.signals);
+      const planned = parsed.roomMix.reduce((s, r) => s + r.count, 0);
+      // Room types get their own stepper editor below — keep the header summary
+      // to pillar/scale signals so counts aren't echoed twice.
+      const summarySignals = planned > 0
+        ? parsed.signals.filter(s => !String(s.id).startsWith("room-"))
+        : parsed.signals;
+      chips.innerHTML = INT.renderChipsHtml(summarySignals);
       const hint = document.getElementById("ds-stale-hint");
       if (hint) {
-        const planned = parsed.roomMix.reduce((s, r) => s + r.count, 0);
         const existing = this.design.rooms.length;
         const needsRegen = planned > 0 && (existing === 0 || existing !== planned || !this.design.intentPlan);
         if (needsRegen && text) {
           hint.hidden = false;
-          hint.innerHTML = planned > 1
-            ? `<strong>Ready to build ${planned} rooms</strong> — click <em>Generate Draft</em> to replace the canvas with your cited portfolio (network + ${planned} collaboration spaces).`
-            : `<strong>Brief parsed</strong> — click <em>Generate Draft</em> to apply it to the canvas.`;
+          hint.textContent = planned > 1
+            ? `Ready · ${planned} rooms + network`
+            : "Ready to build";
         } else hint.hidden = true;
       }
       window.__DS_PREMIUM?.renderRoomMixEditor?.(this, parsed);

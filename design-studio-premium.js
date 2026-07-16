@@ -491,7 +491,6 @@
     if (!box) return;
     const nets = Object.keys(window.__DS_TEMPLATES?.NETWORK_TEMPLATES || {});
     box.innerHTML = `
-      <div class="ds-compare-head"><strong>Compare architectures</strong><span>Side-by-side CVD options</span></div>
       <div class="ds-compare-row">
         <label>A<select id="ds-compare-a">${nets.map(k => `<option value="${k}">${esc(window.__DS_TEMPLATES.NETWORK_TEMPLATES[k].label)}</option>`).join("")}</select></label>
         <label>B<select id="ds-compare-b">${nets.map(k => `<option value="${k}"${k === "campusCollapsed" ? " selected" : ""}>${esc(window.__DS_TEMPLATES.NETWORK_TEMPLATES[k].label)}</option>`).join("")}</select></label>
