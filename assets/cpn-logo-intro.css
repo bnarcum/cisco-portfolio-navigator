@@ -46,6 +46,21 @@ body.logo-intro-open{overflow:hidden}
 .logo-intro-compass-wrap{
   position:relative;flex-shrink:0;
   width:clamp(140px,28vw,220px);height:clamp(140px,28vw,220px)}
+/* Lens-flare bloom sweeps across the mark at the animation climax */
+.logo-intro-flare{
+  position:absolute;top:50%;left:50%;z-index:1;pointer-events:none;
+  width:150%;height:14px;transform:translate(-50%,-50%) rotate(-24deg) scaleX(0);
+  transform-origin:center center;opacity:0;mix-blend-mode:screen;
+  background:linear-gradient(90deg,transparent 0%,rgba(2,200,255,.05) 20%,rgba(255,255,255,.95) 50%,rgba(255,144,0,.4) 68%,transparent 100%);
+  filter:blur(1px)}
+.logo-intro.is-playing .logo-intro-flare{
+  animation:cpnIntroFlare 3.2s ease-out forwards}
+@keyframes cpnIntroFlare{
+  0%,30%{opacity:0;transform:translate(-50%,-50%) rotate(-24deg) scaleX(0)}
+  40%{opacity:.9;transform:translate(-50%,-50%) rotate(-24deg) scaleX(1.1)}
+  55%{opacity:.5}
+  70%,100%{opacity:0;transform:translate(-50%,-50%) rotate(-24deg) scaleX(1.2)}
+}
 .logo-intro-glow{
   position:absolute;inset:-18%;border-radius:50%;
   background:radial-gradient(circle,rgba(2,200,255,.45) 0%,rgba(2,200,255,.08) 42%,transparent 68%);
@@ -151,4 +166,5 @@ body.logo-intro-open{overflow:hidden}
   .logo-intro.is-playing .logo-intro-rule,
   .logo-intro.is-playing .logo-intro-sub,
   .logo-intro.is-playing .logo-intro-glow{opacity:1;transform:none}
+  .logo-intro.is-playing .logo-intro-flare{animation:none;opacity:0}
 }

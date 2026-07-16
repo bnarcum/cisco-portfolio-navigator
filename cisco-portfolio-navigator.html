@@ -9,7 +9,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="2.91.7";
+  window.__CPN_BUILD="2.91.8";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -124,10 +124,16 @@
       background:
         radial-gradient(ellipse 52% 44% at 78% 68%, rgba(91,140,255,.28) 0%, transparent 65%),
         radial-gradient(ellipse 46% 38% at 50% 88%, rgba(139,92,246,.2) 0%, transparent 62%)}
-    .bg-glow{position:absolute;inset:-20%;opacity:1;
+    .bg-glow{position:absolute;inset:-20%;opacity:1;will-change:transform;
       background:
         radial-gradient(ellipse 58% 48% at 22% 32%, rgba(59,130,246,.34) 0%, transparent 68%),
-        radial-gradient(ellipse 40% 35% at 50% 42%, rgba(139,92,246,.2) 0%, transparent 70%)}
+        radial-gradient(ellipse 40% 35% at 50% 42%, rgba(139,92,246,.2) 0%, transparent 70%);
+      animation:bg-aurora-drift 42s ease-in-out infinite alternate}
+    @keyframes bg-aurora-drift{
+      0%{transform:translate3d(0,0,0) scale(1)}
+      50%{transform:translate3d(2.5%,-2%,0) scale(1.06)}
+      100%{transform:translate3d(-2%,1.5%,0) scale(1.03)}
+    }
     .bg-grid{position:absolute;inset:0;opacity:1;
       background-image:
         linear-gradient(rgba(91,140,255,.08) 1px, transparent 1px),
@@ -146,6 +152,9 @@
     }
     @media (prefers-reduced-motion: reduce){
       .bg-grid{animation:none}
+      .bg-glow{animation:none;transform:none}
+      .logo-mark{animation:none}
+      button.logo:hover .logo-mark{transform:none}
     }
 
     /* TOP BAR + ACTION BAR */
@@ -177,7 +186,13 @@
     .logo{display:flex;align-items:center;gap:10px;white-space:nowrap;flex-shrink:0;
       font-family:"CiscoSansTT",system-ui,sans-serif;text-decoration:none;color:inherit}
     .logo-mark{width:48px;height:48px;flex-shrink:0;display:block;
-      filter:drop-shadow(0 0 12px rgba(2,200,255,.38)) drop-shadow(0 0 5px rgba(255,144,0,.15)) drop-shadow(0 2px 8px rgba(0,0,0,.35))}
+      filter:drop-shadow(0 0 12px rgba(2,200,255,.38)) drop-shadow(0 0 5px rgba(255,144,0,.15)) drop-shadow(0 2px 8px rgba(0,0,0,.35));
+      animation:logo-mark-breathe 6s ease-in-out infinite;transition:transform .25s ease}
+    button.logo:hover .logo-mark{transform:scale(1.06) rotate(2deg)}
+    @keyframes logo-mark-breathe{
+      0%,100%{filter:drop-shadow(0 0 12px rgba(2,200,255,.38)) drop-shadow(0 0 5px rgba(255,144,0,.15)) drop-shadow(0 2px 8px rgba(0,0,0,.35))}
+      50%{filter:drop-shadow(0 0 20px rgba(2,200,255,.62)) drop-shadow(0 0 9px rgba(255,144,0,.28)) drop-shadow(0 2px 8px rgba(0,0,0,.35))}
+    }
     .logo-text{display:flex;flex-direction:column;gap:3px;line-height:1.05;min-width:0;text-align:left}
     .logo-title{font-size:15px;font-weight:700;letter-spacing:.015em;color:#eef6fc;
       text-shadow:0 0 18px rgba(2,200,255,.22)}
@@ -1185,6 +1200,7 @@
   <div class="logo-intro-anim logo-intro-content">
     <div class="logo-intro-compass-wrap">
       <div class="logo-intro-glow" aria-hidden="true"></div>
+      <div class="logo-intro-flare" aria-hidden="true"></div>
       <img class="logo-intro-mark" src="assets/cpn-logo.svg" alt="" width="220" height="220" decoding="async"/>
     </div>
     <div class="logo-intro-wordmark">
@@ -1197,7 +1213,7 @@
     <source src="assets/cpn-logo-intro.webm" type="video/webm"/>
     <source src="assets/cpn-logo-intro.mp4" type="video/mp4"/>
   </video>
-  <img class="logo-intro-static" src="assets/cpn-logo-intro-poster.png" alt="Cisco Portfolio Navigator" width="800" hidden/>
+  <img class="logo-intro-static" src="assets/cpn-logo-intro-poster.jpg" alt="Cisco Portfolio Navigator" width="800" loading="lazy" decoding="async" hidden/>
 </div>
 
 <div id="actionbar">
@@ -11058,7 +11074,7 @@ STYLE.textContent = `
   .gw-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;
     padding:12px 10px;cursor:pointer;text-align:center;transition:transform .18s ease,box-shadow .18s ease,border-color .15s,background .15s;
     font-family:inherit;color:inherit}
-  .gw-card:hover{border-color:var(--accent);background:rgba(2,200,255,.06)}
+  .gw-card:hover{border-color:var(--accent);background:rgba(2,200,255,.06);transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.28),0 0 16px rgba(2,200,255,.12)}
   .gw-card.sel{border-color:var(--accent);background:rgba(2,200,255,.12);box-shadow:0 0 0 1px var(--accent)}
   .gw-card--hero{border:none;border-radius:12px;padding:14px 8px 12px;min-height:96px;
     background:linear-gradient(145deg,var(--gw-from),var(--gw-to));color:#fff;
