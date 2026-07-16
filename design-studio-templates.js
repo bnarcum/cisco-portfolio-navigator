@@ -76,7 +76,7 @@
       category: "WAN",
       tags: ["sd-wan", "multi-site"],
       cvd: "Cisco Catalyst SD-WAN Design Guide",
-      cvdUrl: "https://www.cisco.com/c/en/us/solutions/design-zone/sd-wan.html",
+      cvdUrl: "https://www.cisco.com/c/en/us/solutions/design-zone.html",
       nodes: [
         { stencilId: "vmanage", label: "vManage", x: 400, y: 60 },
         { stencilId: "cat-center", label: "Cat Center", x: 520, y: 60 },
@@ -108,7 +108,7 @@
       category: "Branch",
       tags: ["branch", "retail"],
       cvd: "Cisco Catalyst SD-WAN Design Guide",
-      cvdUrl: "https://www.cisco.com/c/en/us/solutions/design-zone/sd-wan.html",
+      cvdUrl: "https://www.cisco.com/c/en/us/solutions/design-zone.html",
       nodes: [
         { stencilId: "c8200-sdwan", label: "Branch Edge", x: 200, y: 220 },
         { stencilId: "fpr-1120", label: "Branch FW", x: 380, y: 220 },
@@ -150,7 +150,7 @@
       category: "Data Center",
       tags: ["dc", "spine-leaf"],
       cvd: "Application-Centric Infrastructure design guide",
-      cvdUrl: "https://www.cisco.com/c/en/us/td/docs/solutions/CVD/DataCenter/cisco-aci-design-guide.html",
+      cvdUrl: "https://www.cisco.com/c/en/us/solutions/design-zone.html",
       nodes: [
         { stencilId: "n9k-spine", label: "Spine-1", x: 400, y: 120 },
         { stencilId: "n9k-spine", label: "Spine-2", x: 400, y: 220 },
@@ -178,7 +178,7 @@
       category: "Data Center",
       tags: ["aci", "dc"],
       cvd: "ACI Pod validated design",
-      cvdUrl: "https://www.cisco.com/c/en/us/td/docs/solutions/CVD/DataCenter/cisco-aci-design-guide.html",
+      cvdUrl: "https://www.cisco.com/c/en/us/solutions/design-zone.html",
       nodes: [
         { stencilId: "apic", label: "APIC Cluster", x: 300, y: 80 },
         { stencilId: "n9k-spine", label: "Spine-A", x: 300, y: 200 },
@@ -203,7 +203,7 @@
       category: "Vertical",
       tags: ["k12", "education"],
       cvd: "Cisco Validated Profile — Education",
-      cvdUrl: "https://www.cisco.com/c/en/us/solutions/industries/education/validated-designs.html",
+      cvdUrl: "https://www.cisco.com/c/en/us/solutions/design-zone.html",
       nodes: [
         { stencilId: "c9500-core", label: "District Core", x: 320, y: 220 },
         { stencilId: "c9400-dist", label: "HS Dist", x: 520, y: 180 },
@@ -232,7 +232,7 @@
       category: "Vertical",
       tags: ["healthcare", "hospital"],
       cvd: "Cisco Validated Profile — Healthcare",
-      cvdUrl: "https://www.cisco.com/c/en/us/solutions/industries/healthcare/validated-designs.html",
+      cvdUrl: "https://www.cisco.com/c/en/us/solutions/design-zone.html",
       nodes: [
         { stencilId: "c9500-core", label: "Clinical Core", x: 300, y: 220 },
         { stencilId: "c9500-core-2", label: "Clinical Core-B", x: 300, y: 320 },
@@ -259,7 +259,7 @@
       category: "Security",
       tags: ["zero-trust", "sase"],
       cvd: "Zero trust access from Cisco",
-      cvdUrl: "https://www.cisco.com/c/en/us/solutions/collateral/enterprise/design-zone-zero-trust.html",
+      cvdUrl: "https://www.cisco.com/c/en/us/solutions/design-zone.html",
       nodes: [
         { stencilId: "c8200-sdwan", label: "SD-WAN Edge", x: 200, y: 220 },
         { stencilId: "fpr-2130", label: "Secure FW", x: 380, y: 220 },
@@ -283,7 +283,7 @@
       category: "Data Center",
       tags: ["hyperflex", "edge-dc"],
       cvd: "HyperFlex validated designs",
-      cvdUrl: "https://www.cisco.com/c/en/us/solutions/data-center-virtualization/hyperconverged-infrastructure/index.html",
+      cvdUrl: "https://www.cisco.com/c/en/us/solutions/design-zone.html",
       nodes: [
         { stencilId: "n9k-leaf", label: "ToR-1", x: 280, y: 200 },
         { stencilId: "n9k-leaf", label: "ToR-2", x: 280, y: 300 },
@@ -373,7 +373,7 @@
       category: "Vertical",
       tags: ["university", "higher-ed", "cvp"],
       cvd: "Cisco Validated Profile — University",
-      cvdUrl: "https://www.cisco.com/c/en/us/solutions/industries/education/validated-designs.html",
+      cvdUrl: "https://www.cisco.com/c/en/us/solutions/design-zone.html",
       nodes: [
         { stencilId: "c9500-core", label: "Campus Core-A", x: 300, y: 200 },
         { stencilId: "c9500-core-2", label: "Campus Core-B", x: 300, y: 300 },
@@ -407,7 +407,7 @@
       category: "Vertical",
       tags: ["manufacturing", "ot", "cvp"],
       cvd: "Cisco Validated Profile — Manufacturing",
-      cvdUrl: "https://www.cisco.com/c/en/us/solutions/industries/manufacturing/validated-designs.html",
+      cvdUrl: "https://www.cisco.com/c/en/us/solutions/design-zone.html",
       nodes: [
         { stencilId: "c9500-core", label: "Plant Core", x: 320, y: 220 },
         { stencilId: "fpr-2130", label: "OT Seg FW", x: 320, y: 100 },
@@ -462,7 +462,7 @@
       category: "Data Center",
       tags: ["ai", "ml", "gpu", "spine-leaf"],
       cvd: "Cisco Data Center Networking Blueprint for AI/ML",
-      cvdUrl: "https://www.cisco.com/c/en/us/solutions/data-center-virtualization/artificial-intelligence-machine-learning/index.html",
+      cvdUrl: "https://www.cisco.com/c/en/us/solutions/design-zone.html",
       nodes: [
         { stencilId: "n9k-spine", label: "AI Spine-1", x: 400, y: 100 },
         { stencilId: "n9k-spine", label: "AI Spine-2", x: 400, y: 200 },

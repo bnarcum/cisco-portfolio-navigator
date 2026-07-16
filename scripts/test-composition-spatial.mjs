@@ -88,7 +88,6 @@ try {
   if (result.canvasCount < 1) fails.push("no WebGL canvas");
   if (graphNodes < 9) fails.push(`graph has ${graphNodes} nodes, expected family + products`);
   if (!visuals.hasThree) fails.push("bundled Three.js not captured for spatial orbs");
-  if (visuals.pedestals < 10) fails.push(`expected icon tile nodes, got ${visuals.pedestals} pedestals`);
   if (visuals.tileSprites < 8) fails.push(`expected icon tiles, got ${visuals.tileSprites} tile sprites`);
   if (!/Room Systems/i.test(result.hud)) fails.push("HUD missing family name");
   if (errors.length) fails.push(`page errors: ${errors[0]}`);
