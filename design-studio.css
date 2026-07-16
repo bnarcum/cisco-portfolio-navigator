@@ -92,6 +92,7 @@
 #design-studio.ds-present-mode #ds-minimap,#design-studio.ds-present-mode #ds-legend{display:none}
 #design-studio.ds-present-mode .ds-ports{display:none}
 #design-studio.ds-present-mode #ds-room-guide .ds-room-view-toggle{display:none}
+#design-studio.ds-present-mode #ds-canvas-view-toggle{display:none}
 #design-studio.ds-present-mode #ds-status-left{display:none}
 
 #ds-header{display:flex;align-items:center;gap:8px;padding:8px 12px;flex-wrap:wrap;
@@ -691,6 +692,27 @@
 .ds-compare-card{padding:8px 10px;border-radius:6px;border:1px solid var(--ds-explore-border);background:var(--ds-panel-deep);font-size:10px}
 .ds-compare-card strong{display:block;font-size:11px;color:var(--text);margin-bottom:4px}
 .ds-compare-card a{color:var(--accent);font-weight:700;text-decoration:none}
+
+#ds-canvas-view-toggle{position:absolute;top:10px;right:12px;z-index:14;display:flex;gap:6px;align-items:center;
+  padding:5px 6px;border-radius:10px;border:1px solid rgba(2,200,255,.38);
+  background:var(--ds-room-guide);box-shadow:0 8px 24px var(--ds-shadow),inset 0 1px 0 rgba(255,255,255,.06);
+  pointer-events:auto}
+#ds-canvas-view-toggle[hidden]{display:none!important}
+[data-theme="light"] #ds-canvas-view-toggle{border-color:rgba(0,110,143,.28)}
+#ds-canvas-wrap.room-mode #ds-canvas-view-toggle{top:52px}
+.ds-canvas-view-toggle .ds-view-btn{font-size:11px;font-weight:700;padding:7px 16px;border-radius:8px;
+  border:1px solid var(--border);background:rgba(8,24,45,.55);color:var(--muted);cursor:pointer;
+  letter-spacing:.02em;transition:background .15s,border-color .15s,color .15s,box-shadow .15s}
+[data-theme="light"] .ds-canvas-view-toggle .ds-view-btn{background:rgba(255,255,255,.85)}
+.ds-canvas-view-toggle .ds-view-btn:hover{border-color:rgba(2,200,255,.45);color:var(--text)}
+.ds-canvas-view-toggle .ds-view-btn.active{background:rgba(2,200,255,.22);border-color:var(--accent);color:var(--text);
+  box-shadow:0 0 0 1px rgba(2,200,255,.25),0 4px 14px rgba(2,200,255,.15)}
+[data-theme="light"] .ds-canvas-view-toggle .ds-view-btn.active{background:rgba(0,110,143,.14)}
+.ds-canvas-view-toggle .ds-view-btn-walk{border-color:rgba(2,200,255,.5);color:#9cecff;
+  background:linear-gradient(135deg,rgba(2,200,255,.18),rgba(10,96,255,.14))}
+.ds-canvas-view-toggle .ds-view-btn-walk:hover{border-color:rgba(2,200,255,.75);color:#fff}
+.ds-canvas-view-toggle .ds-view-btn-walk.active{background:linear-gradient(135deg,#02c8ff,#0a60ff);
+  border-color:rgba(120,230,255,.8);color:#fff;box-shadow:0 4px 18px rgba(2,200,255,.35)}
 
 .ds-room-view-toggle{display:flex;gap:4px;margin-left:auto}
 .ds-view-btn{font-size:9px;padding:3px 8px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer}

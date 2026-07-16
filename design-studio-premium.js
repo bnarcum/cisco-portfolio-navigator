@@ -136,20 +136,31 @@
     }).join("")}</div>`;
   }
 
-  function renderRoomViewToggle(studio) {
-    const bar = document.getElementById("ds-room-guide");
-    if (!bar || studio.tab !== "room") return;
-    let toggle = bar.querySelector("#ds-room-view-toggle");
+  function renderCanvasViewToggle(studio) {
+    const wrap = document.getElementById("ds-canvas-wrap");
+    if (!wrap) return;
+    const show = studio.tab === "room" || studio.tab === "network";
+    let toggle = document.getElementById("ds-canvas-view-toggle");
     if (!toggle) {
       toggle = document.createElement("div");
-      toggle.id = "ds-room-view-toggle";
-      toggle.className = "ds-room-view-toggle";
-      bar.querySelector(".ds-room-guide-head")?.appendChild(toggle);
+      toggle.id = "ds-canvas-view-toggle";
+      toggle.className = "ds-canvas-view-toggle";
+      toggle.setAttribute("role", "toolbar");
+      toggle.setAttribute("aria-label", "Diagram and walkthrough");
+      wrap.appendChild(toggle);
     }
+    toggle.hidden = !show;
+    if (!show) return;
+    const walkOpen = window.__DS_WALK?.isOpen?.();
+    const view = walkOpen ? "walk" : (studio.roomView || "diagram");
+    const showGrid = studio.tab === "room" && studio.design.rooms.length > 1;
+    const gridBtn = showGrid
+      ? `<button type="button" class="ds-view-btn${view === "grid" ? " active" : ""}" data-view="grid">All ${studio.design.rooms.length} rooms</button>`
+      : "";
     toggle.innerHTML = `
-      <button type="button" class="ds-view-btn${studio.roomView === "diagram" ? " active" : ""}" data-view="diagram">Diagram</button>
-      <button type="button" class="ds-view-btn${studio.roomView === "walk" ? " active" : ""}" data-view="walk" title="3D walkthrough along your diagram">Walk</button>
-      <button type="button" class="ds-view-btn${studio.roomView === "grid" ? " active" : ""}" data-view="grid">All ${studio.design.rooms.length} rooms</button>`;
+      <button type="button" class="ds-view-btn${view === "diagram" ? " active" : ""}" data-view="diagram">Diagram</button>
+      <button type="button" class="ds-view-btn ds-view-btn-walk${view === "walk" ? " active" : ""}" data-view="walk" title="3D walkthrough along your diagram">Walk</button>
+      ${gridBtn}`;
     toggle.querySelectorAll(".ds-view-btn").forEach(b => {
       b.onclick = () => {
         const v = b.dataset.view;
@@ -162,11 +173,15 @@
           studio.renderCanvas();
           studio.scheduleFitView?.();
         }
-        renderRoomViewToggle(studio);
+        renderCanvasViewToggle(studio);
         if (studio.roomView === "diagram") requestAnimationFrame(() => studio.fitView());
+        window.__DS_PREMIUM?.renderPortfolioOverlay?.(studio);
       };
     });
   }
+
+  /** @deprecated use renderCanvasViewToggle */
+  function renderRoomViewToggle(studio) { renderCanvasViewToggle(studio); }
 
   function renderPortfolioOverlay(studio) {
     let layer = document.getElementById("ds-portfolio-overlay");
@@ -190,7 +205,7 @@
         window.__DS_WALK?.close?.();
         studio.switchToRoom(btn.dataset.roomId);
         renderPortfolioOverlay(studio);
-        renderRoomViewToggle(studio);
+        renderCanvasViewToggle(studio);
       };
     });
   }
@@ -496,7 +511,7 @@
     const INT = window.__DS_INTENT;
     const text = document.getElementById("ds-intent-text")?.value || "";
     if (INT?.parseIntent) renderRoomMixEditor(studio, INT.parseIntent(text));
-    renderRoomViewToggle(studio);
+    renderCanvasViewToggle(studio);
     renderPortfolioOverlay(studio);
   }
 
@@ -504,7 +519,7 @@
 
   window.__DS_PREMIUM = {
     scoreState, isDesignGenerated, staleState, refresh, renderStaleBanner, renderRoomMixEditor,
-    renderRoomViewToggle, renderPortfolioOverlay,
+    renderCanvasViewToggle, renderRoomViewToggle, renderPortfolioOverlay,
     runTour,
     validationPanelExtras, exportDesignBundle, importDesignBundle, exportCustomerSvg,
     plannerSyncHint, renderCompare, highlightBomPid, roomPortfolioGrid

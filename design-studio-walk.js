@@ -3256,7 +3256,7 @@
       state.overlay?.classList.add("ds-walk-fade-in");
       requestAnimationFrame(() => state.overlay?.classList.remove("ds-walk-fade-in"));
       studio.roomView = "walk";
-      window.__DS_PREMIUM?.renderRoomViewToggle?.(studio);
+      window.__DS_PREMIUM?.renderCanvasViewToggle?.(studio);
       setStatus("Pick a device below or tap a connected link to walk your diagram");
     } catch (err) {
       console.error("[DS Walk]", err);

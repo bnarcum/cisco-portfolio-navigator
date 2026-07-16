@@ -1389,8 +1389,10 @@
       const wrap = document.getElementById("ds-canvas-wrap");
       wrap.classList.toggle("room-mode", tab === "room");
       wrap.classList.toggle("network-mode", tab === "network");
-      const showWalk = tab === "room" || tab === "network";
-      document.getElementById("ds-walk-corridor")?.toggleAttribute("hidden", !showWalk);
+      if (tab === "network" && this.roomView === "grid") this.roomView = "diagram";
+      const showCanvas = tab === "room" || tab === "network";
+      document.getElementById("ds-walk-corridor")?.toggleAttribute("hidden", true);
+      document.getElementById("ds-canvas-view-toggle")?.toggleAttribute("hidden", !showCanvas);
       this.updateRoomPicker();
       this.renderRoomGuide();
       if (tab !== "intent") {
@@ -1444,7 +1446,7 @@
       bar.querySelectorAll(".ds-room-pill").forEach(btn => {
         btn.addEventListener("click", () => this.switchToRoom(btn.dataset.roomId));
       });
-      window.__DS_PREMIUM?.renderRoomViewToggle?.(this);
+      window.__DS_PREMIUM?.renderCanvasViewToggle?.(this);
       if (this.tab === "room" || this.tab === "network") this.scheduleFitView();
     }
 
