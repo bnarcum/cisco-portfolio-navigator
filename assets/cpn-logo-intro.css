@@ -82,6 +82,14 @@ body.logo-intro-open{overflow:hidden}
   max-height:min(72vh,520px);width:auto;height:auto;
   border-radius:12px;
   box-shadow:0 0 60px rgba(2,200,255,.2),0 24px 80px rgba(0,0,0,.55)}
+.logo-intro-static.is-cinematic{
+  animation:cpnPosterCinematic 3.2s cubic-bezier(.2,.85,.2,1) forwards}
+@keyframes cpnPosterCinematic{
+  0%{opacity:0;transform:scale(1.14) translateY(2%)}
+  14%{opacity:1}
+  72%{opacity:1;transform:scale(1.02)}
+  100%{opacity:1;transform:scale(1)}
+}
 
 /* Dramatic sequence (~3.2s) */
 .logo-intro.is-playing .logo-intro-glow{

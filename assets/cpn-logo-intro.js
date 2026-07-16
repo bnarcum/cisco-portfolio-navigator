@@ -1,5 +1,5 @@
 /**
- * Click header logo to play Premium lockup intro (CSS animation; optional WebM/MP4).
+ * Click header logo to play Premium intro, then return to Overview home.
  */
 (function () {
   "use strict";
@@ -19,6 +19,7 @@
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     let playing = false;
+    let returnHomeOnClose = false;
     let closeTimer = null;
 
     function clearCloseTimer() {
@@ -28,21 +29,35 @@
       }
     }
 
+    function goOverviewHome() {
+      if (typeof window.cpnReturnToOverviewHome === "function") {
+        window.cpnReturnToOverviewHome();
+      } else if (typeof window.applyViewLevel === "function") {
+        window.applyViewLevel("overview");
+      }
+    }
+
     function closeIntro() {
+      const shouldHome = returnHomeOnClose;
       clearCloseTimer();
       overlay.classList.remove("is-active", "is-playing", "logo-intro-out");
       overlay.hidden = true;
       overlay.setAttribute("aria-hidden", "true");
       document.body.classList.remove("logo-intro-open");
       playing = false;
+      returnHomeOnClose = false;
       if (video) {
         video.onended = null;
         video.pause();
         video.currentTime = 0;
         video.hidden = true;
       }
+      if (staticImg) {
+        staticImg.hidden = true;
+        staticImg.classList.remove("is-cinematic");
+      }
       if (animBlock) animBlock.hidden = false;
-      if (staticImg) staticImg.hidden = true;
+      if (shouldHome) goOverviewHome();
     }
 
     function scheduleClose(ms) {
@@ -61,10 +76,7 @@
         if (!url) continue;
         try {
           const res = await fetch(url, { method: "HEAD", cache: "no-store" });
-          if (res.ok) {
-            src.setAttribute("data-ok", "1");
-            return true;
-          }
+          if (res.ok) return true;
         } catch (e) { /* optional asset */ }
       }
       return false;
@@ -78,11 +90,16 @@
       scheduleClose(INTRO_MS);
     }
 
-    function playStaticIntro() {
+    function playPosterIntro(cinematic) {
       if (animBlock) animBlock.hidden = true;
       if (video) video.hidden = true;
-      if (staticImg) staticImg.hidden = false;
-      scheduleClose(REDUCED_MS);
+      if (!staticImg) {
+        playCssIntro();
+        return;
+      }
+      staticImg.hidden = false;
+      staticImg.classList.toggle("is-cinematic", !!cinematic);
+      scheduleClose(cinematic ? INTRO_MS : REDUCED_MS);
     }
 
     async function playVideoIntro() {
@@ -90,24 +107,28 @@
       if (staticImg) staticImg.hidden = true;
       video.hidden = false;
       video.currentTime = 0;
-      video.onended = () => closeIntro();
+      video.onended = () => {
+        overlay.classList.add("logo-intro-out");
+        setTimeout(closeIntro, 200);
+      };
       try {
         await video.play();
       } catch (e) {
-        playCssIntro();
+        playPosterIntro(true);
       }
     }
 
     async function openIntro() {
       if (playing) return;
       playing = true;
+      returnHomeOnClose = true;
       overlay.hidden = false;
       overlay.setAttribute("aria-hidden", "false");
       document.body.classList.add("logo-intro-open");
       requestAnimationFrame(() => overlay.classList.add("is-active"));
 
       if (reduced) {
-        playStaticIntro();
+        playPosterIntro(false);
         return;
       }
 
@@ -116,7 +137,7 @@
         return;
       }
 
-      playCssIntro();
+      playPosterIntro(true);
     }
 
     trigger.addEventListener("click", openIntro);
