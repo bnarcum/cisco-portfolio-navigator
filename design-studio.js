@@ -2942,6 +2942,7 @@ Account: ${this.design.account}`;
       if (!wrap || typeof ResizeObserver === "undefined") return;
       this._fitObs = new ResizeObserver(() => {
         if (this.tab === "network" || this.tab === "room") {
+          window.__DS_PREMIUM?.positionCanvasViewToggle?.(this);
           clearTimeout(this._fitTimer);
           this._fitTimer = setTimeout(() => this.scheduleFitView(), 100);
         }

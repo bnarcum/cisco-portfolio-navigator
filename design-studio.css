@@ -699,8 +699,6 @@
   pointer-events:auto}
 #ds-canvas-view-toggle[hidden]{display:none!important}
 [data-theme="light"] #ds-canvas-view-toggle{border-color:rgba(0,110,143,.28)}
-#ds-canvas-wrap.network-mode #ds-canvas-view-toggle{top:52px;left:12px}
-#ds-canvas-wrap.room-mode #ds-canvas-view-toggle{top:124px;left:12px}
 .ds-canvas-view-toggle .ds-view-btn{font-size:11px;font-weight:700;padding:7px 16px;border-radius:8px;
   border:1px solid var(--border);background:rgba(8,24,45,.55);color:var(--muted);cursor:pointer;
   letter-spacing:.02em;transition:background .15s,border-color .15s,color .15s,box-shadow .15s}

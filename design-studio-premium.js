@@ -136,6 +136,20 @@
     }).join("")}</div>`;
   }
 
+  function canvasViewToggleTop(studio) {
+    if (studio.tab === "room") return studio.roomChromeTop?.() ?? 134;
+    const tb = document.getElementById("ds-toolbar");
+    if (tb && !tb.hidden) return Math.max(tb.offsetTop + tb.offsetHeight + 8, 52);
+    return 52;
+  }
+
+  function positionCanvasViewToggle(studio) {
+    const toggle = document.getElementById("ds-canvas-view-toggle");
+    if (!toggle || toggle.hidden) return;
+    toggle.style.left = "12px";
+    toggle.style.top = `${canvasViewToggleTop(studio)}px`;
+  }
+
   function renderCanvasViewToggle(studio) {
     const wrap = document.getElementById("ds-canvas-wrap");
     if (!wrap) return;
@@ -178,6 +192,8 @@
         window.__DS_PREMIUM?.renderPortfolioOverlay?.(studio);
       };
     });
+    positionCanvasViewToggle(studio);
+    requestAnimationFrame(() => positionCanvasViewToggle(studio));
   }
 
   /** @deprecated use renderCanvasViewToggle */
@@ -519,7 +535,7 @@
 
   window.__DS_PREMIUM = {
     scoreState, isDesignGenerated, staleState, refresh, renderStaleBanner, renderRoomMixEditor,
-    renderCanvasViewToggle, renderRoomViewToggle, renderPortfolioOverlay,
+    renderCanvasViewToggle, renderRoomViewToggle, renderPortfolioOverlay, positionCanvasViewToggle,
     runTour,
     validationPanelExtras, exportDesignBundle, importDesignBundle, exportCustomerSvg,
     plannerSyncHint, renderCompare, highlightBomPid, roomPortfolioGrid
