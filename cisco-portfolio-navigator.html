@@ -9,7 +9,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="2.86.2";
+  window.__CPN_BUILD="2.86.3";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -26,6 +26,12 @@
         }
         sessionStorage.removeItem(reloadKey);
       }else if(!seen){localStorage.setItem(key,V);}
+      var want="_v="+encodeURIComponent(V);
+      if(location.search.indexOf(want)<0){
+        var q2=location.search.replace(/[?&]_v=[^&]*/g,"").replace(/^&/,"?");
+        var sep2=(q2&&q2!=="?")?"&":"?";
+        history.replaceState(null,"",location.pathname+q2+sep2+want);
+      }
     }catch(e){}
   })();
   </script>
@@ -37,10 +43,10 @@
   import * as THREE from "three";
   window.__cpnWalkTHREE = THREE;
   </script>
-  <link rel="stylesheet" href="assets/cpn-ui.css?v=2.86.2"/>
-  <link rel="stylesheet" href="assets/cpn-light.css?v=2.86.2"/>
-  <link rel="stylesheet" href="assets/cpn-iq-theme.css?v=2.86.2"/>
-  <link rel="stylesheet" href="design-studio.css?v=2.86.2"/>
+  <link rel="stylesheet" href="assets/cpn-ui.css?v=2.86.3"/>
+  <link rel="stylesheet" href="assets/cpn-light.css?v=2.86.3"/>
+  <link rel="stylesheet" href="assets/cpn-iq-theme.css?v=2.86.3"/>
+  <link rel="stylesheet" href="design-studio.css?v=2.86.3"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     @font-face{
@@ -4614,7 +4620,7 @@ let nodeClickTimer = null;
 
 const MATRIX_SITE = "https://bnarcum.github.io/collaboration-device-matrix/";
 /** Bust iframe cache when Device Matrix deploys — bump with each matrix release. */
-const MATRIX_RELEASE = "20260716d";
+const MATRIX_RELEASE = "20260716e";
 const MATRIX_NODE_FILL = "#ffffff";
 const MATRIX_NODE_RING = "#cbd5e1";
 const MATRIX_IMG_BASE = MATRIX_SITE + "devices/";
@@ -5601,7 +5607,27 @@ function clearViewTransitionClasses(){
     const el = document.getElementById(id);
     if (!el) return;
     el.classList.remove("view-exit", "view-enter", "view-x-dissolve", "view-x-expand", "view-x-contract", "view-x-scan", "view-x-focus", "view-x-default");
+    el.style.removeProperty("opacity");
+    el.style.removeProperty("transform");
+    el.style.removeProperty("filter");
   });
+}
+
+/** Recover from bfcache or stale cache leaving the canvas invisible. */
+function repairCanvasView(){
+  clearViewTransitionClasses();
+  if (typeof viewMode === "undefined" || !lyr) return;
+  if (viewMode === "overview"){
+    if (!lyr.select("g.overview-deck").node()){
+      updateOverviewDeck();
+      scheduleGraphFit("overview");
+    }
+  } else if (viewMode === "spatial"){
+    if (spatialState?.active) refreshSpatialGraph();
+  } else if (ndG){
+    ndG.style("display", null);
+    if (viewNodes?.length) rebindGraph({ restart: false });
+  }
 }
 
 function runViewTransition(callback, from, to){
@@ -8624,6 +8650,7 @@ window.__cpnSpatialVisibleLabels = () => {
   }
   applyViewLevel("overview", { initial: true });
 })();
+requestAnimationFrame(() => requestAnimationFrame(() => repairCanvasView()));
 
 function applyConnectionHighlight(d, depth = connectionHighlightDepth){
   if (viewMode === "composition"){
@@ -10332,7 +10359,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = window.__CPN_BUILD || "2.86.2";
+const APP_VERSION   = window.__CPN_BUILD || "2.86.3";
 const DATA_UPDATED  = "2026-07-16";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -11409,6 +11436,7 @@ function applyState(s){
   $$(".cp").forEach(b => b.classList.toggle("off", !activeCats.has(b.dataset.cat)));
   renderChips(); updateAB();
   applyFilters();
+  repairCanvasView();
   highlightStack();
   analyzed = false;
   plannerSetupExpanded = false;
@@ -16323,6 +16351,8 @@ function boot(){
 
   // Restore prior state (URL hash > current plan > autosave)
   bootRestore();
+  repairCanvasView();
+  window.addEventListener("pageshow", ev => { if (ev.persisted) repairCanvasView(); });
   if (typeof updatePlannerUI === "function") updatePlannerUI();
   if (typeof initDesignStudio === "function") initDesignStudio();
   if (typeof NODES !== "undefined") {
@@ -16356,23 +16386,23 @@ window.__cpnV2 = {
 };
 })();
 </script>
-<script src="assets/family-heroes.js?v=2.86.2"></script>
+<script src="assets/family-heroes.js?v=2.86.3"></script>
 <script>window.__DS_ASSET_V=window.__CPN_BUILD;</script>
-<script src="design-studio-photos.js?v=2.86.2"></script>
-<script src="design-studio-stencils.js?v=2.86.2"></script>
-<script src="design-studio-templates.js?v=2.86.2"></script>
-<script src="design-studio-rules.js?v=2.86.2"></script>
-<script src="design-studio-intent.js?v=2.86.2"></script>
-<script src="design-studio-explore.js?v=2.86.2"></script>
-<script src="design-studio-premium.js?v=2.86.2"></script>
-<script src="design-studio-expert.js?v=2.86.2"></script>
-<script src="design-studio-walk-layout.js?v=2.86.2"></script>
-<script src="design-studio-walk-voxel.js?v=2.86.2"></script>
-<script src="design-studio-field-panel.js?v=2.86.2"></script>
-<script src="design-studio-walk-audio.js?v=2.86.2"></script>
-<script src="design-studio-walk-models.js?v=2.86.2"></script>
-<script src="design-studio-walk-quest.js?v=2.86.2"></script>
-<script src="design-studio-walk.js?v=2.86.2"></script>
-<script src="design-studio.js?v=2.86.2"></script>
+<script src="design-studio-photos.js?v=2.86.3"></script>
+<script src="design-studio-stencils.js?v=2.86.3"></script>
+<script src="design-studio-templates.js?v=2.86.3"></script>
+<script src="design-studio-rules.js?v=2.86.3"></script>
+<script src="design-studio-intent.js?v=2.86.3"></script>
+<script src="design-studio-explore.js?v=2.86.3"></script>
+<script src="design-studio-premium.js?v=2.86.3"></script>
+<script src="design-studio-expert.js?v=2.86.3"></script>
+<script src="design-studio-walk-layout.js?v=2.86.3"></script>
+<script src="design-studio-walk-voxel.js?v=2.86.3"></script>
+<script src="design-studio-field-panel.js?v=2.86.3"></script>
+<script src="design-studio-walk-audio.js?v=2.86.3"></script>
+<script src="design-studio-walk-models.js?v=2.86.3"></script>
+<script src="design-studio-walk-quest.js?v=2.86.3"></script>
+<script src="design-studio-walk.js?v=2.86.3"></script>
+<script src="design-studio.js?v=2.86.3"></script>
 </body>
 </html>
