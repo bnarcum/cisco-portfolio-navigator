@@ -6,6 +6,29 @@
   <title>Cisco Portfolio Navigator</title>
   <link rel="icon" type="image/svg+xml" href="assets/cpn-favicon.svg"/>
   <meta name="theme-color" content="#07070f"/>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+  <meta http-equiv="Pragma" content="no-cache"/>
+  <script>
+  window.__CPN_BUILD="2.86.2";
+  (function(){
+    var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
+    try{
+      var seen=localStorage.getItem(key);
+      if(seen&&seen!==V){
+        ["cpn-view-mode-v2","cpn-view-focus-v2","cpn-autosave-v2","cpn-current-v2"].forEach(function(k){localStorage.removeItem(k);});
+        localStorage.setItem(key,V);
+        if(!sessionStorage.getItem(reloadKey)){
+          sessionStorage.setItem(reloadKey,"1");
+          var q=location.search.replace(/[?&]_v=[^&]*/g,"").replace(/^&/,"?");
+          var sep=q?"&":"?";
+          location.replace(location.pathname+q+sep+"_v="+encodeURIComponent(V));
+          return;
+        }
+        sessionStorage.removeItem(reloadKey);
+      }else if(!seen){localStorage.setItem(key,V);}
+    }catch(e){}
+  })();
+  </script>
   <script type="importmap">
   {"imports":{"three":"./vendor/three.module.min.js"}}
   </script>
@@ -14,10 +37,10 @@
   import * as THREE from "three";
   window.__cpnWalkTHREE = THREE;
   </script>
-  <link rel="stylesheet" href="assets/cpn-ui.css?v=2.81.2"/>
-  <link rel="stylesheet" href="assets/cpn-light.css?v=2.81.2"/>
-  <link rel="stylesheet" href="assets/cpn-iq-theme.css?v=2.81.3"/>
-  <link rel="stylesheet" href="design-studio.css?v=2.81.2"/>
+  <link rel="stylesheet" href="assets/cpn-ui.css?v=2.86.2"/>
+  <link rel="stylesheet" href="assets/cpn-light.css?v=2.86.2"/>
+  <link rel="stylesheet" href="assets/cpn-iq-theme.css?v=2.86.2"/>
+  <link rel="stylesheet" href="design-studio.css?v=2.86.2"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     @font-face{
@@ -4591,7 +4614,7 @@ let nodeClickTimer = null;
 
 const MATRIX_SITE = "https://bnarcum.github.io/collaboration-device-matrix/";
 /** Bust iframe cache when Device Matrix deploys — bump with each matrix release. */
-const MATRIX_RELEASE = "20260716c";
+const MATRIX_RELEASE = "20260716d";
 const MATRIX_NODE_FILL = "#ffffff";
 const MATRIX_NODE_RING = "#cbd5e1";
 const MATRIX_IMG_BASE = MATRIX_SITE + "devices/";
@@ -9021,6 +9044,8 @@ function applyFilters() {
   }
   if (viewMode === "overview"){
     const badge = document.getElementById("fbadge"); if (badge) badge.style.display = "none";
+    updateOverviewDeck();
+    scheduleGraphFit("overview");
     refreshTimelineIfOpen();
     updateCanvasFocusState();
     return;
@@ -9135,10 +9160,8 @@ function resetAll() {
   document.querySelectorAll(".cp").forEach(b=>b.classList.remove("off"));
   if (typeof renderFacets === "function") renderFacets();
   selected=null; resetHL(); closePanel();
-  if (viewMode !== "overview") applyViewLevel("overview");
-  else applyFilters();
-  const {w,h}=getDims();
-  svg.transition().duration(600).call(zoom.transform,d3.zoomIdentity.translate(w/2,h/2).scale(0.78));
+  clearViewTransitionClasses();
+  applyViewLevel("overview");
   if (typeof updatePlannerUI === "function") updatePlannerUI();
   if (typeof refreshPlansBtn === "function") refreshPlansBtn();
   if (typeof showToast === "function") showToast("Reset — fresh start");
@@ -10309,7 +10332,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.86.1";
+const APP_VERSION   = window.__CPN_BUILD || "2.86.2";
 const DATA_UPDATED  = "2026-07-16";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -16333,23 +16356,23 @@ window.__cpnV2 = {
 };
 })();
 </script>
-<script src="assets/family-heroes.js?v=2.51.2"></script>
-<script>window.__DS_ASSET_V="2.51.0";</script>
-<script src="design-studio-photos.js?v=2.58.2"></script>
-<script src="design-studio-stencils.js?v=2.58.2"></script>
-<script src="design-studio-templates.js?v=2.79.24"></script>
-<script src="design-studio-rules.js?v=2.58.2"></script>
-<script src="design-studio-intent.js?v=2.79.24"></script>
-<script src="design-studio-explore.js?v=2.58.2"></script>
-<script src="design-studio-premium.js?v=2.79.24"></script>
-<script src="design-studio-expert.js?v=2.58.2"></script>
-<script src="design-studio-walk-layout.js?v=2.79.24"></script>
-<script src="design-studio-walk-voxel.js?v=2.79.24"></script>
-<script src="design-studio-field-panel.js?v=2.79.24"></script>
-<script src="design-studio-walk-audio.js?v=2.79.24"></script>
-<script src="design-studio-walk-models.js?v=2.79.24"></script>
-<script src="design-studio-walk-quest.js?v=2.79.24"></script>
-<script src="design-studio-walk.js?v=2.79.24"></script>
-<script src="design-studio.js?v=2.79.24"></script>
+<script src="assets/family-heroes.js?v=2.86.2"></script>
+<script>window.__DS_ASSET_V=window.__CPN_BUILD;</script>
+<script src="design-studio-photos.js?v=2.86.2"></script>
+<script src="design-studio-stencils.js?v=2.86.2"></script>
+<script src="design-studio-templates.js?v=2.86.2"></script>
+<script src="design-studio-rules.js?v=2.86.2"></script>
+<script src="design-studio-intent.js?v=2.86.2"></script>
+<script src="design-studio-explore.js?v=2.86.2"></script>
+<script src="design-studio-premium.js?v=2.86.2"></script>
+<script src="design-studio-expert.js?v=2.86.2"></script>
+<script src="design-studio-walk-layout.js?v=2.86.2"></script>
+<script src="design-studio-walk-voxel.js?v=2.86.2"></script>
+<script src="design-studio-field-panel.js?v=2.86.2"></script>
+<script src="design-studio-walk-audio.js?v=2.86.2"></script>
+<script src="design-studio-walk-models.js?v=2.86.2"></script>
+<script src="design-studio-walk-quest.js?v=2.86.2"></script>
+<script src="design-studio-walk.js?v=2.86.2"></script>
+<script src="design-studio.js?v=2.86.2"></script>
 </body>
 </html>
