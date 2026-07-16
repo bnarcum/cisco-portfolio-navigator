@@ -9,7 +9,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="2.86.4";
+  window.__CPN_BUILD="2.86.5";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -43,10 +43,10 @@
   import * as THREE from "three";
   window.__cpnWalkTHREE = THREE;
   </script>
-  <link rel="stylesheet" href="assets/cpn-ui.css?v=2.86.4"/>
-  <link rel="stylesheet" href="assets/cpn-light.css?v=2.86.4"/>
-  <link rel="stylesheet" href="assets/cpn-iq-theme.css?v=2.86.4"/>
-  <link rel="stylesheet" href="design-studio.css?v=2.86.4"/>
+  <link rel="stylesheet" href="assets/cpn-ui.css?v=2.86.5"/>
+  <link rel="stylesheet" href="assets/cpn-light.css?v=2.86.5"/>
+  <link rel="stylesheet" href="assets/cpn-iq-theme.css?v=2.86.5"/>
+  <link rel="stylesheet" href="design-studio.css?v=2.86.5"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     @font-face{
@@ -1136,6 +1136,13 @@
   </style>
 </head>
 <body>
+<svg aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
+  <defs>
+    <filter id="cpn-matrix-photo-soft" x="-4%" y="-4%" width="108%" height="108%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0.35"/>
+    </filter>
+  </defs>
+</svg>
 
 <div id="preview-banner" role="status">Preview sandbox — changes here are not production. Live site: <a href="https://bnarcum.github.io/cisco-portfolio-navigator/" style="color:#1a1200;text-decoration:underline">Portfolio Navigator</a></div>
 <script>if(/cisco-portfolio-navigator-preview/i.test(location.pathname))document.getElementById("preview-banner").classList.add("visible");</script>
@@ -4620,7 +4627,7 @@ let nodeClickTimer = null;
 
 const MATRIX_SITE = "https://bnarcum.github.io/collaboration-device-matrix/";
 /** Bust iframe cache when Device Matrix deploys — bump with each matrix release. */
-const MATRIX_RELEASE = "20260716f";
+const MATRIX_RELEASE = "20260716g";
 const MATRIX_NODE_FILL = "#ffffff";
 const MATRIX_NODE_RING = "#cbd5e1";
 const MATRIX_IMG_BASE = MATRIX_SITE + "devices/";
@@ -4663,6 +4670,51 @@ function matrixImageUrl(id){
   if (e.image) return e.image;
   const base = MATRIX_BRIDGE.imageBase || MATRIX_IMG_BASE;
   return e.hash ? `${base}img-${e.hash}.webp` : null;
+}
+const matrixPhotoRefineCache = new Map();
+function refineMatrixPhotoEdges(img, cb){
+  if (!img || img.dataset.refined){ cb?.(img); return; }
+  const src = img.currentSrc || img.src;
+  if (matrixPhotoRefineCache.has(src)){
+    img.src = matrixPhotoRefineCache.get(src);
+    img.dataset.refined = "1";
+    cb?.(img);
+    return;
+  }
+  const run = () => {
+    const nw = img.naturalWidth, nh = img.naturalHeight;
+    if (!nw || !nh){ cb?.(img); return; }
+    try{
+      const scale = 2;
+      const big = document.createElement("canvas");
+      big.width = nw * scale;
+      big.height = nh * scale;
+      const bctx = big.getContext("2d");
+      bctx.fillStyle = "#ffffff";
+      bctx.fillRect(0, 0, big.width, big.height);
+      bctx.imageSmoothingEnabled = true;
+      bctx.imageSmoothingQuality = "high";
+      bctx.drawImage(img, 0, 0, big.width, big.height);
+      const out = document.createElement("canvas");
+      out.width = nw;
+      out.height = nh;
+      const octx = out.getContext("2d");
+      octx.fillStyle = "#ffffff";
+      octx.fillRect(0, 0, nw, nh);
+      octx.imageSmoothingEnabled = true;
+      octx.imageSmoothingQuality = "high";
+      octx.drawImage(big, 0, 0, nw, nh);
+      const dataUrl = out.toDataURL("image/png");
+      matrixPhotoRefineCache.set(src, dataUrl);
+      img.src = dataUrl;
+      img.dataset.refined = "1";
+    }catch(_e){
+      img.dataset.refined = "skip";
+    }
+    cb?.(img);
+  };
+  if (img.complete && img.naturalWidth) run();
+  else img.addEventListener("load", run, { once: true });
 }
 function matrixDeviceUrl(id, view, opts){
   const e = matrixBridgeEntry(id); if (!e?.matrixId) return null;
@@ -5098,6 +5150,8 @@ function buildNodeGroup(sel){
       .attr("width", pad * 2).attr("height", pad * 2)
       .attr("x", -pad).attr("y", -pad)
       .attr("clip-path", `url(#${cid})`)
+      .attr("filter", "url(#cpn-matrix-photo-soft)")
+      .attr("preserveAspectRatio", "xMidYMid meet")
       .style("pointer-events", "none");
   });
   inner.append("use").attr("class","icn")
@@ -5135,6 +5189,8 @@ function syncNodeProductImages(){
         .attr("width", pad * 2).attr("height", pad * 2)
         .attr("x", -pad).attr("y", -pad)
         .attr("clip-path", `url(#${cid})`)
+        .attr("filter", "url(#cpn-matrix-photo-soft)")
+        .attr("preserveAspectRatio", "xMidYMid meet")
         .style("pointer-events", "none");
     } else if (!pimg.empty()){
       pimg.remove();
@@ -7059,6 +7115,9 @@ function spatialMakeTexture(source){
   const THREE = ensureSpatialTHREE();
   if (!THREE?.CanvasTexture || !source) return null;
   const tex = new THREE.CanvasTexture(source);
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.generateMipmaps = false;
   tex.needsUpdate = true;
   return tex;
 }
@@ -7407,7 +7466,7 @@ function preloadSpatialTiles(nodes){
       spatialState.tileCache.set(key, { ready: false, gen });
       const img = new Image();
       img.crossOrigin = "anonymous";
-      img.onload = () => finishSpatialTileLoad(key, gen, img);
+      img.onload = () => refineMatrixPhotoEdges(img, () => finishSpatialTileLoad(key, gen, img));
       img.onerror = () => preloadSpatialIconTile(n, key, gen);
       img.src = photoUrl;
     } else {
@@ -10359,7 +10418,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = window.__CPN_BUILD || "2.86.4";
+const APP_VERSION   = window.__CPN_BUILD || "2.86.5";
 const DATA_UPDATED  = "2026-07-16";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -10929,8 +10988,10 @@ STYLE.textContent = `
     background:#ffffff;
     border:1px solid rgba(148,163,184,0.4);box-shadow:0 2px 12px rgba(15,23,42,0.08)}
   .p-hero--icon-only{height:108px;margin-bottom:10px}
-  .p-hero img{width:100%;height:100%;object-fit:contain;object-position:center;padding:6px 10px 8px;box-sizing:border-box;
-    filter:drop-shadow(0 2px 8px rgba(15,23,42,0.12));position:relative;z-index:1;background:#fff}
+  .p-hero img{width:100%;height:100%;object-fit:contain;object-position:center;padding:8px 12px 10px;box-sizing:border-box;
+    position:relative;z-index:1;background:transparent;image-rendering:auto;
+    -webkit-backface-visibility:hidden;backface-visibility:hidden;transform:translateZ(0)}
+  .p-hero--matrix .p-hero-matrix-img{filter:url(#cpn-matrix-photo-soft)}
   .p-hero-fallback{display:flex;align-items:center;justify-content:center;height:100%;position:absolute;inset:0;z-index:0;
     background:linear-gradient(165deg, #f8fafc 0%, #eef2f7 100%)}
   .p-hero-fallback svg{width:68px;height:68px;opacity:.88}
@@ -14361,7 +14422,7 @@ function insertProductHero(id, kind){
     hero.innerHTML = `
       <span class="p-hero-open-hint">Click for 3D Showroom</span>
       <img class="p-hero-matrix-img" src="${escapeHtml(matrixUrl)}" alt="${escapeHtml(n.name || id)}"
-        loading="lazy" decoding="async">
+        crossorigin="anonymous" loading="lazy" decoding="async">
       ${fallbackReserveHtml}
       <div class="p-hero-scrim"></div>
       <div class="p-hero-meta">
@@ -14370,6 +14431,7 @@ function insertProductHero(id, kind){
       </div>`;
     const img = hero.querySelector(".p-hero-matrix-img");
     if (img){
+      refineMatrixPhotoEdges(img);
       img.addEventListener("error", () => {
         img.remove();
         hero.classList.remove("p-hero--matrix", "p-hero--clickable");
@@ -16386,23 +16448,23 @@ window.__cpnV2 = {
 };
 })();
 </script>
-<script src="assets/family-heroes.js?v=2.86.4"></script>
+<script src="assets/family-heroes.js?v=2.86.5"></script>
 <script>window.__DS_ASSET_V=window.__CPN_BUILD;</script>
-<script src="design-studio-photos.js?v=2.86.4"></script>
-<script src="design-studio-stencils.js?v=2.86.4"></script>
-<script src="design-studio-templates.js?v=2.86.4"></script>
-<script src="design-studio-rules.js?v=2.86.4"></script>
-<script src="design-studio-intent.js?v=2.86.4"></script>
-<script src="design-studio-explore.js?v=2.86.4"></script>
-<script src="design-studio-premium.js?v=2.86.4"></script>
-<script src="design-studio-expert.js?v=2.86.4"></script>
-<script src="design-studio-walk-layout.js?v=2.86.4"></script>
-<script src="design-studio-walk-voxel.js?v=2.86.4"></script>
-<script src="design-studio-field-panel.js?v=2.86.4"></script>
-<script src="design-studio-walk-audio.js?v=2.86.4"></script>
-<script src="design-studio-walk-models.js?v=2.86.4"></script>
-<script src="design-studio-walk-quest.js?v=2.86.4"></script>
-<script src="design-studio-walk.js?v=2.86.4"></script>
-<script src="design-studio.js?v=2.86.4"></script>
+<script src="design-studio-photos.js?v=2.86.5"></script>
+<script src="design-studio-stencils.js?v=2.86.5"></script>
+<script src="design-studio-templates.js?v=2.86.5"></script>
+<script src="design-studio-rules.js?v=2.86.5"></script>
+<script src="design-studio-intent.js?v=2.86.5"></script>
+<script src="design-studio-explore.js?v=2.86.5"></script>
+<script src="design-studio-premium.js?v=2.86.5"></script>
+<script src="design-studio-expert.js?v=2.86.5"></script>
+<script src="design-studio-walk-layout.js?v=2.86.5"></script>
+<script src="design-studio-walk-voxel.js?v=2.86.5"></script>
+<script src="design-studio-field-panel.js?v=2.86.5"></script>
+<script src="design-studio-walk-audio.js?v=2.86.5"></script>
+<script src="design-studio-walk-models.js?v=2.86.5"></script>
+<script src="design-studio-walk-quest.js?v=2.86.5"></script>
+<script src="design-studio-walk.js?v=2.86.5"></script>
+<script src="design-studio.js?v=2.86.5"></script>
 </body>
 </html>
