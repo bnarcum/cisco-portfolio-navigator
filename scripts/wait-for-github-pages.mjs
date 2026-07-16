@@ -56,11 +56,21 @@ Options:
   return opts;
 }
 
+function parseAppVersion(html) {
+  const build = html.match(/window\.__CPN_BUILD\s*=\s*"([^"]+)"/);
+  if (build) return build[1];
+  const literal = html.match(/const APP_VERSION\s*=\s*"([^"]+)"/);
+  if (literal) return literal[1];
+  const fallback = html.match(/const APP_VERSION\s*=\s*window\.__CPN_BUILD\s*\|\|\s*"([^"]+)"/);
+  if (fallback) return fallback[1];
+  return null;
+}
+
 function readLocalVersion() {
   const html = fs.readFileSync(HTML, "utf8");
-  const m = html.match(/const APP_VERSION\s*=\s*"([^"]+)"/);
-  if (!m) throw new Error("APP_VERSION not found in cisco-portfolio-navigator.html");
-  return m[1];
+  const v = parseAppVersion(html);
+  if (!v) throw new Error("APP_VERSION / __CPN_BUILD not found in cisco-portfolio-navigator.html");
+  return v;
 }
 
 function sleep(ms) {
@@ -102,8 +112,7 @@ async function fetchLiveVersion(pageUrl) {
   });
   if (!res.ok) throw new Error(`HTTP ${res.status} for ${pageUrl}`);
   const text = await res.text();
-  const m = text.match(/const APP_VERSION\s*=\s*"([^"]+)"/);
-  return m?.[1] || null;
+  return parseAppVersion(text);
 }
 
 async function waitForTarget(name, target, expected, timeoutSec, intervalSec, useGh) {
