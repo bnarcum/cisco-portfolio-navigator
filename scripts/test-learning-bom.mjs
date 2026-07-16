@@ -25,11 +25,11 @@ try {
   const mappingOk = await page.evaluate(() => {
     const STN = window.__DS_STENCILS;
     const boardG3 = STN.learningIdsForStencil("board-pro", { label: "Board Pro G3 75", pid: "CS-BRDP75-G3-K9" });
-    const boardG2 = STN.learningIdsForStencil("board-pro", { variant: "g2", pid: "CS-BRDP75-K9" });
+    const boardG355 = STN.learningIdsForStencil("board-pro", { variant: "g3-55", label: "Board Pro G3 55", pid: "CS-BRDP55-G3-K9" });
     const mic = STN.learningIdsForStencil("ceiling-mic", { label: "Ceiling Mic 1" });
     const nav = STN.learningIdsForStencil("room-navigator", { label: "Navigator" });
     return boardG3.products.includes("board-pro-g3-75")
-      && boardG2.products.includes("board-pro-g2")
+      && boardG355.products.includes("board-pro-g3-55")
       && mic.products.includes("ceiling-mic-pro")
       && nav.products.includes("room-navigator");
   });
@@ -73,9 +73,7 @@ try {
   const exploreCtx = await page.evaluate(() => window.__DS_EXPLORE.resolveContext(window.DesignStudio.instance));
   if (!exploreCtx.bomProductIds?.length) errors.push("resolveContext missing bomProductIds for boardroom");
   if (!exploreCtx.bomProductIds?.includes("board-pro-g3-75")
-      && !exploreCtx.bomProductIds?.includes("board-pro-g3")
-      && !exploreCtx.bomProductIds?.includes("board-pro-g2")
-      && !exploreCtx.bomProductIds?.includes("board-pro-75"))
+      && !exploreCtx.bomProductIds?.includes("board-pro-g3"))
     errors.push(`boardroom BOM should include board product, got ${exploreCtx.bomProductIds?.join(", ")}`);
   if (!exploreCtx.skills?.length) errors.push("learn mode should surface skill cards for boardroom BOM");
   const skillLabels = (exploreCtx.skills || []).map(s => s.linkLabel || s.id).join(" ");

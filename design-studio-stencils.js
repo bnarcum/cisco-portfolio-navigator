@@ -202,12 +202,12 @@
   //   model3d     — procedural mesh template key
   //   defaultCount— BOM default the intent can scale (e.g. mics)
   //   aliases     — natural-language phrases the intent maps to this device
-  //   variants    — model variants (e.g. Board Pro G2, wall-mount Navigator)
+  //   variants    — model variants (e.g. Board Pro G3, wall-mount Navigator)
   const ROOM_DEVICES = {
     "room-kit-eq": { label: "Room Kit EQ", pid: "CS-KIT-EQ-K9", shape: "codec", ports: "codec-av", w: 92, h: 52, poeW: 60, mount: "rack", role: "codec", model3d: "codec", aliases: ["room kit eq", "kit eq", "room kit"] },
     "room-kit-pro": { label: "Room Kit Pro G2", pid: "CS-KITPRO-K9", shape: "codec", ports: "codec-av", w: 92, h: 52, poeW: 60, mount: "rack", role: "codec", model3d: "codec", aliases: ["room kit pro", "kit pro"] },
     "room-bar": { label: "Room Bar", pid: "CS-BAR-K9", shape: "codec", ports: "codec-av", w: 84, h: 48, poeW: 45, mount: "shelf", role: "codec", model3d: "codec", aliases: ["room bar", "bar pro", "webex bar"] },
-    "board-pro": { label: "Board Pro G3 75", pid: "CS-BRDP75-G3-K9", shape: "display", ports: "codec-av", w: 104, h: 60, poeW: 45, mount: "wall-display", role: "display", model3d: "display", aliases: ["board pro", "webex board", "board", "board pro g3"], variants: { g3: { pid: "CS-BRDP75-G3-K9", label: "Board Pro G3 75" }, "g3-55": { pid: "CS-BRDP55-G3-K9", label: "Board Pro G3 55" }, g2: { pid: "CS-BRDP75-K9", label: "Board Pro G2 75" }, "55": { pid: "CS-BRDP55-K9", label: "Board Pro 55 G2" } } },
+    "board-pro": { label: "Board Pro G3 75", pid: "CS-BRDP75-G3-K9", shape: "display", ports: "codec-av", w: 104, h: 60, poeW: 45, mount: "wall-display", role: "display", model3d: "display", aliases: ["board pro", "webex board", "board", "board pro g3", "board pro 55"], variants: { g3: { pid: "CS-BRDP75-G3-K9", label: "Board Pro G3 75" }, "g3-55": { pid: "CS-BRDP55-G3-K9", label: "Board Pro G3 55" } } },
     "desk-pro": { label: "Desk Pro", pid: "CS-DESKPRO-K9", shape: "codec", ports: "codec-av", w: 76, h: 48, poeW: 30, mount: "desk", role: "codec", model3d: "display", aliases: ["desk pro"] },
     "desk-mini": { label: "Desk Mini", pid: "CS-DESKMINI-K9", shape: "codec", ports: "codec-av", w: 64, h: 44, poeW: 25, mount: "desk", role: "codec", model3d: "display", aliases: ["desk mini"] },
     "desk-phone": { label: "Desk Phone 9841", pid: "CP-9841-K9", shape: "phone", ports: "phone-lan", w: 52, h: 40, poeW: 8, mount: "desk", role: "phone", model3d: "generic", aliases: ["desk phone", "ip phone", "9841"] },
@@ -274,14 +274,12 @@
 
     if (stencilId === "board-pro") {
       const prof = deviceProfile(stencilId, node);
-      if (node?.variant === "g2" || /g2|pro-g2/i.test(hay) || /G2/.test(prof?.pid || ""))
-        products[0] = "board-pro-g2";
-      else if (node?.variant === "g3-55" || (/\bg3\b/i.test(hay) && /\b55\b/.test(hay)) || /BRDP55-G3/i.test(prof?.pid || ""))
+      if (node?.variant === "g3-55" || (/\bg3\b/i.test(hay) && /\b55\b/.test(hay)) || /BRDP55-G3/i.test(prof?.pid || "") || /\bboard pro 55\b/i.test(hay))
         products[0] = "board-pro-g3-55";
       else if (node?.variant === "g3" || /\bg3\b/i.test(hay) || /G3/.test(prof?.pid || ""))
         products[0] = /\b55\b/.test(hay) ? "board-pro-g3-55" : "board-pro-g3-75";
-      else if (node?.variant === "55" || /\b55\b/.test(hay)) products[0] = "board-pro-55";
-      else if (/\b75\b/.test(hay) || /75/.test(prof?.pid || "")) products[0] = "board-pro-75";
+      else if (/\b75\b/.test(hay) || /75/.test(prof?.pid || ""))
+        products[0] = "board-pro-g3-75";
     }
     if (stencilId === "room-bar" && /bar.pro|bar-pro/i.test(hay))
       products[0] = "room-bar-pro-g2";

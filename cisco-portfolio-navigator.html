@@ -1730,7 +1730,7 @@ const NODES = [
    url:"https://www.webex.com/contact-center.html",
    docsUrl:"https://www.webex.com/contact-center.html"},
   {id:"room-systems",      name:"Cisco Room Systems",          category:"collaboration",
-   desc:"Room Bar, Room Bar Pro, Room Kit EQ, Room Kit Pro, Board Pro G2 — purpose-built video systems for huddle to boardroom with AI-powered cameras and audio.",
+   desc:"Room Bar, Room Bar Pro, Room Kit EQ, Room Kit Pro, Board Pro G3 — purpose-built video systems for huddle to boardroom with AI-powered cameras and audio.",
    useCases:["Hybrid Work","Digital Transformation"],
    industries:["Healthcare","Financial Services","Education","Government","Manufacturing"],
    url:"https://www.cisco.com/c/en/us/products/collaboration-endpoints/index.html",
@@ -1983,18 +1983,6 @@ const PRODUCTS = [
   {id:"room-bar-pro",   name:"Cisco Room Bar Pro",          family:"room-systems",   status:"current",
    desc:"Premium all-in-one video bar for medium to large rooms with extended field of view camera and enterprise-grade audio.",
    url:"https://www.webex.com/us/en/devices/room-series/cisco-room-bar-pro.html"},
-  {id:"board-pro-55",   name:"Cisco Board Pro 55 G2",       family:"room-systems",   status:"current",
-   desc:"55\" 4K AI-powered interactive collaboration board with NVIDIA-powered AI compute, dual-lens 96MP camera, and integrated touch display for small to medium rooms.",
-   url:"https://www.webex.com/us/en/devices/board-series/cisco-board-pro.html",
-   successor:"board-pro-g3-55", successorName:"Cisco Board Pro 55 G3"},
-  {id:"board-pro-75",   name:"Cisco Board Pro 75 G2",       family:"room-systems",   status:"current",
-   desc:"75\" 4K AI-powered interactive collaboration board with NVIDIA-powered AI compute, dual-lens 96MP camera, and integrated touch display for medium to large rooms.",
-   url:"https://www.webex.com/us/en/devices/board-series/cisco-board-pro.html",
-   successor:"board-pro-g3-75", successorName:"Cisco Board Pro 75 G3"},
-  {id:"board-pro-g2",   name:"Cisco Board Pro G2",          family:"room-systems",   status:"current",
-   desc:"All-in-one interactive collaboration board (55\"/75\") with NVIDIA AI engine, dual-lens 96MP camera, touch display, and Microsoft Teams Rooms certification.",
-   url:"https://www.webex.com/us/en/devices/board-series/cisco-board-pro.html",
-   successor:"board-pro-g3", successorName:"Cisco Board Pro G3"},
   {id:"board-pro-g3-55", name:"Cisco Board Pro 55 G3",      family:"room-systems",   status:"current",
    desc:"55\" 4K AI collaboration board with 96 MP dual camera, 14-element mic array, spatial speakers, NVIDIA AI compute, MDEP Teams Rooms, and digital whiteboarding for small-to-medium rooms.",
    url:"https://www.webex.com/us/en/devices/board-series/cisco-board-pro.html"},
@@ -4606,7 +4594,7 @@ let nodeClickTimer = null;
 
 const MATRIX_SITE = "https://bnarcum.github.io/collaboration-device-matrix/";
 /** Bust iframe cache when Device Matrix deploys — bump with each matrix release. */
-const MATRIX_RELEASE = "20260716a";
+const MATRIX_RELEASE = "20260716b";
 const MATRIX_NODE_FILL = "#ffffff";
 const MATRIX_NODE_RING = "#cbd5e1";
 const MATRIX_IMG_BASE = MATRIX_SITE + "devices/";
@@ -4617,9 +4605,6 @@ let MATRIX_BRIDGE = {
     "room-bar": { matrixId: "room-bar", hash: "5930e7bad9" },
     "room-bar-pro": { matrixId: "room-bar-pro", hash: "985d42e216" },
     "room-bar-pro-g2": { matrixId: "room-bar-pro", hash: "985d42e216" },
-    "board-pro-55": { matrixId: "board-pro-g3-55", hash: "9dc39ce9a6", note: "G2 SKU — matrix 3D/photo uses Board Pro G3 55" },
-    "board-pro-75": { matrixId: "board-pro-g3-75", hash: "9dc39ce9a6", note: "G2 SKU — matrix 3D/photo uses Board Pro G3 75" },
-    "board-pro-g2": { matrixId: "board-pro-g3-75", hash: "9dc39ce9a6", note: "G2 family — matrix 3D/photo uses Board Pro G3" },
     "board-pro-g3-55": { matrixId: "board-pro-g3-55", hash: "9dc39ce9a6" },
     "board-pro-g3-75": { matrixId: "board-pro-g3-75", hash: "9dc39ce9a6" },
     "board-pro-g3": { matrixId: "board-pro-g3-75", hash: "9dc39ce9a6" },
@@ -10328,7 +10313,7 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.85.0";
+const APP_VERSION   = "2.86.0";
 const DATA_UPDATED  = "2026-07-16";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
@@ -10399,7 +10384,7 @@ const COMPETITOR_LEGACY = [
   {id:"l-googmeet", name:"Google Meet + Hardware", competitor:true, replaces:["webex-meetings","room-systems"],
    reason:"Webex with WebexAI delivers richer in-room intelligence (gesture, framing, speaker tracking) and unified Webex Control Hub policy."},
   {id:"l-poly", name:"Poly / HP Video Devices", competitor:true, replaces:["room-systems","desk-devices","conf-phones"],
-   reason:"Cisco RoomOS endpoints (Room Bar, Board Pro G2) provide comparable video with WebexAI features and Cisco device manageability."},
+   reason:"Cisco RoomOS endpoints (Room Bar, Board Pro G3) provide comparable video with WebexAI features and Cisco device manageability."},
   {id:"l-ringcentral", name:"RingCentral / 8x8 UCaaS", competitor:true, replaces:["webex-calling","webex-cc"],
    reason:"Webex Calling + Contact Center as a unified Webex Suite avoids multi-vendor sprawl and adds Cisco-grade security and SD-WAN on-ramp."},
   {id:"l-genesys", name:"Genesys Cloud CX", competitor:true, replaces:["webex-cc"],

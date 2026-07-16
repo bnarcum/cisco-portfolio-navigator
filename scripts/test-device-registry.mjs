@@ -7,7 +7,7 @@
 //    the "mic on the table" class of bug can't recur regardless of template
 //    zone drift.
 // 2. Intent BOM: an explicit device brief is honored (Navigator swap, Board Pro
-//    G2 variant, exact ceiling-mic count, PoE switch present).
+//    G3 variant, exact ceiling-mic count, PoE switch present).
 import { chromium } from "playwright";
 import { fileURLToPath } from "url";
 import { dirname, resolve } from "path";
@@ -81,7 +81,7 @@ const bom = await page.evaluate(() => {
   const s = window.DesignStudio.instance;
   s.customRoomMix = null;
   document.getElementById("ds-intent-text").value =
-    "a board pro g2 and a navigator in a boardroom with a poe switch and 2 ceiling mic pros";
+    "a board pro g3 and a navigator in a boardroom with a poe switch and 2 ceiling mic pros";
   s.runGenerate();
   const room = s.design.nodes.filter(n => n.canvas === "room");
   const byStencil = id => room.filter(n => n.stencilId === id);
@@ -99,10 +99,10 @@ if (bom.mics !== 2) errors.push(`intent BOM: ${bom.mics} ceiling mics, expected 
 if (bom.navigators < 1) errors.push(`intent BOM: navigator not present (touch swap failed)`);
 if (bom.touch !== 0) errors.push(`intent BOM: ${bom.touch} touch-10 left, expected 0 (should swap to navigator)`);
 if (bom.switches < 1) errors.push(`intent BOM: PoE switch missing`);
-if (bom.boardVariant !== "g2") errors.push(`intent BOM: board-pro variant ${bom.boardVariant}, expected g2`);
-if (bom.boardPid !== "CS-BRD-PRO-G2-75") errors.push(`intent BOM: board-pro pid ${bom.boardPid}, expected CS-BRD-PRO-G2-75`);
+if (bom.boardVariant !== "g3") errors.push(`intent BOM: board-pro variant ${bom.boardVariant}, expected g3`);
+if (bom.boardPid !== "CS-BRDP75-G3-K9") errors.push(`intent BOM: board-pro pid ${bom.boardPid}, expected CS-BRDP75-G3-K9`);
 
 await browser.close();
 
 if (errors.length) { console.error("FAIL test-device-registry\n" + errors.join("\n")); process.exit(1); }
-console.log(`OK test-device-registry\n  placement verified across all room templates · intent BOM honored (navigator, G2, 2 mics, switch)`);
+console.log(`OK test-device-registry\n  placement verified across all room templates · intent BOM honored (navigator, G3, 2 mics, switch)`);

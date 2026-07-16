@@ -388,7 +388,7 @@
   /**
    * Device-level BOM parsing (Layer C). Maps the brief's natural language onto
    * the canonical registry: explicit counts (mics), model variants (Board Pro
-   * G2), control-device preference (Navigator vs Touch) and PoE-switch intent.
+   * G3), control-device preference (Navigator vs Touch) and PoE-switch intent.
    * Conservative by design — only emits an op when the brief is explicit, so
    * generic briefs keep their template BOM untouched.
    */
@@ -445,7 +445,7 @@
     (design.rooms || []).forEach(room => {
       const roomNodes = () => design.nodes.filter(n => n.roomId === room.id);
 
-      // A) Model variants (e.g. Board Pro G2).
+      // A) Model variants (e.g. Board Pro G3).
       Object.entries(ops.variants).forEach(([sid, vk]) => {
         const v = reg[sid]?.variants?.[vk];
         if (!v) return;
