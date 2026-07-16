@@ -11,6 +11,7 @@
     "room-kit-eq": { "matrixId": "room-kit-eq", "hash": "5dffa60f11" },
     "room-kit-pro": { "matrixId": "room-kit-pro-g2", "hash": "d451a37ab5" },
     "codec-plus": { "matrixId": "room-kit-eq", "hash": "5dffa60f11", "note": "Codec shown via Room Kit EQ kit photo" },
+    "codec-eq": { "matrixId": "codec-eq", "image": "assets/design-studio/codec-eq.webp" },
     "codec-pro": { "matrixId": "room-kit-pro-g2", "hash": "d451a37ab5", "note": "Codec shown via Room Kit Pro G2 kit photo" },
     "quad-camera": { "matrixId": "quad-camera", "hash": "12b412d18f" },
     "ptz-4k": { "matrixId": "ptz-4k-camera", "hash": "167ce81553" },
