@@ -20,7 +20,11 @@ jobs:
       - name: Read expected version
         id: ver
         run: |
-          V=$(grep -oE 'const APP_VERSION[[:space:]]*=[[:space:]]*"[^"]+"' cisco-portfolio-navigator.html | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+          V=$(grep -oE 'window\.__CPN_BUILD[[:space:]]*=[[:space:]]*"[0-9]+\.[0-9]+\.[0-9]+"' cisco-portfolio-navigator.html | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+          if [ -z "$V" ]; then
+            V=$(grep -oE 'const APP_VERSION[[:space:]]*=[[:space:]]*"[0-9]+\.[0-9]+\.[0-9]+"' cisco-portfolio-navigator.html | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+          fi
+          if [ -z "$V" ]; then echo "Could not read APP_VERSION / __CPN_BUILD" >&2; exit 1; fi
           echo "version=$V" >> "$GITHUB_OUTPUT"
           echo "Expecting v$V on production Pages"
 
