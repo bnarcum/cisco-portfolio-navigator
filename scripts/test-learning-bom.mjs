@@ -24,24 +24,26 @@ try {
 
   const mappingOk = await page.evaluate(() => {
     const STN = window.__DS_STENCILS;
-    const board = STN.learningIdsForStencil("board-pro", { variant: "g2", pid: "CS-BRD-PRO-G2-75" });
+    const boardG3 = STN.learningIdsForStencil("board-pro", { label: "Board Pro G3 75", pid: "CS-BRDP75-G3-K9" });
+    const boardG2 = STN.learningIdsForStencil("board-pro", { variant: "g2", pid: "CS-BRDP75-K9" });
     const mic = STN.learningIdsForStencil("ceiling-mic", { label: "Ceiling Mic 1" });
     const nav = STN.learningIdsForStencil("room-navigator", { label: "Navigator" });
-    return board.products.includes("board-pro-g2")
+    return boardG3.products.includes("board-pro-g3-75")
+      && boardG2.products.includes("board-pro-g2")
       && mic.products.includes("ceiling-mic-pro")
       && nav.products.includes("room-navigator");
   });
   if (!mappingOk) errors.push("stencil learningIdsForStencil mapping failed");
 
   const ranked = await page.evaluate(() => window.learningRankEntries({
-    productIds: ["board-pro-g2", "ceiling-mic-pro", "room-navigator"],
+    productIds: ["board-pro-g3-75", "ceiling-mic-pro", "room-navigator"],
     familyIds: ["room-systems"],
     sources: ["webex-academy", "webex-help", "cisco-u"],
-    limit: 5,
+    limit: 6,
     requireProductOrFamily: true
   }));
   const ids = ranked.map(e => e.id);
-  if (!ids.includes("wh-board-pro-g2")) errors.push(`expected wh-board-pro-g2 in ranked skills, got ${ids.join(", ")}`);
+  if (!ids.includes("wh-board-pro-g3")) errors.push(`expected wh-board-pro-g3 in ranked skills, got ${ids.join(", ")}`);
   if (!ids.includes("wh-ceiling-mic-pro")) errors.push(`expected wh-ceiling-mic-pro in ranked skills, got ${ids.join(", ")}`);
   if (!ids.includes("wh-room-navigator")) errors.push(`expected wh-room-navigator in ranked skills, got ${ids.join(", ")}`);
 
@@ -70,7 +72,10 @@ try {
 
   const exploreCtx = await page.evaluate(() => window.__DS_EXPLORE.resolveContext(window.DesignStudio.instance));
   if (!exploreCtx.bomProductIds?.length) errors.push("resolveContext missing bomProductIds for boardroom");
-  if (!exploreCtx.bomProductIds?.includes("board-pro-g2") && !exploreCtx.bomProductIds?.includes("board-pro-75"))
+  if (!exploreCtx.bomProductIds?.includes("board-pro-g3-75")
+      && !exploreCtx.bomProductIds?.includes("board-pro-g3")
+      && !exploreCtx.bomProductIds?.includes("board-pro-g2")
+      && !exploreCtx.bomProductIds?.includes("board-pro-75"))
     errors.push(`boardroom BOM should include board product, got ${exploreCtx.bomProductIds?.join(", ")}`);
   if (!exploreCtx.skills?.length) errors.push("learn mode should surface skill cards for boardroom BOM");
   const skillLabels = (exploreCtx.skills || []).map(s => s.linkLabel || s.id).join(" ");

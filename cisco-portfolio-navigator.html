@@ -1985,12 +1985,24 @@ const PRODUCTS = [
    url:"https://www.webex.com/us/en/devices/room-series/cisco-room-bar-pro.html"},
   {id:"board-pro-55",   name:"Cisco Board Pro 55 G2",       family:"room-systems",   status:"current",
    desc:"55\" 4K AI-powered interactive collaboration board with NVIDIA-powered AI compute, dual-lens 96MP camera, and integrated touch display for small to medium rooms.",
-   url:"https://www.webex.com/us/en/devices/board-series/cisco-board-pro.html"},
+   url:"https://www.webex.com/us/en/devices/board-series/cisco-board-pro.html",
+   successor:"board-pro-g3-55", successorName:"Cisco Board Pro 55 G3"},
   {id:"board-pro-75",   name:"Cisco Board Pro 75 G2",       family:"room-systems",   status:"current",
    desc:"75\" 4K AI-powered interactive collaboration board with NVIDIA-powered AI compute, dual-lens 96MP camera, and integrated touch display for medium to large rooms.",
-   url:"https://www.webex.com/us/en/devices/board-series/cisco-board-pro.html"},
+   url:"https://www.webex.com/us/en/devices/board-series/cisco-board-pro.html",
+   successor:"board-pro-g3-75", successorName:"Cisco Board Pro 75 G3"},
   {id:"board-pro-g2",   name:"Cisco Board Pro G2",          family:"room-systems",   status:"current",
    desc:"All-in-one interactive collaboration board (55\"/75\") with NVIDIA AI engine, dual-lens 96MP camera, touch display, and Microsoft Teams Rooms certification.",
+   url:"https://www.webex.com/us/en/devices/board-series/cisco-board-pro.html",
+   successor:"board-pro-g3", successorName:"Cisco Board Pro G3"},
+  {id:"board-pro-g3-55", name:"Cisco Board Pro 55 G3",      family:"room-systems",   status:"current",
+   desc:"55\" 4K AI collaboration board with 96 MP dual camera, 14-element mic array, spatial speakers, NVIDIA AI compute, MDEP Teams Rooms, and digital whiteboarding for small-to-medium rooms.",
+   url:"https://www.webex.com/us/en/devices/board-series/cisco-board-pro.html"},
+  {id:"board-pro-g3-75", name:"Cisco Board Pro 75 G3",      family:"room-systems",   status:"current",
+   desc:"75\" 4K AI collaboration board with 96 MP dual camera, 14-element mic array, spatial speakers, NVIDIA AI compute, MDEP Teams Rooms, and a larger canvas for training rooms and boardrooms.",
+   url:"https://www.webex.com/us/en/devices/board-series/cisco-board-pro.html"},
+  {id:"board-pro-g3",   name:"Cisco Board Pro G3",          family:"room-systems",   status:"current",
+   desc:"Next-gen all-in-one AI collaboration board (55\"/75\") with dual 48 MP cameras, 14-mic beamforming array, spatial audio, RoomOS 26.7+, and Microsoft Device Ecosystem Platform (MDEP).",
    url:"https://www.webex.com/us/en/devices/board-series/cisco-board-pro.html"},
   {id:"room-kit-mini",  name:"Cisco Webex Room Kit Mini",   family:"room-systems",   status:"current",
    desc:"AI-powered huddle video system (3–5 people): all-in-one bar with 4K camera, 120° field of view, mic array, speakers, and codec. (Last day to order June 18, 2024; superseded by Cisco Room Bar.)",
@@ -4594,7 +4606,7 @@ let nodeClickTimer = null;
 
 const MATRIX_SITE = "https://bnarcum.github.io/collaboration-device-matrix/";
 /** Bust iframe cache when Device Matrix deploys — bump with each matrix release. */
-const MATRIX_RELEASE = "20260622a";
+const MATRIX_RELEASE = "20260716a";
 const MATRIX_NODE_FILL = "#ffffff";
 const MATRIX_NODE_RING = "#cbd5e1";
 const MATRIX_IMG_BASE = MATRIX_SITE + "devices/";
@@ -4605,9 +4617,12 @@ let MATRIX_BRIDGE = {
     "room-bar": { matrixId: "room-bar", hash: "5930e7bad9" },
     "room-bar-pro": { matrixId: "room-bar-pro", hash: "985d42e216" },
     "room-bar-pro-g2": { matrixId: "room-bar-pro", hash: "985d42e216" },
-    "board-pro-55": { matrixId: "board-pro-g2-55", hash: "7a4fbdb9f3" },
-    "board-pro-75": { matrixId: "board-pro-g2-75", hash: "7a4fbdb9f3" },
-    "board-pro-g2": { matrixId: "board-pro-g2-55", hash: "7a4fbdb9f3" },
+    "board-pro-55": { matrixId: "board-pro-g3-55", hash: "9dc39ce9a6", note: "G2 SKU — matrix 3D/photo uses Board Pro G3 55" },
+    "board-pro-75": { matrixId: "board-pro-g3-75", hash: "9dc39ce9a6", note: "G2 SKU — matrix 3D/photo uses Board Pro G3 75" },
+    "board-pro-g2": { matrixId: "board-pro-g3-75", hash: "9dc39ce9a6", note: "G2 family — matrix 3D/photo uses Board Pro G3" },
+    "board-pro-g3-55": { matrixId: "board-pro-g3-55", hash: "9dc39ce9a6" },
+    "board-pro-g3-75": { matrixId: "board-pro-g3-75", hash: "9dc39ce9a6" },
+    "board-pro-g3": { matrixId: "board-pro-g3-75", hash: "9dc39ce9a6" },
     "room-kit-mini": { matrixId: "room-bar", hash: "5930e7bad9" },
     "room-kit-eq": { matrixId: "room-kit-eq", hash: "5dffa60f11" },
     "room-kit-pro": { matrixId: "room-kit-pro-g2", hash: "d451a37ab5" },
@@ -10313,8 +10328,8 @@ document.addEventListener("keydown",ev=>{
    ══════════════════════════════════════════════════════════════════════════*/
 (function v2(){
 
-const APP_VERSION   = "2.84.1";
-const DATA_UPDATED  = "2026-07-08";
+const APP_VERSION   = "2.85.0";
+const DATA_UPDATED  = "2026-07-16";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
   current:  "cpn-current-v2",

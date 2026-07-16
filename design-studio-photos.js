@@ -16,7 +16,7 @@
     "room-kit-eq": "room-kit-eq",
     "room-kit-pro": "room-kit-pro",
     "room-bar": "room-bar",
-    "board-pro": "board-pro-75",
+    "board-pro": "board-pro-g3-75",
     "desk-pro": "desk-pro-g2",
     "quad-cam": "quad-camera",
     "room-navigator": "room-navigator",
@@ -77,7 +77,6 @@
 
   function resolveUrl(stencilId, def) {
     if (!stencilId || !def) return null;
-    if (PHOTO_SKIP_SHAPES.has(def.shape) || PHOTO_SKIP_STENCILS.has(stencilId)) return null;
     if (def.decorative) return null;
 
     const matrixId = STENCIL_MATRIX[stencilId];
@@ -85,6 +84,8 @@
       const u = matrixUrl(matrixId);
       if (u) return u;
     }
+
+    if (PHOTO_SKIP_SHAPES.has(def.shape) || PHOTO_SKIP_STENCILS.has(stencilId)) return null;
 
     let familyId = STENCIL_FAMILY[stencilId];
     if (!familyId) {

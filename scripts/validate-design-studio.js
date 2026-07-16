@@ -126,6 +126,7 @@ if (PHOTOS?.STENCIL_MATRIX) {
   const mustHavePhoto = {
     "touch-10": { bridgeKey: "touch-10", hash: "4b0fa15cf0" },
     "ceiling-mic": { bridgeKey: "ceiling-mic-pro", image: "assets/design-studio/ceiling-mic-pro.webp" },
+    "board-pro": { bridgeKey: "board-pro-g3-75", hash: "9dc39ce9a6" },
     "quad-cam": { bridgeKey: "quad-camera" }
   };
   const tableMicHashes = new Set(["e0e483ccb3", "3b82ce6285", "cbe669d0f2", "76da3a5033"]);
