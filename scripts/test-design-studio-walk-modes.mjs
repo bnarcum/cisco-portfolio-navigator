@@ -40,7 +40,6 @@ must(/#ds-walk-overlay \.ds-walk-hud-glass[\s\S]*width:min\(400px/.test(css), "G
 must(!/hud-more-toggle/.test(walk), "Walk HUD overflow menu should be removed");
 must(/ds-walk-hud-row2[\s\S]*data-action="packets"[\s\S]*data-action="packet-speed"/.test(walk), "Packets and speed belong in main HUD row");
 
-must(/Generate sample walkthrough/.test(studio), "Quickstart copy should say walkthrough, not 3D walk");
 must(/id="ds-walk-corridor"[\s\S]*>Present</.test(studio), "Toolbar should use Present label");
 must(/Open guided solution walkthrough/.test(studio), "Toolbar title should describe guided walkthrough");
 

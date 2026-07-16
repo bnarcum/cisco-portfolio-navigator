@@ -242,7 +242,7 @@
     {
       sel: "#ds-generate",
       place: "top",
-      text: "Generate Draft builds the full topology and collaboration spaces. Quickstart loads a sample and opens the 3D walk.",
+      text: "Generate Draft builds the full topology and collaboration spaces from your brief, then shows the design rationale with a link straight into the network and room diagrams.",
       before: (studio) => studio.setTab("intent")
     },
     {

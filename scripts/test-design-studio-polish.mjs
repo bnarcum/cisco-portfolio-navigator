@@ -76,11 +76,6 @@ try {
     };
   });
   if (!/gradient/.test(intent.genBgImage)) errors.push(`Generate button not styled (bg=${intent.genBgImage})`);
-  const hasQuickstart = await page.evaluate(() => {
-    const b = document.getElementById("ds-quickstart");
-    return !!b && typeof b.onclick === "function";
-  });
-  if (!hasQuickstart) errors.push("Quickstart button missing or not wired");
   if (/mono|courier/.test(intent.taFont)) errors.push(`textarea still monospace (${intent.taFont})`);
   await page.screenshot({ path: path.join(out, "polish-intent.png") });
 

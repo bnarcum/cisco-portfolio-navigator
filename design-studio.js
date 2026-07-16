@@ -663,10 +663,10 @@
                 <div id="ds-room-mix-editor" class="ds-brief-rooms" hidden></div>
                 <div class="ds-brief-actions">
                   <button type="button" class="ds-btn primary" id="ds-generate">Generate Draft <kbd class="ds-kbd">⌘↵</kbd></button>
-                  <button type="button" class="ds-btn ds-btn-quickstart" id="ds-quickstart" title="Generate a sample workspace and open the guided solution walkthrough">Sample walkthrough</button>
                   <span id="ds-stale-hint" class="ds-brief-status" hidden aria-live="polite"></span>
                 </div>
                 <div id="ds-intent-rationale" hidden></div>
+                <div id="ds-rationale-cta" class="ds-rationale-cta" hidden></div>
               </div>
               <div class="ds-intent-more">
                 <details class="ds-intent-fold" id="ds-intent-phrase-fold">
@@ -870,8 +870,6 @@
         if (this.sidebarMode !== "learn") this.exploreFoldOpen = e.currentTarget.open;
       });
       $("ds-generate").onclick = () => this.runGenerate();
-      const qs = $("ds-quickstart");
-      if (qs) qs.onclick = () => this.quickstart();
       let intentPreviewTimer;
       $("ds-intent-text")?.addEventListener("input", () => {
         clearTimeout(intentPreviewTimer);
@@ -1500,17 +1498,37 @@
       document.getElementById("ds-intent-explore-fold")?.setAttribute("open", "");
       this.previewIntent();
       const roomTotal = plan.roomPlan.reduce((s, r) => s + r.count, 0);
+      const hasNet = this.design.nodes.some(n => n.canvas !== "room");
       this.toast(roomTotal
         ? `Built ${roomTotal} rooms + ${plan.netKey ? "network" : "collab only"} · Score ${score}/100`
         : `Draft generated · Score ${score}/100`);
-      const hasNet = this.design.nodes.some(n => n.canvas !== "room");
-      if (roomTotal > 0) {
-        this.activeRoomId = this.design.activeRoomId;
-        this.setTab("room");
-      } else if (hasNet) {
-        this.setTab("network");
-      }
+      // Stay on the Intent view so the rationale is actually read; offer an
+      // explicit CTA into the network / room diagrams instead of auto-jumping.
+      if (roomTotal > 0) this.activeRoomId = this.design.activeRoomId || this.activeRoomId;
+      this.renderRationaleCta(roomTotal, hasNet);
       this.fitView();
+      requestAnimationFrame(() => {
+        document.getElementById("ds-intent-rationale")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+
+    // After a draft is generated, surface a clear next step into the diagrams.
+    renderRationaleCta(roomTotal, hasNet) {
+      const cta = document.getElementById("ds-rationale-cta");
+      if (!cta) return;
+      const btns = [];
+      if (hasNet) btns.push(`<button type="button" class="ds-btn${roomTotal > 0 ? "" : " primary"}" data-goto="network">View network diagram${roomTotal > 0 ? "" : " →"}</button>`);
+      if (roomTotal > 0) btns.push(`<button type="button" class="ds-btn primary" data-goto="room">Walk the ${roomTotal} room${roomTotal === 1 ? "" : "s"} →</button>`);
+      if (!btns.length) { cta.hidden = true; cta.innerHTML = ""; return; }
+      cta.innerHTML = `<span class="ds-rationale-cta-label">Your draft is ready on the canvas</span><div class="ds-rationale-cta-btns">${btns.join("")}</div>`;
+      cta.hidden = false;
+      cta.querySelectorAll("[data-goto]").forEach(b => {
+        b.onclick = () => {
+          if (b.dataset.goto === "room") this.activeRoomId = this.design.activeRoomId || this.activeRoomId;
+          this.setTab(b.dataset.goto);
+          this.fitView();
+        };
+      });
     }
 
     // "Wow in 10 seconds": generate a sample workspace, then drop straight into
