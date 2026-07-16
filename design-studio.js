@@ -1518,7 +1518,7 @@
       if (!cta) return;
       const btns = [];
       if (hasNet) btns.push(`<button type="button" class="ds-btn${roomTotal > 0 ? "" : " primary"}" data-goto="network">View network diagram${roomTotal > 0 ? "" : " →"}</button>`);
-      if (roomTotal > 0) btns.push(`<button type="button" class="ds-btn primary" data-goto="room">Walk the ${roomTotal} room${roomTotal === 1 ? "" : "s"} →</button>`);
+      if (roomTotal > 0) btns.push(`<button type="button" class="ds-btn primary" data-goto="room">View the ${roomTotal} room${roomTotal === 1 ? "" : "s"} →</button>`);
       if (!btns.length) { cta.hidden = true; cta.innerHTML = ""; return; }
       cta.innerHTML = `<span class="ds-rationale-cta-label">Your draft is ready on the canvas</span><div class="ds-rationale-cta-btns">${btns.join("")}</div>`;
       cta.hidden = false;
