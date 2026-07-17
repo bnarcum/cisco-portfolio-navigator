@@ -9,7 +9,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="2.92.2";
+  window.__CPN_BUILD="2.93.0";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -36,13 +36,21 @@
   })();
   (function(){
     var q = location.search || "";
-    window.__CPN_ROOM_MODE = /(?:^|[?&])(?:mode=room|lite=1)(?:&|$)/.test(q);
+    window.__CPN_KIOSK_MODE = /(?:^|[?&])mode=kiosk(?:&|$)/.test(q);
+    window.__CPN_ROOM_MODE = /(?:^|[?&])(?:mode=room|lite=1)(?:&|$)/.test(q) || window.__CPN_KIOSK_MODE;
     if (window.__CPN_ROOM_MODE) {
       document.documentElement.classList.add("cpn-room-mode");
       var rl = document.createElement("link");
       rl.rel = "stylesheet";
       rl.href = "assets/cpn-room.css?v=" + encodeURIComponent(window.__CPN_BUILD);
       document.head.appendChild(rl);
+    }
+    if (window.__CPN_KIOSK_MODE) {
+      document.documentElement.classList.add("cpn-kiosk-mode");
+      var kl = document.createElement("link");
+      kl.rel = "stylesheet";
+      kl.href = "assets/cpn-kiosk.css?v=" + encodeURIComponent(window.__CPN_BUILD);
+      document.head.appendChild(kl);
     }
   })();
   </script>
@@ -8878,6 +8886,19 @@ window.__cpnSpatialVisibleLabels = () => {
 
 // ── Initial mount: read persisted preferences and render the right view.
 (function bootViewLevel(){
+  if (window.__CPN_KIOSK_MODE) {
+    var pillar = null;
+    try {
+      pillar = new URLSearchParams(location.search).get("pillar");
+    } catch (e) {}
+    var valid = ["ai-dc", "workplaces", "resilience"];
+    if (pillar && valid.indexOf(pillar) >= 0) {
+      applyViewLevel("families", { focusPillar: pillar, initial: true });
+    } else {
+      applyViewLevel("overview", { initial: true });
+    }
+    return;
+  }
   if (window.__CPN_ROOM_MODE) {
     applyViewLevel("overview", { initial: true });
     return;
@@ -16689,7 +16710,8 @@ window.__cpnV2 = {
 };
 })();
 </script>
-<script src="assets/cpn-lazy-load.js?v=2.92.2"></script>
+<script src="assets/cpn-lazy-load.js?v=2.93.0"></script>
+<script src="assets/cpn-kiosk.js?v=2.93.0"></script>
 <script src="assets/cpn-logo-intro.js?v=2.91.6"></script>
 </body>
 </html>

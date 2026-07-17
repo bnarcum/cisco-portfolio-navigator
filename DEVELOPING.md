@@ -93,3 +93,19 @@ Playwright tests (optional):
 ```bash
 npm test
 ```
+
+## Kiosk mode (Desk Pro / Board Pro)
+
+Set the device browser homepage to the kiosk attract screen:
+
+| Environment | URL |
+|---|---|
+| **Production** | https://bnarcum.github.io/cisco-portfolio-navigator/kiosk.html |
+| **Preview** | https://bnarcum.github.io/cisco-portfolio-navigator-preview/kiosk.html |
+
+Touch a pillar tile to open the navigator in kiosk mode (`?mode=kiosk`). Optional query params:
+
+- `pillar=workplaces` — deep-link straight into a pillar (also used from attract tiles)
+- `idle=120` — seconds of inactivity before returning to `kiosk.html` (default 120)
+
+The **Home** button (bottom-left) and idle timeout both return to the attract screen.

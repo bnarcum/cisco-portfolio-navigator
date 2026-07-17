@@ -1,0 +1,203 @@
+/* Kiosk mode — touch-first UI for Desk Pro / Board Pro (?mode=kiosk) */
+html.cpn-kiosk-mode {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html.cpn-kiosk-mode::before {
+  content: "Kiosk";
+}
+
+/* Performance: inherit room-mode solid chrome (cpn-room.css also loaded) */
+
+html.cpn-kiosk-mode #preview-banner,
+html.cpn-kiosk-mode #guided-btn,
+html.cpn-kiosk-mode #ai-btn,
+html.cpn-kiosk-mode #planner-btn,
+html.cpn-kiosk-mode #dcloud-btn,
+html.cpn-kiosk-mode #design-studio-btn,
+html.cpn-kiosk-mode #theme-toggle,
+html.cpn-kiosk-mode #rst,
+html.cpn-kiosk-mode #help-fab,
+html.cpn-kiosk-mode #vm-seg button[data-vm="spatial"],
+html.cpn-kiosk-mode #vm-seg button[data-vm="all-products"],
+html.cpn-kiosk-mode #tools,
+html.cpn-kiosk-mode #hint {
+  display: none !important;
+}
+
+/* Larger touch targets */
+html.cpn-kiosk-mode .vm-seg button {
+  min-height: 44px;
+  min-width: 72px;
+  font-size: 13px;
+  padding: 10px 14px;
+}
+
+html.cpn-kiosk-mode #actionbar .actionbar-end button,
+html.cpn-kiosk-mode #planner-btn {
+  min-height: 44px;
+  padding: 10px 14px;
+}
+
+html.cpn-kiosk-mode .cp {
+  min-height: 40px;
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
+html.cpn-kiosk-mode .tbs {
+  min-height: 44px;
+  font-size: 14px;
+  padding: 8px 12px;
+}
+
+html.cpn-kiosk-mode #search {
+  min-height: 48px;
+  font-size: 16px;
+  padding: 10px 12px 10px 36px;
+}
+
+html.cpn-kiosk-mode #topbar {
+  padding-bottom: 4px;
+}
+
+html.cpn-kiosk-mode .logo {
+  min-height: 48px;
+  padding: 4px 8px;
+}
+
+html.cpn-kiosk-mode #vm-crumb .vm-cb-step,
+html.cpn-kiosk-mode #vm-crumb .vm-cb-x {
+  min-height: 36px;
+  min-width: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+html.cpn-kiosk-mode #gw-panel .pbtn,
+html.cpn-kiosk-mode #gw-panel button,
+html.cpn-kiosk-mode .panel .pbtn {
+  min-height: 44px;
+  font-size: 14px;
+}
+
+html.cpn-kiosk-mode #gw-panel .ph-close,
+html.cpn-kiosk-mode .panel .ph-close {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Kiosk home FAB */
+#kiosk-home-fab {
+  position: fixed;
+  left: max(16px, env(safe-area-inset-left));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 200;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 20px 0 16px;
+  border: 1px solid rgba(2, 200, 255, 0.45);
+  border-radius: 999px;
+  background: rgba(10, 34, 64, 0.94);
+  color: #7ee8ff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  touch-action: manipulation;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+
+html.cpn-kiosk-mode #kiosk-home-fab {
+  display: inline-flex;
+}
+
+#kiosk-home-fab svg {
+  flex-shrink: 0;
+}
+
+#kiosk-home-fab:active {
+  transform: scale(0.97);
+  background: rgba(13, 40, 71, 0.98);
+}
+
+/* Idle warning overlay */
+#kiosk-idle-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(4, 12, 24, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+#kiosk-idle-overlay.show {
+  display: flex;
+}
+
+#kiosk-idle-overlay .kiosk-idle-card {
+  width: min(420px, 100%);
+  padding: clamp(24px, 5vw, 36px);
+  border-radius: 20px;
+  border: 1px solid rgba(2, 200, 255, 0.3);
+  background: rgba(10, 34, 64, 0.96);
+  text-align: center;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+#kiosk-idle-overlay h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+#kiosk-idle-overlay p {
+  font-size: 0.95rem;
+  color: #b4b9c0;
+  margin-bottom: 20px;
+  line-height: 1.45;
+}
+
+#kiosk-idle-stay {
+  min-height: 52px;
+  min-width: 200px;
+  padding: 14px 28px;
+  border: none;
+  border-radius: 999px;
+  background: #02c8ff;
+  color: #001a24;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+#kiosk-idle-stay:active {
+  transform: scale(0.98);
+}
+
+/* Panel uses more width on large touch displays */
+@media (min-width: 900px) {
+  html.cpn-kiosk-mode #gw-panel.panel-open {
+    width: min(420px, 38vw);
+  }
+}
+
+/* Board Pro / wide touch — slightly larger graph hit area hint */
+@media (min-width: 1200px) {
+  html.cpn-kiosk-mode .vm-seg button {
+    min-width: 88px;
+    font-size: 14px;
+  }
+}
