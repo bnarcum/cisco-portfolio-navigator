@@ -75,39 +75,41 @@ try {
     waitUntil: "load",
     timeout: 30000
   });
-  await bp.waitForSelector("#cc-board .cc-widget", { timeout: 10000 });
+  await bp.waitForSelector("#cc-board .cc-w", { timeout: 10000 });
 
   const rendered = await bp.evaluate(() => ({
-    title: document.getElementById("cc-board-title").textContent.trim(),
-    boards: document.querySelectorAll(".cc-board-item").length,
-    widgets: document.querySelectorAll("#cc-board .cc-widget").length,
+    widgets: document.querySelectorAll("#cc-board .cc-w").length,
+    tables: document.querySelectorAll("#cc-board .cc-tbl").length,
     chart: document.querySelectorAll("#cc-board .cc-chart").length,
     topo: document.querySelectorAll("#cc-board .cc-topo").length,
-    hasApprove: !!document.getElementById("cc-approve"),
-    presence: document.querySelectorAll("#cc-presence .cc-av").length,
+    tiles: document.querySelectorAll("#cc-board .cc-tile").length,
+    stacks: document.querySelectorAll("#cc-board .cc-stack-row").length,
+    badges: document.querySelectorAll("#cc-board .cc-badge").length,
+    tabs: document.querySelectorAll("#cc-tabs .cc-tab").length,
+    collab: document.querySelectorAll("#cc-collab .cc-av").length,
     composer: !!document.getElementById("cc-input")
   }));
-  if (!rendered.title || rendered.title === "—") errors.push("board title empty");
-  if (rendered.boards < 1) errors.push("board library empty");
-  if (rendered.widgets < 5) errors.push(`expected >=5 widgets, got ${rendered.widgets}`);
-  if (rendered.chart < 1) errors.push("no chart widget rendered");
+  if (rendered.widgets < 6) errors.push(`expected >=6 widgets, got ${rendered.widgets}`);
+  if (rendered.tables < 2) errors.push(`expected data tables, got ${rendered.tables}`);
+  if (rendered.chart < 1) errors.push("no path-health chart rendered");
   if (rendered.topo < 1) errors.push("no topology widget rendered");
-  if (!rendered.hasApprove) errors.push("no approve action");
-  if (rendered.presence < 2) errors.push("presence avatars missing");
+  if (rendered.tiles < 4) errors.push("no anomaly stat tiles rendered");
+  if (rendered.stacks < 1) errors.push("no threat stacked bars rendered");
+  if (rendered.badges < 6) errors.push("category badges missing");
+  if (rendered.tabs < 6) errors.push("product nav tabs missing");
+  if (rendered.collab < 2) errors.push("collaborator avatars missing");
   if (!rendered.composer) errors.push("assistant composer missing");
 
-  // Approve button flips to done + board resolves.
-  await bp.click("#cc-approve");
-  const approved = await bp.evaluate(() => ({
-    done: document.getElementById("cc-approve").classList.contains("is-done"),
-    resolved: document.getElementById("cc-board-status").classList.contains("is-resolved")
-  }));
-  if (!approved.done) errors.push("approve button did not enter done state");
-  if (!approved.resolved) errors.push("board status did not flip to resolved");
+  // Assistant summary streams into the thread.
+  await bp.waitForFunction(() => {
+    const m = document.querySelector("#cc-thread .cc-msg-body p");
+    return m && /network is healthy|Recommendation/i.test(document.querySelector("#cc-thread").textContent);
+  }, { timeout: 8000 }).catch(() => errors.push("assistant summary did not render"));
 
-  // Streaming conversation eventually posts agent messages.
-  await bp.waitForFunction(() => document.querySelectorAll("#cc-thread .cc-msg").length >= 2, { timeout: 8000 })
-    .catch(() => errors.push("conversation did not stream agent messages"));
+  // Board switcher opens and lists scenario boards.
+  await bp.click("#cc-dash");
+  const boards = await bp.evaluate(() => document.querySelectorAll("#cc-boardmenu .cc-boardmenu-item").length);
+  if (boards < 1) errors.push("board switcher menu empty");
 
   if (errors.length) {
     console.error("FAIL test-cloud-control-ops:");

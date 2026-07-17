@@ -114,7 +114,7 @@ The **Home** button (bottom-left) and idle timeout both return to the attract sc
 
 A reconstruction of the **Cisco AI Canvas** generative-UI workspace, composed from the current account plan and curated cross-domain investigation scenarios. Demo composition — **not live telemetry**.
 
-- **Layout:** Cloud Control top nav → Board Library + estate (left), a generated **widget board** (investigation summary, live metric chart, correlated topology, ranked hypotheses, agent evidence, recommended action), and a streaming **multi-agent assistant conversation** with a composer (right).
+- **Layout (matched to the product UI):** Cloud Control product nav + Assistant/Canvas/Actions sub-toolbar; **AI Assistant conversation** with composer (left); a masonry **widget board** (recently connected clients, application QoS policy, dual-axis application path health chart, network topology, top data center anomalies, threats blocked) center/right; a tool strip and zoom/minimap. The dashboard-name dropdown switches scenario boards.
 - **Entry points:** the *Operations · Cloud Control* section on product/family panels (families with a Cloud Control adjacency), and the export menu → *Open in AI Canvas*.
 - **Page:** `cloud-control-briefing.html` (opens in a new tab). Reads a handoff payload from `sessionStorage["cpn-cc-brief"]`; falls back to a representative demo estate when opened directly.
 - **Data model:** `assets/cpn-cloud-control-ops.js` — `window.__cpnOps` maps families → operational profiles (Control Hub, observability signals) and cross-domain scenarios (question, severity, metric, topology, hypotheses, agent evidence, impact, action) plus `DOMAIN_AGENTS`. Shared by the panel and the canvas page.
