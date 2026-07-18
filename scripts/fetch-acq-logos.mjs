@@ -2,6 +2,7 @@
 /**
  * Fetch logos for all acquisitions: Wikipedia thumb → DuckDuckGo favicon → wordmark SVG.
  * Run: node scripts/fetch-acq-logos.mjs
+ * Generate missing fallback tiles only: node scripts/fetch-acq-logos.mjs --generate-name-tiles
  */
 import fs from "fs";
 import path from "path";
@@ -41,6 +42,13 @@ function wordmarkSvg(company, id) {
 
 function escapeXml(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+}
+
+function ensureNameTile(acq) {
+  const svgPath = path.join(logoDir, `${acq.id}.svg`);
+  if (fs.existsSync(svgPath)) return false;
+  fs.writeFileSync(svgPath, wordmarkSvg(acq.company, acq.id));
+  return true;
 }
 
 async function wikiLogo(title) {
@@ -104,11 +112,12 @@ async function downloadImage(url, dest) {
 
 async function processOne(acq, existing) {
   const webpPath = path.join(logoDir, `${acq.id}.webp`);
-  const svgPath = path.join(logoDir, `${acq.id}.svg`);
   if (fs.existsSync(webpPath) && fs.statSync(webpPath).size > 400) {
     if (existing?.path && typeof existing.verified === "boolean") {
+      if (!existing.verified) ensureNameTile(acq);
       return existing;
     }
+    ensureNameTile(acq);
     return {
       id: acq.id,
       source: "cached",
@@ -144,6 +153,7 @@ async function processOne(acq, existing) {
     if (ico) {
       const pngPath = path.join(logoDir, `${acq.id}.png`);
       fs.writeFileSync(pngPath, ico);
+      ensureNameTile(acq);
       try {
         execSync(`sips -s format webp "${pngPath}" --out "${webpPath}"`, { stdio: "pipe" });
         fs.unlinkSync(pngPath);
@@ -169,7 +179,7 @@ async function processOne(acq, existing) {
     }
   }
 
-  fs.writeFileSync(svgPath, wordmarkSvg(acq.company, acq.id));
+  ensureNameTile(acq);
   return {
     id: acq.id,
     source: "generated",
@@ -191,6 +201,16 @@ async function main() {
   const existingManifest = fs.existsSync(manifestPath)
     ? JSON.parse(fs.readFileSync(manifestPath, "utf8"))
     : { items: {} };
+  if (process.argv.includes("--generate-name-tiles")) {
+    let generated = 0;
+    for (const acq of data.acquisitions) {
+      if (existingManifest.items?.[acq.id]?.verified !== true && ensureNameTile(acq)) {
+        generated++;
+      }
+    }
+    console.log(`Generated ${generated} missing name tiles`);
+    return;
+  }
   const manifest = {};
   const list = data.acquisitions;
   console.log(`Fetching logos for ${list.length} acquisitions…`);

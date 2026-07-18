@@ -14,6 +14,9 @@ for (const acq of data.acquisitions) {
   if (normalized.has(acq.id)) errors.push(`${acq.id}: duplicate normalized id`);
   normalized.add(acq.id);
   if (!acq.visualIdentity) errors.push(`${acq.id}: missing visualIdentity`);
+  if (acq.visualIdentity && !fs.existsSync(path.join(root, acq.visualIdentity.path))) {
+    errors.push(`${acq.id}: missing visual identity asset`);
+  }
   if (acq.visualIdentity?.kind === "verified-logo" && !acq.visualIdentity.sourceUrl) {
     errors.push(`${acq.id}: verified logo missing source URL`);
   }
