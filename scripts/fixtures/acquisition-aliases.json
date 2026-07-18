@@ -1,0 +1,66 @@
+[
+  {
+    "id": "komodo",
+    "wiki": "Komodo Technology",
+    "cisco": "Komodo Tehnology, Inc.",
+    "date": "2000-07-25",
+    "country": "United States",
+    "valueUsd": 175000000
+  },
+  {
+    "id": "procket-networks",
+    "wiki": "Procket Networks",
+    "cisco": "Procket Network, Inc.",
+    "date": "2004-06-17",
+    "country": "United States",
+    "valueUsd": 89000000
+  },
+  {
+    "id": "meetinghouse",
+    "wiki": "Meetinghouse",
+    "cisco": "Meetinghouse Data Communications",
+    "date": "2006-07-06",
+    "country": "United States",
+    "valueUsd": 43700000
+  },
+  {
+    "id": "ironport",
+    "wiki": "IronPort",
+    "cisco": "IronPort Systems, Inc.",
+    "date": "2007-01-04",
+    "country": "United States",
+    "valueUsd": 830000000
+  },
+  {
+    "id": "neopath",
+    "wiki": "NeoPath",
+    "cisco": "NeoPath Networks",
+    "date": "2007-03-13",
+    "country": "United States",
+    "valueUsd": null
+  },
+  {
+    "id": "heroik-labs-inc-worklife",
+    "wiki": "Heroik Labs, Inc / Worklife",
+    "cisco": "Worklife",
+    "date": "2016-10-17",
+    "country": "United States",
+    "valueUsd": null
+  },
+  {
+    "id": "telebit",
+    "wiki": "Telebit",
+    "cisco": "Telebit&#39;s MICA Technologies",
+    "date": "1996-07-22",
+    "country": "United States",
+    "valueUsd": 200000000
+  },
+  {
+    "id": "cais-software",
+    "wiki": "CAIS Software",
+    "cisco": "CAIS Software Solutions",
+    "date": "2000-10-20",
+    "country": "United States",
+    "valueUsd": 170000000
+  }
+]

@@ -427,6 +427,16 @@ const searchResults = await page.locator("#acq-search-results").getAttribute("ro
 if (searchResults !== "listbox") errors.push(`search results role: ${searchResults}`);
 
 await page.fill("#acq-search", "security");
+const searchOptionTabStops = await page.locator("#acq-search-results [role='option']")
+  .evaluateAll(options => options.map(option => option.tabIndex));
+if (searchOptionTabStops.some(tabIndex => tabIndex !== -1)) {
+  errors.push(`combobox options entered Tab order: ${searchOptionTabStops.join(",")}`);
+}
+await page.keyboard.press("Tab");
+if (await page.evaluate(() => document.activeElement?.id) !== "acq-prev") {
+  errors.push(`combobox Tab order: ${await page.evaluate(() => document.activeElement?.id)}`);
+}
+await page.locator("#acq-search").focus();
 await page.keyboard.press("ArrowDown");
 let comboState = await page.evaluate(() => ({
   activeDescendant: document.querySelector("#acq-search").getAttribute("aria-activedescendant"),

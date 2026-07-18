@@ -55,3 +55,23 @@ TDD red evidence: the new data tests first failed on Linksys semantics, entity/r
 - The Wikipedia parser intentionally avoids a dependency, so a major upstream table/schema redesign may require fixture and parser updates. Semantic validation now fails fast instead of silently shifting monetary data into country.
 - Existing four reviewed Wikipedia logos remain verified. Automated candidates are never promoted without review.
 - No credentials, certificates, cryptographic material, or new third-party dependencies were introduced.
+
+## Final Follow-Up — Known Same-Event Aliases
+
+- Added deterministic aliases and offline fixture assertions for Komodo/Komodo Tehnology, Procket Networks/Network, Meetinghouse/Data Communications, IronPort/Systems, NeoPath/Networks, Heroik Labs–Worklife/Worklife, Telebit/MICA, and CAIS Software/Solutions.
+- Cisco company names now decode HTML entities before normalization and output; the offline Cisco fixture verifies `Telebit&#39;s MICA Technologies` becomes `Telebit's MICA Technologies`.
+- Regenerated count: 257 canonical acquisitions (265 − 8 same-event pairs). Each canonical fixture record contains the Cisco date and summary plus Wikipedia country and value; all have `wikipedia,cisco` sources.
+- Removed the eight obsolete duplicate logo assets and their manifest entries.
+- Search listbox options now use `tabIndex=-1`; pointer selection and `aria-activedescendant` keyboard selection remain covered, and Tab moves directly from search to Previous acquisition.
+
+Exact verification evidence:
+
+- `npm run build:acquisitions` — PASS; 233 Wikipedia rows + 225 Cisco rows → 257 canonical acquisitions; fetch and final provenance rebuild completed.
+- `npm run test:acquisitions-data` — PASS; `OK test-acquisitions-data (257 acquisitions)`.
+- `npm run test:acquisitions-timeline && npm run test:shortcuts` — PASS.
+- `npm run test:acquisitions-timeline` repeated three times — 3/3 PASS after FIT explicitly cancels any active smooth scroll with an automatic zero-position reset.
+- `npm test` — PASS; all 24 chained repository test scripts exited 0.
+- `git diff --check` — PASS.
+- IDE lint diagnostics for edited JS/test files — no errors.
+
+One full-suite run exposed the active smooth-scroll race as `FIT overview scroll: 9`; the automatic scroll reset fixed it before the final three-repeat and full-suite passes. Remaining concern is limited to deliberate maintenance of the explicit alias table if source naming changes again; aliases are exact and date-aware merge selection still avoids combining multiple distinct same-name events.

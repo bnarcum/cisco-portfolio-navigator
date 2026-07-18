@@ -629,7 +629,7 @@
     ACQ.level = "overview";
     updateZoomUi();
     renderAcquisitionTimeline();
-    canvas.scrollLeft = 0;
+    canvas.scrollTo({ left: 0, behavior: "auto" });
     renderCards($("#acq-inner"));
     updateParallax();
   }
@@ -696,6 +696,7 @@
       option.id = `acq-search-result-${index}`;
       option.setAttribute("role", "option");
       option.setAttribute("aria-selected", "false");
+      option.tabIndex = -1;
       option.dataset.id = acq.id;
       option.textContent = `${acq.company} · ${acq.announced.slice(0, 4)}`;
       option.addEventListener("click", () => {

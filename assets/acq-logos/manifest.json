@@ -1,7 +1,7 @@
 {
-  "generated": "2026-07-18T16:47:28.434Z",
+  "generated": "2026-07-18T16:57:13.813Z",
   "counts": {
-    "generated": 261,
+    "generated": 253,
     "wikipedia": 4
   },
   "items": {
@@ -90,14 +90,6 @@
       "source": "generated",
       "sourceUrl": null,
       "path": "assets/acq-logos/telebit.svg",
-      "verified": false,
-      "ok": true
-    },
-    "telebits-mica": {
-      "id": "telebits-mica",
-      "source": "generated",
-      "sourceUrl": null,
-      "path": "assets/acq-logos/telebits-mica.svg",
       "verified": false,
       "ok": true
     },
@@ -525,14 +517,6 @@
       "verified": false,
       "ok": true
     },
-    "komodo-tehnology": {
-      "id": "komodo-tehnology",
-      "source": "generated",
-      "sourceUrl": null,
-      "path": "assets/acq-logos/komodo-tehnology.svg",
-      "verified": false,
-      "ok": true
-    },
     "nuspeed-internet-systems": {
       "id": "nuspeed-internet-systems",
       "source": "generated",
@@ -578,14 +562,6 @@
       "source": "generated",
       "sourceUrl": null,
       "path": "assets/acq-logos/cais-software.svg",
-      "verified": false,
-      "ok": true
-    },
-    "cais-software-solutions": {
-      "id": "cais-software-solutions",
-      "source": "generated",
-      "sourceUrl": null,
-      "path": "assets/acq-logos/cais-software-solutions.svg",
       "verified": false,
       "ok": true
     },
@@ -722,14 +698,6 @@
       "source": "generated",
       "sourceUrl": null,
       "path": "assets/acq-logos/procket-networks.svg",
-      "verified": false,
-      "ok": true
-    },
-    "procket-network": {
-      "id": "procket-network",
-      "source": "generated",
-      "sourceUrl": null,
-      "path": "assets/acq-logos/procket-network.svg",
       "verified": false,
       "ok": true
     },
@@ -941,14 +909,6 @@
       "verified": false,
       "ok": true
     },
-    "meetinghouse-data-communications": {
-      "id": "meetinghouse-data-communications",
-      "source": "generated",
-      "sourceUrl": null,
-      "path": "assets/acq-logos/meetinghouse-data-communications.svg",
-      "verified": false,
-      "ok": true
-    },
     "arroyo-video-solutions": {
       "id": "arroyo-video-solutions",
       "source": "generated",
@@ -997,14 +957,6 @@
       "verified": false,
       "ok": true
     },
-    "ironport-systems": {
-      "id": "ironport-systems",
-      "source": "generated",
-      "sourceUrl": null,
-      "path": "assets/acq-logos/ironport-systems.svg",
-      "verified": false,
-      "ok": true
-    },
     "five-across": {
       "id": "five-across",
       "source": "generated",
@@ -1034,14 +986,6 @@
       "source": "generated",
       "sourceUrl": null,
       "path": "assets/acq-logos/neopath.svg",
-      "verified": false,
-      "ok": true
-    },
-    "neopath-networks": {
-      "id": "neopath-networks",
-      "source": "generated",
-      "sourceUrl": null,
-      "path": "assets/acq-logos/neopath-networks.svg",
       "verified": false,
       "ok": true
     },
@@ -1650,14 +1594,6 @@
       "source": "generated",
       "sourceUrl": null,
       "path": "assets/acq-logos/heroik-labs-inc-worklife.svg",
-      "verified": false,
-      "ok": true
-    },
-    "worklife": {
-      "id": "worklife",
-      "source": "generated",
-      "sourceUrl": null,
-      "path": "assets/acq-logos/worklife.svg",
       "verified": false,
       "ok": true
     },

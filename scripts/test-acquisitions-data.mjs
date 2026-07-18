@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import {
   mergeRecords,
+  parseCiscoPage,
   parseWikiTable,
 } from "./build-acquisitions.mjs";
 
@@ -16,6 +17,10 @@ const normalizedNameDates = new Set();
 const normalizedCompany = name => name.toLowerCase()
   .replace(/\b(communications|technologies|technology|group|inc|llc|ltd|corp|corporation|limited)\b/g, "")
   .replace(/[^a-z0-9]+/g, "");
+const aliasFixtures = JSON.parse(fs.readFileSync(
+  path.join(root, "scripts/fixtures/acquisition-aliases.json"),
+  "utf8",
+));
 
 const wikiFixture = fs.readFileSync(
   path.join(root, "scripts/fixtures/wikipedia-acquisitions-table.html"),
@@ -35,6 +40,39 @@ if (fixtureExample?.country !== "United States" ||
 if (fixtureRowspan?.announced !== "2020-01-02" ||
     fixtureRowspan?.country !== "United Kingdom") {
   errors.push("wiki fixture: rowspan values were not propagated");
+}
+const [decodedCisco] = parseCiscoPage(fs.readFileSync(
+  path.join(root, "scripts/fixtures/cisco-acquisitions-list.html"),
+  "utf8",
+));
+if (decodedCisco?.company !== "Telebit's MICA Technologies") {
+  errors.push(`Cisco fixture: company entities were not decoded (${decodedCisco?.company})`);
+}
+
+for (const fixture of aliasFixtures) {
+  const merged = mergeRecords(
+    [{
+      company: fixture.wiki,
+      announced: fixture.date,
+      business: `${fixture.wiki} business`,
+      country: fixture.country,
+      valueUsd: fixture.valueUsd,
+    }],
+    [{
+      company: fixture.cisco,
+      announced: fixture.date,
+      summary: `${fixture.cisco} Cisco summary`,
+    }],
+  );
+  const [record] = merged;
+  if (merged.length !== 1 || record.id !== fixture.id ||
+      record.announced !== fixture.date ||
+      record.summary !== `${fixture.cisco} Cisco summary` ||
+      record.country !== fixture.country ||
+      record.valueUsd !== fixture.valueUsd ||
+      record.sources.join(",") !== "wikipedia,cisco") {
+    errors.push(`merge fixture: ${fixture.id} did not combine (${merged.map(row => row.id).join(",")})`);
+  }
 }
 
 const aliasMerge = mergeRecords(
@@ -105,9 +143,22 @@ if (!linksys || linksys.country !== "United States" || linksys.valueUsd !== 5000
     !linksys.sources.includes("wikipedia") || !linksys.sources.includes("cisco")) {
   errors.push(`dataset: Linksys semantic merge invalid (${JSON.stringify(linksys)})`);
 }
-for (const duplicateId of ["linksys-group", "webex-communications", "jasper-technologies"]) {
+const knownDuplicateIds = [
+  "linksys-group", "webex-communications", "jasper-technologies",
+  "komodo-tehnology", "procket-network", "meetinghouse-data-communications",
+  "ironport-systems", "neopath-networks", "worklife", "telebits-mica",
+  "cais-software-solutions",
+];
+for (const duplicateId of knownDuplicateIds) {
   if (data.acquisitions.some(acq => acq.id === duplicateId)) {
     errors.push(`dataset: alias duplicate remains (${duplicateId})`);
+  }
+}
+for (const fixture of aliasFixtures) {
+  const record = data.acquisitions.find(acq => acq.id === fixture.id);
+  if (!record || record.country !== fixture.country || record.valueUsd !== fixture.valueUsd ||
+      !record.summary || record.sources.join(",") !== "wikipedia,cisco") {
+    errors.push(`dataset: known alias did not preserve combined fields (${fixture.id})`);
   }
 }
 

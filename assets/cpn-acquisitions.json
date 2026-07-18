@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-18T16:47:29.820Z",
+  "generated": "2026-07-18T16:57:15.215Z",
   "sources": [
     "https://en.wikipedia.org/wiki/List_of_acquisitions_by_Cisco",
     "https://www.cisco.com/site/us/en/about/corporate-development/acquisitions/acquisitions-list-years/index.html"
@@ -296,41 +296,19 @@
       "business": "Modems",
       "country": "United States",
       "valueUsd": 200000000,
-      "summary": "",
+      "summary": "In July 1996, Cisco Systems, Inc., announced an agreement to acquire Telebit Corp. and its Modem ISDN Channel Aggregation (MICA) technologies. Cisco will integrate the advanced features of MICA's high-density digital modem technology currently under development into current and future Cisco products, including the Cisco 2509-2511 access servers and the AS5200 Universal Access Server. Under the terms of the agreement, Telebit will sell its analog modem business, NetBlazer and MicaBlazer products and other assets and liabilities to a new entity formed via a Telebit management buyout.",
       "families": [],
       "era": "routing",
       "featured": false,
       "sources": [
-        "wikipedia"
+        "wikipedia",
+        "cisco"
       ],
       "logo": "assets/acq-logos/telebit.webp",
       "wikiTitle": "Telebit",
       "visualIdentity": {
         "kind": "name-tile",
         "path": "assets/acq-logos/telebit.svg",
-        "source": "generated",
-        "sourceUrl": null
-      }
-    },
-    {
-      "id": "telebits-mica",
-      "company": "Telebit&#39;s MICA Technologies",
-      "announced": "1996-07-22",
-      "business": "",
-      "country": "",
-      "valueUsd": null,
-      "summary": "In July 1996, Cisco Systems, Inc., announced an agreement to acquire Telebit Corp. and its Modem ISDN Channel Aggregation (MICA) technologies. Cisco will integrate the advanced features of MICA's high-density digital modem technology currently under development into current and future Cisco products, including the Cisco 2509-2511 access servers and the AS5200 Universal Access Server. Under the terms of the agreement, Telebit will sell its analog modem business, NetBlazer and MicaBlazer products and other assets and liabilities to a new entity formed via a Telebit management buyout.",
-      "families": [],
-      "era": "routing",
-      "featured": false,
-      "sources": [
-        "cisco"
-      ],
-      "logo": "assets/acq-logos/telebits-mica.webp",
-      "wikiTitle": "Telebit&#39;s MICA Technologies",
-      "visualIdentity": {
-        "kind": "name-tile",
-        "path": "assets/acq-logos/telebits-mica.svg",
         "source": "generated",
         "sourceUrl": null
       }
@@ -1580,41 +1558,19 @@
       "business": "Voice over Internet Protocol",
       "country": "United States",
       "valueUsd": 175000000,
-      "summary": "",
+      "summary": "Komodo Technology is a leading developer of Voice-over-IP (VoIP) devices that allow analog telephones to place calls over IP-based networks. This acquisition strengthens Cisco's service provider solutions by offering a smooth transition path from traditional circuit-switched networks to new packet-based networks. Komodo's VoIP devices are cost-effective solutions that will help service providers meet the growing demand for IP telephone services by supporting customers with analog telephones. An analog phone can be connected directly to Komodo's product, which connects via an internal modem to a standard telephone line or via an Ethernet jack to a broadband (DSL, cable or wireless) access device.",
       "families": [],
       "era": "dotcom",
       "featured": false,
       "sources": [
-        "wikipedia"
+        "wikipedia",
+        "cisco"
       ],
       "logo": "assets/acq-logos/komodo.webp",
       "wikiTitle": "Komodo Technology",
       "visualIdentity": {
         "kind": "name-tile",
         "path": "assets/acq-logos/komodo.svg",
-        "source": "generated",
-        "sourceUrl": null
-      }
-    },
-    {
-      "id": "komodo-tehnology",
-      "company": "Komodo Tehnology, Inc.",
-      "announced": "2000-07-25",
-      "business": "",
-      "country": "",
-      "valueUsd": null,
-      "summary": "Komodo Technology is a leading developer of Voice-over-IP (VoIP) devices that allow analog telephones to place calls over IP-based networks. This acquisition strengthens Cisco's service provider solutions by offering a smooth transition path from traditional circuit-switched networks to new packet-based networks. Komodo's VoIP devices are cost-effective solutions that will help service providers meet the growing demand for IP telephone services by supporting customers with analog telephones. An analog phone can be connected directly to Komodo's product, which connects via an internal modem to a standard telephone line or via an Ethernet jack to a broadband (DSL, cable or wireless) access device.",
-      "families": [],
-      "era": "dotcom",
-      "featured": false,
-      "sources": [
-        "cisco"
-      ],
-      "logo": "assets/acq-logos/komodo-tehnology.webp",
-      "wikiTitle": "Komodo Tehnology, Inc.",
-      "visualIdentity": {
-        "kind": "name-tile",
-        "path": "assets/acq-logos/komodo-tehnology.svg",
         "source": "generated",
         "sourceUrl": null
       }
@@ -1745,41 +1701,19 @@
       "business": "Integrated development environment",
       "country": "United States",
       "valueUsd": 170000000,
-      "summary": "",
+      "summary": "CAISsoft offers software applications that enable service providers to provide and manage high-speed, broadband Internet services in the multi-unit building market (MxU). CAISsoft's suite of server-based software applications complements Cisco's existing in-building DSL, Ethernet, cable, wireless and VPN network solutions. It enables broadband service providers to deploy, market and operate services for the multi-family, multi-tenant and hospitality markets. CAISsoft's application, the IPORT Broadband Provisioning System, provides security, authorization, accounting, billing, reporting, policy, and management functionality.",
       "families": [],
       "era": "dotcom",
       "featured": false,
       "sources": [
-        "wikipedia"
+        "wikipedia",
+        "cisco"
       ],
       "logo": "assets/acq-logos/cais-software.webp",
       "wikiTitle": "CAIS Software",
       "visualIdentity": {
         "kind": "name-tile",
         "path": "assets/acq-logos/cais-software.svg",
-        "source": "generated",
-        "sourceUrl": null
-      }
-    },
-    {
-      "id": "cais-software-solutions",
-      "company": "CAIS Software Solutions",
-      "announced": "2000-10-20",
-      "business": "",
-      "country": "",
-      "valueUsd": null,
-      "summary": "CAISsoft offers software applications that enable service providers to provide and manage high-speed, broadband Internet services in the multi-unit building market (MxU). CAISsoft's suite of server-based software applications complements Cisco's existing in-building DSL, Ethernet, cable, wireless and VPN network solutions. It enables broadband service providers to deploy, market and operate services for the multi-family, multi-tenant and hospitality markets. CAISsoft's application, the IPORT Broadband Provisioning System, provides security, authorization, accounting, billing, reporting, policy, and management functionality.",
-      "families": [],
-      "era": "dotcom",
-      "featured": false,
-      "sources": [
-        "cisco"
-      ],
-      "logo": "assets/acq-logos/cais-software-solutions.webp",
-      "wikiTitle": "CAIS Software Solutions",
-      "visualIdentity": {
-        "kind": "name-tile",
-        "path": "assets/acq-logos/cais-software-solutions.svg",
         "source": "generated",
         "sourceUrl": null
       }
@@ -2176,41 +2110,19 @@
       "business": "Routers",
       "country": "United States",
       "valueUsd": 89000000,
-      "summary": "",
+      "summary": "Procket Networks is a developer of concurrent services routers and has expertise in silicon and software development. This purchase will add a rich intellectual property portfolio and a team of proven silicon and software architects to Cisco's industry leading routing technology and products.",
       "families": [],
       "era": "dotcom",
       "featured": false,
       "sources": [
-        "wikipedia"
+        "wikipedia",
+        "cisco"
       ],
       "logo": "assets/acq-logos/procket-networks.webp",
       "wikiTitle": "Procket Networks",
       "visualIdentity": {
         "kind": "name-tile",
         "path": "assets/acq-logos/procket-networks.svg",
-        "source": "generated",
-        "sourceUrl": null
-      }
-    },
-    {
-      "id": "procket-network",
-      "company": "Procket Network, Inc.",
-      "announced": "2004-06-17",
-      "business": "",
-      "country": "",
-      "valueUsd": null,
-      "summary": "Procket Networks is a developer of concurrent services routers and has expertise in silicon and software development. This purchase will add a rich intellectual property portfolio and a team of proven silicon and software architects to Cisco's industry leading routing technology and products.",
-      "families": [],
-      "era": "dotcom",
-      "featured": false,
-      "sources": [
-        "cisco"
-      ],
-      "logo": "assets/acq-logos/procket-network.webp",
-      "wikiTitle": "Procket Network, Inc.",
-      "visualIdentity": {
-        "kind": "name-tile",
-        "path": "assets/acq-logos/procket-network.svg",
         "source": "generated",
         "sourceUrl": null
       }
@@ -2818,41 +2730,19 @@
       "business": "Computer security",
       "country": "United States",
       "valueUsd": 43700000,
-      "summary": "",
+      "summary": "Meetinghouse provides a client-side 802.1X supplicant security software that allows enterprise customers to restrict network access to only authorized users and/or host devices attempting to gain access to networked resources through both wired and wireless media. When integrated with Cisco's existing security portfolio, Meetinghouse's AEGIS SecureConnect products will enable Cisco to provide a single unified wired and wireless client to enterprise customers that will help them reduce operational costs by simplifying the security management of a broad array of host devices and operating systems.",
       "families": [],
       "era": "collab",
       "featured": false,
       "sources": [
-        "wikipedia"
+        "wikipedia",
+        "cisco"
       ],
       "logo": "assets/acq-logos/meetinghouse.webp",
       "wikiTitle": "Meetinghouse",
       "visualIdentity": {
         "kind": "name-tile",
         "path": "assets/acq-logos/meetinghouse.svg",
-        "source": "generated",
-        "sourceUrl": null
-      }
-    },
-    {
-      "id": "meetinghouse-data-communications",
-      "company": "Meetinghouse Data Communications",
-      "announced": "2006-07-06",
-      "business": "",
-      "country": "",
-      "valueUsd": null,
-      "summary": "Meetinghouse provides a client-side 802.1X supplicant security software that allows enterprise customers to restrict network access to only authorized users and/or host devices attempting to gain access to networked resources through both wired and wireless media. When integrated with Cisco's existing security portfolio, Meetinghouse's AEGIS SecureConnect products will enable Cisco to provide a single unified wired and wireless client to enterprise customers that will help them reduce operational costs by simplifying the security management of a broad array of host devices and operating systems.",
-      "families": [],
-      "era": "collab",
-      "featured": false,
-      "sources": [
-        "cisco"
-      ],
-      "logo": "assets/acq-logos/meetinghouse-data-communications.webp",
-      "wikiTitle": "Meetinghouse Data Communications",
-      "visualIdentity": {
-        "kind": "name-tile",
-        "path": "assets/acq-logos/meetinghouse-data-communications.svg",
         "source": "generated",
         "sourceUrl": null
       }
@@ -2983,43 +2873,21 @@
       "business": "Computer security",
       "country": "United States",
       "valueUsd": 830000000,
-      "summary": "",
+      "summary": "IronPort is a leading provider of messaging security appliances, focusing on enterprise spam and spyware protection. Securing email, messaging and other sorts of content is of primary concern to enterprises and other organizations. As email and messaging are leading applications for use over the Internet, the acquisition of IronPort's industry-leading messaging and Web security solutions is a natural extension to Cisco's security portfolio. The security products and technology from IronPort add a rich and complementary suite of messaging solutions to Cisco's industry-leading threat mitigation, confidential communications, policy control, and management solutions.",
       "families": [
         "email-security"
       ],
       "era": "collab",
       "featured": false,
       "sources": [
-        "wikipedia"
+        "wikipedia",
+        "cisco"
       ],
       "logo": "assets/acq-logos/ironport.webp",
       "wikiTitle": "IronPort",
       "visualIdentity": {
         "kind": "name-tile",
         "path": "assets/acq-logos/ironport.svg",
-        "source": "generated",
-        "sourceUrl": null
-      }
-    },
-    {
-      "id": "ironport-systems",
-      "company": "IronPort Systems, Inc.",
-      "announced": "2007-01-04",
-      "business": "",
-      "country": "",
-      "valueUsd": null,
-      "summary": "IronPort is a leading provider of messaging security appliances, focusing on enterprise spam and spyware protection. Securing email, messaging and other sorts of content is of primary concern to enterprises and other organizations. As email and messaging are leading applications for use over the Internet, the acquisition of IronPort's industry-leading messaging and Web security solutions is a natural extension to Cisco's security portfolio. The security products and technology from IronPort add a rich and complementary suite of messaging solutions to Cisco's industry-leading threat mitigation, confidential communications, policy control, and management solutions.",
-      "families": [],
-      "era": "collab",
-      "featured": false,
-      "sources": [
-        "cisco"
-      ],
-      "logo": "assets/acq-logos/ironport-systems.webp",
-      "wikiTitle": "IronPort Systems, Inc.",
-      "visualIdentity": {
-        "kind": "name-tile",
-        "path": "assets/acq-logos/ironport-systems.svg",
         "source": "generated",
         "sourceUrl": null
       }
@@ -3101,41 +2969,19 @@
       "business": "Data storage",
       "country": "United States",
       "valueUsd": null,
-      "summary": "",
+      "summary": "NeoPath Networks is the leading provider of high-performance and highly scalable file storage management solutions. Cisco and NeoPath share a common vision of providing unique and flexible file storage management services to enterprise customers. In line with our Service-Oriented Network Architecture (SONA) strategy and vision, Cisco plans to integrate the NeoPath technology in future products with the goal of providing additional value added file services. This will benefit both our current file based solutions, such as Wide Area Application Services (WAAS), and our business partners file based solutions.",
       "families": [],
       "era": "collab",
       "featured": false,
       "sources": [
-        "wikipedia"
+        "wikipedia",
+        "cisco"
       ],
       "logo": "assets/acq-logos/neopath.webp",
       "wikiTitle": "NeoPath",
       "visualIdentity": {
         "kind": "name-tile",
         "path": "assets/acq-logos/neopath.svg",
-        "source": "generated",
-        "sourceUrl": null
-      }
-    },
-    {
-      "id": "neopath-networks",
-      "company": "NeoPath Networks",
-      "announced": "2007-03-13",
-      "business": "",
-      "country": "",
-      "valueUsd": null,
-      "summary": "NeoPath Networks is the leading provider of high-performance and highly scalable file storage management solutions. Cisco and NeoPath share a common vision of providing unique and flexible file storage management services to enterprise customers. In line with our Service-Oriented Network Architecture (SONA) strategy and vision, Cisco plans to integrate the NeoPath technology in future products with the goal of providing additional value added file services. This will benefit both our current file based solutions, such as Wide Area Application Services (WAAS), and our business partners file based solutions.",
-      "families": [],
-      "era": "collab",
-      "featured": false,
-      "sources": [
-        "cisco"
-      ],
-      "logo": "assets/acq-logos/neopath-networks.webp",
-      "wikiTitle": "NeoPath Networks",
-      "visualIdentity": {
-        "kind": "name-tile",
-        "path": "assets/acq-logos/neopath-networks.svg",
         "source": "generated",
         "sourceUrl": null
       }
@@ -4957,41 +4803,19 @@
       "business": "Meeting productivity",
       "country": "United States",
       "valueUsd": null,
-      "summary": "",
+      "summary": "Cisco is pleased to announce the acquisition of Heroik Labs, Inc. doing business as Worklife. Worklife’s mission is to help teams be prepared and informed so they can run highly effective meetings. Their application enables people to be more productive at work, by giving them more options to stay engaged before, during, and after meetings, from sharing agendas before the meeting, to taking notes during the meeting, and sharing those notes, as well as action items, after each meeting.",
       "families": [],
       "era": "cloud",
       "featured": false,
       "sources": [
-        "wikipedia"
+        "wikipedia",
+        "cisco"
       ],
       "logo": "assets/acq-logos/heroik-labs-inc-worklife.webp",
       "wikiTitle": "Heroik Labs, Inc / Worklife",
       "visualIdentity": {
         "kind": "name-tile",
         "path": "assets/acq-logos/heroik-labs-inc-worklife.svg",
-        "source": "generated",
-        "sourceUrl": null
-      }
-    },
-    {
-      "id": "worklife",
-      "company": "Worklife",
-      "announced": "2016-10-17",
-      "business": "",
-      "country": "",
-      "valueUsd": null,
-      "summary": "Cisco is pleased to announce the acquisition of Heroik Labs, Inc. doing business as Worklife. Worklife’s mission is to help teams be prepared and informed so they can run highly effective meetings. Their application enables people to be more productive at work, by giving them more options to stay engaged before, during, and after meetings, from sharing agendas before the meeting, to taking notes during the meeting, and sharing those notes, as well as action items, after each meeting.",
-      "families": [],
-      "era": "cloud",
-      "featured": false,
-      "sources": [
-        "cisco"
-      ],
-      "logo": "assets/acq-logos/worklife.webp",
-      "wikiTitle": "Worklife",
-      "visualIdentity": {
-        "kind": "name-tile",
-        "path": "assets/acq-logos/worklife.svg",
         "source": "generated",
         "sourceUrl": null
       }

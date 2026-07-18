@@ -65,6 +65,14 @@ const COMPANY_SUFFIX =
 const COMPANY_ALIASES = new Map([
   ["webexcommunications", "webex"],
   ["jaspertechnologies", "jasper"],
+  ["komodotehnology", "komodo"],
+  ["procketnetwork", "procketnetworks"],
+  ["meetinghousedatacommunications", "meetinghouse"],
+  ["ironportsystems", "ironport"],
+  ["neopathnetworks", "neopath"],
+  ["worklife", "heroiklabsincworklife"],
+  ["telebitsmica", "telebit"],
+  ["caissoftwaresolutions", "caissoftware"],
 ]);
 
 function decodeHtmlEntities(value) {
@@ -225,12 +233,15 @@ export function parseWikiTable(html) {
   return rows;
 }
 
-function parseCiscoPage(html) {
+export function parseCiscoPage(html) {
   const items = [];
   const re = /<li[^>]*>\s*(?:<a[^>]*>)?([^<]+)(?:<\/a>)?\s*[-–]\s*([^<\n]+)(?:<br\s*\/?>|\n)([\s\S]*?)<\/li>/gi;
   let m;
   while ((m = re.exec(html))) {
-    const company = m[1].replace(/\(intent to acquire\)/i, "").replace(/\u00a0/g, " ").trim();
+    const company = decodeHtmlEntities(m[1])
+      .replace(/\(intent to acquire\)/i, "")
+      .replace(/\u00a0/g, " ")
+      .trim();
     const dateRaw = m[2].replace(/\u00a0/g, " ").trim();
     const summary = stripHtml(m[3]).slice(0, 1200);
     const announced = parseWikiDate(dateRaw) || parseWikiDate(dateRaw.replace(/^Subject to close\.\s*/i, ""));
