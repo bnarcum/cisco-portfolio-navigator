@@ -170,15 +170,18 @@
   function escapeAttr(s) { return escapeHtml(s); }
 
   function problemBlockHtml(prob, persona, P, opts) {
-    const line = persona ? P.personaLine(prob, persona) : prob.outcome;
-    const compare = prob.proof
+    const view = P.personaView ? P.personaView(prob, persona) : { symptom: prob.symptom, line: persona ? P.personaLine(prob, persona) : prob.outcome, proof: prob.proof };
+    const symptom = view.symptom || prob.symptom;
+    const line = view.line || prob.outcome;
+    const proof = view.proof || prob.proof;
+    const compare = proof
       ? `<div class="oc-compare">
           <div class="oc-compare-box oc-compare-before">
-            <div class="oc-compare-lbl">Before</div>${escapeHtml(prob.proof.before)}
+            <div class="oc-compare-lbl">Before</div>${escapeHtml(proof.before)}
           </div>
           <div class="oc-compare-arrow" aria-hidden="true">→</div>
           <div class="oc-compare-box oc-compare-after">
-            <div class="oc-compare-lbl">After</div>${escapeHtml(prob.proof.after)}
+            <div class="oc-compare-lbl">After</div>${escapeHtml(proof.after)}
           </div>
         </div>`
       : "";
@@ -188,7 +191,7 @@
       : "";
     const divider = opts?.withDivider ? `<div class="oc-prob-divider" role="separator"></div>` : "";
     return `${divider}
-      <p class="oc-quote">"<em>${escapeHtml(prob.symptom)}</em>"</p>
+      <p class="oc-quote">"<em>${escapeHtml(symptom)}</em>"</p>
       <div class="oc-headline">${escapeHtml(line)}</div>
       ${compare}
       ${chain}`;

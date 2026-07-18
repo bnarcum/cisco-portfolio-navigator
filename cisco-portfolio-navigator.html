@@ -9,7 +9,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.0.1";
+  window.__CPN_BUILD="3.1.0";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -12550,11 +12550,14 @@ function planSummary(){
       problems = {
         persona,
         narrative: P.problemNarrative([...effNodes], persona),
-        addressed: cov.addressed.map(a => ({
-          outcome: persona ? P.personaLine(a.problem, persona) : a.problem.outcome,
-          by: a.by.map(f => nameOf(f)),
-          proof: a.problem.proof || null
-        })),
+        addressed: cov.addressed.map(a => {
+          const view = P.personaView ? P.personaView(a.problem, persona) : null;
+          return {
+            outcome: view ? view.line : (persona ? P.personaLine(a.problem, persona) : a.problem.outcome),
+            by: a.by.map(f => nameOf(f)),
+            proof: (view ? view.proof : a.problem.proof) || null
+          };
+        }),
         open: cov.open.slice(0, 5).map(o => ({
           outcome: o.problem.outcome,
           closers: o.gapFamilies.map(f => nameOf(f))
@@ -17342,11 +17345,11 @@ window.__cpnV2 = {
 };
 })();
 </script>
-<script src="assets/cpn-problems.js?v=3.0.1"></script>
-<script src="assets/cpn-outcome-card.js?v=3.0.1"></script>
-<script src="assets/cpn-cloud-control-ops.js?v=3.0.1"></script>
-<script src="assets/cpn-lazy-load.js?v=3.0.1"></script>
-<script src="assets/cpn-kiosk.js?v=3.0.1"></script>
+<script src="assets/cpn-problems.js?v=3.1.0"></script>
+<script src="assets/cpn-outcome-card.js?v=3.1.0"></script>
+<script src="assets/cpn-cloud-control-ops.js?v=3.1.0"></script>
+<script src="assets/cpn-lazy-load.js?v=3.1.0"></script>
+<script src="assets/cpn-kiosk.js?v=3.1.0"></script>
 <script src="assets/cpn-logo-intro.js?v=2.91.6"></script>
 </body>
 </html>

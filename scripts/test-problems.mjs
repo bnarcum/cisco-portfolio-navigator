@@ -32,7 +32,19 @@ try {
       bundleTop: P.topProblemForBundle("Hybrid Work Suite")?.id || null,
       addressed: cov.addressed.length,
       open: cov.open.length,
-      narrative: P.problemNarrative(["sdwan", "room-systems"], "ciso")
+      narrative: P.problemNarrative(["sdwan", "room-systems"], "ciso"),
+      pv: (() => {
+        const prob = P.getProblem("branch-app-experience");
+        const net = P.personaView(prob, "netops");
+        const ci = P.personaView(prob, "ciso");
+        const base = P.personaView(prob, "");
+        return {
+          symptomDiffers: net.symptom !== ci.symptom,
+          proofDiffers: net.proof?.after !== ci.proof?.after,
+          lineDiffers: net.line !== ci.line,
+          baseFallback: base.symptom === prob.symptom && base.line === prob.outcome
+        };
+      })()
     };
   });
   if (model.count < 15) errors.push(`expected >=15 problems, got ${model.count}`);
@@ -43,6 +55,10 @@ try {
   if (!model.bundleTop) errors.push("no top problem for Hybrid Work Suite bundle");
   if (model.addressed < 3) errors.push(`expected addressed outcomes, got ${model.addressed}`);
   if (!/Problems this stack already addresses/.test(model.narrative)) errors.push("narrative missing addressed section");
+  if (!model.pv.symptomDiffers) errors.push("personaView: symptom should differ across personas");
+  if (!model.pv.proofDiffers) errors.push("personaView: proof before/after should differ across personas");
+  if (!model.pv.lineDiffers) errors.push("personaView: outcome line should differ across personas");
+  if (!model.pv.baseFallback) errors.push("personaView: no-persona should fall back to base symptom/outcome");
 
   // 2) Canvas outcome card renders + persona toggle (not side panel)
   const card = await page.evaluate(async () => {
@@ -58,10 +74,21 @@ try {
       personaChips: el?.querySelectorAll(".oc-persona").length || 0,
       noPanelBlock: !document.querySelector("#pbody .p-prob")
     };
-    const before = el?.querySelector(".oc-headline")?.textContent || "";
-    el?.querySelector('[data-oc-persona="ciso"]')?.click();
-    const after = document.getElementById("outcome-card")?.querySelector(".oc-headline")?.textContent || "";
-    out.personaChanged = before !== after;
+    const grab = () => {
+      const c = document.getElementById("outcome-card");
+      return {
+        headline: c?.querySelector(".oc-headline")?.textContent || "",
+        quote: c?.querySelector(".oc-quote")?.textContent || "",
+        after: c?.querySelector(".oc-compare-after")?.textContent || ""
+      };
+    };
+    el?.querySelector('[data-oc-persona="netops"]')?.click();
+    const net = grab();
+    document.getElementById("outcome-card")?.querySelector('[data-oc-persona="ciso"]')?.click();
+    const ciso = grab();
+    out.personaChanged = net.headline !== ciso.headline;
+    out.quoteChanged = net.quote !== ciso.quote;
+    out.proofChanged = net.after !== ciso.after;
     window.setPersona("");
     return out;
   });
@@ -71,6 +98,8 @@ try {
   if (!card.hasProof) errors.push("canvas: no proof line");
   if (card.personaChips !== 3) errors.push(`canvas: expected 3 persona chips, got ${card.personaChips}`);
   if (!card.personaChanged) errors.push("canvas: persona toggle did not change outcome");
+  if (!card.quoteChanged) errors.push("canvas: persona toggle did not change symptom quote");
+  if (!card.proofChanged) errors.push("canvas: persona toggle did not change before/after proof");
   if (!card.noPanelBlock) errors.push("side panel should not contain .p-prob block");
 
   // 3) Analyze a stack -> Outcomes tab + reframed suggestions/bundles
