@@ -1148,13 +1148,15 @@
     tBtn.type = "button";
     tBtn.className = "tools-btn";
     tBtn.id = "tools-acquisitions";
-    tBtn.innerHTML = `<span class="ti">◆</span><span>Acquisitions</span>`;
-    tBtn.title = "Acquisition History — interactive logo timeline (A)";
+    tBtn.innerHTML = `<span class="ti">◆</span><span>Acquisitions Timeline</span>`;
+    tBtn.title = "Acquisitions Timeline — interactive logo timeline (M)";
     tBtn.addEventListener("click", () => {
       if ($("#acq-wrap")?.classList.contains("show")) closeAcquisitionTimeline();
       else openAcquisitionTimeline();
     });
-    $("#tools")?.appendChild(tBtn);
+    const tools = $("#tools");
+    if (tools?.firstChild) tools.insertBefore(tBtn, tools.firstChild);
+    else tools?.appendChild(tBtn);
 
     updateZoomUi();
     renderAcquisitionTimeline();

@@ -9,7 +9,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.3.2";
+  window.__CPN_BUILD="3.3.3";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -62,7 +62,7 @@
   <link rel="stylesheet" href="assets/cpn-light.css?v=2.87.5"/>
   <link rel="stylesheet" href="assets/cpn-iq-theme.css?v=2.87.5"/>
   <link rel="stylesheet" href="assets/cpn-logo-intro.css?v=2.91.6"/>
-  <link rel="stylesheet" href="assets/cpn-acquisitions-timeline.css?v=3.3.2"/>
+  <link rel="stylesheet" href="assets/cpn-acquisitions-timeline.css?v=3.3.3"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     @font-face{
@@ -12370,27 +12370,7 @@ function renderRecentPinned(){
   }));
 }
 function buildRecentPinned(){
-  const p = document.createElement("div");
-  p.id = "rp-panel";
-  document.body.appendChild(p);
-  // Toggle button in legend
-  const tog = document.createElement("button");
-  tog.className = "tools-btn";
-  tog.id = "tools-recent";
-  tog.innerHTML = `<span class="ti">★</span><span>Recent / Pinned</span>`;
-  tog.title = "Recent and pinned items";
-  tog.addEventListener("click", () => {
-    p.classList.toggle("show");
-    tog.classList.toggle("active", p.classList.contains("show"));
-    renderRecentPinned();
-  });
-  $("#tools").appendChild(tog);
-  renderRecentPinned();
-  document.addEventListener("click", e => {
-    if (!p.contains(e.target) && e.target !== tog && !tog.contains(e.target)){
-      p.classList.remove("show"); tog.classList.remove("active");
-    }
-  });
+  /* Recent / Pinned toolbar entry removed; pin/recent data helpers remain for detail panel. */
 }
 
 /* Detail-panel enhancement is wired via a MutationObserver in boot() so we
@@ -17416,8 +17396,8 @@ window.__cpnV2 = {
 <script src="assets/cpn-cloud-control-ops.js?v=3.3.0"></script>
 <script src="assets/cpn-lazy-load.js?v=3.3.0"></script>
 <script src="assets/cpn-kiosk.js?v=3.3.0"></script>
-<script src="assets/cpn-acquisitions-data.js?v=3.3.2"></script>
-<script src="assets/cpn-acquisitions-timeline.js?v=3.3.2"></script>
+<script src="assets/cpn-acquisitions-data.js?v=3.3.3"></script>
+<script src="assets/cpn-acquisitions-timeline.js?v=3.3.3"></script>
 <script src="assets/cpn-logo-intro.js?v=2.91.6"></script>
 </body>
 </html>
