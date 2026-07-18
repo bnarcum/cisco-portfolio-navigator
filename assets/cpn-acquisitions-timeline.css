@@ -373,7 +373,6 @@ body.acq-open #tools {
 }
 
 .acq-card:hover,
-.acq-card.focused,
 .acq-card:focus-visible {
   --scale: 1.12;
   z-index: 5;

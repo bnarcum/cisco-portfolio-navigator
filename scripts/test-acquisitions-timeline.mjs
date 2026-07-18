@@ -7,6 +7,193 @@ const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const html = path.join(root, "cisco-portfolio-navigator.html");
 const errors = [];
 const browser = await chromium.launch();
+
+async function assertOverviewCoverage(page, label) {
+  const coverage = await page.evaluate(() => {
+    const acquisitionYears = window.CPN_ACQUISITIONS.acquisitions
+      .map(acquisition => acquisition.announced.slice(0, 4));
+    const expectedYears = [...new Set(acquisitionYears)].sort();
+    const markers = [...document.querySelectorAll(".acq-year-marker")].map(marker => ({
+      year: marker.dataset.year,
+      count: Number(marker.querySelector(".acq-year-marker-count")?.textContent),
+    }));
+    const markerYears = markers.map(marker => marker.year);
+    return {
+      totalCount: acquisitionYears.length,
+      markerCountTotal: markers.reduce((sum, marker) => sum + marker.count, 0),
+      duplicateYears: markerYears.filter((year, index) => markerYears.indexOf(year) !== index),
+      missingYears: expectedYears.filter(year => !markerYears.includes(year)),
+      unexpectedYears: markerYears.filter(year => !expectedYears.includes(year)),
+    };
+  });
+  if (coverage.markerCountTotal !== coverage.totalCount) {
+    errors.push(`${label}: marker counts ${coverage.markerCountTotal}/${coverage.totalCount}`);
+  }
+  if (coverage.duplicateYears.length) {
+    errors.push(`${label}: duplicate year markers ${coverage.duplicateYears.join(",")}`);
+  }
+  if (coverage.missingYears.length || coverage.unexpectedYears.length) {
+    errors.push(
+      `${label}: year coverage missing=${coverage.missingYears.join(",")} ` +
+      `unexpected=${coverage.unexpectedYears.join(",")}`
+    );
+  }
+}
+
+async function assertLayout(page, label, { focus = false } = {}) {
+  const layout = await page.evaluate(checkFocus => {
+    const state = window.CPN_AcquisitionTimeline.testState();
+    const canvasRect = document.querySelector("#acq-canvas").getBoundingClientRect();
+    const timelineNodes = [...document.querySelectorAll(
+      ".acq-year-marker, .acq-card, .acq-overflow-marker"
+    )].filter(node => {
+      const rect = node.getBoundingClientRect();
+      return rect.left < canvasRect.right && rect.right > canvasRect.left &&
+        rect.top < canvasRect.bottom && rect.bottom > canvasRect.top;
+    });
+    const overlapPairs = [];
+    for (let i = 0; i < timelineNodes.length; i += 1) {
+      for (let j = i + 1; j < timelineNodes.length; j += 1) {
+        const a = timelineNodes[i].getBoundingClientRect();
+        const b = timelineNodes[j].getBoundingClientRect();
+        const overlaps = a.left < b.right && a.right > b.left &&
+          a.top < b.bottom && a.bottom > b.top;
+        if (overlaps) {
+          overlapPairs.push([
+            timelineNodes[i].dataset.id || timelineNodes[i].getAttribute("aria-label"),
+            timelineNodes[j].dataset.id || timelineNodes[j].getAttribute("aria-label"),
+          ].join("/"));
+        }
+      }
+    }
+    const selectors = [
+      "#acq-wrap", "#acq-head", ".acq-head-controls", "#acq-search",
+      "#acq-prev", "#acq-next", ".acq-zoom", "#acq-filter-btn",
+      "#acq-close", "#acq-minimap",
+    ];
+    if (checkFocus) {
+      selectors.push(
+        "#acq-focus", "#acq-focus-inner", "#acq-focus-actions",
+        "#acq-focus-source", "#acq-focus-jump", "#acq-focus-clear"
+      );
+    }
+    const tolerance = 1;
+    const outOfBounds = selectors.flatMap(selector => {
+      const element = document.querySelector(selector);
+      if (!element || !element.getClientRects().length) return [];
+      const rect = element.getBoundingClientRect();
+      return rect.left < -tolerance || rect.top < -tolerance ||
+        rect.right > innerWidth + tolerance || rect.bottom > innerHeight + tolerance
+        ? [selector]
+        : [];
+    });
+    const focusPanel = document.querySelector("#acq-focus");
+    const focusActions = document.querySelector("#acq-focus-actions");
+    const focusRect = focusPanel?.getBoundingClientRect();
+    const actionsRect = focusActions?.getBoundingClientRect();
+    const focusControlsClipped = checkFocus &&
+      [...document.querySelectorAll("#acq-focus button, #acq-focus a")]
+        .filter(control => control.getClientRects().length)
+        .some(control => {
+          const rect = control.getBoundingClientRect();
+          return rect.left < focusRect.left - tolerance ||
+            rect.top < focusRect.top - tolerance ||
+            rect.right > focusRect.right + tolerance ||
+            rect.bottom > focusRect.bottom + tolerance;
+        });
+    return {
+      overlapCount: state.overlapCount,
+      overlapPairs,
+      horizontalOverflow: document.documentElement.scrollWidth > innerWidth,
+      outOfBounds,
+      focusClipped: checkFocus && (
+        focusPanel.scrollHeight > focusPanel.clientHeight + tolerance ||
+        actionsRect.left < focusRect.left - tolerance ||
+        actionsRect.top < focusRect.top - tolerance ||
+        actionsRect.right > focusRect.right + tolerance ||
+        actionsRect.bottom > focusRect.bottom + tolerance ||
+        focusControlsClipped
+      ),
+    };
+  }, focus);
+  if (layout.overlapCount !== 0) {
+    errors.push(`${label}: ${layout.overlapCount} overlaps (${layout.overlapPairs.join(",")})`);
+  }
+  if (layout.horizontalOverflow) {
+    errors.push(`${label}: page-level horizontal overflow`);
+  }
+  if (layout.outOfBounds.length) {
+    errors.push(`${label}: out of bounds ${layout.outOfBounds.join(",")}`);
+  }
+  if (layout.focusClipped) {
+    errors.push(`${label}: focus panel or controls clipped`);
+  }
+}
+
+async function assertAllAcquisitionsReachable(page, label) {
+  const yearGroups = await page.evaluate(() => {
+    const groups = new Map();
+    window.CPN_ACQUISITIONS.acquisitions.forEach(acquisition => {
+      const year = acquisition.announced.slice(0, 4);
+      const ids = groups.get(year) || [];
+      ids.push(acquisition.id);
+      groups.set(year, ids);
+    });
+    return [...groups].map(([year, ids]) => ({ year, ids }));
+  });
+  const reached = new Set();
+
+  for (const { year, ids } of yearGroups) {
+    await page.locator(`.acq-year-marker[data-year="${year}"]`).evaluate(marker => marker.click());
+    await page.waitForFunction(expectedYear => {
+      const state = window.CPN_AcquisitionTimeline.testState();
+      return state.level === "explore" && state.anchorYear === Number(expectedYear);
+    }, year);
+    await page.evaluate(expectedYear => {
+      window.CPN_AcquisitionTimeline.setZoom(2.4);
+      const canvas = document.querySelector("#acq-canvas");
+      canvas.scrollLeft = (Number(expectedYear) - 1993) * 72 * 2.4 +
+        120 - canvas.clientWidth / 2;
+      canvas.dispatchEvent(new Event("scroll"));
+    }, year);
+    await page.evaluate(() => new Promise(resolve =>
+      requestAnimationFrame(() => requestAnimationFrame(resolve))));
+
+    const overflowMarker = page.locator(`.acq-overflow-marker[aria-label*="from ${year}"]`);
+    if (await overflowMarker.count()) {
+      await overflowMarker.evaluate(marker => marker.click());
+      await page.waitForFunction(expectedYear =>
+        window.CPN_AcquisitionTimeline.testState().expandedYear === Number(expectedYear),
+      year);
+      const expandedIds = await page.locator(".acq-year-expansion .acq-card")
+        .evaluateAll(cards => cards.map(card => card.dataset.id));
+      expandedIds.forEach(id => reached.add(id));
+      const missingFromExpansion = ids.filter(id => !expandedIds.includes(id));
+      if (missingFromExpansion.length) {
+        errors.push(`${label}: ${year} expansion missing ${missingFromExpansion.join(",")}`);
+      }
+    } else {
+      const visibleIds = await page.evaluate(() =>
+        window.CPN_AcquisitionTimeline.testState().visibleIds);
+      ids.filter(id => visibleIds.includes(id)).forEach(id => reached.add(id));
+      const missingDirect = ids.filter(id => !visibleIds.includes(id));
+      if (missingDirect.length) {
+        errors.push(`${label}: ${year} direct reachability missing ${missingDirect.join(",")}`);
+      }
+    }
+
+    await page.evaluate(() => window.CPN_AcquisitionTimeline.setZoom(0.55));
+    await page.waitForFunction(() =>
+      window.CPN_AcquisitionTimeline.testState().level === "overview");
+  }
+
+  const allIds = yearGroups.flatMap(group => group.ids);
+  const unreachable = allIds.filter(id => !reached.has(id));
+  if (unreachable.length) {
+    errors.push(`${label}: unreachable acquisitions ${unreachable.join(",")}`);
+  }
+}
+
 const cases = [
   { name: "desktop-dark", width: 1440, height: 900, theme: "dark", reducedMotion: "no-preference" },
   { name: "tablet-light", width: 1024, height: 768, theme: "light", reducedMotion: "no-preference" },
@@ -19,44 +206,24 @@ for (const testCase of cases) {
     reducedMotion: testCase.reducedMotion,
   });
   await casePage.addInitScript(theme => {
+    localStorage.setItem("cpn-theme-v1", theme);
     if (theme === "light") document.documentElement.setAttribute("data-theme", "light");
     else document.documentElement.removeAttribute("data-theme");
   }, testCase.theme);
   await casePage.goto(`file://${html}`, { waitUntil: "load", timeout: 60000 });
-  await casePage.evaluate(theme => {
-    if (theme === "light") document.documentElement.setAttribute("data-theme", "light");
-    else document.documentElement.removeAttribute("data-theme");
-  }, testCase.theme);
   await casePage.waitForFunction(() => window.CPN_AcquisitionTimeline?.open);
+  const rootTheme = await casePage.evaluate(() =>
+    document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark");
+  if (rootTheme !== testCase.theme) {
+    errors.push(`${testCase.name}: initialized theme ${rootTheme}`);
+  }
   await casePage.evaluate(() => window.CPN_AcquisitionTimeline.open());
   await casePage.waitForSelector("#acq-wrap.show");
 
-  const state = await casePage.evaluate(() => window.CPN_AcquisitionTimeline.testState());
-  if (state.overlapCount !== 0) errors.push(`${testCase.name}: ${state.overlapCount} overlaps`);
-  if (state.representedCount !== state.totalCount) {
-    errors.push(`${testCase.name}: incomplete overview`);
-  }
-  const horizontalOverflow = await casePage.evaluate(() =>
-    document.documentElement.scrollWidth > innerWidth);
-  if (horizontalOverflow) errors.push(`${testCase.name}: page-level horizontal overflow`);
-
-  if (testCase.theme === "light") {
-    await casePage.click('.acq-year-marker[data-year="2012"]');
-    await casePage.waitForFunction(() =>
-      window.CPN_AcquisitionTimeline.testState().level === "explore");
-    const usesThemeCardSurface = await casePage.evaluate(() => {
-      const card = document.querySelector(".acq-card-shell");
-      const probe = document.createElement("div");
-      probe.style.background = "var(--glass-bg)";
-      document.body.append(probe);
-      const matches = getComputedStyle(card).backgroundColor ===
-        getComputedStyle(probe).backgroundColor;
-      probe.remove();
-      return matches;
-    });
-    if (!usesThemeCardSurface) {
-      errors.push(`${testCase.name}: cards bypass light-theme surface variable`);
-    }
+  await assertOverviewCoverage(casePage, `${testCase.name} overview`);
+  await assertLayout(casePage, `${testCase.name} overview`);
+  if (testCase.name === "desktop-dark") {
+    await assertAllAcquisitionsReachable(casePage, testCase.name);
   }
 
   if (testCase.width <= 768) {
@@ -85,16 +252,42 @@ for (const testCase of cases) {
     if (!mobileHeader.controlsContained || !mobileHeader.searchContained) {
       errors.push(`${testCase.name}: header controls overflowed`);
     }
+  }
 
+  if (testCase.width <= 1024) {
     await casePage.click('.acq-year-marker[data-year="2012"]');
     await casePage.waitForFunction(() =>
       window.CPN_AcquisitionTimeline.testState().level === "explore");
+    await assertLayout(casePage, `${testCase.name} explore`);
+
+    if (testCase.theme === "light") {
+      const usesThemeCardSurface = await casePage.evaluate(() => {
+        const card = document.querySelector(".acq-card-shell");
+        const probe = document.createElement("div");
+        probe.style.background = "var(--glass-bg)";
+        document.body.append(probe);
+        const matches = getComputedStyle(card).backgroundColor ===
+          getComputedStyle(probe).backgroundColor;
+        probe.remove();
+        return matches;
+      });
+      if (!usesThemeCardSurface) {
+        errors.push(`${testCase.name}: cards bypass light-theme surface variable`);
+      }
+    }
+
     await casePage.click('.acq-card[data-id="meraki"]');
     await casePage.waitForSelector("#acq-focus.show");
-    const focusMaxHeight = await casePage.locator("#acq-focus")
-      .evaluate(element => getComputedStyle(element).maxHeight);
-    if (focusMaxHeight !== "190px") {
-      errors.push(`${testCase.name}: focus max-height ${focusMaxHeight}`);
+    await casePage.locator("#acq-focus").evaluate(element =>
+      Promise.all(element.getAnimations().map(animation => animation.finished)));
+    await assertLayout(casePage, `${testCase.name} focus`, { focus: true });
+
+    if (testCase.width <= 768) {
+      const focusMaxHeight = await casePage.locator("#acq-focus")
+        .evaluate(element => getComputedStyle(element).maxHeight);
+      if (focusMaxHeight !== "190px") {
+        errors.push(`${testCase.name}: focus max-height ${focusMaxHeight}`);
+      }
     }
   }
   await casePage.close();
@@ -109,9 +302,7 @@ await page.waitForSelector("#acq-wrap.show");
 
 const initial = await page.evaluate(() => window.CPN_AcquisitionTimeline.testState());
 if (initial.level !== "overview") errors.push(`initial level: ${initial.level}`);
-if (initial.representedCount !== initial.totalCount) {
-  errors.push(`represented ${initial.representedCount}/${initial.totalCount}`);
-}
+await assertOverviewCoverage(page, "detailed overview");
 if (initial.overlapCount !== 0) errors.push(`overview overlaps: ${initial.overlapCount}`);
 if (initial.renderedCards >= initial.totalCount) errors.push("overview rendered every card");
 
@@ -357,7 +548,8 @@ await page.locator("#acq-canvas").evaluate(el => {
   el.scrollLeft = (rawYear - 1993) * 72 * 2.4 + 120 - el.clientWidth / 2;
   el.dispatchEvent(new Event("scroll"));
 });
-await page.waitForTimeout(100);
+await page.waitForFunction(() =>
+  document.querySelector("#acq-current-period")?.textContent.trim() === "2012");
 const exactPeriod = await page.locator("#acq-current-period").textContent();
 if (exactPeriod.trim() !== "2012") errors.push(`centered temporal year: ${exactPeriod}`);
 
