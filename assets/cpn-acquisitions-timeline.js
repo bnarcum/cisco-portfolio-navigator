@@ -19,6 +19,7 @@
     scrollVel: 0,
     level: "overview",
     anchorYear: null,
+    expandedYear: null,
   };
 
   const $ = (s, r = document) => r.querySelector(s);
@@ -79,6 +80,10 @@
   function getSemanticLevel(zoom = ACQ.zoom) {
     if (ACQ.focusedId) return "focus";
     return zoom < 0.78 ? "overview" : "explore";
+  }
+
+  function prefersReducedMotion() {
+    return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
   }
 
   function groupByYear(list) {
@@ -190,6 +195,7 @@
 
       marker.addEventListener("click", () => {
         ACQ.anchorYear = placement.year;
+        ACQ.expandedYear = null;
         ACQ.zoom = 1.05;
         updateZoomUi();
         renderAcquisitionTimeline();
@@ -230,6 +236,10 @@
 
   function renderExplore(inner, list, mid) {
     const canvas = $("#acq-canvas");
+    if (ACQ.expandedYear != null) {
+      renderExpandedYear(inner, list, canvas);
+      return;
+    }
     const placements = layoutExploreCards(list, { mid });
     if (ACQ.anchorYear != null) {
       const year = String(ACQ.anchorYear);
@@ -274,17 +284,56 @@
       marker.setAttribute("aria-label", `Show ${items.length} more acquisitions from ${year}`);
       marker.addEventListener("click", () => {
         ACQ.anchorYear = Number(year);
-        setAcqZoom(ACQ.zoom * 1.35);
-        if (canvas) {
-          canvas.scrollLeft = Math.max(0, yearX(Number(year), 6) - canvas.clientWidth / 2);
-        }
+        ACQ.expandedYear = Number(year);
+        renderCards(inner);
+        updateParallax();
       });
       inner.appendChild(marker);
     });
   }
 
+  function renderExpandedYear(inner, list, canvas) {
+    const year = String(ACQ.expandedYear);
+    const items = list.filter(acq => acq.announced.startsWith(year));
+    const tray = document.createElement("section");
+    tray.className = "acq-year-expansion";
+    tray.style.left = `${(canvas?.scrollLeft || 0) + 16}px`;
+    tray.style.width = `${Math.max(280, (canvas?.clientWidth || 1440) - 32)}px`;
+    tray.setAttribute("aria-label", `${year} acquisitions`);
+
+    const head = document.createElement("div");
+    head.className = "acq-year-expansion-head";
+    const title = document.createElement("strong");
+    title.textContent = `${year} · ${items.length} acquisitions`;
+    head.appendChild(title);
+    const close = document.createElement("button");
+    close.type = "button";
+    close.className = "acq-year-expansion-close";
+    close.textContent = "Return to timeline";
+    close.addEventListener("click", () => {
+      ACQ.expandedYear = null;
+      renderCards(inner);
+      updateParallax();
+    });
+    head.appendChild(close);
+    tray.appendChild(head);
+
+    const grid = document.createElement("div");
+    grid.className = "acq-year-expansion-grid";
+    items.forEach((acq, index) => {
+      grid.appendChild(createAcquisitionCard({
+        acq,
+        x: 0,
+        y: 0,
+        overflow: false,
+      }, index));
+    });
+    tray.appendChild(grid);
+    inner.appendChild(tray);
+  }
+
   function renderCards(inner) {
-    inner.querySelectorAll(".acq-card, .acq-year-marker, .acq-overflow-marker, .acq-cluster").forEach(e => e.remove());
+    inner.querySelectorAll(".acq-card, .acq-year-marker, .acq-overflow-marker, .acq-year-expansion, .acq-cluster").forEach(e => e.remove());
     const list = filteredList();
     const canvas = $("#acq-canvas");
     const mid = canvas ? canvas.clientHeight / 2 : 210;
@@ -350,7 +399,10 @@
     const canvas = $("#acq-canvas");
     if (canvas) {
       const x = dateX(a.announced) - canvas.clientWidth / 2;
-      canvas.scrollTo({ left: Math.max(0, x), behavior: "smooth" });
+      canvas.scrollTo({
+        left: Math.max(0, x),
+        behavior: prefersReducedMotion() ? "auto" : "smooth",
+      });
     }
   }
 
@@ -359,12 +411,19 @@
     const inner = $("#acq-inner");
     if (!canvas || !inner) return;
     const x = canvas.scrollLeft;
+    if (prefersReducedMotion()) {
+      inner.querySelectorAll(".acq-layer[data-depth], .acq-particle").forEach(node => {
+        node.style.transform = "";
+      });
+      renderMinimap();
+      return;
+    }
     inner.querySelectorAll(".acq-layer[data-depth]").forEach(layer => {
       const d = +layer.dataset.depth || 0.3;
       layer.style.transform = `translate3d(${-x * d * 0.12}px, 0, 0)`;
     });
 
-    $("#acq-particles")?.querySelectorAll(".acq-particle").forEach((p, i) => {
+    $("#acq-particles")?.querySelectorAll(".acq-particle").forEach(p => {
       const t = performance.now();
       const ph = +p.dataset.phase || 0;
       const dx = Math.sin(t / 3000 + ph) * 12 + ACQ.scrollVel * 0.3;
@@ -434,8 +493,19 @@
   }
 
   function testState() {
-    const nodes = [...document.querySelectorAll(".acq-year-marker, .acq-card")];
-    const rects = nodes.map(node => node.getBoundingClientRect());
+    const canvasRect = document.querySelector("#acq-canvas")?.getBoundingClientRect();
+    const intersectsCanvas = rect => canvasRect &&
+      rect.left < canvasRect.right && rect.right > canvasRect.left &&
+      rect.top < canvasRect.bottom && rect.bottom > canvasRect.top;
+    const nodes = [...document.querySelectorAll(".acq-year-marker, .acq-card, .acq-overflow-marker")];
+    const rects = nodes.map(node => node.getBoundingClientRect()).filter(intersectsCanvas);
+    const mountedIds = [...document.querySelectorAll(".acq-card")].map(el => el.dataset.id);
+    const visibleIds = [...document.querySelectorAll(".acq-card")]
+      .filter(el => {
+        const rect = el.getBoundingClientRect();
+        return intersectsCanvas(rect);
+      })
+      .map(el => el.dataset.id);
     let overlapCount = 0;
     for (let i = 0; i < rects.length; i += 1) {
       for (let j = i + 1; j < rects.length; j += 1) {
@@ -450,8 +520,15 @@
       totalCount: window.CPN_ACQUISITIONS.acquisitions.length,
       representedCount: Number(document.querySelector("#acq-inner")?.dataset.represented || 0),
       renderedCards: document.querySelectorAll(".acq-card").length,
-      visibleIds: [...document.querySelectorAll(".acq-card")].map(el => el.dataset.id),
+      mountedIds,
+      visibleIds,
+      overflowMarkers: document.querySelectorAll(".acq-overflow-marker").length,
       overlapCount,
+      zoom: ACQ.zoom,
+      anchorYear: ACQ.anchorYear,
+      expandedYear: ACQ.expandedYear,
+      focusedId: ACQ.focusedId,
+      reducedMotion: prefersReducedMotion(),
     };
   }
 
