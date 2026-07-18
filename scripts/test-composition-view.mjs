@@ -16,7 +16,8 @@ function diag(page) {
     const h = svg.clientHeight;
     const panel = document.getElementById("panel");
     const pw = panel?.classList.contains("open") ? 390 : 0;
-    const cx = (w - pw) / 2;
+    const oc = window.__cpnOutcomeCard?.offsetW?.() || 0;
+    const cx = (w - pw - oc) / 2;
     const cy = h / 2;
 
     const familyNode = [...document.querySelectorAll("g.nd")].find((g) => {
@@ -63,7 +64,7 @@ function diag(page) {
       viewMode: window.getViewMode?.(),
       viewFocus: window.getViewFocus?.(),
       transform: { x: t.x, y: t.y, k: t.k },
-      viewport: { w, h, pw, cx, cy },
+      viewport: { w, h, pw, oc, cx, cy },
       familyGraph,
       familyCenterError: Math.round(familyCenterError),
       visibleNodeCount: visibleNodes.length,

@@ -2,16 +2,55 @@
  * Node-attached outcome card — "Problems this solves" on the graph canvas.
  * One primary problem (+ expand), persona framing, and a consolidated Journey row:
  * Explore graph → Prove on dCloud → Investigate in AI Canvas → Skill up.
+ *
+ * In Composition / Families views, opening the card reserves right chrome and
+ * animates the graph left; closing animates back.
  */
 (function () {
   "use strict";
 
+  const CARD_GAP = 16;
+  const CARD_FALLBACK_W = 340;
+
   let activeFamilyId = null;
   let expandedMore = false;
   let anchorNode = null;
+  let graphWasPushed = false;
 
   function cardEl() {
     return document.getElementById("outcome-card");
+  }
+
+  function isVisible() {
+    const card = cardEl();
+    return !!(card && card.style.display !== "none" && card.getAttribute("aria-hidden") !== "true");
+  }
+
+  function offsetW() {
+    if (!isVisible()) return 0;
+    const card = cardEl();
+    const w = card?.offsetWidth || CARD_FALLBACK_W;
+    return w + CARD_GAP;
+  }
+
+  function viewMode() {
+    try {
+      if (typeof window.viewMode === "string") return window.viewMode;
+    } catch (e) { /* noop */ }
+    const active = document.querySelector("[data-vm].active");
+    return active?.dataset?.vm || "";
+  }
+
+  function shouldPushGraph() {
+    const vm = viewMode();
+    return vm === "composition" || vm === "families";
+  }
+
+  function refitGraph(animate) {
+    if (!shouldPushGraph()) return;
+    if (typeof window.refitGraphForChrome === "function") {
+      window.refitGraphForChrome(animate);
+    }
   }
 
   function nodeScreenPosition(d) {
@@ -144,12 +183,12 @@
         const val = btn.dataset.ocPersona;
         const cur = typeof currentPersona === "function" ? currentPersona() : "";
         if (typeof setPersona === "function") setPersona(val === cur ? "" : val);
-        showOutcomeCard(familyId, anchorNode);
+        showOutcomeCard(familyId, anchorNode, { skipGraphPush: true });
       });
     });
     card.querySelector("[data-oc-more]")?.addEventListener("click", () => {
       expandedMore = true;
-      showOutcomeCard(familyId, anchorNode);
+      showOutcomeCard(familyId, anchorNode, { skipGraphPush: true });
     });
     card.querySelectorAll("[data-ocj-explore]").forEach(btn => {
       btn.addEventListener("click", () => {
@@ -163,7 +202,7 @@
     });
   }
 
-  function showOutcomeCard(familyId, node) {
+  function showOutcomeCard(familyId, node, opts) {
     const P = window.__cpnProblems;
     const card = cardEl();
     if (!P || !card) return;
@@ -173,6 +212,9 @@
       hideOutcomeCard();
       return;
     }
+
+    const wasVisible = isVisible();
+    const pushGraph = shouldPushGraph() && !opts?.skipGraphPush;
 
     if (familyId !== activeFamilyId) expandedMore = false;
     activeFamilyId = familyId;
@@ -210,17 +252,33 @@
     wireCard(card, familyId, primary);
     card.style.display = "block";
     card.setAttribute("aria-hidden", "false");
-    requestAnimationFrame(() => repositionOutcomeCard());
+    card.classList.toggle("oc-dock", shouldPushGraph());
+
+    if (pushGraph && (!wasVisible || !graphWasPushed)) {
+      graphWasPushed = true;
+      refitGraph(true);
+    }
+
+    requestAnimationFrame(() => {
+      repositionOutcomeCard();
+      if (pushGraph && !wasVisible) {
+        requestAnimationFrame(() => repositionOutcomeCard());
+      }
+    });
   }
 
   function hideOutcomeCard() {
     const card = cardEl();
     if (!card) return;
+    const hadPush = graphWasPushed && shouldPushGraph();
     card.style.display = "none";
     card.setAttribute("aria-hidden", "true");
+    card.classList.remove("oc-dock");
     activeFamilyId = null;
     anchorNode = null;
     expandedMore = false;
+    graphWasPushed = false;
+    if (hadPush) refitGraph(true);
   }
 
   function repositionOutcomeCard() {
@@ -228,23 +286,42 @@
     if (!card || card.style.display === "none" || !anchorNode) return;
     const pos = nodeScreenPosition(anchorNode);
     if (!pos) return;
-    const cw = card.offsetWidth || 320;
+
+    const cw = card.offsetWidth || CARD_FALLBACK_W;
     const ch = card.offsetHeight || 220;
     const panelW = panelRightWidth();
-    const rightLimit = window.innerWidth - panelW - 12;
-    let x = pos.x + 28;
+    const edgePad = 12;
+
+    let x;
     let y = pos.y - ch * 0.45;
-    if (x + cw > rightLimit) x = pos.x - cw - 28;
-    if (x < 12) x = 12;
+
+    if (shouldPushGraph()) {
+      const rightLimit = window.innerWidth - panelW - edgePad;
+      x = rightLimit - cw;
+    } else {
+      const rightLimit = window.innerWidth - panelW - edgePad;
+      x = pos.x + 28;
+      if (x + cw > rightLimit) x = pos.x - cw - 28;
+    }
+
+    if (x < edgePad) x = edgePad;
     if (y < 72) y = 72;
-    if (y + ch > window.innerHeight - 12) y = window.innerHeight - ch - 12;
+    if (y + ch > window.innerHeight - edgePad) y = window.innerHeight - ch - edgePad;
+
     card.style.left = x + "px";
     card.style.top = y + "px";
   }
 
+  window.addEventListener("resize", () => {
+    if (!isVisible()) return;
+    repositionOutcomeCard();
+  });
+
   window.__cpnOutcomeCard = {
     show: showOutcomeCard,
     hide: hideOutcomeCard,
-    reposition: repositionOutcomeCard
+    reposition: repositionOutcomeCard,
+    offsetW,
+    isVisible
   };
 })();

@@ -9,7 +9,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="2.98.0";
+  window.__CPN_BUILD="2.99.0";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -407,6 +407,7 @@
     /* Canvas outcome card — node-attached "Problems this solves" */
     #outcome-card{position:fixed;display:none;z-index:415;pointer-events:auto;
       width:min(340px,calc(100vw - 420px));max-height:min(78vh,560px);overflow:auto;
+      transition:left 480ms cubic-bezier(.4,0,.2,1),top 320ms cubic-bezier(.4,0,.2,1);
       border-radius:12px;border:1px solid rgba(45,206,92,.45);
       background:linear-gradient(155deg,rgba(8,28,18,.94) 0%,rgba(6,14,28,.96) 55%,rgba(4,20,32,.94) 100%);
       box-shadow:0 12px 40px rgba(0,0,0,.45),0 0 0 1px rgba(45,206,92,.12);
@@ -454,6 +455,7 @@
       border-color:rgba(30,150,70,.4);box-shadow:0 10px 30px rgba(0,60,40,.12)}
     [data-theme="light"] #outcome-card .oc-prob-before{color:#c0392b}
     [data-theme="light"] #outcome-card .oc-prob-after{color:#1e8449}
+    @media (prefers-reduced-motion:reduce){#outcome-card{transition:none}}
 
     #panel{position:fixed;top:var(--topbar-h);right:0;bottom:0;width:390px;
       background:var(--glass-bg);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
@@ -5658,9 +5660,15 @@ function panelOffsetW(){
   return panel?.classList.contains("open") ? 390 : 0;
 }
 
+function outcomeCardOffsetW(){
+  try {
+    return window.__cpnOutcomeCard?.offsetW?.() || 0;
+  } catch (e) { return 0; }
+}
+
 /** Left/top chrome that should stay clear of the graph (pillar legend in Families). */
 function graphChromeInsets(){
-  const right = panelOffsetW();
+  const right = panelOffsetW() + outcomeCardOffsetW();
   let left = 0, top = 0;
   const leg = document.getElementById("pillar-legend");
   if (viewMode === "families" && usePillarLayout() && leg?.classList.contains("show")){
@@ -5793,17 +5801,25 @@ function applyCompositionLayout(){
     .attr("x2", d => px(tid(d))).attr("y2", d => py(tid(d)));
 }
 
-function fitCompositionView(){
+function fitCompositionView(immediate = true){
   const {w, h} = getDims();
   if (w < 40 || h < 40) return;
-  const pw = panelOffsetW();
+  const { right } = graphChromeInsets();
   const r = (compositionOrbitR || 160) + 40;
   const diameter = (r + 32) * 2;
-  const k = Math.min(1.05, Math.max(0.55, Math.min(w - pw - 48, h - 90) / diameter));
-  applyGraphTransform(0, 0, k, true);
+  const k = Math.min(1.05, Math.max(0.55, Math.min(w - right - 48, h - 90) / diameter));
+  applyGraphTransform(0, 0, k, immediate);
 }
 
-function fitVisibleGraphView(fallbackScale){
+function refitGraphForChrome(animate){
+  const immediate = compositionReducedMotion() || !animate;
+  if (viewMode === "composition") fitCompositionView(immediate);
+  else if (viewMode === "families" && usePillarLayout()) fitPillarLayoutView(immediate);
+  else if (viewMode === "families") fitVisibleGraphView(0.78, immediate);
+}
+window.refitGraphForChrome = refitGraphForChrome;
+
+function fitVisibleGraphView(fallbackScale, immediate = false){
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity, count = 0;
   viewNodes.forEach(n => {
     if (!nodeVisibleForFit(n)) return;
@@ -5817,15 +5833,15 @@ function fitVisibleGraphView(fallbackScale){
     maxY = Math.max(maxY, y + pad + 16);
     count++;
   });
-  if (!count){ applyGraphTransform(0, 0, fallbackScale || 0.78); return; }
+  if (!count){ applyGraphTransform(0, 0, fallbackScale || 0.78, immediate); return; }
   applyGraphTransform((minX + maxX) / 2, (minY + maxY) / 2,
     Math.min(1.15, Math.max(0.35, (() => {
       const {w, h} = getDims();
-      const pw = panelOffsetW();
+      const { right } = graphChromeInsets();
       const bw = Math.max(maxX - minX, 60);
       const bh = Math.max(maxY - minY, 60);
-      return Math.min((w - pw - 72) / bw, (h - 96) / bh);
-    })())));
+      return Math.min((w - right - 72) / bw, (h - 96) / bh);
+    })())), immediate);
 }
 
 function fitAllProductsView(){
@@ -5874,7 +5890,7 @@ function fitOverviewDeckView(){
   applyGraphTransform(0, (minY + maxY) / 2, k);
 }
 
-function fitPillarLayoutView(){
+function fitPillarLayoutView(immediate = false){
   const focused = singlePillarFocused();
   const F = focused ? PILLAR_FIT.focus : PILLAR_FIT.all;
   const pad = F.pad;
@@ -5905,7 +5921,7 @@ function fitPillarLayoutView(){
   const availH = Math.max(240, (focused ? h - top : h) - F.marginY);
   const k = Math.min(F.maxK, Math.max(F.minK,
     Math.min(availW / bw * F.widthFill, availH / bh * F.heightFill)));
-  applyGraphTransform(0, (minY + maxY) / 2, k, false, { topBias: 0.18 });
+  applyGraphTransform(0, (minY + maxY) / 2, k, immediate, { topBias: 0.18 });
 }
 
 let graphFitTimer = null;
@@ -17309,11 +17325,11 @@ window.__cpnV2 = {
 };
 })();
 </script>
-<script src="assets/cpn-problems.js?v=2.98.0"></script>
-<script src="assets/cpn-outcome-card.js?v=2.98.0"></script>
-<script src="assets/cpn-cloud-control-ops.js?v=2.98.0"></script>
-<script src="assets/cpn-lazy-load.js?v=2.98.0"></script>
-<script src="assets/cpn-kiosk.js?v=2.98.0"></script>
+<script src="assets/cpn-problems.js?v=2.99.0"></script>
+<script src="assets/cpn-outcome-card.js?v=2.99.0"></script>
+<script src="assets/cpn-cloud-control-ops.js?v=2.99.0"></script>
+<script src="assets/cpn-lazy-load.js?v=2.99.0"></script>
+<script src="assets/cpn-kiosk.js?v=2.99.0"></script>
 <script src="assets/cpn-logo-intro.js?v=2.91.6"></script>
 </body>
 </html>
