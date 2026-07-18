@@ -9,7 +9,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="2.99.0";
+  window.__CPN_BUILD="3.0.0";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -404,57 +404,60 @@
     /* DETAIL PANEL */
     [data-theme="light"] #link-why-card .lwc-tag{color:#334155;background:rgba(0,110,143,.08);border-color:rgba(0,110,143,.22)}
 
-    /* Canvas outcome card — node-attached "Problems this solves" */
+    /* Canvas outcome card — editorial "Problems this solves" */
     #outcome-card{position:fixed;display:none;z-index:415;pointer-events:auto;
-      width:min(340px,calc(100vw - 420px));max-height:min(78vh,560px);overflow:auto;
+      width:min(360px,calc(100vw - 420px));max-height:min(78vh,560px);overflow:auto;
       transition:left 480ms cubic-bezier(.4,0,.2,1),top 320ms cubic-bezier(.4,0,.2,1);
-      border-radius:12px;border:1px solid rgba(45,206,92,.45);
-      background:linear-gradient(155deg,rgba(8,28,18,.94) 0%,rgba(6,14,28,.96) 55%,rgba(4,20,32,.94) 100%);
-      box-shadow:0 12px 40px rgba(0,0,0,.45),0 0 0 1px rgba(45,206,92,.12);
-      padding:12px 13px 11px;backdrop-filter:blur(10px)}
-    #outcome-card .oc-close{position:absolute;top:8px;right:8px;font-family:inherit;font-size:18px;line-height:1;
+      border-radius:16px;border:1px solid rgba(255,255,255,.08);
+      background:rgba(12,16,24,.92);box-shadow:0 20px 60px rgba(0,0,0,.55);
+      padding:18px 20px 16px;backdrop-filter:blur(20px)}
+    #outcome-card .oc-close{position:absolute;top:12px;right:12px;font-family:inherit;font-size:18px;line-height:1;
       cursor:pointer;border:none;background:transparent;color:var(--muted);padding:2px 6px;border-radius:6px}
     #outcome-card .oc-close:hover{color:var(--fg);background:rgba(255,255,255,.06)}
-    #outcome-card .oc-head{margin:0 28px 8px 0}
-    #outcome-card .oc-family{font-size:11px;font-weight:700;color:#2dce5c;text-transform:uppercase;letter-spacing:.04em}
-    #outcome-card .oc-title{font-size:13px;font-weight:800;color:var(--fg);margin-top:2px}
-    #outcome-card .oc-personas{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap}
-    #outcome-card .oc-persona{font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;
-      padding:3px 8px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);transition:all .15s}
-    #outcome-card .oc-persona:hover{border-color:#2dce5c;color:var(--fg)}
-    #outcome-card .oc-persona.on{background:#2dce5c;border-color:#2dce5c;color:#04210f}
-    #outcome-card .oc-prob-item{padding:9px 10px;border-radius:9px;margin-bottom:7px;
-      border:1px solid rgba(45,206,92,.24);background:rgba(45,206,92,.08)}
-    #outcome-card .oc-prob-symptom{font-size:11.5px;font-style:italic;color:var(--muted);line-height:1.4;margin-bottom:5px}
-    #outcome-card .oc-prob-outcome{font-size:12px;font-weight:700;color:var(--fg);line-height:1.4;display:flex;gap:5px}
-    #outcome-card .oc-prob-tick{color:#2dce5c;flex-shrink:0}
-    #outcome-card .oc-prob-proof{margin-top:5px;font-size:10px;color:var(--muted);line-height:1.4}
-    #outcome-card .oc-prob-k{font-weight:700;color:var(--fg)}
-    #outcome-card .oc-prob-before{color:#e07a7a}
-    #outcome-card .oc-prob-arrow{opacity:.7;padding:0 2px}
-    #outcome-card .oc-prob-after{color:#2dce5c;font-weight:600}
-    #outcome-card .oc-prob-next{display:block;width:100%;margin-top:6px;text-align:left;font-family:inherit;
-      font-size:10px;font-weight:600;cursor:pointer;padding:4px 8px;border-radius:6px;
-      border:1px dashed rgba(45,206,92,.35);background:transparent;color:var(--muted)}
-    #outcome-card .oc-prob-next:hover{border-color:#2dce5c;color:var(--fg)}
-    #outcome-card .oc-more{width:100%;font-family:inherit;font-size:10.5px;font-weight:700;cursor:pointer;
-      padding:5px;border-radius:6px;border:1px dashed var(--line);background:transparent;color:var(--muted);margin-top:2px}
-    #outcome-card .oc-more:hover{border-color:#2dce5c;color:#2dce5c}
-    #outcome-card .oc-journey{margin-top:10px;padding-top:9px;border-top:1px solid rgba(45,206,92,.2)}
-    #outcome-card .oc-journey-label{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:6px}
-    #outcome-card .oc-journey-track{display:flex;flex-wrap:wrap;align-items:center;gap:4px 2px}
-    #outcome-card .oc-j-arrow{color:var(--muted);font-size:10px;padding:0 1px}
-    #outcome-card .oc-j-step{font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;
-      padding:4px 8px;border-radius:6px;border:1px solid rgba(45,206,92,.45);
-      background:rgba(45,206,92,.1);color:#2dce5c;text-decoration:none;transition:all .15s;white-space:nowrap}
-    #outcome-card .oc-j-step:hover{background:rgba(45,206,92,.22)}
-    #outcome-card .oc-j-step--canvas{border-color:rgba(2,200,255,.45);background:rgba(2,200,255,.1);color:#02c8ff}
-    #outcome-card .oc-j-step--canvas:hover{background:rgba(2,200,255,.2)}
-    #outcome-card .oc-note{font-size:9px;color:var(--muted);opacity:.75;margin-top:8px}
-    [data-theme="light"] #outcome-card{background:linear-gradient(155deg,rgba(240,255,246,.97),rgba(248,252,255,.98));
-      border-color:rgba(30,150,70,.4);box-shadow:0 10px 30px rgba(0,60,40,.12)}
-    [data-theme="light"] #outcome-card .oc-prob-before{color:#c0392b}
-    [data-theme="light"] #outcome-card .oc-prob-after{color:#1e8449}
+    #outcome-card .oc-head{margin:0 32px 14px 0}
+    #outcome-card .oc-title{font-size:18px;font-weight:700;line-height:1.2;letter-spacing:-.02em;color:var(--fg)}
+    #outcome-card .oc-meta{font-size:11px;color:var(--subtle);margin-top:3px}
+    #outcome-card .oc-personas{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+    #outcome-card .oc-persona{font-family:inherit;font-size:10px;font-weight:600;cursor:pointer;
+      padding:4px 0;background:none;border:none;border-bottom:2px solid transparent;color:var(--subtle);transition:all .15s}
+    #outcome-card .oc-persona:hover{color:var(--fg)}
+    #outcome-card .oc-persona.on{color:var(--fg);border-bottom-color:var(--fg)}
+    #outcome-card .oc-prob-divider{height:1px;background:rgba(255,255,255,.08);margin:16px 0}
+    #outcome-card .oc-quote{font-size:14px;line-height:1.55;color:var(--muted);margin-bottom:14px;font-weight:400}
+    #outcome-card .oc-quote em{font-style:normal;color:rgba(255,255,255,.85)}
+    #outcome-card .oc-headline{font-size:15px;font-weight:700;line-height:1.45;margin-bottom:12px;color:var(--fg)}
+    #outcome-card .oc-compare{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:14px;font-size:11px;line-height:1.4}
+    #outcome-card .oc-compare-box{padding:10px;border-radius:8px}
+    #outcome-card .oc-compare-before{background:rgba(255,0,127,.08);color:#ffb3d9}
+    #outcome-card .oc-compare-after{background:rgba(2,200,255,.08);color:#7ee8ff}
+    #outcome-card .oc-compare-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;opacity:.7;margin-bottom:4px}
+    #outcome-card .oc-compare-arrow{color:var(--subtle);font-size:14px;text-align:center}
+    #outcome-card .oc-prob-next{display:block;width:100%;margin-top:0;text-align:left;font-family:inherit;
+      font-size:12px;font-weight:400;cursor:pointer;padding:12px 0 0;border:none;border-top:1px solid rgba(255,255,255,.08);
+      background:transparent;color:var(--muted)}
+    #outcome-card .oc-prob-next b{color:var(--accent);font-weight:600}
+    #outcome-card .oc-prob-next:hover{color:var(--fg)}
+    #outcome-card .oc-more{display:block;width:100%;margin-top:12px;font-family:inherit;font-size:11px;font-weight:600;
+      color:var(--accent);background:none;border:none;cursor:pointer;text-align:center;padding:6px}
+    #outcome-card .oc-more:hover{text-decoration:underline}
+    #outcome-card .oc-journey{margin-top:16px}
+    #outcome-card .oc-journey-label{font-size:10px;font-weight:600;color:var(--subtle);margin-bottom:8px}
+    #outcome-card .oc-journey-flow{display:flex;align-items:center;gap:0;overflow-x:auto;padding-bottom:4px}
+    #outcome-card .oc-j-line{width:16px;height:1px;background:rgba(255,255,255,.15);flex-shrink:0}
+    #outcome-card .oc-j-node{flex-shrink:0;font-family:inherit;font-size:10px;font-weight:600;padding:6px 10px;
+      border-radius:999px;background:rgba(255,255,255,.06);color:var(--fg);border:none;cursor:pointer;
+      white-space:nowrap;text-decoration:none;transition:background .15s}
+    #outcome-card .oc-j-node:hover{background:rgba(255,255,255,.12)}
+    #outcome-card .oc-j-node--canvas{background:rgba(2,200,255,.1);color:#7ee8ff}
+    #outcome-card .oc-j-node--canvas:hover{background:rgba(2,200,255,.18)}
+    #outcome-card .oc-note{font-size:10px;color:var(--subtle);margin-top:14px}
+    [data-theme="light"] #outcome-card{background:rgba(255,255,255,.97);border-color:rgba(7,24,45,.1);
+      box-shadow:0 16px 48px rgba(7,24,45,.12)}
+    [data-theme="light"] #outcome-card .oc-quote em{color:#07182d}
+    [data-theme="light"] #outcome-card .oc-compare-before{background:rgba(255,0,127,.06);color:#9d174d}
+    [data-theme="light"] #outcome-card .oc-compare-after{background:rgba(2,200,255,.08);color:#0369a1}
+    [data-theme="light"] #outcome-card .oc-j-node{color:#07182d;background:rgba(7,24,45,.06)}
+    [data-theme="light"] #outcome-card .oc-prob-next{border-top-color:rgba(7,24,45,.1)}
     @media (prefers-reduced-motion:reduce){#outcome-card{transition:none}}
 
     #panel{position:fixed;top:var(--topbar-h);right:0;bottom:0;width:390px;
@@ -17325,11 +17328,11 @@ window.__cpnV2 = {
 };
 })();
 </script>
-<script src="assets/cpn-problems.js?v=2.99.0"></script>
-<script src="assets/cpn-outcome-card.js?v=2.99.0"></script>
-<script src="assets/cpn-cloud-control-ops.js?v=2.99.0"></script>
-<script src="assets/cpn-lazy-load.js?v=2.99.0"></script>
-<script src="assets/cpn-kiosk.js?v=2.99.0"></script>
+<script src="assets/cpn-problems.js?v=3.0.0"></script>
+<script src="assets/cpn-outcome-card.js?v=3.0.0"></script>
+<script src="assets/cpn-cloud-control-ops.js?v=3.0.0"></script>
+<script src="assets/cpn-lazy-load.js?v=3.0.0"></script>
+<script src="assets/cpn-kiosk.js?v=3.0.0"></script>
 <script src="assets/cpn-logo-intro.js?v=2.91.6"></script>
 </body>
 </html>

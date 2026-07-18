@@ -53,14 +53,14 @@ try {
     const out = {
       visible: el?.style.display !== "none",
       hasJourney: !!el?.querySelector(".oc-journey"),
-      journeySteps: el?.querySelectorAll(".oc-j-step").length || 0,
-      hasProof: !!el?.querySelector(".oc-prob-proof"),
+      journeySteps: el?.querySelectorAll(".oc-j-node").length || 0,
+      hasProof: !!el?.querySelector(".oc-compare"),
       personaChips: el?.querySelectorAll(".oc-persona").length || 0,
       noPanelBlock: !document.querySelector("#pbody .p-prob")
     };
-    const before = el?.querySelector(".oc-prob-outcome")?.textContent || "";
+    const before = el?.querySelector(".oc-headline")?.textContent || "";
     el?.querySelector('[data-oc-persona="ciso"]')?.click();
-    const after = document.getElementById("outcome-card")?.querySelector(".oc-prob-outcome")?.textContent || "";
+    const after = document.getElementById("outcome-card")?.querySelector(".oc-headline")?.textContent || "";
     out.personaChanged = before !== after;
     window.setPersona("");
     return out;

@@ -10,7 +10,7 @@
   "use strict";
 
   const CARD_GAP = 16;
-  const CARD_FALLBACK_W = 340;
+  const CARD_FALLBACK_W = 360;
 
   let activeFamilyId = null;
   let expandedMore = false;
@@ -133,23 +133,33 @@
     return steps;
   }
 
+  function journeyShortLabel(s) {
+    if (s.key === "explore") return "Explore";
+    if (s.key === "dcloud") return "dCloud";
+    if (s.key === "canvas") return "AI Canvas";
+    if (s.key === "learn") return "Skill up";
+    return s.label;
+  }
+
   function renderJourneyHtml(steps) {
     if (!steps.length) return "";
+    const nodes = steps.map((s, i) => {
+      const line = i > 0 ? `<span class="oc-j-line" aria-hidden="true"></span>` : "";
+      const label = escapeHtml(journeyShortLabel(s));
+      if (s.kind === "link") {
+        return `${line}<a class="oc-j-node" href="${escapeAttr(s.url)}" target="_blank" rel="noopener" title="${escapeAttr(s.hint || s.label)}">${label}</a>`;
+      }
+      if (s.key === "explore") {
+        return `${line}<button type="button" class="oc-j-node" data-ocj-explore="${escapeAttr(s.probId)}">${label}</button>`;
+      }
+      if (s.key === "canvas") {
+        return `${line}<button type="button" class="oc-j-node oc-j-node--canvas" data-ocj-canvas="${escapeAttr(s.familyId)}">${label}</button>`;
+      }
+      return "";
+    }).join("");
     return `<div class="oc-journey">
       <div class="oc-journey-label">Journey</div>
-      <div class="oc-journey-track">${steps.map((s, i) => {
-        const arrow = i > 0 ? `<span class="oc-j-arrow" aria-hidden="true">→</span>` : "";
-        if (s.kind === "link") {
-          return `${arrow}<a class="oc-j-step" href="${escapeAttr(s.url)}" target="_blank" rel="noopener" title="${escapeAttr(s.hint || s.label)}">${escapeHtml(s.label)} ↗</a>`;
-        }
-        if (s.key === "explore") {
-          return `${arrow}<button type="button" class="oc-j-step" data-ocj-explore="${escapeAttr(s.probId)}">${escapeHtml(s.label)}</button>`;
-        }
-        if (s.key === "canvas") {
-          return `${arrow}<button type="button" class="oc-j-step oc-j-step--canvas" data-ocj-canvas="${escapeAttr(s.familyId)}">${escapeHtml(s.label)} →</button>`;
-        }
-        return "";
-      }).join("")}</div>
+      <div class="oc-journey-flow">${nodes}</div>
     </div>`;
   }
 
@@ -159,21 +169,35 @@
   }
   function escapeAttr(s) { return escapeHtml(s); }
 
-  function problemBlockHtml(prob, persona, P) {
+  function problemBlockHtml(prob, persona, P, opts) {
     const line = persona ? P.personaLine(prob, persona) : prob.outcome;
-    const proof = prob.proof
-      ? `<div class="oc-prob-proof"><span class="oc-prob-k">${escapeHtml(prob.proof.metric)}:</span> <span class="oc-prob-before">${escapeHtml(prob.proof.before)}</span> <span class="oc-prob-arrow">→</span> <span class="oc-prob-after">${escapeHtml(prob.proof.after)}</span></div>`
+    const compare = prob.proof
+      ? `<div class="oc-compare">
+          <div class="oc-compare-box oc-compare-before">
+            <div class="oc-compare-lbl">Before</div>${escapeHtml(prob.proof.before)}
+          </div>
+          <div class="oc-compare-arrow" aria-hidden="true">→</div>
+          <div class="oc-compare-box oc-compare-after">
+            <div class="oc-compare-lbl">After</div>${escapeHtml(prob.proof.after)}
+          </div>
+        </div>`
       : "";
     const next = prob.maturityNext ? P.getProblem(prob.maturityNext) : null;
     const chain = next
-      ? `<button type="button" class="oc-prob-next" data-ocj-explore="${escapeAttr(next.id)}">Then: ${escapeHtml(next.outcome)} →</button>`
+      ? `<button type="button" class="oc-prob-next" data-ocj-explore="${escapeAttr(next.id)}">Then explore <b>${escapeHtml(next.outcome)}</b> →</button>`
       : "";
-    return `<div class="oc-prob-item">
-      <div class="oc-prob-symptom">${escapeHtml(prob.symptom)}</div>
-      <div class="oc-prob-outcome"><span class="oc-prob-tick">✓</span>${escapeHtml(line)}</div>
-      ${proof}
-      ${chain}
-    </div>`;
+    const divider = opts?.withDivider ? `<div class="oc-prob-divider" role="separator"></div>` : "";
+    return `${divider}
+      <p class="oc-quote">"<em>${escapeHtml(prob.symptom)}</em>"</p>
+      <div class="oc-headline">${escapeHtml(line)}</div>
+      ${compare}
+      ${chain}`;
+  }
+
+  function personaMetaLabel(persona, P) {
+    if (!persona) return "Problems this solves";
+    const p = P.PERSONAS.find(x => x.id === persona);
+    return `Problems this solves · ${p?.label || persona} view`;
   }
 
   function wireCard(card, familyId, primaryProb) {
@@ -237,13 +261,13 @@
     card.innerHTML = `
       <button type="button" class="oc-close" aria-label="Dismiss outcome card">×</button>
       <div class="oc-head">
-        <div class="oc-family">${escapeHtml(famName)}</div>
-        <div class="oc-title">Problems this solves</div>
+        <div class="oc-title">${escapeHtml(famName)}</div>
+        <div class="oc-meta">${escapeHtml(personaMetaLabel(persona, P))}</div>
       </div>
       <div class="oc-personas" role="group" aria-label="Frame for persona">${personaChips}</div>
       <div class="oc-problems">
         ${problemBlockHtml(primary, persona, P)}
-        ${showRest ? rest.map(p => problemBlockHtml(p, persona, P)).join("") : ""}
+        ${showRest ? rest.map((p, i) => problemBlockHtml(p, persona, P, { withDivider: true })).join("") : ""}
         ${moreBtn}
       </div>
       ${renderJourneyHtml(journeySteps(familyId, primary, problems))}
