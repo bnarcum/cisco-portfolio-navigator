@@ -14,6 +14,8 @@
   --cisco-blue-light: #0088ad;
   --cpn-hover: rgba(0, 110, 143, 0.08);
   --cpn-dim: rgba(7, 24, 45, 0.2);
+  --acq-card-bg: var(--glass-bg);
+  --acq-card-shadow: 0 6px 18px rgba(7, 24, 45, 0.08);
 }
 
 /* ── Shared buttons (main chrome) ───────────────────────────── */
@@ -218,8 +220,8 @@
 
 /* ── Acquisition timeline (light theme) ───────────────────────── */
 [data-theme="light"] .acq-card-shell {
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 6px 18px rgba(7, 24, 45, 0.08);
+  background: var(--acq-card-bg);
+  box-shadow: var(--acq-card-shadow);
 }
 [data-theme="light"] .acq-card-logo-wrap {
   background: rgba(7, 24, 45, 0.04);

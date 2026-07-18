@@ -386,13 +386,13 @@ body.acq-open #tools {
 }
 
 .acq-card-shell {
-  background: var(--glass-bg, rgba(10, 34, 64, 0.72));
+  background: var(--acq-card-bg, var(--glass-bg, rgba(10, 34, 64, 0.72)));
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 5px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--acq-card-shadow, 0 8px 24px rgba(0, 0, 0, 0.35));
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
@@ -726,13 +726,20 @@ body.acq-open #tools {
 @media (max-width: 768px) {
   #acq-head {
     align-items: flex-start;
-    padding-inline: 12px;
+    flex-direction: column;
+    padding: 10px 14px;
   }
   .acq-head-controls {
-    gap: 5px;
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
   }
   #acq-search {
-    width: 150px;
+    min-width: 0;
+    width: 100%;
+  }
+  #acq-focus.show {
+    max-height: 190px;
   }
   #acq-focus-inner {
     grid-template-columns: 56px 1fr;

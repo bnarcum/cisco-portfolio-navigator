@@ -7,6 +7,99 @@ const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const html = path.join(root, "cisco-portfolio-navigator.html");
 const errors = [];
 const browser = await chromium.launch();
+const cases = [
+  { name: "desktop-dark", width: 1440, height: 900, theme: "dark", reducedMotion: "no-preference" },
+  { name: "tablet-light", width: 1024, height: 768, theme: "light", reducedMotion: "no-preference" },
+  { name: "mobile-reduced", width: 390, height: 844, theme: "dark", reducedMotion: "reduce" },
+];
+
+for (const testCase of cases) {
+  const casePage = await browser.newPage({
+    viewport: { width: testCase.width, height: testCase.height },
+    reducedMotion: testCase.reducedMotion,
+  });
+  await casePage.addInitScript(theme => {
+    if (theme === "light") document.documentElement.setAttribute("data-theme", "light");
+    else document.documentElement.removeAttribute("data-theme");
+  }, testCase.theme);
+  await casePage.goto(`file://${html}`, { waitUntil: "load", timeout: 60000 });
+  await casePage.evaluate(theme => {
+    if (theme === "light") document.documentElement.setAttribute("data-theme", "light");
+    else document.documentElement.removeAttribute("data-theme");
+  }, testCase.theme);
+  await casePage.waitForFunction(() => window.CPN_AcquisitionTimeline?.open);
+  await casePage.evaluate(() => window.CPN_AcquisitionTimeline.open());
+  await casePage.waitForSelector("#acq-wrap.show");
+
+  const state = await casePage.evaluate(() => window.CPN_AcquisitionTimeline.testState());
+  if (state.overlapCount !== 0) errors.push(`${testCase.name}: ${state.overlapCount} overlaps`);
+  if (state.representedCount !== state.totalCount) {
+    errors.push(`${testCase.name}: incomplete overview`);
+  }
+  const horizontalOverflow = await casePage.evaluate(() =>
+    document.documentElement.scrollWidth > innerWidth);
+  if (horizontalOverflow) errors.push(`${testCase.name}: page-level horizontal overflow`);
+
+  if (testCase.theme === "light") {
+    await casePage.click('.acq-year-marker[data-year="2012"]');
+    await casePage.waitForFunction(() =>
+      window.CPN_AcquisitionTimeline.testState().level === "explore");
+    const usesThemeCardSurface = await casePage.evaluate(() => {
+      const card = document.querySelector(".acq-card-shell");
+      const probe = document.createElement("div");
+      probe.style.background = "var(--glass-bg)";
+      document.body.append(probe);
+      const matches = getComputedStyle(card).backgroundColor ===
+        getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      return matches;
+    });
+    if (!usesThemeCardSurface) {
+      errors.push(`${testCase.name}: cards bypass light-theme surface variable`);
+    }
+  }
+
+  if (testCase.width <= 768) {
+    const mobileHeader = await casePage.evaluate(() => {
+      const head = document.querySelector("#acq-head");
+      const controls = document.querySelector(".acq-head-controls");
+      const search = document.querySelector("#acq-search");
+      const headRect = head.getBoundingClientRect();
+      const controlsRect = controls.getBoundingClientRect();
+      const searchRect = search.getBoundingClientRect();
+      return {
+        direction: getComputedStyle(head).flexDirection,
+        controlsDisplay: getComputedStyle(controls).display,
+        controlsContained: controlsRect.left >= headRect.left &&
+          controlsRect.right <= headRect.right,
+        searchContained: searchRect.left >= controlsRect.left &&
+          searchRect.right <= controlsRect.right,
+      };
+    });
+    if (mobileHeader.direction !== "column") {
+      errors.push(`${testCase.name}: header did not stack`);
+    }
+    if (mobileHeader.controlsDisplay !== "grid") {
+      errors.push(`${testCase.name}: controls did not use compact grid`);
+    }
+    if (!mobileHeader.controlsContained || !mobileHeader.searchContained) {
+      errors.push(`${testCase.name}: header controls overflowed`);
+    }
+
+    await casePage.click('.acq-year-marker[data-year="2012"]');
+    await casePage.waitForFunction(() =>
+      window.CPN_AcquisitionTimeline.testState().level === "explore");
+    await casePage.click('.acq-card[data-id="meraki"]');
+    await casePage.waitForSelector("#acq-focus.show");
+    const focusMaxHeight = await casePage.locator("#acq-focus")
+      .evaluate(element => getComputedStyle(element).maxHeight);
+    if (focusMaxHeight !== "190px") {
+      errors.push(`${testCase.name}: focus max-height ${focusMaxHeight}`);
+    }
+  }
+  await casePage.close();
+}
+
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 
 await page.goto(`file://${html}`, { waitUntil: "load", timeout: 60000 });
