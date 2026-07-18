@@ -697,7 +697,9 @@
     }
     if (menu) menu.hidden = true;
     menu?.querySelectorAll("[data-acq-filter]").forEach(item => {
-      item.setAttribute("aria-checked", String(item.dataset.acqFilter === filter));
+      const selected = item.dataset.acqFilter === filter;
+      item.setAttribute("aria-checked", String(selected));
+      item.tabIndex = selected ? 0 : -1;
     });
     if (render) renderAcquisitionTimeline();
     if (restoreFocus) focusVisible(button);
@@ -718,6 +720,13 @@
     if (restoreFocus) focusVisible(button);
   }
 
+  function setMenuRovingItem(target) {
+    const items = $("#acq-filter-menu")?.querySelectorAll("[role='menuitemradio']") || [];
+    items.forEach(item => {
+      item.tabIndex = item === target ? 0 : -1;
+    });
+  }
+
   function buildFilterMenu() {
     const menu = $("#acq-filter-menu");
     if (!menu) return;
@@ -734,6 +743,7 @@
       item.type = "button";
       item.setAttribute("role", "menuitemradio");
       item.setAttribute("aria-checked", String(filter.id === ACQ.filter));
+      item.tabIndex = filter.id === ACQ.filter ? 0 : -1;
       item.dataset.acqFilter = filter.id;
       item.textContent = filter.label;
       item.addEventListener("click", () => setFilter(filter.id, filter.label));
@@ -882,7 +892,11 @@
       const open = button.getAttribute("aria-expanded") !== "true";
       button.setAttribute("aria-expanded", String(open));
       if (menu) menu.hidden = !open;
-      if (open) focusVisible(menu?.querySelector('[aria-checked="true"]'));
+      if (open) {
+        const selected = menu?.querySelector('[aria-checked="true"]');
+        setMenuRovingItem(selected);
+        focusVisible(selected);
+      }
     });
     $("#acq-filter-menu")?.addEventListener("keydown", event => {
       const items = [...event.currentTarget.querySelectorAll("[role='menuitemradio']")];
@@ -892,6 +906,13 @@
       else if (event.key === "ArrowUp") target = items[(current - 1 + items.length) % items.length];
       else if (event.key === "Home") target = items[0];
       else if (event.key === "End") target = items.at(-1);
+      else if (event.key === "Tab") {
+        event.preventDefault();
+        event.stopPropagation();
+        closeFilterMenu();
+        focusVisible(event.shiftKey ? $("#acq-filter-btn") : $("#acq-close"));
+        return;
+      }
       else if (event.key === "Escape") {
         event.preventDefault();
         event.stopPropagation();
@@ -900,6 +921,7 @@
       }
       if (target) {
         event.preventDefault();
+        setMenuRovingItem(target);
         focusVisible(target);
       }
     });

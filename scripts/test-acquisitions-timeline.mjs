@@ -141,9 +141,29 @@ if (searchSelection.activeId !== excludedSearch.id || !searchSelection.activeVis
 }
 
 await page.click("#acq-filter-btn");
+let rovingState = await page.evaluate(() => {
+  const items = [...document.querySelectorAll("#acq-filter-menu [role='menuitemradio']")];
+  return {
+    tabStops: items.filter(item => item.tabIndex === 0).map(item => item.dataset.acqFilter),
+    active: document.activeElement?.dataset?.acqFilter,
+  };
+});
+if (rovingState.tabStops.length !== 1 || rovingState.tabStops[0] !== rovingState.active) {
+  errors.push(`filter initial roving tabindex: ${rovingState.tabStops.join(",")}/${rovingState.active}`);
+}
 await page.keyboard.press("ArrowDown");
 let menuFocus = await page.evaluate(() => document.activeElement?.dataset?.acqFilter);
 if (menuFocus !== "featured") errors.push(`filter ArrowDown focus: ${menuFocus}`);
+rovingState = await page.evaluate(() => {
+  const items = [...document.querySelectorAll("#acq-filter-menu [role='menuitemradio']")];
+  return {
+    tabStops: items.filter(item => item.tabIndex === 0).map(item => item.dataset.acqFilter),
+    active: document.activeElement?.dataset?.acqFilter,
+  };
+});
+if (rovingState.tabStops.length !== 1 || rovingState.tabStops[0] !== "featured") {
+  errors.push(`filter moved roving tabindex: ${rovingState.tabStops.join(",")}`);
+}
 await page.keyboard.press("End");
 const lastFilter = await page.evaluate(() =>
   [...document.querySelectorAll("#acq-filter-menu [data-acq-filter]")].at(-1)?.dataset.acqFilter);
@@ -159,6 +179,22 @@ await page.keyboard.press("Escape");
 if (!(await page.locator("#acq-filter-menu").isHidden())) errors.push("Escape did not close filter menu");
 if (await page.evaluate(() => document.activeElement?.id) !== "acq-filter-btn") {
   errors.push("filter Escape did not restore button focus");
+}
+
+await page.click("#acq-filter-btn");
+await page.keyboard.press("ArrowDown");
+await page.keyboard.press("Tab");
+if (!(await page.locator("#acq-filter-menu").isHidden())) errors.push("Tab did not close filter menu");
+if (await page.evaluate(() => document.activeElement?.id) !== "acq-close") {
+  errors.push(`filter Tab exit: ${await page.evaluate(() => document.activeElement?.id)}`);
+}
+
+await page.locator("#acq-filter-btn").focus();
+await page.keyboard.press("Enter");
+await page.keyboard.press("Shift+Tab");
+if (!(await page.locator("#acq-filter-menu").isHidden())) errors.push("Shift+Tab did not close filter menu");
+if (await page.evaluate(() => document.activeElement?.id) !== "acq-filter-btn") {
+  errors.push(`filter Shift+Tab exit: ${await page.evaluate(() => document.activeElement?.id)}`);
 }
 
 await page.click("#acq-filter-btn");
@@ -259,12 +295,16 @@ if (accessibility.cardTabIndex != null && accessibility.cardTabIndex !== 0) {
 }
 if (accessibility.cardRole && !accessibility.cardLabel) errors.push("card label missing");
 
-const badVerified = await page.evaluate(() =>
-  window.CPN_ACQUISITIONS.acquisitions.some(acq =>
-    acq.visualIdentity?.kind === "verified-logo" &&
-    acq.visualIdentity?.source === "favicon-png")
-);
-if (badVerified) errors.push("unverified favicon rendered as verified logo");
+const invalidVerifiedSources = await page.evaluate(() => {
+  const allowed = new Set(["official", "wikimedia", "wikipedia", "manual"]);
+  return window.CPN_ACQUISITIONS.acquisitions
+    .filter(acq => acq.visualIdentity?.kind === "verified-logo" &&
+      !allowed.has(acq.visualIdentity?.source))
+    .map(acq => `${acq.id}:${acq.visualIdentity.source}`);
+});
+if (invalidVerifiedSources.length) {
+  errors.push(`invalid verified-logo provenance: ${invalidVerifiedSources.join(",")}`);
+}
 const incompleteIdentity = await page.evaluate(() =>
   window.CPN_ACQUISITIONS.acquisitions.some(acq =>
     !acq.visualIdentity?.kind || !acq.visualIdentity?.source || !acq.visualIdentity?.path)
