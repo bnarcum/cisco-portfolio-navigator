@@ -216,7 +216,18 @@
   background: rgba(0, 110, 143, 0.06);
 }
 
-/* ── Timeline view ───────────────────────────────────────────── */
+/* ── Acquisition timeline (light theme) ───────────────────────── */
+[data-theme="light"] .acq-card-shell {
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 6px 18px rgba(7, 24, 45, 0.08);
+}
+[data-theme="light"] .acq-card-logo-wrap {
+  background: rgba(7, 24, 45, 0.04);
+}
+[data-theme="light"] #acq-focus {
+  background: rgba(0, 110, 143, 0.06);
+}
+
 [data-theme="light"] #tl-canvas::-webkit-scrollbar,
 [data-theme="light"] #tl-canvas::-webkit-scrollbar-track,
 [data-theme="light"] #tl-canvas::-webkit-scrollbar-corner {

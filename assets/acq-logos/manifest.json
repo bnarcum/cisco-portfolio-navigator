@@ -1,0 +1,1420 @@
+{
+  "generated": "2026-07-18T15:15:16.082Z",
+  "counts": {
+    "favicon-png": 95,
+    "wordmark": 183,
+    "wikipedia": 4
+  },
+  "items": {
+    "crescendo-communications": {
+      "id": "crescendo-communications",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "newport-systems-solutions": {
+      "id": "newport-systems-solutions",
+      "source": "wordmark",
+      "ok": true
+    },
+    "kalpana": {
+      "id": "kalpana",
+      "source": "wordmark",
+      "ok": true
+    },
+    "lightstream": {
+      "id": "lightstream",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "combinet": {
+      "id": "combinet",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "internet-junction": {
+      "id": "internet-junction",
+      "source": "wordmark",
+      "ok": true
+    },
+    "network-translation": {
+      "id": "network-translation",
+      "source": "wordmark",
+      "ok": true
+    },
+    "grand-junction-networks": {
+      "id": "grand-junction-networks",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "tgv-software": {
+      "id": "tgv-software",
+      "source": "wordmark",
+      "ok": true
+    },
+    "stratacom": {
+      "id": "stratacom",
+      "source": "wordmark",
+      "ok": true
+    },
+    "telebit": {
+      "id": "telebit",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "telebits-mica": {
+      "id": "telebits-mica",
+      "source": "wordmark",
+      "ok": true
+    },
+    "nashoba-networks": {
+      "id": "nashoba-networks",
+      "source": "wordmark",
+      "ok": true
+    },
+    "granite-systems": {
+      "id": "granite-systems",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "netsys": {
+      "id": "netsys",
+      "source": "wordmark",
+      "ok": true
+    },
+    "metaplex": {
+      "id": "metaplex",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "telesend": {
+      "id": "telesend",
+      "source": "wordmark",
+      "ok": true
+    },
+    "skystone-systems": {
+      "id": "skystone-systems",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "global-internet-software": {
+      "id": "global-internet-software",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "ardent-communications": {
+      "id": "ardent-communications",
+      "source": "wordmark",
+      "ok": true
+    },
+    "dagaz": {
+      "id": "dagaz",
+      "source": "wordmark",
+      "ok": true
+    },
+    "integrated-network": {
+      "id": "integrated-network",
+      "source": "wordmark",
+      "ok": true
+    },
+    "lightspeed-international": {
+      "id": "lightspeed-international",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "wheel": {
+      "id": "wheel",
+      "source": "wordmark",
+      "ok": true
+    },
+    "wheelgroup": {
+      "id": "wheelgroup",
+      "source": "wordmark",
+      "ok": true
+    },
+    "netspeed": {
+      "id": "netspeed",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "precept-software": {
+      "id": "precept-software",
+      "source": "wordmark",
+      "ok": true
+    },
+    "class-data-systems": {
+      "id": "class-data-systems",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "summa-four": {
+      "id": "summa-four",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "american-internet": {
+      "id": "american-internet",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "clarity-wireless": {
+      "id": "clarity-wireless",
+      "source": "wordmark",
+      "ok": true
+    },
+    "selsius-systems": {
+      "id": "selsius-systems",
+      "source": "wordmark",
+      "ok": true
+    },
+    "pipelinks": {
+      "id": "pipelinks",
+      "source": "wordmark",
+      "ok": true
+    },
+    "fibex-systems": {
+      "id": "fibex-systems",
+      "source": "wordmark",
+      "ok": true
+    },
+    "sentient-networks": {
+      "id": "sentient-networks",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "geotel-communications": {
+      "id": "geotel-communications",
+      "source": "wordmark",
+      "ok": true
+    },
+    "amteva": {
+      "id": "amteva",
+      "source": "wordmark",
+      "ok": true
+    },
+    "amteva-technologies": {
+      "id": "amteva-technologies",
+      "source": "wordmark",
+      "ok": true
+    },
+    "transmedia-communications": {
+      "id": "transmedia-communications",
+      "source": "wordmark",
+      "ok": true
+    },
+    "stratumone-communications": {
+      "id": "stratumone-communications",
+      "source": "wordmark",
+      "ok": true
+    },
+    "calista": {
+      "id": "calista",
+      "source": "wordmark",
+      "ok": true
+    },
+    "maxcomm": {
+      "id": "maxcomm",
+      "source": "wordmark",
+      "ok": true
+    },
+    "maxcomm-technologies": {
+      "id": "maxcomm-technologies",
+      "source": "wordmark",
+      "ok": true
+    },
+    "monterey-networks": {
+      "id": "monterey-networks",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "cerent": {
+      "id": "cerent",
+      "source": "wordmark",
+      "ok": true
+    },
+    "ibm-networking-hardware-division": {
+      "id": "ibm-networking-hardware-division",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "cocom": {
+      "id": "cocom",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "webline-communications": {
+      "id": "webline-communications",
+      "source": "wordmark",
+      "ok": true
+    },
+    "tasmania-network-systems": {
+      "id": "tasmania-network-systems",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "aironet-wireless-communications": {
+      "id": "aironet-wireless-communications",
+      "source": "wordmark",
+      "ok": true
+    },
+    "v-bits": {
+      "id": "v-bits",
+      "source": "wordmark",
+      "ok": true
+    },
+    "worldwide-data-systems": {
+      "id": "worldwide-data-systems",
+      "source": "wordmark",
+      "ok": true
+    },
+    "internet-engineering-group": {
+      "id": "internet-engineering-group",
+      "source": "wordmark",
+      "ok": true
+    },
+    "pirelli-optical-systems": {
+      "id": "pirelli-optical-systems",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "compatible-systems": {
+      "id": "compatible-systems",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "altiga-networks": {
+      "id": "altiga-networks",
+      "source": "wordmark",
+      "ok": true
+    },
+    "growth-networks": {
+      "id": "growth-networks",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "atlantech": {
+      "id": "atlantech",
+      "source": "wordmark",
+      "ok": true
+    },
+    "jetcell": {
+      "id": "jetcell",
+      "source": "wordmark",
+      "ok": true
+    },
+    "infogear": {
+      "id": "infogear",
+      "source": "wordmark",
+      "ok": true
+    },
+    "infogear-technology": {
+      "id": "infogear-technology",
+      "source": "wordmark",
+      "ok": true
+    },
+    "sightpath": {
+      "id": "sightpath",
+      "source": "wordmark",
+      "ok": true
+    },
+    "pentacom": {
+      "id": "pentacom",
+      "source": "wordmark",
+      "ok": true
+    },
+    "seagull-semiconductor": {
+      "id": "seagull-semiconductor",
+      "source": "wordmark",
+      "ok": true
+    },
+    "arrowpoint-communications": {
+      "id": "arrowpoint-communications",
+      "source": "wordmark",
+      "ok": true
+    },
+    "qeyton-systems": {
+      "id": "qeyton-systems",
+      "source": "wordmark",
+      "ok": true
+    },
+    "hynex": {
+      "id": "hynex",
+      "source": "wordmark",
+      "ok": true
+    },
+    "netiverse": {
+      "id": "netiverse",
+      "source": "wordmark",
+      "ok": true
+    },
+    "komodo": {
+      "id": "komodo",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "komodo-tehnology": {
+      "id": "komodo-tehnology",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "nuspeed-internet-systems": {
+      "id": "nuspeed-internet-systems",
+      "source": "wordmark",
+      "ok": true
+    },
+    "ipmobile": {
+      "id": "ipmobile",
+      "source": "wordmark",
+      "ok": true
+    },
+    "pixstream": {
+      "id": "pixstream",
+      "source": "wordmark",
+      "ok": true
+    },
+    "ipcell": {
+      "id": "ipcell",
+      "source": "wordmark",
+      "ok": true
+    },
+    "vovida-networks": {
+      "id": "vovida-networks",
+      "source": "wordmark",
+      "ok": true
+    },
+    "ipcell-technologies": {
+      "id": "ipcell-technologies",
+      "source": "wordmark",
+      "ok": true
+    },
+    "cais-software": {
+      "id": "cais-software",
+      "source": "wordmark",
+      "ok": true
+    },
+    "cais-software-solutions": {
+      "id": "cais-software-solutions",
+      "source": "wordmark",
+      "ok": true
+    },
+    "active-voice": {
+      "id": "active-voice",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "radiata": {
+      "id": "radiata",
+      "source": "wordmark",
+      "ok": true
+    },
+    "exio-communications": {
+      "id": "exio-communications",
+      "source": "wordmark",
+      "ok": true
+    },
+    "auroranetics": {
+      "id": "auroranetics",
+      "source": "wordmark",
+      "ok": true
+    },
+    "allegro-systems": {
+      "id": "allegro-systems",
+      "source": "wordmark",
+      "ok": true
+    },
+    "hammerhead-networks": {
+      "id": "hammerhead-networks",
+      "source": "wordmark",
+      "ok": true
+    },
+    "navarro-networks": {
+      "id": "navarro-networks",
+      "source": "wordmark",
+      "ok": true
+    },
+    "ayr-networks": {
+      "id": "ayr-networks",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "andiamo-systems": {
+      "id": "andiamo-systems",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "psionic-software": {
+      "id": "psionic-software",
+      "source": "wordmark",
+      "ok": true
+    },
+    "okena": {
+      "id": "okena",
+      "source": "wordmark",
+      "ok": true
+    },
+    "signalworks": {
+      "id": "signalworks",
+      "source": "wordmark",
+      "ok": true
+    },
+    "linksys": {
+      "id": "linksys",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "linksys-group": {
+      "id": "linksys-group",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "latitude-communications": {
+      "id": "latitude-communications",
+      "source": "wordmark",
+      "ok": true
+    },
+    "twingo-systems": {
+      "id": "twingo-systems",
+      "source": "wordmark",
+      "ok": true
+    },
+    "riverhead-networks": {
+      "id": "riverhead-networks",
+      "source": "wordmark",
+      "ok": true
+    },
+    "procket-networks": {
+      "id": "procket-networks",
+      "source": "wordmark",
+      "ok": true
+    },
+    "procket-network": {
+      "id": "procket-network",
+      "source": "wordmark",
+      "ok": true
+    },
+    "actona": {
+      "id": "actona",
+      "source": "wordmark",
+      "ok": true
+    },
+    "actona-technologies": {
+      "id": "actona-technologies",
+      "source": "wordmark",
+      "ok": true
+    },
+    "parc": {
+      "id": "parc",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "parc-technologies": {
+      "id": "parc-technologies",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "p-cube": {
+      "id": "p-cube",
+      "source": "wordmark",
+      "ok": true
+    },
+    "netsolve": {
+      "id": "netsolve",
+      "source": "wordmark",
+      "ok": true
+    },
+    "dynamicsoft": {
+      "id": "dynamicsoft",
+      "source": "wordmark",
+      "ok": true
+    },
+    "perfigo": {
+      "id": "perfigo",
+      "source": "wordmark",
+      "ok": true
+    },
+    "jahi-networks": {
+      "id": "jahi-networks",
+      "source": "wordmark",
+      "ok": true
+    },
+    "bcn-systems": {
+      "id": "bcn-systems",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "protego-networks": {
+      "id": "protego-networks",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "airespace": {
+      "id": "airespace",
+      "source": "wordmark",
+      "ok": true
+    },
+    "topspin-communications": {
+      "id": "topspin-communications",
+      "source": "wordmark",
+      "ok": true
+    },
+    "sipura": {
+      "id": "sipura",
+      "source": "wordmark",
+      "ok": true
+    },
+    "sipura-technology": {
+      "id": "sipura-technology",
+      "source": "wordmark",
+      "ok": true
+    },
+    "vihana": {
+      "id": "vihana",
+      "source": "wordmark",
+      "ok": true
+    },
+    "fineground-networks": {
+      "id": "fineground-networks",
+      "source": "wordmark",
+      "ok": true
+    },
+    "m-i-secure": {
+      "id": "m-i-secure",
+      "source": "wordmark",
+      "ok": true
+    },
+    "netsift": {
+      "id": "netsift",
+      "source": "wordmark",
+      "ok": true
+    },
+    "kiss": {
+      "id": "kiss",
+      "source": "wordmark",
+      "ok": true
+    },
+    "kiss-technology": {
+      "id": "kiss-technology",
+      "source": "wordmark",
+      "ok": true
+    },
+    "sheer-networks": {
+      "id": "sheer-networks",
+      "source": "wordmark",
+      "ok": true
+    },
+    "nemo-systems": {
+      "id": "nemo-systems",
+      "source": "wordmark",
+      "ok": true
+    },
+    "scientific-atlanta": {
+      "id": "scientific-atlanta",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "cybertrust": {
+      "id": "cybertrust",
+      "source": "wordmark",
+      "ok": true
+    },
+    "intellishield-alert-manager": {
+      "id": "intellishield-alert-manager",
+      "source": "wordmark",
+      "ok": true
+    },
+    "sypixx-networks": {
+      "id": "sypixx-networks",
+      "source": "wordmark",
+      "ok": true
+    },
+    "metreos": {
+      "id": "metreos",
+      "source": "wordmark",
+      "ok": true
+    },
+    "audium": {
+      "id": "audium",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "meetinghouse": {
+      "id": "meetinghouse",
+      "source": "wordmark",
+      "ok": true
+    },
+    "meetinghouse-data-communications": {
+      "id": "meetinghouse-data-communications",
+      "source": "wordmark",
+      "ok": true
+    },
+    "arroyo-video-solutions": {
+      "id": "arroyo-video-solutions",
+      "source": "wordmark",
+      "ok": true
+    },
+    "ashley-laurent": {
+      "id": "ashley-laurent",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "orative": {
+      "id": "orative",
+      "source": "wordmark",
+      "ok": true
+    },
+    "greenfield-networks": {
+      "id": "greenfield-networks",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "tivella": {
+      "id": "tivella",
+      "source": "wordmark",
+      "ok": true
+    },
+    "ironport": {
+      "id": "ironport",
+      "source": "wordmark",
+      "ok": true
+    },
+    "ironport-systems": {
+      "id": "ironport-systems",
+      "source": "wordmark",
+      "ok": true
+    },
+    "five-across": {
+      "id": "five-across",
+      "source": "wordmark",
+      "ok": true
+    },
+    "reactivity": {
+      "id": "reactivity",
+      "source": "wordmark",
+      "ok": true
+    },
+    "utah-street-networks": {
+      "id": "utah-street-networks",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "neopath": {
+      "id": "neopath",
+      "source": "wordmark",
+      "ok": true
+    },
+    "neopath-networks": {
+      "id": "neopath-networks",
+      "source": "wordmark",
+      "ok": true
+    },
+    "webex": {
+      "id": "webex",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "webex-communications": {
+      "id": "webex-communications",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "spanslogic": {
+      "id": "spanslogic",
+      "source": "wordmark",
+      "ok": true
+    },
+    "broadware": {
+      "id": "broadware",
+      "source": "wordmark",
+      "ok": true
+    },
+    "cognio": {
+      "id": "cognio",
+      "source": "wordmark",
+      "ok": true
+    },
+    "latigent": {
+      "id": "latigent",
+      "source": "wordmark",
+      "ok": true
+    },
+    "navini-networks": {
+      "id": "navini-networks",
+      "source": "wordmark",
+      "ok": true
+    },
+    "securent": {
+      "id": "securent",
+      "source": "wordmark",
+      "ok": true
+    },
+    "nuova-systems": {
+      "id": "nuova-systems",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "divitech": {
+      "id": "divitech",
+      "source": "wordmark",
+      "ok": true
+    },
+    "pure-networks": {
+      "id": "pure-networks",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "postpath": {
+      "id": "postpath",
+      "source": "wordmark",
+      "ok": true
+    },
+    "jabber": {
+      "id": "jabber",
+      "source": "wordmark",
+      "ok": true
+    },
+    "richards-zeta-building-intelligence": {
+      "id": "richards-zeta-building-intelligence",
+      "source": "wordmark",
+      "ok": true
+    },
+    "pure-digital": {
+      "id": "pure-digital",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "pure-digital-technologies": {
+      "id": "pure-digital-technologies",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "tidal-software": {
+      "id": "tidal-software",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "scansafe": {
+      "id": "scansafe",
+      "source": "wordmark",
+      "ok": true
+    },
+    "set-top-box-business-of-dvn": {
+      "id": "set-top-box-business-of-dvn",
+      "source": "wordmark",
+      "ok": true
+    },
+    "starent-networks": {
+      "id": "starent-networks",
+      "source": "wordmark",
+      "ok": true
+    },
+    "tandberg": {
+      "id": "tandberg",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "moto-development": {
+      "id": "moto-development",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "coreoptics": {
+      "id": "coreoptics",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "extendmedia": {
+      "id": "extendmedia",
+      "source": "wordmark",
+      "ok": true
+    },
+    "arch-rock": {
+      "id": "arch-rock",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "linesider": {
+      "id": "linesider",
+      "source": "wordmark",
+      "ok": true
+    },
+    "linesider-technologies": {
+      "id": "linesider-technologies",
+      "source": "wordmark",
+      "ok": true
+    },
+    "pari-networks": {
+      "id": "pari-networks",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "inlet": {
+      "id": "inlet",
+      "source": "wordmark",
+      "ok": true
+    },
+    "newscale": {
+      "id": "newscale",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "axioss-software-and-talent": {
+      "id": "axioss-software-and-talent",
+      "source": "wordmark",
+      "ok": true
+    },
+    "versly": {
+      "id": "versly",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "bni-video": {
+      "id": "bni-video",
+      "source": "wordmark",
+      "ok": true
+    },
+    "nds": {
+      "id": "nds",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "nds-group": {
+      "id": "nds-group",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "lightwire": {
+      "id": "lightwire",
+      "source": "wordmark",
+      "ok": true
+    },
+    "clearaccess": {
+      "id": "clearaccess",
+      "source": "wordmark",
+      "ok": true
+    },
+    "truviso": {
+      "id": "truviso",
+      "source": "wordmark",
+      "ok": true
+    },
+    "virtuata": {
+      "id": "virtuata",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "thinksmart": {
+      "id": "thinksmart",
+      "source": "wordmark",
+      "ok": true
+    },
+    "vcider": {
+      "id": "vcider",
+      "source": "wordmark",
+      "ok": true
+    },
+    "cloupia": {
+      "id": "cloupia",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "meraki": {
+      "id": "meraki",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "cariden": {
+      "id": "cariden",
+      "source": "wordmark",
+      "ok": true
+    },
+    "cariden-technologies": {
+      "id": "cariden-technologies",
+      "source": "wordmark",
+      "ok": true
+    },
+    "intucell": {
+      "id": "intucell",
+      "source": "wordmark",
+      "ok": true
+    },
+    "cognitive-security": {
+      "id": "cognitive-security",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "solvedirect": {
+      "id": "solvedirect",
+      "source": "wordmark",
+      "ok": true
+    },
+    "ubiquisys": {
+      "id": "ubiquisys",
+      "source": "wordmark",
+      "ok": true
+    },
+    "joulex": {
+      "id": "joulex",
+      "source": "wordmark",
+      "ok": true
+    },
+    "sourcefire": {
+      "id": "sourcefire",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "composite-software": {
+      "id": "composite-software",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "broadhop": {
+      "id": "broadhop",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "whiptail": {
+      "id": "whiptail",
+      "source": "wordmark",
+      "ok": true
+    },
+    "insieme": {
+      "id": "insieme",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "collaborate-com": {
+      "id": "collaborate-com",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "tetration-analytics": {
+      "id": "tetration-analytics",
+      "source": "wordmark",
+      "ok": true
+    },
+    "threatgrid": {
+      "id": "threatgrid",
+      "source": "wordmark",
+      "ok": true
+    },
+    "assemblage": {
+      "id": "assemblage",
+      "source": "wordmark",
+      "ok": true
+    },
+    "tail-f-systems": {
+      "id": "tail-f-systems",
+      "source": "wordmark",
+      "ok": true
+    },
+    "metacloud": {
+      "id": "metacloud",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "memoir-systems": {
+      "id": "memoir-systems",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "neohapsis": {
+      "id": "neohapsis",
+      "source": "wordmark",
+      "ok": true
+    },
+    "embrane": {
+      "id": "embrane",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "tropo": {
+      "id": "tropo",
+      "source": "wordmark",
+      "ok": true
+    },
+    "piston-cloud-computing": {
+      "id": "piston-cloud-computing",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "opendns": {
+      "id": "opendns",
+      "source": "wikipedia",
+      "ok": true
+    },
+    "maintenancenet": {
+      "id": "maintenancenet",
+      "source": "wordmark",
+      "ok": true
+    },
+    "portcullis": {
+      "id": "portcullis",
+      "source": "wikipedia",
+      "ok": true
+    },
+    "pawaa": {
+      "id": "pawaa",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "1-mainstream": {
+      "id": "1-mainstream",
+      "source": "wordmark",
+      "ok": true
+    },
+    "parstream": {
+      "id": "parstream",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "acano": {
+      "id": "acano",
+      "source": "wordmark",
+      "ok": true
+    },
+    "lancope": {
+      "id": "lancope",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "jasper": {
+      "id": "jasper",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "jasper-technologies": {
+      "id": "jasper-technologies",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "cliqr": {
+      "id": "cliqr",
+      "source": "wordmark",
+      "ok": true
+    },
+    "cliqr-technologies": {
+      "id": "cliqr-technologies",
+      "source": "wordmark",
+      "ok": true
+    },
+    "leaba-semiconductor": {
+      "id": "leaba-semiconductor",
+      "source": "wordmark",
+      "ok": true
+    },
+    "synata": {
+      "id": "synata",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "cloudlock": {
+      "id": "cloudlock",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "containerx": {
+      "id": "containerx",
+      "source": "wordmark",
+      "ok": true
+    },
+    "heroik-labs-inc-worklife": {
+      "id": "heroik-labs-inc-worklife",
+      "source": "wordmark",
+      "ok": true
+    },
+    "worklife": {
+      "id": "worklife",
+      "source": "wordmark",
+      "ok": true
+    },
+    "appdynamics": {
+      "id": "appdynamics",
+      "source": "wordmark",
+      "ok": true
+    },
+    "viptela": {
+      "id": "viptela",
+      "source": "wordmark",
+      "ok": true
+    },
+    "advanced-analytics-team-from-saggezza": {
+      "id": "advanced-analytics-team-from-saggezza",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "mindmeld": {
+      "id": "mindmeld",
+      "source": "wordmark",
+      "ok": true
+    },
+    "observable-networks": {
+      "id": "observable-networks",
+      "source": "wordmark",
+      "ok": true
+    },
+    "springpath": {
+      "id": "springpath",
+      "source": "wordmark",
+      "ok": true
+    },
+    "perspica": {
+      "id": "perspica",
+      "source": "wordmark",
+      "ok": true
+    },
+    "broadsoft": {
+      "id": "broadsoft",
+      "source": "wordmark",
+      "ok": true
+    },
+    "cmpute-io": {
+      "id": "cmpute-io",
+      "source": "wordmark",
+      "ok": true
+    },
+    "skyport-systems": {
+      "id": "skyport-systems",
+      "source": "wordmark",
+      "ok": true
+    },
+    "accompany": {
+      "id": "accompany",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "july-systems": {
+      "id": "july-systems",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "duo-security": {
+      "id": "duo-security",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "ensoft": {
+      "id": "ensoft",
+      "source": "wordmark",
+      "ok": true
+    },
+    "luxtera": {
+      "id": "luxtera",
+      "source": "wordmark",
+      "ok": true
+    },
+    "singularity-networks": {
+      "id": "singularity-networks",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "sentryo": {
+      "id": "sentryo",
+      "source": "wordmark",
+      "ok": true
+    },
+    "acacia-communications": {
+      "id": "acacia-communications",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "voicea": {
+      "id": "voicea",
+      "source": "wordmark",
+      "ok": true
+    },
+    "cloudcherry": {
+      "id": "cloudcherry",
+      "source": "wordmark",
+      "ok": true
+    },
+    "exablaze": {
+      "id": "exablaze",
+      "source": "wordmark",
+      "ok": true
+    },
+    "fluidmesh-networks": {
+      "id": "fluidmesh-networks",
+      "source": "wordmark",
+      "ok": true
+    },
+    "thousandeyes": {
+      "id": "thousandeyes",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "modcam": {
+      "id": "modcam",
+      "source": "wordmark",
+      "ok": true
+    },
+    "babblelabs": {
+      "id": "babblelabs",
+      "source": "wordmark",
+      "ok": true
+    },
+    "portshift": {
+      "id": "portshift",
+      "source": "wordmark",
+      "ok": true
+    },
+    "banzai-cloud": {
+      "id": "banzai-cloud",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "slido": {
+      "id": "slido",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "dashbase": {
+      "id": "dashbase",
+      "source": "wordmark",
+      "ok": true
+    },
+    "imimobile": {
+      "id": "imimobile",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "involvio": {
+      "id": "involvio",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "sedona-systems": {
+      "id": "sedona-systems",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "kenna-security": {
+      "id": "kenna-security",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "socio-labs": {
+      "id": "socio-labs",
+      "source": "wordmark",
+      "ok": true
+    },
+    "epsagon": {
+      "id": "epsagon",
+      "source": "wordmark",
+      "ok": true
+    },
+    "replex": {
+      "id": "replex",
+      "source": "wordmark",
+      "ok": true
+    },
+    "opsani": {
+      "id": "opsani",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "syrmia-networks": {
+      "id": "syrmia-networks",
+      "source": "wordmark",
+      "ok": true
+    },
+    "valtix": {
+      "id": "valtix",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "lightspin": {
+      "id": "lightspin",
+      "source": "wordmark",
+      "ok": true
+    },
+    "smartlook": {
+      "id": "smartlook",
+      "source": "wikipedia",
+      "ok": true
+    },
+    "armorblox": {
+      "id": "armorblox",
+      "source": "wikipedia",
+      "ok": true
+    },
+    "accedian": {
+      "id": "accedian",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "samknows": {
+      "id": "samknows",
+      "source": "wordmark",
+      "ok": true
+    },
+    "code-bgp": {
+      "id": "code-bgp",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "working-group-two": {
+      "id": "working-group-two",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "oort": {
+      "id": "oort",
+      "source": "wordmark",
+      "ok": true
+    },
+    "splunk": {
+      "id": "splunk",
+      "source": "wordmark",
+      "ok": true
+    },
+    "isovalent": {
+      "id": "isovalent",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "deepfactor": {
+      "id": "deepfactor",
+      "source": "wordmark",
+      "ok": true
+    },
+    "robust-intelligence": {
+      "id": "robust-intelligence",
+      "source": "wordmark",
+      "ok": true
+    },
+    "deeper-insights-ai": {
+      "id": "deeper-insights-ai",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "snapattack": {
+      "id": "snapattack",
+      "source": "wordmark",
+      "ok": true
+    },
+    "aura-asset-intelligence": {
+      "id": "aura-asset-intelligence",
+      "source": "favicon-png",
+      "ok": true
+    },
+    "neuralfabric": {
+      "id": "neuralfabric",
+      "source": "wordmark",
+      "ok": true
+    },
+    "ezdubs": {
+      "id": "ezdubs",
+      "source": "wordmark",
+      "ok": true
+    },
+    "galileo-technologies": {
+      "id": "galileo-technologies",
+      "source": "wordmark",
+      "ok": true
+    },
+    "astrix-security": {
+      "id": "astrix-security",
+      "source": "wordmark",
+      "ok": true
+    }
+  }
+}
