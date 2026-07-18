@@ -1,1420 +1,2266 @@
 {
-  "generated": "2026-07-18T15:15:16.082Z",
+  "generated": "2026-07-18T15:30:34.985Z",
   "counts": {
     "favicon-png": 95,
-    "wordmark": 183,
+    "generated": 183,
     "wikipedia": 4
   },
   "items": {
     "crescendo-communications": {
       "id": "crescendo-communications",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://crescendo.com",
+      "path": "assets/acq-logos/crescendo-communications.png",
+      "verified": false
     },
     "newport-systems-solutions": {
       "id": "newport-systems-solutions",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/newport-systems-solutions.svg",
+      "verified": false
     },
     "kalpana": {
       "id": "kalpana",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/kalpana.svg",
+      "verified": false
     },
     "lightstream": {
       "id": "lightstream",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://lightstream.com",
+      "path": "assets/acq-logos/lightstream.png",
+      "verified": false
     },
     "combinet": {
       "id": "combinet",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://combinet.com",
+      "path": "assets/acq-logos/combinet.png",
+      "verified": false
     },
     "internet-junction": {
       "id": "internet-junction",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/internet-junction.svg",
+      "verified": false
     },
     "network-translation": {
       "id": "network-translation",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/network-translation.svg",
+      "verified": false
     },
     "grand-junction-networks": {
       "id": "grand-junction-networks",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://grand.com",
+      "path": "assets/acq-logos/grand-junction-networks.png",
+      "verified": false
     },
     "tgv-software": {
       "id": "tgv-software",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/tgv-software.svg",
+      "verified": false
     },
     "stratacom": {
       "id": "stratacom",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/stratacom.svg",
+      "verified": false
     },
     "telebit": {
       "id": "telebit",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://telebit.com",
+      "path": "assets/acq-logos/telebit.png",
+      "verified": false
     },
     "telebits-mica": {
       "id": "telebits-mica",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/telebits-mica.svg",
+      "verified": false
     },
     "nashoba-networks": {
       "id": "nashoba-networks",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/nashoba-networks.svg",
+      "verified": false
     },
     "granite-systems": {
       "id": "granite-systems",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://granite.com",
+      "path": "assets/acq-logos/granite-systems.png",
+      "verified": false
     },
     "netsys": {
       "id": "netsys",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/netsys.svg",
+      "verified": false
     },
     "metaplex": {
       "id": "metaplex",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://metaplex.com",
+      "path": "assets/acq-logos/metaplex.png",
+      "verified": false
     },
     "telesend": {
       "id": "telesend",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/telesend.svg",
+      "verified": false
     },
     "skystone-systems": {
       "id": "skystone-systems",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://skystone.com",
+      "path": "assets/acq-logos/skystone-systems.png",
+      "verified": false
     },
     "global-internet-software": {
       "id": "global-internet-software",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://global.com",
+      "path": "assets/acq-logos/global-internet-software.png",
+      "verified": false
     },
     "ardent-communications": {
       "id": "ardent-communications",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/ardent-communications.svg",
+      "verified": false
     },
     "dagaz": {
       "id": "dagaz",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/dagaz.svg",
+      "verified": false
     },
     "integrated-network": {
       "id": "integrated-network",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/integrated-network.svg",
+      "verified": false
     },
     "lightspeed-international": {
       "id": "lightspeed-international",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://lightspeed.com",
+      "path": "assets/acq-logos/lightspeed-international.png",
+      "verified": false
     },
     "wheel": {
       "id": "wheel",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/wheel.svg",
+      "verified": false
     },
     "wheelgroup": {
       "id": "wheelgroup",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/wheelgroup.svg",
+      "verified": false
     },
     "netspeed": {
       "id": "netspeed",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://netspeed.com",
+      "path": "assets/acq-logos/netspeed.png",
+      "verified": false
     },
     "precept-software": {
       "id": "precept-software",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/precept-software.svg",
+      "verified": false
     },
     "class-data-systems": {
       "id": "class-data-systems",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://class.com",
+      "path": "assets/acq-logos/class-data-systems.png",
+      "verified": false
     },
     "summa-four": {
       "id": "summa-four",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://summa.com",
+      "path": "assets/acq-logos/summa-four.png",
+      "verified": false
     },
     "american-internet": {
       "id": "american-internet",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://american.com",
+      "path": "assets/acq-logos/american-internet.png",
+      "verified": false
     },
     "clarity-wireless": {
       "id": "clarity-wireless",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/clarity-wireless.svg",
+      "verified": false
     },
     "selsius-systems": {
       "id": "selsius-systems",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/selsius-systems.svg",
+      "verified": false
     },
     "pipelinks": {
       "id": "pipelinks",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/pipelinks.svg",
+      "verified": false
     },
     "fibex-systems": {
       "id": "fibex-systems",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/fibex-systems.svg",
+      "verified": false
     },
     "sentient-networks": {
       "id": "sentient-networks",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://sentient.com",
+      "path": "assets/acq-logos/sentient-networks.png",
+      "verified": false
     },
     "geotel-communications": {
       "id": "geotel-communications",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/geotel-communications.svg",
+      "verified": false
     },
     "amteva": {
       "id": "amteva",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/amteva.svg",
+      "verified": false
     },
     "amteva-technologies": {
       "id": "amteva-technologies",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/amteva-technologies.svg",
+      "verified": false
     },
     "transmedia-communications": {
       "id": "transmedia-communications",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/transmedia-communications.svg",
+      "verified": false
     },
     "stratumone-communications": {
       "id": "stratumone-communications",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/stratumone-communications.svg",
+      "verified": false
     },
     "calista": {
       "id": "calista",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/calista.svg",
+      "verified": false
     },
     "maxcomm": {
       "id": "maxcomm",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/maxcomm.svg",
+      "verified": false
     },
     "maxcomm-technologies": {
       "id": "maxcomm-technologies",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/maxcomm-technologies.svg",
+      "verified": false
     },
     "monterey-networks": {
       "id": "monterey-networks",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://monterey.com",
+      "path": "assets/acq-logos/monterey-networks.png",
+      "verified": false
     },
     "cerent": {
       "id": "cerent",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/cerent.svg",
+      "verified": false
     },
     "ibm-networking-hardware-division": {
       "id": "ibm-networking-hardware-division",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://ibm.com",
+      "path": "assets/acq-logos/ibm-networking-hardware-division.png",
+      "verified": false
     },
     "cocom": {
       "id": "cocom",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://cocom.com",
+      "path": "assets/acq-logos/cocom.png",
+      "verified": false
     },
     "webline-communications": {
       "id": "webline-communications",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/webline-communications.svg",
+      "verified": false
     },
     "tasmania-network-systems": {
       "id": "tasmania-network-systems",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://tasmania.com",
+      "path": "assets/acq-logos/tasmania-network-systems.png",
+      "verified": false
     },
     "aironet-wireless-communications": {
       "id": "aironet-wireless-communications",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/aironet-wireless-communications.svg",
+      "verified": false
     },
     "v-bits": {
       "id": "v-bits",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/v-bits.svg",
+      "verified": false
     },
     "worldwide-data-systems": {
       "id": "worldwide-data-systems",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/worldwide-data-systems.svg",
+      "verified": false
     },
     "internet-engineering-group": {
       "id": "internet-engineering-group",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/internet-engineering-group.svg",
+      "verified": false
     },
     "pirelli-optical-systems": {
       "id": "pirelli-optical-systems",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://pirelli.com",
+      "path": "assets/acq-logos/pirelli-optical-systems.png",
+      "verified": false
     },
     "compatible-systems": {
       "id": "compatible-systems",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://compatible.com",
+      "path": "assets/acq-logos/compatible-systems.png",
+      "verified": false
     },
     "altiga-networks": {
       "id": "altiga-networks",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/altiga-networks.svg",
+      "verified": false
     },
     "growth-networks": {
       "id": "growth-networks",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://growth.com",
+      "path": "assets/acq-logos/growth-networks.png",
+      "verified": false
     },
     "atlantech": {
       "id": "atlantech",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/atlantech.svg",
+      "verified": false
     },
     "jetcell": {
       "id": "jetcell",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/jetcell.svg",
+      "verified": false
     },
     "infogear": {
       "id": "infogear",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/infogear.svg",
+      "verified": false
     },
     "infogear-technology": {
       "id": "infogear-technology",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/infogear-technology.svg",
+      "verified": false
     },
     "sightpath": {
       "id": "sightpath",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/sightpath.svg",
+      "verified": false
     },
     "pentacom": {
       "id": "pentacom",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/pentacom.svg",
+      "verified": false
     },
     "seagull-semiconductor": {
       "id": "seagull-semiconductor",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/seagull-semiconductor.svg",
+      "verified": false
     },
     "arrowpoint-communications": {
       "id": "arrowpoint-communications",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/arrowpoint-communications.svg",
+      "verified": false
     },
     "qeyton-systems": {
       "id": "qeyton-systems",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/qeyton-systems.svg",
+      "verified": false
     },
     "hynex": {
       "id": "hynex",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/hynex.svg",
+      "verified": false
     },
     "netiverse": {
       "id": "netiverse",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/netiverse.svg",
+      "verified": false
     },
     "komodo": {
       "id": "komodo",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://komodo.com",
+      "path": "assets/acq-logos/komodo.png",
+      "verified": false
     },
     "komodo-tehnology": {
       "id": "komodo-tehnology",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://komodo.com",
+      "path": "assets/acq-logos/komodo-tehnology.png",
+      "verified": false
     },
     "nuspeed-internet-systems": {
       "id": "nuspeed-internet-systems",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/nuspeed-internet-systems.svg",
+      "verified": false
     },
     "ipmobile": {
       "id": "ipmobile",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/ipmobile.svg",
+      "verified": false
     },
     "pixstream": {
       "id": "pixstream",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/pixstream.svg",
+      "verified": false
     },
     "ipcell": {
       "id": "ipcell",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/ipcell.svg",
+      "verified": false
     },
     "vovida-networks": {
       "id": "vovida-networks",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/vovida-networks.svg",
+      "verified": false
     },
     "ipcell-technologies": {
       "id": "ipcell-technologies",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/ipcell-technologies.svg",
+      "verified": false
     },
     "cais-software": {
       "id": "cais-software",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/cais-software.svg",
+      "verified": false
     },
     "cais-software-solutions": {
       "id": "cais-software-solutions",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/cais-software-solutions.svg",
+      "verified": false
     },
     "active-voice": {
       "id": "active-voice",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://active.com",
+      "path": "assets/acq-logos/active-voice.png",
+      "verified": false
     },
     "radiata": {
       "id": "radiata",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/radiata.svg",
+      "verified": false
     },
     "exio-communications": {
       "id": "exio-communications",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/exio-communications.svg",
+      "verified": false
     },
     "auroranetics": {
       "id": "auroranetics",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/auroranetics.svg",
+      "verified": false
     },
     "allegro-systems": {
       "id": "allegro-systems",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/allegro-systems.svg",
+      "verified": false
     },
     "hammerhead-networks": {
       "id": "hammerhead-networks",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/hammerhead-networks.svg",
+      "verified": false
     },
     "navarro-networks": {
       "id": "navarro-networks",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/navarro-networks.svg",
+      "verified": false
     },
     "ayr-networks": {
       "id": "ayr-networks",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://ayr.com",
+      "path": "assets/acq-logos/ayr-networks.png",
+      "verified": false
     },
     "andiamo-systems": {
       "id": "andiamo-systems",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://andiamo.com",
+      "path": "assets/acq-logos/andiamo-systems.png",
+      "verified": false
     },
     "psionic-software": {
       "id": "psionic-software",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/psionic-software.svg",
+      "verified": false
     },
     "okena": {
       "id": "okena",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/okena.svg",
+      "verified": false
     },
     "signalworks": {
       "id": "signalworks",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/signalworks.svg",
+      "verified": false
     },
     "linksys": {
       "id": "linksys",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://linksys.com",
+      "path": "assets/acq-logos/linksys.png",
+      "verified": false
     },
     "linksys-group": {
       "id": "linksys-group",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://linksys.com",
+      "path": "assets/acq-logos/linksys-group.png",
+      "verified": false
     },
     "latitude-communications": {
       "id": "latitude-communications",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/latitude-communications.svg",
+      "verified": false
     },
     "twingo-systems": {
       "id": "twingo-systems",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/twingo-systems.svg",
+      "verified": false
     },
     "riverhead-networks": {
       "id": "riverhead-networks",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/riverhead-networks.svg",
+      "verified": false
     },
     "procket-networks": {
       "id": "procket-networks",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/procket-networks.svg",
+      "verified": false
     },
     "procket-network": {
       "id": "procket-network",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/procket-network.svg",
+      "verified": false
     },
     "actona": {
       "id": "actona",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/actona.svg",
+      "verified": false
     },
     "actona-technologies": {
       "id": "actona-technologies",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/actona-technologies.svg",
+      "verified": false
     },
     "parc": {
       "id": "parc",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://parc.com",
+      "path": "assets/acq-logos/parc.png",
+      "verified": false
     },
     "parc-technologies": {
       "id": "parc-technologies",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://parc.com",
+      "path": "assets/acq-logos/parc-technologies.png",
+      "verified": false
     },
     "p-cube": {
       "id": "p-cube",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/p-cube.svg",
+      "verified": false
     },
     "netsolve": {
       "id": "netsolve",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/netsolve.svg",
+      "verified": false
     },
     "dynamicsoft": {
       "id": "dynamicsoft",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/dynamicsoft.svg",
+      "verified": false
     },
     "perfigo": {
       "id": "perfigo",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/perfigo.svg",
+      "verified": false
     },
     "jahi-networks": {
       "id": "jahi-networks",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/jahi-networks.svg",
+      "verified": false
     },
     "bcn-systems": {
       "id": "bcn-systems",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://bcn.com",
+      "path": "assets/acq-logos/bcn-systems.png",
+      "verified": false
     },
     "protego-networks": {
       "id": "protego-networks",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://protego.com",
+      "path": "assets/acq-logos/protego-networks.png",
+      "verified": false
     },
     "airespace": {
       "id": "airespace",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/airespace.svg",
+      "verified": false
     },
     "topspin-communications": {
       "id": "topspin-communications",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/topspin-communications.svg",
+      "verified": false
     },
     "sipura": {
       "id": "sipura",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/sipura.svg",
+      "verified": false
     },
     "sipura-technology": {
       "id": "sipura-technology",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/sipura-technology.svg",
+      "verified": false
     },
     "vihana": {
       "id": "vihana",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/vihana.svg",
+      "verified": false
     },
     "fineground-networks": {
       "id": "fineground-networks",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/fineground-networks.svg",
+      "verified": false
     },
     "m-i-secure": {
       "id": "m-i-secure",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/m-i-secure.svg",
+      "verified": false
     },
     "netsift": {
       "id": "netsift",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/netsift.svg",
+      "verified": false
     },
     "kiss": {
       "id": "kiss",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/kiss.svg",
+      "verified": false
     },
     "kiss-technology": {
       "id": "kiss-technology",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/kiss-technology.svg",
+      "verified": false
     },
     "sheer-networks": {
       "id": "sheer-networks",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/sheer-networks.svg",
+      "verified": false
     },
     "nemo-systems": {
       "id": "nemo-systems",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/nemo-systems.svg",
+      "verified": false
     },
     "scientific-atlanta": {
       "id": "scientific-atlanta",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://scientific.com",
+      "path": "assets/acq-logos/scientific-atlanta.png",
+      "verified": false
     },
     "cybertrust": {
       "id": "cybertrust",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/cybertrust.svg",
+      "verified": false
     },
     "intellishield-alert-manager": {
       "id": "intellishield-alert-manager",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/intellishield-alert-manager.svg",
+      "verified": false
     },
     "sypixx-networks": {
       "id": "sypixx-networks",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/sypixx-networks.svg",
+      "verified": false
     },
     "metreos": {
       "id": "metreos",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/metreos.svg",
+      "verified": false
     },
     "audium": {
       "id": "audium",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://audium.com",
+      "path": "assets/acq-logos/audium.png",
+      "verified": false
     },
     "meetinghouse": {
       "id": "meetinghouse",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/meetinghouse.svg",
+      "verified": false
     },
     "meetinghouse-data-communications": {
       "id": "meetinghouse-data-communications",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/meetinghouse-data-communications.svg",
+      "verified": false
     },
     "arroyo-video-solutions": {
       "id": "arroyo-video-solutions",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/arroyo-video-solutions.svg",
+      "verified": false
     },
     "ashley-laurent": {
       "id": "ashley-laurent",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://ashley.com",
+      "path": "assets/acq-logos/ashley-laurent.png",
+      "verified": false
     },
     "orative": {
       "id": "orative",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/orative.svg",
+      "verified": false
     },
     "greenfield-networks": {
       "id": "greenfield-networks",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://greenfield.com",
+      "path": "assets/acq-logos/greenfield-networks.png",
+      "verified": false
     },
     "tivella": {
       "id": "tivella",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/tivella.svg",
+      "verified": false
     },
     "ironport": {
       "id": "ironport",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/ironport.svg",
+      "verified": false
     },
     "ironport-systems": {
       "id": "ironport-systems",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/ironport-systems.svg",
+      "verified": false
     },
     "five-across": {
       "id": "five-across",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/five-across.svg",
+      "verified": false
     },
     "reactivity": {
       "id": "reactivity",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/reactivity.svg",
+      "verified": false
     },
     "utah-street-networks": {
       "id": "utah-street-networks",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://utah.com",
+      "path": "assets/acq-logos/utah-street-networks.png",
+      "verified": false
     },
     "neopath": {
       "id": "neopath",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/neopath.svg",
+      "verified": false
     },
     "neopath-networks": {
       "id": "neopath-networks",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/neopath-networks.svg",
+      "verified": false
     },
     "webex": {
       "id": "webex",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://webex.com",
+      "path": "assets/acq-logos/webex.png",
+      "verified": false
     },
     "webex-communications": {
       "id": "webex-communications",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://webex.com",
+      "path": "assets/acq-logos/webex-communications.png",
+      "verified": false
     },
     "spanslogic": {
       "id": "spanslogic",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/spanslogic.svg",
+      "verified": false
     },
     "broadware": {
       "id": "broadware",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/broadware.svg",
+      "verified": false
     },
     "cognio": {
       "id": "cognio",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/cognio.svg",
+      "verified": false
     },
     "latigent": {
       "id": "latigent",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/latigent.svg",
+      "verified": false
     },
     "navini-networks": {
       "id": "navini-networks",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/navini-networks.svg",
+      "verified": false
     },
     "securent": {
       "id": "securent",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/securent.svg",
+      "verified": false
     },
     "nuova-systems": {
       "id": "nuova-systems",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://nuova.com",
+      "path": "assets/acq-logos/nuova-systems.png",
+      "verified": false
     },
     "divitech": {
       "id": "divitech",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/divitech.svg",
+      "verified": false
     },
     "pure-networks": {
       "id": "pure-networks",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://pure.com",
+      "path": "assets/acq-logos/pure-networks.png",
+      "verified": false
     },
     "postpath": {
       "id": "postpath",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/postpath.svg",
+      "verified": false
     },
     "jabber": {
       "id": "jabber",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/jabber.svg",
+      "verified": false
     },
     "richards-zeta-building-intelligence": {
       "id": "richards-zeta-building-intelligence",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/richards-zeta-building-intelligence.svg",
+      "verified": false
     },
     "pure-digital": {
       "id": "pure-digital",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://pure.com",
+      "path": "assets/acq-logos/pure-digital.png",
+      "verified": false
     },
     "pure-digital-technologies": {
       "id": "pure-digital-technologies",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://pure.com",
+      "path": "assets/acq-logos/pure-digital-technologies.png",
+      "verified": false
     },
     "tidal-software": {
       "id": "tidal-software",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://tidal.com",
+      "path": "assets/acq-logos/tidal-software.png",
+      "verified": false
     },
     "scansafe": {
       "id": "scansafe",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/scansafe.svg",
+      "verified": false
     },
     "set-top-box-business-of-dvn": {
       "id": "set-top-box-business-of-dvn",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/set-top-box-business-of-dvn.svg",
+      "verified": false
     },
     "starent-networks": {
       "id": "starent-networks",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/starent-networks.svg",
+      "verified": false
     },
     "tandberg": {
       "id": "tandberg",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://tandberg.com",
+      "path": "assets/acq-logos/tandberg.png",
+      "verified": false
     },
     "moto-development": {
       "id": "moto-development",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://moto.com",
+      "path": "assets/acq-logos/moto-development.png",
+      "verified": false
     },
     "coreoptics": {
       "id": "coreoptics",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://coreoptics.com",
+      "path": "assets/acq-logos/coreoptics.png",
+      "verified": false
     },
     "extendmedia": {
       "id": "extendmedia",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/extendmedia.svg",
+      "verified": false
     },
     "arch-rock": {
       "id": "arch-rock",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://arch.com",
+      "path": "assets/acq-logos/arch-rock.png",
+      "verified": false
     },
     "linesider": {
       "id": "linesider",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/linesider.svg",
+      "verified": false
     },
     "linesider-technologies": {
       "id": "linesider-technologies",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/linesider-technologies.svg",
+      "verified": false
     },
     "pari-networks": {
       "id": "pari-networks",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://pari.com",
+      "path": "assets/acq-logos/pari-networks.png",
+      "verified": false
     },
     "inlet": {
       "id": "inlet",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/inlet.svg",
+      "verified": false
     },
     "newscale": {
       "id": "newscale",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://newscale.com",
+      "path": "assets/acq-logos/newscale.png",
+      "verified": false
     },
     "axioss-software-and-talent": {
       "id": "axioss-software-and-talent",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/axioss-software-and-talent.svg",
+      "verified": false
     },
     "versly": {
       "id": "versly",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://versly.com",
+      "path": "assets/acq-logos/versly.png",
+      "verified": false
     },
     "bni-video": {
       "id": "bni-video",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/bni-video.svg",
+      "verified": false
     },
     "nds": {
       "id": "nds",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://nds.com",
+      "path": "assets/acq-logos/nds.png",
+      "verified": false
     },
     "nds-group": {
       "id": "nds-group",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://nds.com",
+      "path": "assets/acq-logos/nds-group.png",
+      "verified": false
     },
     "lightwire": {
       "id": "lightwire",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/lightwire.svg",
+      "verified": false
     },
     "clearaccess": {
       "id": "clearaccess",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/clearaccess.svg",
+      "verified": false
     },
     "truviso": {
       "id": "truviso",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/truviso.svg",
+      "verified": false
     },
     "virtuata": {
       "id": "virtuata",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://virtuata.com",
+      "path": "assets/acq-logos/virtuata.png",
+      "verified": false
     },
     "thinksmart": {
       "id": "thinksmart",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/thinksmart.svg",
+      "verified": false
     },
     "vcider": {
       "id": "vcider",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/vcider.svg",
+      "verified": false
     },
     "cloupia": {
       "id": "cloupia",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://cloupia.com",
+      "path": "assets/acq-logos/cloupia.png",
+      "verified": false
     },
     "meraki": {
       "id": "meraki",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://meraki.com",
+      "path": "assets/acq-logos/meraki.png",
+      "verified": false
     },
     "cariden": {
       "id": "cariden",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/cariden.svg",
+      "verified": false
     },
     "cariden-technologies": {
       "id": "cariden-technologies",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/cariden-technologies.svg",
+      "verified": false
     },
     "intucell": {
       "id": "intucell",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/intucell.svg",
+      "verified": false
     },
     "cognitive-security": {
       "id": "cognitive-security",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://cognitive.com",
+      "path": "assets/acq-logos/cognitive-security.png",
+      "verified": false
     },
     "solvedirect": {
       "id": "solvedirect",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/solvedirect.svg",
+      "verified": false
     },
     "ubiquisys": {
       "id": "ubiquisys",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/ubiquisys.svg",
+      "verified": false
     },
     "joulex": {
       "id": "joulex",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/joulex.svg",
+      "verified": false
     },
     "sourcefire": {
       "id": "sourcefire",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://sourcefire.com",
+      "path": "assets/acq-logos/sourcefire.png",
+      "verified": false
     },
     "composite-software": {
       "id": "composite-software",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://composite.com",
+      "path": "assets/acq-logos/composite-software.png",
+      "verified": false
     },
     "broadhop": {
       "id": "broadhop",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://broadhop.com",
+      "path": "assets/acq-logos/broadhop.png",
+      "verified": false
     },
     "whiptail": {
       "id": "whiptail",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/whiptail.svg",
+      "verified": false
     },
     "insieme": {
       "id": "insieme",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://insieme.com",
+      "path": "assets/acq-logos/insieme.png",
+      "verified": false
     },
     "collaborate-com": {
       "id": "collaborate-com",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://collaboratecom.com",
+      "path": "assets/acq-logos/collaborate-com.png",
+      "verified": false
     },
     "tetration-analytics": {
       "id": "tetration-analytics",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/tetration-analytics.svg",
+      "verified": false
     },
     "threatgrid": {
       "id": "threatgrid",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/threatgrid.svg",
+      "verified": false
     },
     "assemblage": {
       "id": "assemblage",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/assemblage.svg",
+      "verified": false
     },
     "tail-f-systems": {
       "id": "tail-f-systems",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/tail-f-systems.svg",
+      "verified": false
     },
     "metacloud": {
       "id": "metacloud",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://metacloud.com",
+      "path": "assets/acq-logos/metacloud.png",
+      "verified": false
     },
     "memoir-systems": {
       "id": "memoir-systems",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://memoir.com",
+      "path": "assets/acq-logos/memoir-systems.png",
+      "verified": false
     },
     "neohapsis": {
       "id": "neohapsis",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/neohapsis.svg",
+      "verified": false
     },
     "embrane": {
       "id": "embrane",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://embrane.com",
+      "path": "assets/acq-logos/embrane.png",
+      "verified": false
     },
     "tropo": {
       "id": "tropo",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/tropo.svg",
+      "verified": false
     },
     "piston-cloud-computing": {
       "id": "piston-cloud-computing",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://piston.com",
+      "path": "assets/acq-logos/piston-cloud-computing.png",
+      "verified": false
     },
     "opendns": {
       "id": "opendns",
       "source": "wikipedia",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://en.wikipedia.org/wiki/OpenDNS",
+      "path": "assets/acq-logos/opendns.webp",
+      "verified": true
     },
     "maintenancenet": {
       "id": "maintenancenet",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/maintenancenet.svg",
+      "verified": false
     },
     "portcullis": {
       "id": "portcullis",
       "source": "wikipedia",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://en.wikipedia.org/wiki/Portcullis",
+      "path": "assets/acq-logos/portcullis.webp",
+      "verified": true
     },
     "pawaa": {
       "id": "pawaa",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://pawaa.com",
+      "path": "assets/acq-logos/pawaa.png",
+      "verified": false
     },
     "1-mainstream": {
       "id": "1-mainstream",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/1-mainstream.svg",
+      "verified": false
     },
     "parstream": {
       "id": "parstream",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://parstream.com",
+      "path": "assets/acq-logos/parstream.png",
+      "verified": false
     },
     "acano": {
       "id": "acano",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/acano.svg",
+      "verified": false
     },
     "lancope": {
       "id": "lancope",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://lancope.com",
+      "path": "assets/acq-logos/lancope.png",
+      "verified": false
     },
     "jasper": {
       "id": "jasper",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://jasper.com",
+      "path": "assets/acq-logos/jasper.png",
+      "verified": false
     },
     "jasper-technologies": {
       "id": "jasper-technologies",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://jasper.com",
+      "path": "assets/acq-logos/jasper-technologies.png",
+      "verified": false
     },
     "cliqr": {
       "id": "cliqr",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/cliqr.svg",
+      "verified": false
     },
     "cliqr-technologies": {
       "id": "cliqr-technologies",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/cliqr-technologies.svg",
+      "verified": false
     },
     "leaba-semiconductor": {
       "id": "leaba-semiconductor",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/leaba-semiconductor.svg",
+      "verified": false
     },
     "synata": {
       "id": "synata",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://synata.com",
+      "path": "assets/acq-logos/synata.png",
+      "verified": false
     },
     "cloudlock": {
       "id": "cloudlock",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://cloudlock.com",
+      "path": "assets/acq-logos/cloudlock.png",
+      "verified": false
     },
     "containerx": {
       "id": "containerx",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/containerx.svg",
+      "verified": false
     },
     "heroik-labs-inc-worklife": {
       "id": "heroik-labs-inc-worklife",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/heroik-labs-inc-worklife.svg",
+      "verified": false
     },
     "worklife": {
       "id": "worklife",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/worklife.svg",
+      "verified": false
     },
     "appdynamics": {
       "id": "appdynamics",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/appdynamics.svg",
+      "verified": false
     },
     "viptela": {
       "id": "viptela",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/viptela.svg",
+      "verified": false
     },
     "advanced-analytics-team-from-saggezza": {
       "id": "advanced-analytics-team-from-saggezza",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://advanced.com",
+      "path": "assets/acq-logos/advanced-analytics-team-from-saggezza.png",
+      "verified": false
     },
     "mindmeld": {
       "id": "mindmeld",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/mindmeld.svg",
+      "verified": false
     },
     "observable-networks": {
       "id": "observable-networks",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/observable-networks.svg",
+      "verified": false
     },
     "springpath": {
       "id": "springpath",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/springpath.svg",
+      "verified": false
     },
     "perspica": {
       "id": "perspica",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/perspica.svg",
+      "verified": false
     },
     "broadsoft": {
       "id": "broadsoft",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/broadsoft.svg",
+      "verified": false
     },
     "cmpute-io": {
       "id": "cmpute-io",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/cmpute-io.svg",
+      "verified": false
     },
     "skyport-systems": {
       "id": "skyport-systems",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/skyport-systems.svg",
+      "verified": false
     },
     "accompany": {
       "id": "accompany",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://accompany.com",
+      "path": "assets/acq-logos/accompany.png",
+      "verified": false
     },
     "july-systems": {
       "id": "july-systems",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://july.com",
+      "path": "assets/acq-logos/july-systems.png",
+      "verified": false
     },
     "duo-security": {
       "id": "duo-security",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://duo.com",
+      "path": "assets/acq-logos/duo-security.png",
+      "verified": false
     },
     "ensoft": {
       "id": "ensoft",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/ensoft.svg",
+      "verified": false
     },
     "luxtera": {
       "id": "luxtera",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/luxtera.svg",
+      "verified": false
     },
     "singularity-networks": {
       "id": "singularity-networks",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://singularity.com",
+      "path": "assets/acq-logos/singularity-networks.png",
+      "verified": false
     },
     "sentryo": {
       "id": "sentryo",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/sentryo.svg",
+      "verified": false
     },
     "acacia-communications": {
       "id": "acacia-communications",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://acacia.com",
+      "path": "assets/acq-logos/acacia-communications.png",
+      "verified": false
     },
     "voicea": {
       "id": "voicea",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/voicea.svg",
+      "verified": false
     },
     "cloudcherry": {
       "id": "cloudcherry",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/cloudcherry.svg",
+      "verified": false
     },
     "exablaze": {
       "id": "exablaze",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/exablaze.svg",
+      "verified": false
     },
     "fluidmesh-networks": {
       "id": "fluidmesh-networks",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/fluidmesh-networks.svg",
+      "verified": false
     },
     "thousandeyes": {
       "id": "thousandeyes",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://thousandeyes.com",
+      "path": "assets/acq-logos/thousandeyes.png",
+      "verified": false
     },
     "modcam": {
       "id": "modcam",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/modcam.svg",
+      "verified": false
     },
     "babblelabs": {
       "id": "babblelabs",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/babblelabs.svg",
+      "verified": false
     },
     "portshift": {
       "id": "portshift",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/portshift.svg",
+      "verified": false
     },
     "banzai-cloud": {
       "id": "banzai-cloud",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://banzai.com",
+      "path": "assets/acq-logos/banzai-cloud.png",
+      "verified": false
     },
     "slido": {
       "id": "slido",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://slido.com",
+      "path": "assets/acq-logos/slido.png",
+      "verified": false
     },
     "dashbase": {
       "id": "dashbase",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/dashbase.svg",
+      "verified": false
     },
     "imimobile": {
       "id": "imimobile",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://imimobile.com",
+      "path": "assets/acq-logos/imimobile.png",
+      "verified": false
     },
     "involvio": {
       "id": "involvio",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://involvio.com",
+      "path": "assets/acq-logos/involvio.png",
+      "verified": false
     },
     "sedona-systems": {
       "id": "sedona-systems",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://sedona.com",
+      "path": "assets/acq-logos/sedona-systems.png",
+      "verified": false
     },
     "kenna-security": {
       "id": "kenna-security",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://kenna.com",
+      "path": "assets/acq-logos/kenna-security.png",
+      "verified": false
     },
     "socio-labs": {
       "id": "socio-labs",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/socio-labs.svg",
+      "verified": false
     },
     "epsagon": {
       "id": "epsagon",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/epsagon.svg",
+      "verified": false
     },
     "replex": {
       "id": "replex",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/replex.svg",
+      "verified": false
     },
     "opsani": {
       "id": "opsani",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://opsani.com",
+      "path": "assets/acq-logos/opsani.png",
+      "verified": false
     },
     "syrmia-networks": {
       "id": "syrmia-networks",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/syrmia-networks.svg",
+      "verified": false
     },
     "valtix": {
       "id": "valtix",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://valtix.com",
+      "path": "assets/acq-logos/valtix.png",
+      "verified": false
     },
     "lightspin": {
       "id": "lightspin",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/lightspin.svg",
+      "verified": false
     },
     "smartlook": {
       "id": "smartlook",
       "source": "wikipedia",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://en.wikipedia.org/wiki/Smartlook",
+      "path": "assets/acq-logos/smartlook.webp",
+      "verified": true
     },
     "armorblox": {
       "id": "armorblox",
       "source": "wikipedia",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://en.wikipedia.org/wiki/Armorblox",
+      "path": "assets/acq-logos/armorblox.webp",
+      "verified": true
     },
     "accedian": {
       "id": "accedian",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://accedian.com",
+      "path": "assets/acq-logos/accedian.png",
+      "verified": false
     },
     "samknows": {
       "id": "samknows",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/samknows.svg",
+      "verified": false
     },
     "code-bgp": {
       "id": "code-bgp",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://code.com",
+      "path": "assets/acq-logos/code-bgp.png",
+      "verified": false
     },
     "working-group-two": {
       "id": "working-group-two",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://working.com",
+      "path": "assets/acq-logos/working-group-two.png",
+      "verified": false
     },
     "oort": {
       "id": "oort",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/oort.svg",
+      "verified": false
     },
     "splunk": {
       "id": "splunk",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/splunk.svg",
+      "verified": false
     },
     "isovalent": {
       "id": "isovalent",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://isovalent.com",
+      "path": "assets/acq-logos/isovalent.png",
+      "verified": false
     },
     "deepfactor": {
       "id": "deepfactor",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/deepfactor.svg",
+      "verified": false
     },
     "robust-intelligence": {
       "id": "robust-intelligence",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/robust-intelligence.svg",
+      "verified": false
     },
     "deeper-insights-ai": {
       "id": "deeper-insights-ai",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://deeper.com",
+      "path": "assets/acq-logos/deeper-insights-ai.png",
+      "verified": false
     },
     "snapattack": {
       "id": "snapattack",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/snapattack.svg",
+      "verified": false
     },
     "aura-asset-intelligence": {
       "id": "aura-asset-intelligence",
       "source": "favicon-png",
-      "ok": true
+      "ok": true,
+      "sourceUrl": "https://aura.com",
+      "path": "assets/acq-logos/aura-asset-intelligence.png",
+      "verified": false
     },
     "neuralfabric": {
       "id": "neuralfabric",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/neuralfabric.svg",
+      "verified": false
     },
     "ezdubs": {
       "id": "ezdubs",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/ezdubs.svg",
+      "verified": false
     },
     "galileo-technologies": {
       "id": "galileo-technologies",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/galileo-technologies.svg",
+      "verified": false
     },
     "astrix-security": {
       "id": "astrix-security",
-      "source": "wordmark",
-      "ok": true
+      "source": "generated",
+      "ok": true,
+      "sourceUrl": null,
+      "path": "assets/acq-logos/astrix-security.svg",
+      "verified": false
     }
   }
 }

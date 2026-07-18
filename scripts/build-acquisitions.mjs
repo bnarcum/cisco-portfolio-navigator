@@ -169,6 +169,39 @@ function eraForYear(y) {
   return ERA_BANDS.find(e => y >= e.from && y <= e.to)?.id || "ai";
 }
 
+function visualIdentityFor(id, manifest) {
+  const item = manifest?.items?.[id];
+  const verified = item?.verified === true &&
+    ["official", "wikimedia", "wikipedia", "manual"].includes(item.source);
+  return verified
+    ? {
+        kind: "verified-logo",
+        path: item.path,
+        source: item.source,
+        sourceUrl: item.sourceUrl,
+      }
+    : {
+        kind: "name-tile",
+        path: `assets/acq-logos/${id}.svg`,
+        source: "generated",
+        sourceUrl: null,
+      };
+}
+
+function validateAcquisitions(payload, manifest) {
+  const errors = [];
+  const ids = new Set();
+  for (const acq of payload.acquisitions) {
+    if (ids.has(acq.id)) errors.push(`duplicate id: ${acq.id}`);
+    ids.add(acq.id);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(acq.announced)) {
+      errors.push(`invalid date: ${acq.id}`);
+    }
+    if (!manifest.items?.[acq.id]) errors.push(`missing manifest: ${acq.id}`);
+  }
+  return errors;
+}
+
 function mergeRecords(wiki, cisco) {
   const byKey = new Map();
 
@@ -248,12 +281,26 @@ async function main() {
   const acquisitions = mergeRecords(wikiRows, ciscoRows);
   console.log(`  Merged: ${acquisitions.length} unique acquisitions`);
 
+  const manifestPath = path.join(root, "assets/acq-logos/manifest.json");
+  const manifest = fs.existsSync(manifestPath)
+    ? JSON.parse(fs.readFileSync(manifestPath, "utf8"))
+    : { items: {} };
+
+  for (const acq of acquisitions) {
+    acq.visualIdentity = visualIdentityFor(acq.id, manifest);
+  }
+
   const payload = {
     generated: new Date().toISOString(),
     sources: ["https://en.wikipedia.org/wiki/List_of_acquisitions_by_Cisco", CISCO_URL],
     eraBands: ERA_BANDS,
     acquisitions,
   };
+
+  const errors = validateAcquisitions(payload, manifest);
+  if (errors.length) {
+    throw new Error(`Acquisition validation failed:\n${errors.join("\n")}`);
+  }
 
   fs.mkdirSync(path.dirname(outJson), { recursive: true });
   fs.writeFileSync(outJson, JSON.stringify(payload, null, 2));

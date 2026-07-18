@@ -102,11 +102,21 @@ async function downloadImage(url, dest) {
   return true;
 }
 
-async function processOne(acq) {
+async function processOne(acq, existing) {
   const webpPath = path.join(logoDir, `${acq.id}.webp`);
   const svgPath = path.join(logoDir, `${acq.id}.svg`);
   if (fs.existsSync(webpPath) && fs.statSync(webpPath).size > 400) {
-    return { id: acq.id, source: "cached", ok: true };
+    if (existing?.path && typeof existing.verified === "boolean") {
+      return existing;
+    }
+    return {
+      id: acq.id,
+      source: "cached",
+      sourceUrl: null,
+      path: `assets/acq-logos/${acq.id}.webp`,
+      verified: false,
+      ok: true,
+    };
   }
 
   let imgUrl = await wikiLogo(acq.wikiTitle || acq.company);
@@ -115,7 +125,16 @@ async function processOne(acq) {
   if (imgUrl) {
     try {
       const ok = await downloadImage(imgUrl, webpPath);
-      if (ok) return { id: acq.id, source: "wikipedia", ok: true };
+      if (ok) {
+        return {
+          id: acq.id,
+          source: "wikipedia",
+          sourceUrl: imgUrl,
+          path: `assets/acq-logos/${acq.id}.webp`,
+          verified: true,
+          ok: true,
+        };
+      }
     } catch (_) {}
   }
 
@@ -128,16 +147,37 @@ async function processOne(acq) {
       try {
         execSync(`sips -s format webp "${pngPath}" --out "${webpPath}"`, { stdio: "pipe" });
         fs.unlinkSync(pngPath);
-        return { id: acq.id, source: "favicon", ok: true };
+        return {
+          id: acq.id,
+          source: "favicon-png",
+          sourceUrl: `https://${domain}`,
+          path: `assets/acq-logos/${acq.id}.webp`,
+          verified: false,
+          ok: true,
+        };
       } catch {
         fs.copyFileSync(pngPath, webpPath.replace(".webp", ".png"));
-        return { id: acq.id, source: "favicon-png", ok: true };
+        return {
+          id: acq.id,
+          source: "favicon-png",
+          sourceUrl: `https://${domain}`,
+          path: `assets/acq-logos/${acq.id}.png`,
+          verified: false,
+          ok: true,
+        };
       }
     }
   }
 
   fs.writeFileSync(svgPath, wordmarkSvg(acq.company, acq.id));
-  return { id: acq.id, source: "wordmark", ok: true };
+  return {
+    id: acq.id,
+    source: "generated",
+    sourceUrl: null,
+    path: `assets/acq-logos/${acq.id}.svg`,
+    verified: false,
+    ok: true,
+  };
 }
 
 async function main() {
@@ -148,13 +188,16 @@ async function main() {
   const data = JSON.parse(fs.readFileSync(dataPath, "utf8"));
   fs.mkdirSync(logoDir, { recursive: true });
 
+  const existingManifest = fs.existsSync(manifestPath)
+    ? JSON.parse(fs.readFileSync(manifestPath, "utf8"))
+    : { items: {} };
   const manifest = {};
   const list = data.acquisitions;
   console.log(`Fetching logos for ${list.length} acquisitions…`);
 
   for (let i = 0; i < list.length; i++) {
     const acq = list[i];
-    const result = await processOne(acq);
+    const result = await processOne(acq, existingManifest.items?.[acq.id]);
     manifest[acq.id] = result;
     if ((i + 1) % 25 === 0 || i === list.length - 1) {
       console.log(`  ${i + 1}/${list.length} — last: ${acq.company} (${result.source})`);
