@@ -9,7 +9,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.1.1";
+  window.__CPN_BUILD="3.2.0";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -1786,7 +1786,7 @@ function pillarLabelTextWidth(text, fontPx){
  * Primary family → pillar assignment (Families view). Aligned to Cisco One Cisco outcome pages.
  */
 const AI_DC_SET = new Set([
-  "nexus", "aci", "nexus-one", "silicon-one", "ucs", "hyperflex", "intersight"
+  "nexus", "aci", "nexus-dashboard", "nexus-one", "silicon-one", "ucs", "hyperflex", "intersight"
 ]);
 const WORKPLACES_SET = new Set([
   "webex-app", "webex-meetings", "webex-calling", "webex-cc", "webex-connect",
@@ -1878,6 +1878,12 @@ const NODES = [
    industries:["Financial Services","Healthcare","Manufacturing","Service Provider"],
    url:"https://www.cisco.com/site/us/en/products/networking/cloud-networking/application-centric-infrastructure/index.html",
    docsUrl:"https://www.cisco.com/c/en/us/solutions/data-center-virtualization/application-centric-infrastructure/index.html"},
+  {id:"nexus-dashboard",   name:"Cisco Nexus Dashboard",       category:"networking",
+   desc:"Centralized fabric operations for ACI and NX-OS, including provisioning, assurance, anomaly detection, compliance, and AI-fabric congestion visibility.",
+   useCases:["Data Center Modernization","AI Networking","Network Automation"],
+   industries:["Financial Services","Healthcare","Manufacturing","Service Provider"],
+   url:"https://www.cisco.com/site/us/en/products/networking/cloud-networking/nexus-platform/index.html",
+   docsUrl:"https://www.cisco.com/c/en/us/support/cloud-systems-management/nexus-dashboard/series.html"},
   {id:"nexus-one",         name:"Cisco Nexus One",             category:"networking",
    desc:"Unified AI networking platform with AgenticOps, consistent management, and AI-driven insights across Nexus data center infrastructure.",
    useCases:["AI Networking","Data Center Modernization","Network Automation"],
@@ -2091,8 +2097,8 @@ const NODES = [
    url:"https://www.cisco.com/site/us/en/products/computing/index.html",
    docsUrl:"https://www.cisco.com/c/en/us/products/servers-unified-computing/index.html"},
   {id:"hyperflex",         name:"Cisco HyperFlex",             category:"computing",
-   desc:"Hyperconverged infrastructure (HCI) combining UCS compute, all-NVMe storage, and Cisco fabric — cloud-like agility managed through Intersight.",
-   useCases:["Data Center Modernization","Cloud Migration","AI Networking"],
+   desc:"Legacy Cisco HCI platform. HXDP is past end of sale and software maintenance; customers should plan migration before last support on February 28, 2029.",
+   useCases:["Data Center Modernization","Cloud Migration"],
    industries:["Healthcare","Financial Services","Education","Manufacturing"],
    url:"https://www.cisco.com/c/en/us/products/hyperconverged-infrastructure/index.html",
    docsUrl:"https://www.cisco.com/c/en/us/products/hyperconverged-infrastructure/index.html"},
@@ -2104,7 +2110,7 @@ const NODES = [
 
   // OBSERVABILITY
   {id:"cloud-control",     name:"Cisco Cloud Control",         category:"observability",
-   desc:"AI-native AgenticOps platform — Collaboration Control Hub, AI Canvas, AI Assistant, unified inventory, topology, and correlated alerts across collaboration and networking.",
+   desc:"Controlled Availability AgenticOps platform bringing connected Cisco domains, AI Canvas, and governed AI-assisted investigation into a shared workspace.",
    useCases:["Hybrid Work","Network Automation","Digital Transformation","AI Networking"],
    industries:["Healthcare","Financial Services","Education","Government","Manufacturing","Retail"],
    url:"https://cloud.cisco.com",
@@ -2114,7 +2120,7 @@ const NODES = [
    useCases:["SD-WAN / SASE","Hybrid Work","Cloud Migration","Network Automation","Digital Transformation"],
    industries:["Financial Services","Healthcare","Retail","Education","Manufacturing"],
    url:"https://www.thousandeyes.com", docsUrl:"https://docs.thousandeyes.com"},
-  {id:"appdynamics",       name:"Cisco AppDynamics",           category:"observability",
+  {id:"appdynamics",       name:"Splunk AppDynamics",           category:"observability",
    desc:"Application performance monitoring and full-stack observability correlating business KPIs with application behavior and infrastructure performance.",
    useCases:["Digital Transformation","Cloud Migration","AI Networking"],
    industries:["Financial Services","Retail","Healthcare","Manufacturing","Education"],
@@ -2168,6 +2174,7 @@ const LINKS = [
   {source:"secure-routers",   target:"thousandeyes",      type:"direct",   label:"Embedded WAN assurance"},
   {source:"secure-routers",   target:"silicon-one",       type:"adjacent", label:"Powered by"},
   {source:"nexus",            target:"aci",               type:"direct",   label:"Policy plane"},
+  {source:"nexus",            target:"nexus-dashboard",   type:"direct",   label:"Fabric operations"},
   {source:"nexus",            target:"nexus-one",         type:"direct",   label:"Managed by Nexus One"},
   {source:"nexus",            target:"ucs",               type:"direct",   label:"Server fabric"},
   {source:"nexus",            target:"silicon-one",       type:"adjacent", label:"Powered by"},
@@ -2176,6 +2183,8 @@ const LINKS = [
   {source:"industrial-eth",   target:"cyber-vision",      type:"direct",   label:"OT visibility"},
   {source:"industrial-eth",   target:"ise",               type:"adjacent", label:"NAC for OT"},
   {source:"aci",              target:"intersight",        type:"adjacent", label:"Cloud operations"},
+  {source:"aci",              target:"nexus-dashboard",   type:"direct",   label:"Fabric assurance"},
+  {source:"nexus-dashboard",  target:"nexus-one",         type:"direct",   label:"Operations platform"},
   {source:"nexus-one",        target:"splunk",            type:"adjacent", label:"Telemetry export"},
   // Security
   {source:"sf-branch",        target:"ise",               type:"direct",   label:"Identity-aware policy"},
@@ -2926,13 +2935,17 @@ const PRODUCTS = [
    desc:"Previous-generation 1RU rack servers (C220/C240/C480 M5). EOS Oct 30, 2023; Last Support Oct 31, 2028.",
    url:"https://www.cisco.com/c/en/us/products/collateral/servers-unified-computing/ucs-c-series-rack-servers/ucs-m5-rack-server-c220-c240-c480-eol.html"},
 
-  // ── HYPERFLEX (Current)
-  {id:"hx220c",         name:"Cisco HyperFlex HX220c",       family:"hyperflex",      status:"current",
-   desc:"All-flash 1RU HCI node for compute-dense and edge deployments with NVMe drives and Intersight management.",
-   url:"https://www.cisco.com/site/us/en/products/computing/hyperconverged-infrastructure/index.html"},
-  {id:"hx240c",         name:"Cisco HyperFlex HX240c",       family:"hyperflex",      status:"current",
-   desc:"All-flash 2RU HCI node for storage-intensive workloads with up to 23 NVMe drives.",
-   url:"https://www.cisco.com/site/us/en/products/computing/hyperconverged-infrastructure/index.html"},
+  // ── HYPERFLEX (EOL — HXDP software end of maintenance Sep 11, 2025)
+  {id:"hx220c",         name:"Cisco HyperFlex HX220c",       family:"hyperflex",      status:"eol",
+   eosDate:"Sep 11, 2024", eolDate:"Feb 28, 2029",
+   migNote:"HXDP is past end of software maintenance. Cisco recommends planning migration to Nutanix on Cisco UCS or another supported platform; qualifying M6 hardware may be repurposed.",
+   desc:"Legacy all-flash 1RU HyperFlex HCI node. HXDP receives best-effort TAC support without new maintenance releases through Feb 28, 2029.",
+   url:"https://www.cisco.com/c/en/us/td/docs/unified_computing/ucs/sw/SA/SW_Advisory_2025_HX_eol_notice.html"},
+  {id:"hx240c",         name:"Cisco HyperFlex HX240c",       family:"hyperflex",      status:"eol",
+   eosDate:"Sep 11, 2024", eolDate:"Feb 28, 2029",
+   migNote:"HXDP is past end of software maintenance. Cisco recommends planning migration to Nutanix on Cisco UCS or another supported platform; qualifying M6 hardware may be repurposed.",
+   desc:"Legacy all-flash 2RU HyperFlex HCI node. HXDP receives best-effort TAC support without new maintenance releases through Feb 28, 2029.",
+   url:"https://www.cisco.com/c/en/us/td/docs/unified_computing/ucs/sw/SA/SW_Advisory_2025_HX_eol_notice.html"},
 
   // ── INDUSTRIAL (Current)
   {id:"ie3400",         name:"Cisco Catalyst IE3400 Rugged Series", family:"industrial-eth", status:"current",
@@ -3226,10 +3239,10 @@ const PRODUCTS = [
   {id:"apic-l4",        name:"Cisco APIC-L4 Controller",      family:"aci", status:"current",
    desc:"Latest generation APIC with higher density and PCIe Gen5 for ACI fabrics over 400 leaf switches.",
    url:"https://www.cisco.com/c/en/us/products/cloud-systems-management/application-policy-infrastructure-controller-apic/index.html"},
-  {id:"nd-cluster",     name:"Cisco Nexus Dashboard",         family:"aci", status:"current",
+  {id:"nd-cluster",     name:"Cisco Nexus Dashboard",         family:"nexus-dashboard", status:"current",
    desc:"Unified operations platform for ACI / NX-OS / Nexus Hyperfabric — hosts services like Insights, Orchestrator, and Fabric Controller.",
    url:"https://www.cisco.com/c/en/us/products/data-center-analytics/nexus-dashboard/index.html"},
-  {id:"nd-insights",    name:"Nexus Dashboard Insights",      family:"aci", status:"current",
+  {id:"nd-insights",    name:"Nexus Dashboard Insights",      family:"nexus-dashboard", status:"current",
    desc:"Day-2 operations service for ACI and NX-OS: anomaly detection, compliance, capacity forecasting, and pre-change analysis.",
    url:"https://www.cisco.com/c/en/us/products/data-center-analytics/nexus-dashboard/index.html"},
   {id:"multi-site-orch", name:"Cisco Multi-Site Orchestrator", family:"aci", status:"current",
@@ -3478,13 +3491,17 @@ const PRODUCTS = [
    desc:"4RU 4-socket mission-critical rack server (M5 gen). EOS Apr 30, 2023.",
    url:"https://www.cisco.com/site/us/en/products/computing/servers-unified-computing-systems/ucs-c-series-rack-servers/index.html"},
 
-  // ── HYPERFLEX additions (Current)
-  {id:"hyperflex-edge", name:"Cisco HyperFlex Edge",          family:"hyperflex", status:"current",
-   desc:"2-/3-node small-form-factor HCI for branch and remote sites with optional satellite uplinks.",
-   url:"https://www.cisco.com/c/en/us/products/hyperconverged-infrastructure/index.html"},
-  {id:"hyperflex-express", name:"Cisco HyperFlex Express",    family:"hyperflex", status:"current",
-   desc:"Validated 2-node HCI bundle with Intersight onboarding — ROBO-optimized deployment.",
-   url:"https://www.cisco.com/c/en/us/products/hyperconverged-infrastructure/index.html"},
+  // ── HYPERFLEX additions (EOL)
+  {id:"hyperflex-edge", name:"Cisco HyperFlex Edge",          family:"hyperflex", status:"eol",
+   eosDate:"Sep 11, 2024", eolDate:"Feb 28, 2029",
+   migNote:"HXDP is past end of software maintenance. Assess workload migration and whether qualifying UCS hardware can be repurposed.",
+   desc:"Legacy edge/ROBO HyperFlex deployment. No new HXDP maintenance releases or bug fixes are issued after Sep 11, 2025.",
+   url:"https://www.cisco.com/c/en/us/td/docs/unified_computing/ucs/sw/SA/SW_Advisory_2025_HX_eol_notice.html"},
+  {id:"hyperflex-express", name:"Cisco HyperFlex Express",    family:"hyperflex", status:"eol",
+   eosDate:"Sep 11, 2024", eolDate:"Feb 28, 2029",
+   migNote:"HXDP is past end of software maintenance. Assess workload migration and whether qualifying UCS hardware can be repurposed.",
+   desc:"Legacy two-node HyperFlex deployment. No new HXDP maintenance releases or bug fixes are issued after Sep 11, 2025.",
+   url:"https://www.cisco.com/c/en/us/td/docs/unified_computing/ucs/sw/SA/SW_Advisory_2025_HX_eol_notice.html"},
 
   // ── THOUSANDEYES (Current)
   {id:"te-endpoint",    name:"ThousandEyes Endpoint Agent",   family:"thousandeyes", status:"current",
@@ -4136,19 +4153,19 @@ const BUNDLES = [
    desc:"Complete Zero Trust architecture: identity, device posture, network access control, and cloud-delivered security."},
   {name:"Hybrid Work Suite",
    products:["webex-app","vidcast","slido","webex-calling","room-systems","desk-devices","thousandeyes","secure-access","duo","cloud-control"],
-   desc:"Full hybrid workforce: collaboration, cloud calling, room and desk devices, network assurance, secure access, and Cloud Control ops."},
+   desc:"Hybrid-work architecture spanning collaboration, calling, devices, network assurance, and secure access; Cloud Control capabilities require eligibility for Controlled Availability."},
   {name:"Threat Defense Platform",
    products:["sf-branch","secure-endpoint","xdr","talos","splunk"],
    desc:"Integrated threat detection and automated response across endpoint, network, and SIEM."},
   {name:"AI-Ready Data Center Network",
-   products:["nexus","nexus-one","silicon-one","catalyst-center","thousandeyes"],
-   desc:"High-performance AI/ML networking with unified management and end-to-end observability."},
+   products:["nexus","nexus-dashboard","nexus-one","silicon-one","ucs","intersight"],
+   desc:"AI-ready compute and Ethernet fabric with Nexus switching, Nexus Dashboard operations, UCS, and Intersight lifecycle management."},
   {name:"Cloud Branch (SASE)",
    products:["sdwan","secure-access","umbrella","duo","thousandeyes"],
    desc:"Complete SASE architecture for secure, optimized cloud connectivity from branches and remote users."},
   {name:"Data Center Modernization",
-   products:["nexus","aci","ucs","hyperflex","intersight"],
-   desc:"Next-generation data center with SDN policy, HCI, and AI-powered cloud operations."},
+   products:["nexus","aci","nexus-dashboard","ucs","intersight"],
+   desc:"Modern data-center networking and compute with policy-based fabric, centralized assurance, and cloud-operated lifecycle management."},
   {name:"Industrial OT Security",
    products:["industrial-eth","cyber-vision","ise","sf-branch"],
    desc:"OT/IT convergence with industrial network visibility, asset inventory, and zero-trust enforcement."},
@@ -4157,10 +4174,10 @@ const BUNDLES = [
    desc:"Cloud-native omnichannel contact center with AI-powered routing, digital channels, and secure agent access."},
   {name:"Cloud Control Platform",
    products:["cloud-control","webex-app","webex-calling","thousandeyes","catalyst-center"],
-   desc:"AI-native AgenticOps — unified Control Hub, AI Canvas, inventory, alerts, and cross-domain troubleshooting."},
+   desc:"Controlled Availability architecture for connected Cisco domains, AI Canvas, shared context, and cross-domain investigation; availability and integrations depend on the enrolled release."},
   {name:"Cisco IQ Operations",
    products:["cisco-iq","catalyst-center","intersight","thousandeyes","vuln-mgmt","xdr"],
-   desc:"CX intelligence layer — unified asset landscape, AI troubleshooting, and risk prioritization across your deployed Cisco stack."}
+   desc:"Cisco IQ asset intelligence paired with adjacent domain-management, assurance, vulnerability, and response platforms; each system retains its own operational scope."}
 ];
 
 const LEGACY_NODES = [
@@ -5416,6 +5433,7 @@ function iconKey(n) {
   if (id === "catalyst-center")                                  return "gear";
   if (id === "intersight")                                       return "intersight";
   if (id === "aci")                                              return "fabric";
+  if (id === "nexus-dashboard")                                  return "dashboard";
   if (id === "industrial-eth")                                   return "factory";
   // Security
   if (/^sf-/.test(id))                                           return "shield";
@@ -17367,11 +17385,11 @@ window.__cpnV2 = {
 };
 })();
 </script>
-<script src="assets/cpn-problems.js?v=3.1.1"></script>
-<script src="assets/cpn-outcome-card.js?v=3.1.1"></script>
-<script src="assets/cpn-cloud-control-ops.js?v=3.1.1"></script>
-<script src="assets/cpn-lazy-load.js?v=3.1.1"></script>
-<script src="assets/cpn-kiosk.js?v=3.1.1"></script>
+<script src="assets/cpn-problems.js?v=3.2.0"></script>
+<script src="assets/cpn-outcome-card.js?v=3.2.0"></script>
+<script src="assets/cpn-cloud-control-ops.js?v=3.2.0"></script>
+<script src="assets/cpn-lazy-load.js?v=3.2.0"></script>
+<script src="assets/cpn-kiosk.js?v=3.2.0"></script>
 <script src="assets/cpn-logo-intro.js?v=2.91.6"></script>
 </body>
 </html>

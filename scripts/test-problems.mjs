@@ -33,6 +33,92 @@ try {
       addressed: cov.addressed.length,
       open: cov.open.length,
       narrative: P.problemNarrative(["sdwan", "room-systems"], "ciso"),
+      editorial: (() => {
+        const byId = id => P.getProblem(id);
+        const text = P.PROBLEMS.flatMap(p => [
+          p.outcome,
+          ...Object.values(p.personas || {}).flatMap(v => typeof v === "string"
+            ? [v]
+            : [v.symptom, v.line, v.proof?.before, v.proof?.after])
+        ]).filter(Boolean).join("\n");
+        return {
+          allSourced: P.PROBLEMS.every(p =>
+            p.proof?.source &&
+            /^https:\/\/([a-z0-9-]+\.)*(cisco|webex|splunk|thousandeyes|appdynamics)\.com\//.test(p.proof?.sourceUrl || "")
+          ),
+          campusMapping: !byId("campus-manual-ops")?.families?.includes("intersight"),
+          aiFabricMapping:
+            byId("ai-fabric-bottleneck")?.families?.includes("nexus-dashboard") &&
+            !byId("ai-fabric-bottleneck")?.signals?.missing?.includes("thousandeyes"),
+          nexusDashboardFamily:
+            !!window.nodeById?.["nexus-dashboard"] &&
+            typeof PRODUCTS !== "undefined" &&
+            PRODUCTS.filter(p => /^nd-/.test(p.id)).every(p => p.family === "nexus-dashboard"),
+          aiBundleScoped: typeof BUNDLES !== "undefined" && (() => {
+            const b = BUNDLES.find(x => x.name === "AI-Ready Data Center Network");
+            return !!b &&
+              ["nexus", "nexus-dashboard", "ucs", "intersight"].every(id => b.products.includes(id)) &&
+              !b.products.includes("catalyst-center") &&
+              !b.products.includes("thousandeyes");
+          })(),
+          aiSecuritySplit:
+            byId("ai-app-security")?.families?.includes("ai-defense") &&
+            !byId("ai-app-security")?.families?.includes("hypershield") &&
+            byId("workload-runtime-protection")?.families?.includes("hypershield"),
+          campusSegmentationScoped:
+            !byId("flat-network-breach")?.families?.includes("hypershield") &&
+            !byId("flat-network-breach")?.families?.includes("secure-workload"),
+          hyperflexLifecycle: P.topProblemForFamily("hyperflex")?.id === "hyperflex-migration",
+          hyperflexCatalogStatus: typeof PRODUCTS !== "undefined" &&
+            PRODUCTS.filter(p => p.family === "hyperflex").every(p => p.status !== "current"),
+          roomSource: /Control Hub.*ThousandEyes/i.test(byId("room-quality")?.proof?.source || ""),
+          cloudControlQualified: /Controlled Availability/i.test(byId("tool-sprawl-ops")?.proof?.source || ""),
+          collaborationScoped: (() => {
+            const hybrid = byId("hybrid-meeting-equity");
+            const pbx = byId("pbx-eol");
+            const cx = byId("contact-center-cx");
+            const room = byId("room-quality");
+            return !hybrid?.families?.includes("conf-phones") &&
+              pbx?.maturityNext === "hybrid-meeting-equity" &&
+              cx?.maturityNext == null &&
+              cx?.useCases?.includes("Contact Center") &&
+              !cx?.families?.includes("webex-calling") &&
+              !cx?.families?.includes("webex-app") &&
+              !room?.families?.includes("cloud-control");
+          })(),
+          securityScoped: (() => {
+            const vpn = byId("vpn-overload");
+            const email = byId("phishing-email");
+            const ai = byId("ai-app-security");
+            const runtime = byId("workload-runtime-protection");
+            return !vpn?.families?.includes("umbrella") &&
+              email?.families?.includes("xdr") &&
+              !email?.families?.includes("secure-web") &&
+              ai?.useCases?.includes("Threat Detection & Response") &&
+              runtime?.families?.length === 2 &&
+              runtime.families.includes("hypershield") &&
+              runtime.families.includes("secure-workload");
+          })(),
+          operationsScoped: (() => {
+            const obs = byId("observability-blindspots");
+            const tools = byId("tool-sprawl-ops");
+            const assets = byId("unknown-assets");
+            const vulns = byId("vulnerability-prioritization");
+            return !obs?.families?.includes("cloud-control") &&
+              tools?.families?.length === 1 &&
+              tools.families[0] === "cloud-control" &&
+              assets?.families?.length === 1 &&
+              assets.families[0] === "cisco-iq" &&
+              vulns?.families?.length === 1 &&
+              vulns.families[0] === "vuln-mgmt";
+          })(),
+          catalogAvailabilityQualified:
+            /Controlled Availability/i.test(window.nodeById?.["cloud-control"]?.desc || "") &&
+            /Controlled Availability/i.test(BUNDLES.find(x => x.name === "Cloud Control Platform")?.desc || ""),
+          appDynamicsBrand: window.nodeById?.appdynamics?.name === "Splunk AppDynamics",
+          noGuaranteeLanguage: !/\b(stops? lateral movement cold|every time|complete asset inventory|nothing to babysit)\b/i.test(text)
+        };
+      })(),
       pv: (() => {
         const prob = P.getProblem("branch-app-experience");
         const net = P.personaView(prob, "netops");
@@ -59,6 +145,23 @@ try {
   if (!model.pv.proofDiffers) errors.push("personaView: proof before/after should differ across personas");
   if (!model.pv.lineDiffers) errors.push("personaView: outcome line should differ across personas");
   if (!model.pv.baseFallback) errors.push("personaView: no-persona should fall back to base symptom/outcome");
+  if (!model.editorial.allSourced) errors.push("catalog: every problem needs an official source URL");
+  if (!model.editorial.campusMapping) errors.push("catalog: campus automation must not map to Intersight");
+  if (!model.editorial.aiFabricMapping) errors.push("catalog: AI fabric assurance must map to Nexus Dashboard/ACI, not ThousandEyes");
+  if (!model.editorial.nexusDashboardFamily) errors.push("catalog: Nexus Dashboard needs a first-class family mapping");
+  if (!model.editorial.aiBundleScoped) errors.push("catalog: AI-ready data-center bundle has incorrect core products");
+  if (!model.editorial.aiSecuritySplit) errors.push("catalog: AI Defense and Hypershield need separate problems");
+  if (!model.editorial.campusSegmentationScoped) errors.push("catalog: campus segmentation should not imply workload-security products");
+  if (!model.editorial.hyperflexLifecycle) errors.push("catalog: HyperFlex should lead with its current migration/EOL motion");
+  if (!model.editorial.hyperflexCatalogStatus) errors.push("catalog: HyperFlex products must not remain marked current after HXDP end of maintenance");
+  if (!model.editorial.roomSource) errors.push("catalog: room-quality proof should cite Control Hub + ThousandEyes");
+  if (!model.editorial.cloudControlQualified) errors.push("catalog: Cloud Control claims must disclose Controlled Availability");
+  if (!model.editorial.collaborationScoped) errors.push("catalog: Collaboration mappings or maturity chains are out of scope");
+  if (!model.editorial.securityScoped) errors.push("catalog: Security mappings blur distinct control domains");
+  if (!model.editorial.operationsScoped) errors.push("catalog: Operations mappings blur Cisco IQ, Cloud Control, and vulnerability management");
+  if (!model.editorial.catalogAvailabilityQualified) errors.push("catalog: Cloud Control family and bundle must disclose Controlled Availability");
+  if (!model.editorial.appDynamicsBrand) errors.push("catalog: AppDynamics family must use current Splunk branding");
+  if (!model.editorial.noGuaranteeLanguage) errors.push("catalog: remove absolute/guarantee language");
 
   // 2) Canvas outcome card renders + persona toggle (not side panel)
   const card = await page.evaluate(async () => {

@@ -51,14 +51,14 @@
           proof: { metric: "MTTR for app-vs-network issues", before: "Hours of finger-pointing with no shared evidence", after: "Minutes to pinpoint the failing hop with per-hop telemetry" }
         },
         cio: {
-          line: "Protect workforce productivity across every branch without adding circuits.",
+          line: "Improve application experience across branches by using available paths more intelligently before adding bandwidth.",
           symptom: "Slow apps at branches quietly drain workforce productivity everywhere.",
-          proof: { metric: "Branch workforce productivity", before: "Users lose time to unpredictable app performance", after: "Consistent app experience without adding costly circuits" }
+          proof: { metric: "Branch application experience", before: "Users lose time to unpredictable application performance", after: "Application-aware path selection makes better use of available connectivity" }
         },
         ciso: {
-          line: "Reach cloud apps securely without backhauling traffic to the data center.",
+          line: "Inspect branch-to-cloud access through cloud-delivered SSE without forcing routine traffic through a central data center.",
           symptom: "Backhauling branch traffic for inspection adds latency and risk.",
-          proof: { metric: "Secure branch-to-cloud access", before: "Traffic hair-pinned to the data center for inspection", after: "Direct, inspected cloud access at the branch edge (SASE)" }
+          proof: { metric: "Secure branch-to-cloud access", before: "Traffic is hair-pinned to a central data center for inspection", after: "SD-WAN steers traffic to cloud-delivered security enforcement" }
         }
       },
       useCases: ["SD-WAN / SASE", "Hybrid Work", "Cloud Migration"],
@@ -73,33 +73,33 @@
       id: "campus-manual-ops",
       pillar: "connectivity",
       symptom: "The network team spends its week on manual CLI changes, tickets, and firefighting.",
-      outcome: "Automated, intent-based operations with AI assurance across campus and WAN.",
+      outcome: "Standardized, intent-based operations and assurance across campus and branch wired and wireless networks.",
       proof: {
         metric: "Time spent on manual provisioning & troubleshooting",
         before: "Change windows measured in days; config drift everywhere",
-        after: "Templated, closed-loop automation with proactive assurance",
+        after: "Template-based provisioning with assurance-guided troubleshooting",
         source: "Cisco Catalyst Center automation positioning"
       },
       personas: {
         netops: {
-          line: "Push standardized changes fleet-wide and let assurance flag issues before users call.",
+          line: "Standardize changes across sites and use assurance to find issues before tickets multiply.",
           symptom: "You're the bottleneck — every change is a manual, after-hours CLI push.",
-          proof: { metric: "Provisioning & troubleshooting effort", before: "Change windows in days; config drift everywhere", after: "Templated, closed-loop automation with proactive assurance" }
+          proof: { metric: "Provisioning & troubleshooting effort", before: "Device-by-device changes and inconsistent configurations", after: "Reusable profiles with assurance-guided troubleshooting" }
         },
         cio: {
-          line: "Free scarce network talent from repetitive toil to focus on the business.",
-          symptom: "Skilled network engineers burn their week on repetitive toil, not the business.",
-          proof: { metric: "Return on network talent", before: "Experts stuck on manual break-fix", after: "Teams freed for higher-value initiatives" }
+          line: "Shift scarce network talent from repetitive changes toward service improvement.",
+          symptom: "Routine provisioning and troubleshooting consume engineers needed for modernization.",
+          proof: { metric: "Use of network engineering capacity", before: "Specialists spend time on repetitive changes and triage", after: "Standard workflows reduce routine operational effort" }
         },
         ciso: {
-          line: "Consistent policy everywhere means fewer misconfigurations to exploit.",
+          line: "Use standardized configurations and policy to reduce avoidable security drift.",
           symptom: "Manual, inconsistent configs are a steady source of exploitable gaps.",
-          proof: { metric: "Config-driven exposure", before: "Drift and one-off changes create security holes", after: "Consistent, policy-based configuration everywhere" }
+          proof: { metric: "Configuration-driven exposure", before: "Drift and one-off changes create review gaps", after: "Standard profiles make deviations easier to identify" }
         }
       },
       useCases: ["Network Automation", "AI Networking"],
       bundles: [],
-      families: ["catalyst-center", "catalyst-access", "catalyst-core", "meraki-switches", "intersight"],
+      families: ["catalyst-center", "catalyst-access", "catalyst-core", "meraki-switches", "catalyst-wireless"],
       refArch: "Network Automation",
       signals: { has: ["catalyst-access"], missing: ["catalyst-center"] },
       dcloudPath: "network-automation",
@@ -128,9 +128,9 @@
           proof: { metric: "Workplace connectivity reliability", before: "Unpredictable coverage and constant complaints", after: "Dependable, self-optimizing wireless everywhere" }
         },
         ciso: {
-          line: "Identify and segment rogue and unmanaged devices on the air.",
+          line: "Improve visibility into wireless clients and rogue access points so access-control decisions start with better evidence.",
           symptom: "Unmanaged and rogue devices on the air are an invisible attack surface.",
-          proof: { metric: "Wireless device exposure", before: "Unknown clients and rogue APs on the network", after: "Identified, segmented, and monitored wireless clients" }
+          proof: { metric: "Wireless device visibility", before: "Unknown clients and rogue access points require manual investigation", after: "Client and rogue-device telemetry supports investigation and access policy" }
         }
       },
       useCases: ["Hybrid Work", "Network Automation", "AI Networking"],
@@ -147,33 +147,33 @@
       id: "flat-network-breach",
       pillar: "resilience",
       symptom: "One infected laptop can reach everything — a flat network turns an incident into an outage.",
-      outcome: "Zero-trust segmentation that contains threats to a single segment.",
+      outcome: "Identity-based segmentation that limits lateral movement and reduces breach impact.",
       proof: {
         metric: "Blast radius of a compromised device",
         before: "Lateral movement across the whole network",
-        after: "Contained to one segment via identity-based policy",
-        source: "Cisco Zero Trust (ISE + Secure Firewall + Duo) positioning"
+        after: "Access constrained by identity and group-based policy",
+        source: "Cisco SD-Access segmentation with ISE and Secure Firewall positioning"
       },
       personas: {
         netops: {
-          line: "Enforce who-talks-to-whom without redesigning the network by hand.",
+          line: "Apply group-based access policy in phases without a wholesale network replacement.",
           symptom: "Segmenting the network by hand means VLAN spaghetti no one wants to touch.",
-          proof: { metric: "Effort to enforce segmentation", before: "Manual ACLs and VLANs that break things", after: "Identity-based policy pushed without redesign" }
+          proof: { metric: "Effort to enforce segmentation", before: "Growing VLAN and ACL complexity", after: "Group-based policy with centralized identity context" }
         },
         cio: {
-          line: "Reduce the business impact of the breach that will eventually happen.",
+          line: "Reduce the potential business impact when a device or identity is compromised.",
           symptom: "One infected device can escalate into a business-wide outage.",
-          proof: { metric: "Business impact of a breach", before: "Lateral movement across the whole network", after: "Damage contained to a single segment" }
+          proof: { metric: "Potential breach impact", before: "Broad reachability increases lateral-movement paths", after: "Policy limits which users and devices can reach sensitive resources" }
         },
         ciso: {
-          line: "Identity-based micro-segmentation that stops lateral movement cold.",
+          line: "Use identity and group-based policy to constrain lateral movement.",
           symptom: "Flat networks let attackers move laterally at will after the first foothold.",
-          proof: { metric: "Blast radius of a compromised device", before: "Unrestricted lateral movement", after: "Contained to one segment via identity-based policy" }
+          proof: { metric: "Reachability from a compromised device", before: "Broad access enables more lateral-movement paths", after: "Access constrained by identity and group-based policy" }
         }
       },
       useCases: ["Zero Trust Security", "Network Automation"],
       bundles: ["Zero Trust Foundation"],
-      families: ["ise", "sf-branch", "sf-enterprise", "duo", "secure-access", "secure-workload", "hypershield"],
+      families: ["ise", "catalyst-access", "catalyst-center", "sf-branch", "sf-enterprise"],
       refArch: "Zero Trust Security",
       signals: { has: ["ise"], missing: ["duo"] },
       dcloudPath: "zero-trust",
@@ -183,7 +183,7 @@
       id: "vpn-overload",
       pillar: "connectivity",
       symptom: "Legacy VPN is slow, over-trusted, and doesn't scale to a hybrid workforce.",
-      outcome: "Zero-trust access to any app, on-prem or cloud, without a full-tunnel VPN.",
+      outcome: "Least-privilege access for private and internet applications using ZTNA, with VPNaaS where full network access is still required.",
       proof: {
         metric: "Remote access risk & user friction",
         before: "Broad network access once the VPN is up",
@@ -192,14 +192,14 @@
       },
       personas: {
         netops: {
-          line: "Retire VPN concentrators for a cloud-delivered access edge.",
+          line: "Reduce on-premises VPN infrastructure by using cloud-delivered ZTNA and VPNaaS where each fits.",
           symptom: "You're scaling and babysitting VPN concentrators that users still hate.",
-          proof: { metric: "Remote access ops burden", before: "VPN concentrators to size, patch, and scale", after: "Cloud-delivered access edge, no concentrators" }
+          proof: { metric: "Remote access operations", before: "On-premises headends to size, patch, and scale", after: "Cloud-delivered access with ZTNA plus VPNaaS for legacy needs" }
         },
         cio: {
           line: "Faster, simpler access for employees and third parties from anywhere.",
           symptom: "Clunky remote access slows down employees and partners every day.",
-          proof: { metric: "Workforce access experience", before: "Slow, all-or-nothing VPN logins", after: "Fast, per-app access from anywhere" }
+          proof: { metric: "Workforce access experience", before: "A full network tunnel for routine application access", after: "Context-aware access matched to the application" }
         },
         ciso: {
           line: "Least-privilege access replaces implicit trust in the VPN tunnel.",
@@ -209,7 +209,7 @@
       },
       useCases: ["Zero Trust Security", "SD-WAN / SASE", "Hybrid Work"],
       bundles: ["Cloud Branch (SASE)", "Zero Trust Foundation"],
-      families: ["secure-access", "duo", "umbrella", "secure-client"],
+      families: ["secure-access", "duo", "secure-client"],
       refArch: "Zero Trust Security",
       signals: { has: ["secure-client"], missing: ["secure-access"] },
       dcloudPath: "zero-trust",
@@ -219,31 +219,31 @@
       id: "threat-dwell-time",
       pillar: "resilience",
       symptom: "Attacks hide for weeks and the SOC drowns in disconnected alerts.",
-      outcome: "Correlated detection and automated response across endpoint, network, and SIEM.",
+      outcome: "Correlated detection, investigation, and response across endpoint, network analytics, XDR, and SIEM workflows.",
       proof: {
         metric: "Threat dwell time & analyst effort",
         before: "Siloed tools; manual correlation across consoles",
         after: "One correlated incident with guided/automated response",
-        source: "Cisco XDR + Splunk + Talos positioning"
+        source: "Cisco XDR + Secure Network Analytics + Splunk positioning"
       },
       personas: {
         netops: {
-          line: "Fewer console swivel-chairs; network context feeds the investigation automatically.",
+          line: "Feed network detections and context into XDR investigations instead of assembling them manually.",
           symptom: "Security keeps pulling you into investigations across yet more consoles.",
           proof: { metric: "Network's role in investigations", before: "Manual pulls of network context per case", after: "Network telemetry auto-feeds the investigation" }
         },
         cio: {
           line: "Detect and contain incidents before they become headlines.",
-          symptom: "Threats dwell for weeks — the next one could be the headline breach.",
-          proof: { metric: "Incident containment speed", before: "Weeks of undetected dwell time", after: "Fast detection and contained incidents" }
+          symptom: "Disconnected security tools increase the time and cost required to understand a serious incident.",
+          proof: { metric: "Incident investigation and containment", before: "Teams reconstruct context across separate tools", after: "Correlated incidents support faster, more consistent triage" }
         },
         ciso: {
-          line: "Cross-domain correlation and Talos intel cut dwell time and analyst fatigue.",
-          symptom: "Your SOC swivel-chairs across siloed tools while attackers dwell.",
+          line: "Correlate endpoint, network, identity, and threat intelligence to reduce analyst investigation effort.",
+          symptom: "Analysts spend too much time correlating alerts and rebuilding context across tools.",
           proof: { metric: "Threat dwell time & analyst effort", before: "Siloed tools; manual correlation across consoles", after: "One correlated incident with guided/automated response" }
         }
       },
-      useCases: ["Zero Trust Security"],
+      useCases: ["Threat Detection & Response"],
       bundles: ["Threat Defense Platform"],
       families: ["xdr", "secure-endpoint", "splunk", "talos", "stealthwatch"],
       signals: { has: ["secure-endpoint"], missing: ["xdr"] },
@@ -253,7 +253,7 @@
     {
       id: "phishing-email",
       pillar: "resilience",
-      symptom: "Email is still the #1 way attackers get in — phishing and BEC slip past filters.",
+      symptom: "Email remains a common entry path, and targeted phishing or business-email compromise can evade basic filtering.",
       outcome: "Layered email defense that blocks phishing, malware, and account takeover.",
       proof: {
         metric: "Malicious email reaching inboxes",
@@ -263,9 +263,9 @@
       },
       personas: {
         netops: {
-          line: "Less malware to chase on endpoints and the network.",
-          symptom: "Every phishing click becomes malware you chase across endpoints and the network.",
-          proof: { metric: "Downstream malware cleanup", before: "Infections spread from clicked emails", after: "Threats blocked before they reach inboxes" }
+          line: "Give IT operations clearer containment actions when an email-originated incident reaches a user.",
+          symptom: "Email-originated incidents arrive as urgent isolate-and-block requests with limited shared context.",
+          proof: { metric: "Operational handoffs after an email threat", before: "Ad hoc requests across email, endpoint, and network teams", after: "Shared incident context and coordinated response actions" }
         },
         cio: {
           line: "Protect the workforce from the most common breach entry point.",
@@ -278,9 +278,9 @@
           proof: { metric: "Malicious email reaching inboxes", before: "Native filtering misses targeted phishing/BEC", after: "Threat intelligence-driven blocking with rapid remediation" }
         }
       },
-      useCases: ["Zero Trust Security"],
+      useCases: ["Threat Detection & Response"],
       bundles: ["Threat Defense Platform"],
-      families: ["secure-email", "secure-endpoint", "secure-web", "talos"],
+      families: ["secure-email", "xdr", "secure-endpoint", "talos"],
       signals: { has: ["secure-endpoint"], missing: ["secure-email"] },
       maturityNext: "threat-dwell-time"
     },
@@ -297,9 +297,9 @@
       },
       personas: {
         netops: {
-          line: "One access policy engine across VPN, apps, and network.",
-          symptom: "You maintain separate access rules across VPN, apps, and the network.",
-          proof: { metric: "Access policy sprawl", before: "Different policy engines per access path", after: "One policy engine across VPN, apps, and network" }
+          line: "Reuse identity and device-trust signals across network, remote-access, and application decisions.",
+          symptom: "Network, VPN, and application access decisions rely on disconnected identity and device context.",
+          proof: { metric: "Access-policy consistency", before: "Different identity and posture context by access path", after: "Shared identity and device-trust signals inform access decisions" }
         },
         cio: {
           line: "Reduce account-takeover risk without slowing employees down.",
@@ -312,7 +312,7 @@
           proof: { metric: "Credential-based intrusion risk", before: "Passwords + basic MFA that users click through", after: "Device trust, risk-based and phishing-resistant MFA" }
         }
       },
-      useCases: ["Zero Trust Security", "Hybrid Work"],
+      useCases: ["Zero Trust Security", "Threat Detection & Response", "Hybrid Work"],
       bundles: ["Zero Trust Foundation"],
       families: ["duo", "ise", "identity-intel", "secure-access"],
       refArch: "Zero Trust Security",
@@ -333,14 +333,14 @@
       },
       personas: {
         netops: {
-          line: "Autonomous, kernel-level segmentation that keeps up with workload sprawl.",
-          symptom: "AI workloads spin up faster than you can segment them by hand.",
-          proof: { metric: "Keeping pace with workload sprawl", before: "Manual segmentation lags deployment", after: "Autonomous, kernel-level segmentation" }
+          line: "Give platform and network teams visibility into AI application traffic and enforce runtime guardrails consistently.",
+          symptom: "AI applications and agents introduce new traffic patterns, data paths, and operational dependencies that are difficult to inventory.",
+          proof: { metric: "Operational visibility for AI applications", before: "AI assets and traffic are discovered through ad hoc investigation", after: "AI assets, models, and application traffic are mapped for policy and operations" }
         },
         cio: {
           line: "Adopt AI confidently without opening a new class of risk.",
           symptom: "The business wants AI now, but no one owns the new risk it creates.",
-          proof: { metric: "Confidence to adopt AI", before: "AI apps deployed with no guardrails", after: "AI adopted with controls built in" }
+          proof: { metric: "Governance for AI adoption", before: "AI applications launch without consistent validation or runtime policy", after: "Validation findings and runtime guardrails support governed adoption" }
         },
         ciso: {
           line: "Discover, validate, and protect AI apps and models end to end.",
@@ -348,11 +348,45 @@
           proof: { metric: "AI/workload attack surface", before: "AI apps deployed with no model- or prompt-level controls", after: "Validated models, protected runtime, and segmented workloads" }
         }
       },
-      useCases: ["Zero Trust Security", "Data Center Modernization", "AI Networking"],
+      useCases: ["Threat Detection & Response", "Cloud Migration"],
       bundles: [],
-      families: ["ai-defense", "hypershield", "secure-workload", "multicloud-defense"],
-      signals: { has: ["secure-workload"], missing: ["ai-defense"] },
-      maturityNext: "ai-infra-ready"
+      families: ["ai-defense"],
+      signals: { has: [], missing: ["ai-defense"] },
+      maturityNext: "workload-runtime-protection"
+    },
+    {
+      id: "workload-runtime-protection",
+      pillar: "resilience",
+      symptom: "Application teams move workloads across data centers and clouds faster than security teams can understand dependencies and maintain segmentation policy.",
+      outcome: "Workload-level visibility and adaptive segmentation that reduce lateral-movement paths across hybrid environments.",
+      proof: {
+        metric: "Workload segmentation operations",
+        before: "Application dependencies and policies are maintained through manual discovery and static rules",
+        after: "Observed workload behavior informs policy recommendations, testing, and distributed enforcement",
+        source: "Cisco Hypershield autonomous segmentation and Secure Workload positioning"
+      },
+      personas: {
+        netops: {
+          line: "Understand application dependencies before enforcing east-west policy across hybrid infrastructure.",
+          symptom: "Network teams are asked to segment dynamic workloads without an accurate map of application dependencies.",
+          proof: { metric: "Segmentation change confidence", before: "Static rules are changed with incomplete dependency context", after: "Observed dependencies and policy testing reduce change uncertainty" }
+        },
+        cio: {
+          line: "Reduce the operational drag and outage risk of protecting applications across changing infrastructure.",
+          symptom: "Security policy struggles to keep pace as applications move across on-premises and cloud environments.",
+          proof: { metric: "Security-policy agility", before: "Protection depends on manual discovery and environment-specific rules", after: "Adaptive policy supports changing application environments" }
+        },
+        ciso: {
+          line: "Constrain east-west movement with workload-aware policy and distributed enforcement.",
+          symptom: "Perimeter controls do not provide enough visibility or control inside modern application environments.",
+          proof: { metric: "East-west application exposure", before: "Limited workload context and broad internal reachability", after: "Workload-aware segmentation narrows permitted communication paths" }
+        }
+      },
+      useCases: ["Zero Trust Security", "Data Center Modernization"],
+      bundles: [],
+      families: ["hypershield", "secure-workload"],
+      signals: { has: ["secure-workload"], missing: ["hypershield"] },
+      maturityNext: "threat-dwell-time"
     },
 
     /* ── Collaboration / Workplaces ────────────────────────────────── */
@@ -369,24 +403,24 @@
       },
       personas: {
         netops: {
-          line: "Zero-touch devices managed centrally in Control Hub.",
-          symptom: "Every room is a different config, and each glitch is a manual ticket.",
-          proof: { metric: "Room device operations", before: "Per-site setup; a call for every room issue", after: "Zero-touch, fleet-managed rooms in Control Hub" }
+          line: "Validate Webex media reachability and apply appropriate QoS across Wi-Fi, WAN, firewall, and internet paths.",
+          symptom: "Hybrid-meeting quality depends on network readiness, but media-path and QoS evidence is often missing.",
+          proof: { metric: "Network readiness for hybrid meetings", before: "Media paths and real-time traffic handling are not validated", after: "Webex reachability, preferred UDP transport, and QoS treatment are documented" }
         },
         cio: {
-          line: "Get the return on real estate and make hybrid work feel fair.",
-          symptom: "Expensive rooms sit empty while hybrid meetings feel unfair.",
-          proof: { metric: "Real-estate ROI & meeting equity", before: "Underused rooms; remote people are second-class", after: "Booked rooms and equitable hybrid meetings" }
+          line: "Improve the usefulness of meeting spaces and participation for in-room and remote employees.",
+          symptom: "Meeting spaces are underused while remote participants struggle to be seen and heard equally.",
+          proof: { metric: "Meeting-space value and participation", before: "Inconsistent room use and unequal remote participation", after: "Room intelligence and AI-assisted audio/video improve the hybrid experience" }
         },
         ciso: {
-          line: "Managed, updatable endpoints instead of unmanaged BYO gear.",
-          symptom: "Unmanaged BYO meeting gear is a blind spot in the room.",
-          proof: { metric: "Meeting endpoint governance", before: "Shadow, unpatched BYO AV devices", after: "Managed, updatable, monitored endpoints" }
+          line: "Use managed room endpoints with centralized configuration, updates, and access controls.",
+          symptom: "Unmanaged room PCs and unapproved meeting tools can expose meeting data and weaken device governance.",
+          proof: { metric: "Meeting endpoint governance", before: "Inconsistent patching, configuration, and application control", after: "Centrally managed room devices with policy and lifecycle visibility" }
         }
       },
       useCases: ["Hybrid Work"],
       bundles: ["Hybrid Work Suite"],
-      families: ["room-systems", "desk-devices", "webex-meetings", "webex-app", "cisco-headsets", "conf-phones"],
+      families: ["room-systems", "desk-devices", "webex-meetings", "webex-app", "cisco-headsets"],
       refArch: "Hybrid Work",
       signals: { has: ["webex-app"], missing: ["room-systems"] },
       dcloudPath: "hybrid-work",
@@ -405,9 +439,9 @@
       },
       personas: {
         netops: {
-          line: "Retire PBX hardware; manage calling from the cloud.",
-          symptom: "You're keeping an end-of-life PBX and PSTN gear alive site by site.",
-          proof: { metric: "Telephony maintenance burden", before: "Per-site PBX hardware to maintain", after: "Cloud calling managed from one plane" }
+          line: "Assure WAN and internet paths, QoS, firewall reachability, and resilient Local Gateway connectivity for cloud voice.",
+          symptom: "Cloud-calling migration depends on transport readiness, but network and voice ownership boundaries are unclear.",
+          proof: { metric: "Cloud-voice network readiness", before: "Latency, jitter, loss, QoS, and service reachability are unassessed", after: "Voice paths and Local Gateway resiliency are validated before migration" }
         },
         cio: {
           line: "Modern calling experience with predictable subscription cost.",
@@ -422,11 +456,11 @@
       },
       useCases: ["Hybrid Work"],
       bundles: ["Hybrid Work Suite"],
-      families: ["webex-calling", "webex-app", "ip-phones", "conf-phones"],
+      families: ["webex-calling", "webex-app", "ip-phones"],
       refArch: "Hybrid Work",
       signals: { has: ["ip-phones"], missing: ["webex-calling"] },
       dcloudPath: "hybrid-work",
-      maturityNext: "contact-center-cx"
+      maturityNext: "hybrid-meeting-equity"
     },
     {
       id: "contact-center-cx",
@@ -441,9 +475,9 @@
       },
       personas: {
         netops: {
-          line: "Cloud-delivered CC with no on-prem stack to babysit.",
-          symptom: "The on-prem contact-center stack is a fragile thing you babysit.",
-          proof: { metric: "Contact-center ops burden", before: "On-prem CC stack to maintain and patch", after: "Cloud-delivered CC with nothing to babysit" }
+          line: "Assure resilient, low-latency connectivity for agent desktops and media while CX owners manage routing and agent workflows.",
+          symptom: "Agent and customer media quality suffers when internet, WAN, QoS, or cloud-service reachability is not ready.",
+          proof: { metric: "Contact-center network readiness", before: "Bandwidth, latency, jitter, loss, and firewall requirements are unvalidated", after: "Agent and media paths are assessed with clear escalation boundaries" }
         },
         cio: {
           line: "Differentiate on customer experience and lower cost-to-serve.",
@@ -451,17 +485,17 @@
           proof: { metric: "Customer effort & cost-to-serve", before: "Voice-only queues; agents lack context", after: "AI routing, digital channels, and self-service deflection" }
         },
         ciso: {
-          line: "Secure agent access and compliant, encrypted interactions.",
-          symptom: "Agent access and customer data in the contact center must stay compliant.",
-          proof: { metric: "CC access & data protection", before: "Broad agent access; compliance gaps", after: "Secure agent access and encrypted interactions" }
+          line: "Apply role-based agent access and protect customer interactions across voice and digital channels.",
+          symptom: "Customer conversations may contain regulated data that must be controlled across agents, recordings, and digital channels.",
+          proof: { metric: "Contact-center data protection", before: "Inconsistent controls for sensitive interaction data", after: "Role-based access plus encryption, masking, and channel controls support compliance" }
         }
       },
-      useCases: ["Hybrid Work"],
+      useCases: ["Contact Center", "Digital Transformation"],
       bundles: ["Cloud Contact Center"],
-      families: ["webex-cc", "webex-connect", "webex-calling", "webex-app"],
+      families: ["webex-cc", "webex-connect"],
       signals: { has: ["webex-calling"], missing: ["webex-cc"] },
       dcloudPath: "contact-center",
-      maturityNext: "pbx-eol"
+      maturityNext: null
     },
     {
       id: "room-quality",
@@ -472,7 +506,7 @@
         metric: "Time to root-cause a bad meeting",
         before: "Blame bounces between collab, network, and ISP",
         after: "Correlated device + path evidence in one investigation",
-        source: "Cisco Cloud Control / AI Canvas positioning"
+        source: "Webex Control Hub troubleshooting + ThousandEyes network-path integration"
       },
       personas: {
         netops: {
@@ -481,19 +515,19 @@
           proof: { metric: "Time to root-cause a bad meeting", before: "Blame bounces between collab, network, and ISP", after: "Correlated device + path evidence in one investigation" }
         },
         cio: {
-          line: "Reliable executive and all-hands experiences, every time.",
-          symptom: "Choppy executive and all-hands meetings are visible, embarrassing failures.",
-          proof: { metric: "Executive meeting reliability", before: "Unexplained quality issues in high-stakes meetings", after: "Reliable executive and all-hands experiences" }
+          line: "Reduce disruption in high-visibility meetings and shorten escalation time when quality degrades.",
+          symptom: "Quality failures in executive and all-hands meetings are highly visible and difficult to explain quickly.",
+          proof: { metric: "Business impact of meeting-quality incidents", before: "High-visibility failures trigger long, cross-team escalations", after: "Participant, device, media, and network-path evidence speeds triage" }
         },
         ciso: {
-          line: "Managed devices and visibility instead of shadow AV.",
-          symptom: "When quality is poor, shadow AV and unmanaged tools creep in.",
-          proof: { metric: "Meeting estate visibility", before: "Shadow AV workarounds outside IT", after: "Managed devices with full visibility" }
+          line: "Use role-scoped Control Hub access and centrally managed diagnostics instead of ad hoc troubleshooting access.",
+          symptom: "Meeting diagnostics contain device and user telemetry that requires governed administrative access.",
+          proof: { metric: "Diagnostic access governance", before: "Troubleshooting evidence is gathered through ad hoc tools and broad access", after: "Role-scoped administration and centralized telemetry support investigation" }
         }
       },
       useCases: ["Hybrid Work", "SD-WAN / SASE"],
-      bundles: ["Hybrid Work Suite", "Cloud Control Platform"],
-      families: ["room-systems", "thousandeyes", "cloud-control", "webex-meetings"],
+      bundles: ["Hybrid Work Suite"],
+      families: ["room-systems", "thousandeyes", "webex-meetings"],
       signals: { has: ["room-systems"], missing: ["thousandeyes"] },
       dcloudPath: "hybrid-work",
       maturityNext: "observability-blindspots"
@@ -523,9 +557,9 @@
           proof: { metric: "Time-to-stand-up AI infrastructure", before: "Infrastructure is the bottleneck for AI", after: "Validated AI-ready fabric + compute that scales" }
         },
         ciso: {
-          line: "Segment and protect high-value AI data and workloads by design.",
-          symptom: "High-value AI data and workloads need protection by design, not after.",
-          proof: { metric: "AI data/workload protection", before: "AI workloads on flat, open infrastructure", after: "Segmented, protected AI workloads by design" }
+          line: "Design observable network boundaries and defined enforcement points around high-value AI workloads.",
+          symptom: "AI infrastructure is being designed before data flows, trust boundaries, and security enforcement points are agreed.",
+          proof: { metric: "AI infrastructure security readiness", before: "Security requirements are added after the fabric and compute design", after: "The architecture documents flows, boundaries, telemetry, and enforcement integration" }
         }
       },
       useCases: ["AI Networking", "Data Center Modernization", "Data Center Networking"],
@@ -537,36 +571,71 @@
       maturityNext: "ai-fabric-bottleneck"
     },
     {
+      id: "hyperflex-migration",
+      pillar: "ai-dc",
+      symptom: "HyperFlex Data Platform is past end of software maintenance, but critical workloads still depend on it.",
+      outcome: "A planned migration from HyperFlex to a supported platform before the February 2029 last date of support.",
+      proof: {
+        metric: "HyperFlex lifecycle risk",
+        before: "HXDP remains in production without new maintenance releases or bug fixes after September 2025",
+        after: "Workloads follow a tested migration plan to Nutanix on Cisco UCS or another supported platform",
+        source: "Cisco HyperFlex Data Platform end-of-life notice and migration guidance"
+      },
+      personas: {
+        netops: {
+          line: "Inventory dependencies, validate the target design, and sequence migration without creating an avoidable outage.",
+          symptom: "The HyperFlex cluster still runs important workloads, but patches and maintenance releases have ended.",
+          proof: { metric: "Migration readiness", before: "Dependencies, capacity, and rollback requirements are not documented", after: "A validated target, workload sequence, and rollback plan guide migration" }
+        },
+        cio: {
+          line: "Move critical workloads off an aging platform on a deliberate timeline rather than through an emergency project.",
+          symptom: "A supported-until-2029 platform can still become a business risk if migration planning starts too late.",
+          proof: { metric: "Lifecycle planning risk", before: "Migration is deferred while support and skills narrow", after: "Funding, platform choice, and workload moves are planned against lifecycle dates" }
+        },
+        ciso: {
+          line: "Reduce exposure created by infrastructure that no longer receives software maintenance fixes.",
+          symptom: "HXDP no longer receives maintenance releases or bug fixes, increasing the importance of compensating controls and migration.",
+          proof: { metric: "Unsupported-software exposure", before: "Production workloads depend on software past end of maintenance", after: "Compensating controls and migration reduce time on the aging platform" }
+        }
+      },
+      useCases: ["Data Center Modernization"],
+      bundles: ["Data Center Modernization"],
+      families: ["hyperflex", "ucs", "intersight"],
+      signals: { has: ["hyperflex"], missing: ["ucs"] },
+      dcloudPath: "dc-modernization",
+      maturityNext: "dc-sprawl"
+    },
+    {
       id: "dc-sprawl",
       pillar: "ai-dc",
       symptom: "The data center is a sprawl of legacy silos that are slow and costly to operate.",
-      outcome: "A modern, policy-driven data center operated from the cloud.",
+      outcome: "Policy-based data-center networking and cloud-operated compute management with clearer lifecycle control.",
       proof: {
         metric: "Data center operational complexity",
         before: "Device-by-device management across disconnected silos",
-        after: "Policy-based fabric + HCI with cloud operations",
+        after: "Policy-based fabric and cloud-operated compute management",
         source: "Cisco Data Center Modernization positioning"
       },
       personas: {
         netops: {
           line: "Automate fabric and compute from a single operations plane.",
           symptom: "You manage the data center device-by-device across disconnected silos.",
-          proof: { metric: "DC operational complexity", before: "Device-by-device management across silos", after: "Policy-based fabric + HCI with cloud operations" }
+          proof: { metric: "Data-center operational complexity", before: "Device-by-device management across separate network and compute tools", after: "Policy-based fabric with centralized compute lifecycle operations" }
         },
         cio: {
-          line: "Lower data center TCO and move faster on new services.",
+          line: "Improve lifecycle control and service delivery without assuming a single infrastructure model fits every workload.",
           symptom: "The legacy data center is slow to change and expensive to run.",
-          proof: { metric: "Data center TCO & agility", before: "Costly silos; slow to deliver new services", after: "Lower TCO and faster new services" }
+          proof: { metric: "Data-center agility", before: "Siloed operations slow changes and obscure lifecycle costs", after: "Standardized platforms and policy make service delivery and lifecycle decisions easier" }
         },
         ciso: {
           line: "Consistent policy and workload protection across the estate.",
           symptom: "Inconsistent policy across data-center silos leaves workloads exposed.",
-          proof: { metric: "Workload policy consistency", before: "Uneven policy across disconnected silos", after: "Consistent workload protection across the estate" }
+          proof: { metric: "Workload-policy consistency", before: "Different controls and visibility across infrastructure domains", after: "Policy and workload context are applied more consistently across supported environments" }
         }
       },
       useCases: ["Data Center Modernization", "Data Center Networking", "Network Automation"],
       bundles: ["Data Center Modernization"],
-      families: ["nexus", "aci", "ucs", "hyperflex", "intersight", "multicloud-defense"],
+      families: ["nexus", "aci", "ucs", "intersight", "multicloud-defense"],
       refArch: "Data Center Modernization",
       signals: { has: ["ucs"], missing: ["intersight"] },
       dcloudPath: "dc-modernization",
@@ -576,34 +645,34 @@
       id: "ai-fabric-bottleneck",
       pillar: "ai-dc",
       symptom: "GPU training jobs stall and no one can tell if the fabric is the bottleneck.",
-      outcome: "Fabric telemetry that protects AI workloads and pinpoints congestion.",
+      outcome: "AI-fabric telemetry and congestion analytics that help isolate network bottlenecks affecting GPU workloads.",
       proof: {
         metric: "AI job throughput lost to congestion",
         before: "Blind to ECN/buffer pressure on the fabric",
-        after: "Per-leaf telemetry and QoS that protects the AI class",
+        after: "Fabric-wide congestion scoring, ECN/PFC visibility, and consistent QoS templates",
         source: "Cisco Nexus Dashboard / AI fabric positioning"
       },
       personas: {
         netops: {
-          line: "See buffer/ECN pressure per switch and rebalance flows.",
+          line: "Use ECN/PFC statistics, congestion scoring, and microburst telemetry to isolate fabric bottlenecks.",
           symptom: "When AI jobs stall, you're blind to ECN and buffer pressure on the fabric.",
-          proof: { metric: "Fabric visibility for AI", before: "Blind to ECN/buffer pressure on the fabric", after: "Per-leaf telemetry and QoS that protect the AI class" }
+          proof: { metric: "Fabric visibility for AI", before: "Congestion symptoms require device-by-device investigation", after: "Nexus Dashboard correlates congestion indicators across the fabric" }
         },
         cio: {
-          line: "Protect expensive GPU cycles from network waste.",
+          line: "Reduce avoidable GPU idle time caused by fabric congestion and configuration inconsistency.",
           symptom: "Stalled GPU jobs waste some of your most expensive compute.",
-          proof: { metric: "GPU cycles lost to congestion", before: "Expensive GPUs idle on network waste", after: "Protected AI throughput with less waste" }
+          proof: { metric: "Infrastructure time lost to fabric issues", before: "GPU jobs slow while teams isolate network causes", after: "Faster congestion diagnosis and consistent fabric templates reduce avoidable delay" }
         },
         ciso: {
-          line: "Keep AI data on protected, observable paths.",
-          symptom: "AI training data must stay on observable, protected paths.",
-          proof: { metric: "AI data path assurance", before: "AI traffic on unobserved paths", after: "AI data on protected, observable paths" }
+          line: "Make AI east-west traffic observable so segmentation and anomaly investigations have usable network context.",
+          symptom: "High-volume AI traffic can obscure unusual communication paths if the fabric lacks granular telemetry.",
+          proof: { metric: "AI traffic visibility", before: "Limited context for traffic anomalies inside the AI fabric", after: "Granular fabric telemetry supports investigation and policy validation" }
         }
       },
       useCases: ["AI Networking", "Data Center Networking"],
       bundles: ["AI-Ready Data Center Network"],
-      families: ["nexus", "nexus-one", "intersight", "silicon-one"],
-      signals: { has: ["nexus"], missing: ["thousandeyes"] },
+      families: ["nexus", "nexus-one", "nexus-dashboard", "silicon-one"],
+      signals: { has: ["nexus"], missing: ["nexus-dashboard"] },
       dcloudPath: "ai-networking",
       maturityNext: "observability-blindspots"
     },
@@ -613,11 +682,11 @@
       id: "ot-blind",
       pillar: "resilience",
       symptom: "You can't see or secure the OT devices running the plant floor.",
-      outcome: "Full OT visibility and zero-trust segmentation across IT/OT.",
+      outcome: "Passive OT asset visibility and identity-based segmentation across industrial networks.",
       proof: {
         metric: "OT asset visibility & exposure",
         before: "Unknown industrial assets on flat OT networks",
-        after: "Complete asset inventory with segmented, monitored OT",
+        after: "Continuously observed OT inventory with segmentation and monitoring",
         source: "Cisco Cyber Vision + Industrial Ethernet + ISE positioning"
       },
       personas: {
@@ -629,12 +698,12 @@
         cio: {
           line: "Keep production running while connecting the plant safely.",
           symptom: "You must connect the plant without risking a production outage.",
-          proof: { metric: "Safe plant connectivity", before: "Connecting OT risks downtime", after: "Production stays up while OT connects safely" }
+          proof: { metric: "Operational risk of OT connectivity", before: "New connectivity is delayed because dependencies and downtime risk are unclear", after: "Passive visibility and phased segmentation support change planning without active probing" }
         },
         ciso: {
           line: "See every OT asset and contain threats before they hit operations.",
           symptom: "Unseen OT assets on flat networks are a serious exposure.",
-          proof: { metric: "OT asset visibility & exposure", before: "Unknown industrial assets on flat OT networks", after: "Complete asset inventory with segmented, monitored OT" }
+          proof: { metric: "OT asset visibility and exposure", before: "Unknown industrial assets on broadly connected OT networks", after: "Passively discovered assets with segmentation and monitoring context" }
         }
       },
       useCases: ["IoT / Industrial", "Zero Trust Security"],
@@ -651,7 +720,7 @@
       id: "observability-blindspots",
       pillar: "resilience",
       symptom: "When something breaks, teams argue in a war room because no one owns the full picture.",
-      outcome: "Cross-domain observability that ends finger-pointing and shortens MTTR.",
+      outcome: "Cross-domain observability that replaces assumptions with shared evidence and can shorten MTTR.",
       proof: {
         metric: "Mean time to resolution (cross-team)",
         before: "War rooms; each team sees only its own slice",
@@ -670,15 +739,15 @@
           proof: { metric: "Downtime & war-room cost", before: "Frequent, drawn-out war rooms", after: "Less downtime and faster resolution" }
         },
         ciso: {
-          line: "Telemetry everywhere means investigations aren't blind.",
+          line: "Bring network, application, and internet telemetry into investigations to reduce critical blind spots.",
           symptom: "Blind spots between domains mean investigations start in the dark.",
-          proof: { metric: "Investigation visibility", before: "Telemetry gaps across domains", after: "Telemetry everywhere for investigations" }
+          proof: { metric: "Investigation visibility", before: "Security investigations lack application or network-path context", after: "Cross-domain telemetry provides additional evidence for investigation" }
         }
       },
       useCases: ["AI Networking", "SD-WAN / SASE", "Data Center Modernization"],
-      bundles: ["Cloud Control Platform"],
-      families: ["thousandeyes", "splunk", "fso", "appdynamics", "cloud-control"],
-      signals: { has: ["thousandeyes"], missing: ["cloud-control"] },
+      bundles: [],
+      families: ["thousandeyes", "splunk", "fso", "appdynamics"],
+      signals: { has: ["appdynamics"], missing: ["thousandeyes"] },
       dcloudPath: "ai-networking",
       maturityNext: "tool-sprawl-ops"
     },
@@ -686,33 +755,33 @@
       id: "tool-sprawl-ops",
       pillar: "resilience",
       symptom: "Operators juggle a dozen dashboards and still can't answer a simple question fast.",
-      outcome: "A unified, AI-native operations plane across domains (AgenticOps).",
+      outcome: "A shared operations workspace for cross-domain evidence, human operators, and AI-assisted investigation.",
       proof: {
         metric: "Consoles per investigation",
         before: "Swivel-chair across many disconnected tools",
-        after: "One AI-assisted canvas correlating every domain",
-        source: "Cisco Cloud Control / AI Canvas positioning"
+        after: "A shared AI-assisted workspace preserves evidence and investigation context",
+        source: "Cisco Cloud Control and AI Canvas positioning — Controlled Availability in the United States as of June 2026"
       },
       personas: {
         netops: {
-          line: "Ask a question once and let agents assemble the evidence.",
+          line: "Use a shared workspace to assemble cross-domain evidence while operators remain in control.",
           symptom: "You swivel-chair across a dozen tools to answer one simple question.",
-          proof: { metric: "Consoles per investigation", before: "Swivel-chair across many disconnected tools", after: "One AI-assisted canvas correlating every domain" }
+          proof: { metric: "Handoffs per investigation", before: "Operators copy evidence between disconnected tools and teams", after: "AI Canvas preserves shared evidence and context across the investigation" }
         },
         cio: {
-          line: "Operational efficiency and faster answers for the business.",
-          symptom: "Tool sprawl slows answers and inflates operational cost.",
-          proof: { metric: "Operational efficiency", before: "Fragmented tooling slows the business", after: "Unified, AI-native operations" }
+          line: "Get more operational value from existing Cisco domains by reducing handoffs between teams and tools.",
+          symptom: "The company pays for multiple operations platforms, yet major incidents still require manual context gathering and repeated handoffs.",
+          proof: { metric: "Cross-team investigation effort", before: "Each escalation restarts context gathering in another tool", after: "A shared workspace carries evidence and reasoning across teams" }
         },
         ciso: {
-          line: "Security context joins the same investigation surface.",
+          line: "Bring security context into the same governed investigation workspace used by infrastructure teams.",
           symptom: "Security context lives apart from the ops investigation surface.",
-          proof: { metric: "Security-ops convergence", before: "Security siloed from ops tooling", after: "Security context on one investigation surface" }
+          proof: { metric: "Security-to-operations handoffs", before: "Security and infrastructure teams exchange screenshots and summaries", after: "Shared evidence supports coordinated investigation while domain controls remain separate" }
         }
       },
       useCases: ["Network Automation", "AI Networking"],
-      bundles: ["Cloud Control Platform", "Cisco IQ Operations"],
-      families: ["cloud-control", "cisco-iq", "intersight", "catalyst-center"],
+      bundles: ["Cloud Control Platform"],
+      families: ["cloud-control"],
       signals: { has: ["catalyst-center"], missing: ["cloud-control"] },
       dcloudPath: "ai-networking",
       maturityNext: "unknown-assets"
@@ -721,36 +790,70 @@
       id: "unknown-assets",
       pillar: "resilience",
       symptom: "You don't have a reliable inventory of your Cisco estate or its risk exposure.",
-      outcome: "A unified asset landscape with AI troubleshooting and risk prioritization.",
+      outcome: "A consolidated Cisco asset view with lifecycle, advisory, hardening, and risk-prioritization insights.",
       proof: {
         metric: "Time to answer \"what do we have and what's at risk?\"",
         before: "Spreadsheets and stale CMDB data",
-        after: "Live asset landscape with prioritized vulnerabilities",
+        after: "A centralized Cisco inventory with lifecycle and prioritized security insights",
         source: "Cisco IQ + Vulnerability Management positioning"
       },
       personas: {
         netops: {
           line: "Know exactly what's deployed and what needs attention.",
           symptom: "You can't reliably say what's deployed or what needs attention.",
-          proof: { metric: "Estate inventory accuracy", before: "Spreadsheets and stale CMDB data", after: "Live asset landscape with prioritized attention" }
+          proof: { metric: "Cisco estate inventory confidence", before: "Spreadsheets and stale CMDB records", after: "A centralized Cisco asset view reconciles multiple data sources" }
         },
         cio: {
-          line: "Governance and lifecycle clarity across the Cisco investment.",
-          symptom: "There's no clear governance or lifecycle view of the Cisco investment.",
-          proof: { metric: "Estate governance clarity", before: "No unified lifecycle view", after: "Clear governance across the Cisco estate" }
+          line: "Tie Cisco lifecycle, coverage, and risk decisions to a consistent asset view.",
+          symptom: "Leadership cannot quickly connect Cisco inventory, support coverage, lifecycle dates, and risk exposure.",
+          proof: { metric: "Lifecycle decision readiness", before: "Asset, coverage, and lifecycle data live in separate reports", after: "A consolidated view supports refresh, support, and risk decisions" }
         },
         ciso: {
           line: "Prioritize the vulnerabilities that actually matter to your estate.",
           symptom: "Without an accurate inventory, you can't prioritize real risk.",
-          proof: { metric: "Risk prioritization", before: "Unknown exposure across the estate", after: "Prioritized vulnerabilities that actually matter" }
+          proof: { metric: "Infrastructure risk prioritization", before: "Advisories are reviewed without reliable asset and criticality context", after: "Relevant advisories and hardening findings are mapped to affected Cisco assets" }
         }
       },
       useCases: ["Network Automation"],
       bundles: ["Cisco IQ Operations"],
-      families: ["cisco-iq", "vuln-mgmt", "xdr", "intersight"],
+      families: ["cisco-iq"],
       refArch: "Operational Resilience",
       signals: { has: ["catalyst-center"], missing: ["cisco-iq"] },
-      maturityNext: "observability-blindspots"
+      maturityNext: "vulnerability-prioritization"
+    },
+    {
+      id: "vulnerability-prioritization",
+      pillar: "resilience",
+      symptom: "Vulnerability teams have more findings than they can remediate and limited evidence about which exposures create the most business risk.",
+      outcome: "Risk-based vulnerability prioritization that combines exploit intelligence, asset context, and remediation workflows.",
+      proof: {
+        metric: "Vulnerability remediation focus",
+        before: "Teams prioritize mostly by raw severity and scanner volume",
+        after: "Risk scoring and asset context focus remediation on the exposures most likely to matter",
+        source: "Cisco Vulnerability Management risk-based prioritization positioning"
+      },
+      personas: {
+        netops: {
+          line: "Give infrastructure owners a prioritized remediation queue with enough asset and exploit context to plan changes.",
+          symptom: "Infrastructure teams receive long scanner lists without clear ownership, exploit context, or change priority.",
+          proof: { metric: "Remediation handoff quality", before: "Unprioritized findings move between security and infrastructure teams", after: "Risk-ranked findings include asset context and remediation ownership" }
+        },
+        cio: {
+          line: "Direct limited remediation capacity toward exposures with the greatest potential business impact.",
+          symptom: "Leadership cannot tell whether vulnerability backlogs reflect material risk or simply scanner volume.",
+          proof: { metric: "Remediation investment focus", before: "Backlog size drives activity without business context", after: "Risk and asset criticality inform remediation priorities" }
+        },
+        ciso: {
+          line: "Prioritize exploitable, consequential exposures and track risk reduction rather than raw finding counts.",
+          symptom: "CVSS-only queues overwhelm teams and obscure the exposures most likely to be exploited.",
+          proof: { metric: "Risk-based remediation", before: "Severity and volume dominate prioritization", after: "Exploit intelligence, asset context, and risk scoring guide action" }
+        }
+      },
+      useCases: ["Threat Detection & Response", "Zero Trust Security"],
+      bundles: ["Cisco IQ Operations"],
+      families: ["vuln-mgmt"],
+      signals: { has: ["cisco-iq"], missing: ["vuln-mgmt"] },
+      maturityNext: "threat-dwell-time"
     },
     {
       id: "app-performance",
@@ -761,7 +864,7 @@
         metric: "Time to isolate app performance issues",
         before: "Dev vs ops standoff with separate tools",
         after: "Correlated app, infra, and network telemetry",
-        source: "Cisco AppDynamics / FSO + Splunk positioning"
+        source: "Splunk AppDynamics + Splunk platform positioning"
       },
       personas: {
         netops: {
@@ -770,23 +873,55 @@
           proof: { metric: "Time to isolate app issues", before: "Dev vs ops standoff with separate tools", after: "Correlated app, infra, and network telemetry" }
         },
         cio: {
-          line: "Protect revenue-driving digital experiences.",
-          symptom: "Slow critical apps put revenue and digital experience at risk.",
-          proof: { metric: "Digital experience & revenue", before: "Slow apps quietly hurt the business", after: "Protected, performant digital experiences" }
+          line: "Connect application performance to the digital journeys and business services that depend on it.",
+          symptom: "Leadership sees customer or employee impact before teams can connect it to the affected application service.",
+          proof: { metric: "Business-service visibility", before: "Technical health is disconnected from business-service impact", after: "Application telemetry helps prioritize issues by service and user impact" }
         },
         ciso: {
-          line: "Spot anomalies that signal abuse or compromise in the app tier.",
-          symptom: "App-tier anomalies that signal abuse go unnoticed without correlation.",
-          proof: { metric: "App-tier threat visibility", before: "No correlated view of app behavior", after: "Anomalies surfaced across app and infrastructure" }
+          line: "Bring application and infrastructure telemetry into security investigations without treating APM as a security control.",
+          symptom: "Security teams may lack application-performance context needed to distinguish reliability failures from suspicious behavior.",
+          proof: { metric: "Application context in investigations", before: "Security and application teams use separate telemetry and timelines", after: "Splunk can correlate application and infrastructure events with security data" }
         }
       },
       useCases: ["Data Center Modernization", "Cloud Migration"],
-      bundles: ["Cloud Control Platform"],
+      bundles: [],
       families: ["appdynamics", "fso", "splunk", "thousandeyes"],
       signals: { has: ["splunk"], missing: ["appdynamics"] },
       maturityNext: "observability-blindspots"
     }
   ];
+
+  // Official product/solution references used to validate each directional
+  // talking point. These are provenance links, not customer-result evidence.
+  const OFFICIAL_SOURCE_URLS = {
+    "branch-app-experience": "https://www.cisco.com/site/us/en/solutions/networking/sdwan/index.html",
+    "campus-manual-ops": "https://www.cisco.com/site/us/en/products/networking/catalyst-center/index.html",
+    "wifi-complaints": "https://www.cisco.com/site/us/en/products/networking/wireless/index.html",
+    "flat-network-breach": "https://www.cisco.com/c/en/us/td/docs/cloud-systems-management/network-automation-and-management/catalyst-center/cisco-validated-solution-profiles/validated-profile-sda-deployment.html",
+    "vpn-overload": "https://www.cisco.com/site/us/en/products/security/secure-access/index.html",
+    "threat-dwell-time": "https://docs.xdr.security.cisco.com/Content/Integrations/secure-network-analytics-integration.htm",
+    "phishing-email": "https://www.cisco.com/site/us/en/products/security/secure-email/index.html",
+    "identity-attacks": "https://www.cisco.com/site/us/en/products/security/duo/index.html",
+    "ai-app-security": "https://www.cisco.com/c/en/us/products/collateral/security/ai-defense/ai-defense-so.html",
+    "workload-runtime-protection": "https://www.cisco.com/c/en/us/products/collateral/security/hypershield/hypershield-so.html",
+    "hybrid-meeting-equity": "https://www.cisco.com/c/en/us/products/collaboration-endpoints/index.html",
+    "pbx-eol": "https://www.cisco.com/c/en/us/products/collateral/unified-communications/cisco-collaboration-flex-plan/collaboration-flex-plan3-data-sheet.html",
+    "contact-center-cx": "https://www.cisco.com/c/en/us/support/customer-collaboration/webex-contact-center/series.html",
+    "room-quality": "https://help.webex.com/en-us/article/pkbkx7/ThousandEyes-integration-with-Webex-services-in-Control-Hub",
+    "ai-infra-ready": "https://www.cisco.com/c/en/us/products/collateral/switches/data-center-switches/data-center-networking-ai-ml-so.html",
+    "hyperflex-migration": "https://www.cisco.com/c/en/us/td/docs/unified_computing/ucs/sw/SA/SW_Advisory_2025_HX_eol_notice.html",
+    "dc-sprawl": "https://www.cisco.com/c/en/us/products/collateral/cloud-systems-management/intersight/solution-overview-c22-742932.html",
+    "ai-fabric-bottleneck": "https://www.cisco.com/c/en/us/products/collateral/networking/cloud-networking-switches/nexus-9000-switches/nexus-9000-ai-networking-wp.html",
+    "ot-blind": "https://www.cisco.com/site/us/en/products/security/industrial-security/cyber-vision/index.html",
+    "observability-blindspots": "https://www.cisco.com/site/us/en/products/networking/software/internet-cloud-intelligence/index.html",
+    "tool-sprawl-ops": "https://newsroom.cisco.com/c/r/newsroom/en/us/a/y2026/m06/cisco-unveils-agentic-platform-for-operating-and-defending-critical-it-infrastructure.html",
+    "unknown-assets": "https://www.cisco.com/c/en/us/support/docs/cx/cisco-iq/getting-started-guide/cx225778-cisco-iq-getting-started-guide.html",
+    "vulnerability-prioritization": "https://www.cisco.com/c/en/us/products/collateral/security/vulnerability-management/security-risk-score-so.html",
+    "app-performance": "https://www.cisco.com/c/en/us/solutions/data-center/appdynamics-application-performance-monitoring.html"
+  };
+  PROBLEMS.forEach(p => {
+    if (p.proof) p.proof.sourceUrl = OFFICIAL_SOURCE_URLS[p.id] || "";
+  });
 
   // Fast lookups
   const BY_ID = {};

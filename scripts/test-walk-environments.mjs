@@ -1,9 +1,23 @@
 #!/usr/bin/env node
 /** Walk — semantic placement + adaptive venues (room + network). */
 import { chromium } from "playwright";
+import { spawn } from "node:child_process";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const URL = "http://127.0.0.1:8765/cisco-portfolio-navigator.html";
+const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const port = 9876 + Math.floor(Math.random() * 1000);
+const URL = `http://127.0.0.1:${port}/cisco-portfolio-navigator.html`;
 const errors = [];
+
+const server = spawn("python3", ["-m", "http.server", String(port)], {
+  cwd: root,
+  stdio: ["ignore", "pipe", "pipe"]
+});
+await new Promise((resolve, reject) => {
+  server.on("error", reject);
+  setTimeout(resolve, 400);
+});
 
 function near(a, b, eps = 1.2) {
   return Math.abs(a - b) <= eps;
@@ -103,4 +117,5 @@ try {
   console.log("OK test-walk-environments");
 } finally {
   await browser.close();
+  server.kill();
 }

@@ -40,14 +40,18 @@ try {
     }));
   }
 
-  const aci = await orbitLabels("aci", 7);
+  const aci = await orbitLabels("aci", 5);
+  const nexusDashboard = await orbitLabels("nexus-dashboard", 2);
   const room = await orbitLabels("room-systems", 10);
-  console.log(JSON.stringify({ aci, room }, null, 2));
+  console.log(JSON.stringify({ aci, nexusDashboard, room }, null, 2));
 
   const fails = [];
   if (aci.focus !== "aci") fails.push(`aci focus=${aci.focus}`);
-  if (aci.nodes < 7) fails.push(`aci nodes=${aci.nodes}`);
-  if (aci.labels.visible < 7) fails.push(`aci visibleLabels=${aci.labels.visible}, expected ≥7`);
+  if (aci.nodes < 5) fails.push(`aci nodes=${aci.nodes}`);
+  if (aci.labels.visible < 5) fails.push(`aci visibleLabels=${aci.labels.visible}, expected ≥5`);
+  if (nexusDashboard.focus !== "nexus-dashboard") fails.push(`nexus-dashboard focus=${nexusDashboard.focus}`);
+  if (nexusDashboard.nodes < 2) fails.push(`nexus-dashboard nodes=${nexusDashboard.nodes}`);
+  if (nexusDashboard.labels.visible < 2) fails.push(`nexus-dashboard visibleLabels=${nexusDashboard.labels.visible}, expected ≥2`);
   if (room.focus !== "room-systems") fails.push(`room focus=${room.focus}`);
   if (room.labels.visible < 10) fails.push(`room visibleLabels=${room.labels.visible}, expected ≥10`);
 
