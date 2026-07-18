@@ -93,24 +93,8 @@ if (previouslyOverflowed[0]) {
   previouslyOverflowed[0]);
 }
 
-await page.fill("#acq-search", "Meraki");
-await page.waitForFunction(() =>
-  window.CPN_AcquisitionTimeline.testState().visibleIds.includes("meraki")
-);
-await page.keyboard.press("Enter");
-let focused = await page.evaluate(() => window.CPN_AcquisitionTimeline.testState().focusedId);
-if (focused !== "meraki") errors.push(`search focus: ${focused}`);
-
 const searchResults = await page.locator("#acq-search-results").getAttribute("role");
 if (searchResults !== "listbox") errors.push(`search results role: ${searchResults}`);
-
-await page.click("#acq-next");
-focused = await page.evaluate(() => window.CPN_AcquisitionTimeline.testState().focusedId);
-if (!focused || focused === "meraki") errors.push("next acquisition did not advance");
-
-await page.keyboard.press("ArrowLeft");
-focused = await page.evaluate(() => window.CPN_AcquisitionTimeline.testState().focusedId);
-if (focused !== "meraki") errors.push(`keyboard previous focus: ${focused}`);
 
 const compactFilters = await page.evaluate(() => ({
   buttonExpanded: document.querySelector("#acq-filter-btn")?.getAttribute("aria-expanded"),
@@ -129,9 +113,124 @@ await page.click('#acq-filter-menu [data-acq-filter="featured"]');
 const activeFilter = await page.locator("#acq-filter-btn").textContent();
 if (!activeFilter.includes("Megadeals")) errors.push(`active filter label: ${activeFilter}`);
 
+const excludedSearch = await page.evaluate(() => {
+  const api = window.CPN_AcquisitionTimeline;
+  return window.CPN_ACQUISITIONS.acquisitions.find(acq =>
+    !acq.featured && api.searchAcquisitions(acq.company)[0]?.id === acq.id);
+});
+await page.fill("#acq-search", excludedSearch.company);
+await page.keyboard.press("Enter");
+await page.waitForTimeout(100);
+const searchSelection = await page.evaluate(() => ({
+  state: window.CPN_AcquisitionTimeline.testState(),
+  filterLabel: document.querySelector("#acq-filter-btn")?.textContent,
+  activeId: document.activeElement?.dataset?.id,
+  activeVisible: Boolean(document.activeElement?.getClientRects().length),
+}));
+if (searchSelection.state.focusedId !== excludedSearch.id) {
+  errors.push(`filtered search focus: ${searchSelection.state.focusedId}`);
+}
+if (!searchSelection.filterLabel.includes("All")) {
+  errors.push(`filtered search retained filter: ${searchSelection.filterLabel}`);
+}
+if (!searchSelection.state.visibleIds.includes(excludedSearch.id)) {
+  errors.push("filtered search selection was unreachable");
+}
+if (searchSelection.activeId !== excludedSearch.id || !searchSelection.activeVisible) {
+  errors.push(`search focus restoration: ${searchSelection.activeId}`);
+}
+
 await page.click("#acq-filter-btn");
+await page.keyboard.press("ArrowDown");
+let menuFocus = await page.evaluate(() => document.activeElement?.dataset?.acqFilter);
+if (menuFocus !== "featured") errors.push(`filter ArrowDown focus: ${menuFocus}`);
+await page.keyboard.press("End");
+const lastFilter = await page.evaluate(() =>
+  [...document.querySelectorAll("#acq-filter-menu [data-acq-filter]")].at(-1)?.dataset.acqFilter);
+menuFocus = await page.evaluate(() => document.activeElement?.dataset?.acqFilter);
+if (menuFocus !== lastFilter) errors.push(`filter End focus: ${menuFocus}`);
+await page.keyboard.press("Home");
+menuFocus = await page.evaluate(() => document.activeElement?.dataset?.acqFilter);
+if (menuFocus !== "all") errors.push(`filter Home focus: ${menuFocus}`);
+await page.keyboard.press("ArrowUp");
+menuFocus = await page.evaluate(() => document.activeElement?.dataset?.acqFilter);
+if (menuFocus !== lastFilter) errors.push(`filter ArrowUp wrap: ${menuFocus}`);
 await page.keyboard.press("Escape");
 if (!(await page.locator("#acq-filter-menu").isHidden())) errors.push("Escape did not close filter menu");
+if (await page.evaluate(() => document.activeElement?.id) !== "acq-filter-btn") {
+  errors.push("filter Escape did not restore button focus");
+}
+
+await page.click("#acq-filter-btn");
+await page.keyboard.press("End");
+await page.keyboard.press("Enter");
+const selectedFilter = await page.evaluate(() =>
+  document.querySelector('#acq-filter-menu [aria-checked="true"]')?.dataset.acqFilter);
+if (await page.evaluate(() => document.activeElement?.id) !== "acq-filter-btn") {
+  errors.push("filter selection did not restore button focus");
+}
+const filteredBounds = await page.evaluate(filter => {
+  const list = window.CPN_ACQUISITIONS.acquisitions
+    .filter(acq => acq.era === filter)
+    .sort((a, b) => a.announced.localeCompare(b.announced) || a.id.localeCompare(b.id));
+  return { first: list[0]?.id, last: list.at(-1)?.id };
+}, selectedFilter);
+await page.click("#acq-next");
+let focused = await page.evaluate(() => window.CPN_AcquisitionTimeline.testState().focusedId);
+if (focused !== filteredBounds.first) errors.push(`filtered next boundary: ${focused}`);
+await page.click("#acq-prev");
+focused = await page.evaluate(() => window.CPN_AcquisitionTimeline.testState().focusedId);
+if (focused !== filteredBounds.last) errors.push(`filtered previous wrap: ${focused}`);
+await page.waitForFunction(id => document.activeElement?.dataset?.id === id, filteredBounds.last);
+if (await page.evaluate(() => document.activeElement?.dataset?.id) !== filteredBounds.last) {
+  errors.push("previous navigation did not restore card focus");
+}
+
+await page.click("#acq-filter-btn");
+await page.click('#acq-filter-menu [data-acq-filter="all"]');
+await page.fill("#acq-search", "Meraki");
+await page.keyboard.press("Enter");
+await page.locator("#acq-focus-clear").evaluate(el => el.click());
+await page.evaluate(() => window.CPN_AcquisitionTimeline.setZoom(2.4));
+await page.locator("#acq-canvas").evaluate(el => {
+  const yearMin = 1993;
+  const zoom = 2.4;
+  el.scrollLeft = (2012 - yearMin) * 72 * zoom + 120 - el.clientWidth / 2;
+});
+await page.waitForFunction(() =>
+  document.querySelector('.acq-overflow-marker[aria-label*="2012"]'));
+await page.locator('.acq-overflow-marker[aria-label*="2012"]').evaluate(el => el.click());
+await page.waitForFunction(() => window.CPN_AcquisitionTimeline.testState().expandedYear === 2012);
+const crossYear = await page.evaluate(() => {
+  const list = window.CPN_ACQUISITIONS.acquisitions
+    .slice().sort((a, b) => a.announced.localeCompare(b.announced) || a.id.localeCompare(b.id));
+  const currentIndex = list.map(acq => acq.announced.slice(0, 4)).lastIndexOf("2012");
+  return { current: list[currentIndex].id, next: list[currentIndex + 1].id };
+});
+await page.locator(`.acq-card[data-id="${crossYear.current}"]`).evaluate(el => el.click());
+await page.click("#acq-next");
+const crossYearReached = await page.waitForFunction(id => {
+  const state = window.CPN_AcquisitionTimeline.testState();
+  return state.focusedId === id && state.visibleIds.includes(id) &&
+    document.activeElement?.dataset?.id === id;
+}, crossYear.next, { timeout: 3000 }).then(() => true, () => false);
+const crossYearState = await page.evaluate(() => window.CPN_AcquisitionTimeline.testState());
+if (!crossYearReached) {
+  const activeId = await page.evaluate(() => document.activeElement?.dataset?.id);
+  errors.push(`cross-year reachability: ${crossYearState.focusedId}/${activeId}`);
+}
+if (crossYearState.expandedYear != null) {
+  errors.push(`cross-year navigation retained tray: ${crossYearState.expandedYear}`);
+}
+
+await page.locator("#acq-canvas").evaluate(el => {
+  const rawYear = 2012.75;
+  el.scrollLeft = (rawYear - 1993) * 72 * 2.4 + 120 - el.clientWidth / 2;
+  el.dispatchEvent(new Event("scroll"));
+});
+await page.waitForTimeout(100);
+const exactPeriod = await page.locator("#acq-current-period").textContent();
+if (exactPeriod.trim() !== "2012") errors.push(`centered temporal year: ${exactPeriod}`);
 
 const accessibility = await page.evaluate(() => {
   const marker = document.querySelector(".acq-year-marker, .acq-overflow-marker");
@@ -161,10 +260,27 @@ if (accessibility.cardTabIndex != null && accessibility.cardTabIndex !== 0) {
 if (accessibility.cardRole && !accessibility.cardLabel) errors.push("card label missing");
 
 const badVerified = await page.evaluate(() =>
-  [...document.querySelectorAll('.acq-card[data-identity="verified-logo"]')]
-    .some(el => el.dataset.identitySource === "favicon-png")
+  window.CPN_ACQUISITIONS.acquisitions.some(acq =>
+    acq.visualIdentity?.kind === "verified-logo" &&
+    acq.visualIdentity?.source === "favicon-png")
 );
 if (badVerified) errors.push("unverified favicon rendered as verified logo");
+const incompleteIdentity = await page.evaluate(() =>
+  window.CPN_ACQUISITIONS.acquisitions.some(acq =>
+    !acq.visualIdentity?.kind || !acq.visualIdentity?.source || !acq.visualIdentity?.path)
+);
+if (incompleteIdentity) errors.push("dataset identity provenance incomplete");
+
+await page.click("#acq-close");
+await page.click("#tools-acquisitions");
+await page.click("#acq-close");
+const closeFocus = await page.evaluate(() => ({
+  id: document.activeElement?.id,
+  visible: Boolean(document.activeElement?.getClientRects().length),
+}));
+if (closeFocus.id !== "tools-acquisitions" || !closeFocus.visible) {
+  errors.push(`close focus restoration: ${closeFocus.id}`);
+}
 
 const reducedPage = await browser.newPage({
   viewport: { width: 1440, height: 900 },

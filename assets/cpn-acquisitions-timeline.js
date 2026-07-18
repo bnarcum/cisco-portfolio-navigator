@@ -21,6 +21,7 @@
     anchorYear: null,
     expandedYear: null,
     searchQuery: "",
+    opener: null,
   };
 
   const $ = (s, r = document) => r.querySelector(s);
@@ -98,7 +99,31 @@
     const current = list.findIndex(acq => acq.id === ACQ.focusedId);
     const index = current < 0 ? (delta > 0 ? -1 : 0) : current;
     const next = list[(index + delta + list.length) % list.length];
-    if (next) focusAcquisition(next.id);
+    if (next) {
+      ACQ.expandedYear = null;
+      focusAcquisition(next.id);
+    }
+  }
+
+  function isVisible(node) {
+    return Boolean(node?.isConnected && !node.hidden && node.getClientRects().length &&
+      !node.closest("[hidden], [aria-hidden='true']"));
+  }
+
+  function focusVisible(node) {
+    if (!isVisible(node)) return false;
+    node.focus({ preventScroll: true });
+    return document.activeElement === node;
+  }
+
+  function restoreCardFocus(id, attempts = 90) {
+    const tryFocus = remaining => {
+      if (!$("#acq-wrap")?.classList.contains("show") || ACQ.focusedId !== id) return;
+      const card = $("#acq-inner")?.querySelector(`.acq-card[data-id="${CSS.escape(id)}"]`);
+      if (focusVisible(card) || remaining <= 0) return;
+      requestAnimationFrame(() => tryFocus(remaining - 1));
+    };
+    requestAnimationFrame(() => tryFocus(attempts));
   }
 
   function getSemanticLevel(zoom = ACQ.zoom) {
@@ -282,6 +307,20 @@
       return;
     }
     const placements = layoutExploreCards(list, { mid });
+    if (ACQ.focusedId) {
+      const selected = placements.find(placement =>
+        placement.overflow && placement.acq.id === ACQ.focusedId);
+      const replacement = selected && placements.slice().reverse().find(placement =>
+        !placement.overflow &&
+        placement.acq.announced.slice(0, 4) === selected.year &&
+        placement.acq.id !== ACQ.focusedId);
+      if (selected && replacement) {
+        selected.overflow = false;
+        selected.y = replacement.y;
+        replacement.overflow = true;
+        replacement.year = selected.year;
+      }
+    }
     if (ACQ.anchorYear != null) {
       const year = String(ACQ.anchorYear);
       const promoted = placements.find(placement =>
@@ -289,7 +328,8 @@
       const replaced = placements.slice().reverse().find(placement =>
         !placement.overflow &&
         placement.acq.announced.startsWith(year) &&
-        !placement.acq.featured);
+        !placement.acq.featured &&
+        placement.acq.id !== ACQ.focusedId);
       if (promoted && replaced) {
         promoted.overflow = false;
         promoted.y = replaced.y;
@@ -483,6 +523,7 @@
         behavior: prefersReducedMotion() ? "auto" : "smooth",
       });
     }
+    restoreCardFocus(id);
   }
 
   function updateParallax() {
@@ -521,7 +562,7 @@
     if (!canvas || !label) return;
     const center = canvas.scrollLeft + canvas.clientWidth / 2;
     const rawYear = ACQ.yearMin + (center - 120) / (ACQ.pxPerYear * ACQ.zoom);
-    const year = Math.max(ACQ.yearMin, Math.min(ACQ.yearMax, Math.round(rawYear)));
+    const year = Math.max(ACQ.yearMin, Math.min(ACQ.yearMax, Math.floor(rawYear)));
     if (getSemanticLevel() === "overview") {
       const era = (window.CPN_ACQUISITIONS?.eraBands || [])
         .find(band => year >= band.from && year <= band.to);
@@ -618,9 +659,7 @@
       option.dataset.id = acq.id;
       option.textContent = `${acq.company} · ${acq.announced.slice(0, 4)}`;
       option.addEventListener("click", () => {
-        focusAcquisition(acq.id);
-        popup.hidden = true;
-        input.setAttribute("aria-expanded", "false");
+        selectSearchResult(acq);
       });
       popup.appendChild(option);
     });
@@ -645,7 +684,7 @@
     ACQ.searchQuery = "";
   }
 
-  function setFilter(filter, label) {
+  function setFilter(filter, label, { render = true, restoreFocus = true } = {}) {
     ACQ.filter = filter;
     ACQ.focusedId = null;
     ACQ.expandedYear = null;
@@ -660,7 +699,23 @@
     menu?.querySelectorAll("[data-acq-filter]").forEach(item => {
       item.setAttribute("aria-checked", String(item.dataset.acqFilter === filter));
     });
-    renderAcquisitionTimeline();
+    if (render) renderAcquisitionTimeline();
+    if (restoreFocus) focusVisible(button);
+  }
+
+  function selectSearchResult(acq) {
+    setFilter("all", "All", { render: false, restoreFocus: false });
+    ACQ.expandedYear = null;
+    clearSearchResults();
+    focusAcquisition(acq.id);
+  }
+
+  function closeFilterMenu({ restoreFocus = false } = {}) {
+    const menu = $("#acq-filter-menu");
+    const button = $("#acq-filter-btn");
+    if (menu) menu.hidden = true;
+    button?.setAttribute("aria-expanded", "false");
+    if (restoreFocus) focusVisible(button);
   }
 
   function buildFilterMenu() {
@@ -814,10 +869,7 @@
         const first = searchAcquisitions(event.currentTarget.value)[0];
         if (!first) return;
         event.preventDefault();
-        focusAcquisition(first.id);
-        clearSearchResults();
-        $("#acq-inner")?.querySelector(`.acq-card[data-id="${CSS.escape(first.id)}"]`)
-          ?.focus({ preventScroll: true });
+        selectSearchResult(first);
       } else if (event.key === "Escape" && ACQ.searchQuery) {
         event.preventDefault();
         event.stopPropagation();
@@ -830,13 +882,30 @@
       const open = button.getAttribute("aria-expanded") !== "true";
       button.setAttribute("aria-expanded", String(open));
       if (menu) menu.hidden = !open;
-      if (open) menu?.querySelector('[aria-checked="true"]')?.focus();
+      if (open) focusVisible(menu?.querySelector('[aria-checked="true"]'));
+    });
+    $("#acq-filter-menu")?.addEventListener("keydown", event => {
+      const items = [...event.currentTarget.querySelectorAll("[role='menuitemradio']")];
+      const current = items.indexOf(document.activeElement);
+      let target = null;
+      if (event.key === "ArrowDown") target = items[(current + 1 + items.length) % items.length];
+      else if (event.key === "ArrowUp") target = items[(current - 1 + items.length) % items.length];
+      else if (event.key === "Home") target = items[0];
+      else if (event.key === "End") target = items.at(-1);
+      else if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        closeFilterMenu({ restoreFocus: true });
+        return;
+      }
+      if (target) {
+        event.preventDefault();
+        focusVisible(target);
+      }
     });
     document.addEventListener("click", event => {
       if (event.target.closest(".acq-filter-wrap")) return;
-      const menu = $("#acq-filter-menu");
-      if (menu) menu.hidden = true;
-      $("#acq-filter-btn")?.setAttribute("aria-expanded", "false");
+      closeFilterMenu();
     });
     document.addEventListener("keydown", event => {
       if (!$("#acq-wrap")?.classList.contains("show")) return;
@@ -844,9 +913,7 @@
         if (ACQ.searchQuery) {
           clearSearchResults();
         } else if (!$("#acq-filter-menu")?.hidden) {
-          $("#acq-filter-menu").hidden = true;
-          $("#acq-filter-btn")?.setAttribute("aria-expanded", "false");
-          $("#acq-filter-btn")?.focus();
+          closeFilterMenu({ restoreFocus: true });
         } else {
           closeAcquisitionTimeline();
         }
@@ -899,6 +966,8 @@
   }
 
   function openAcquisitionTimeline() {
+    const active = document.activeElement;
+    ACQ.opener = isVisible(active) ? active : null;
     $("#acq-wrap")?.classList.add("show");
     document.body.classList.add("acq-open");
     $("#tools-acquisitions")?.classList.add("active");
@@ -909,12 +978,15 @@
   }
 
   function closeAcquisitionTimeline() {
+    const opener = ACQ.opener;
     $("#acq-wrap")?.classList.remove("show");
     document.body.classList.remove("acq-open");
     $("#tools-acquisitions")?.classList.remove("active");
     ACQ.focusedId = null;
     clearSearchResults();
     $("#acq-focus")?.classList.remove("show");
+    ACQ.opener = null;
+    focusVisible(opener);
   }
 
   function closeTimelineView() {
