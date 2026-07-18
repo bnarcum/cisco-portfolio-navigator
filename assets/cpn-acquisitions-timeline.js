@@ -17,6 +17,8 @@
     cardW: 88,
     raf: 0,
     scrollVel: 0,
+    level: "overview",
+    anchorYear: null,
   };
 
   const $ = (s, r = document) => r.querySelector(s);
@@ -42,7 +44,7 @@
 
   function setLogoImg(img, acq) {
     const u = logoUrl(acq);
-    img.src = u.webp;
+    img.src = acq.visualIdentity?.path || u.webp;
     img.onerror = () => {
       img.onerror = () => { img.src = u.svg; };
       img.src = u.png;
@@ -74,8 +76,41 @@
     return list;
   }
 
-  function clusterMode() {
-    return ACQ.zoom < 0.55;
+  function getSemanticLevel(zoom = ACQ.zoom) {
+    if (ACQ.focusedId) return "focus";
+    return zoom < 0.78 ? "overview" : "explore";
+  }
+
+  function groupByYear(list) {
+    return list.reduce((map, acq) => {
+      const year = Number(acq.announced.slice(0, 4));
+      const bucket = map.get(year) || [];
+      bucket.push(acq);
+      map.set(year, bucket);
+      return map;
+    }, new Map());
+  }
+
+  function layoutOverviewByYear(list, { mid, minGap = 58 }) {
+    let lastX = -Infinity;
+    return [...groupByYear(list)].map(([year, items]) => {
+      const trueX = yearX(year, 6);
+      const x = Math.max(trueX, lastX + minGap);
+      lastX = x;
+      return { year, items, x, y: mid, representedCount: items.length };
+    });
+  }
+
+  function layoutExploreCards(list, { mid, cardW = 88, gap = 12, laneH = 128 }) {
+    const lanes = [-1, 1, -2, 2, -3, 3];
+    const laneRight = new Map(lanes.map(lane => [lane, -Infinity]));
+    return list.map(acq => {
+      const x = dateX(acq.announced);
+      const lane = lanes.find(candidate => x >= laneRight.get(candidate) + cardW + gap);
+      if (lane == null) return { acq, overflow: true, x, year: acq.announced.slice(0, 4) };
+      laneRight.set(lane, x);
+      return { acq, overflow: false, x, y: mid + lane * laneH / 2 };
+    });
   }
 
   function buildParticles(container, n = 28) {
@@ -122,82 +157,141 @@
     }
   }
 
+  function renderOverview(inner, list, mid) {
+    const canvas = $("#acq-canvas");
+    const placements = layoutOverviewByYear(list, { mid });
+    placements.forEach(placement => {
+      const marker = document.createElement("button");
+      marker.type = "button";
+      marker.className = "acq-year-marker";
+      marker.dataset.year = String(placement.year);
+      marker.style.setProperty("--tx", `${placement.x}px`);
+      marker.style.setProperty("--ty", `${placement.y}px`);
+      marker.setAttribute("aria-label", `Explore ${placement.year}: ${placement.representedCount} acquisitions`);
+
+      const logo = placement.items.find(acq =>
+        acq.featured && acq.visualIdentity?.kind === "verified-logo");
+      if (logo) {
+        const img = document.createElement("img");
+        img.alt = "";
+        img.loading = "lazy";
+        setLogoImg(img, logo);
+        marker.appendChild(img);
+      }
+
+      const year = document.createElement("span");
+      year.className = "acq-year-marker-year";
+      year.textContent = String(placement.year);
+      marker.appendChild(year);
+      const count = document.createElement("span");
+      count.className = "acq-year-marker-count";
+      count.textContent = String(placement.representedCount);
+      marker.appendChild(count);
+
+      marker.addEventListener("click", () => {
+        ACQ.anchorYear = placement.year;
+        ACQ.zoom = 1.05;
+        updateZoomUi();
+        renderAcquisitionTimeline();
+        if (canvas) {
+          canvas.scrollLeft = Math.max(0, yearX(placement.year, 6) - canvas.clientWidth / 2);
+          renderCards(inner);
+          updateParallax();
+        }
+      });
+      inner.appendChild(marker);
+    });
+  }
+
+  function createAcquisitionCard(placement, index) {
+    const { acq: a, x, y } = placement;
+    const card = document.createElement("div");
+    card.className = "acq-card" + (a.featured ? " featured" : "") + (ACQ.focusedId && ACQ.focusedId !== a.id ? " dim" : "");
+    if (ACQ.focusedId === a.id) card.classList.add("focused");
+    card.style.setProperty("--tx", `${x}px`);
+    card.style.setProperty("--ty", `${y}px`);
+    card.style.setProperty("--acq-card-w", "88px");
+    card.dataset.id = a.id;
+    card.dataset.depth = String(0.15 + (index % 5) * 0.08);
+
+    card.innerHTML = `
+      <div class="acq-card-shell">
+        <div class="acq-card-logo-wrap">
+          <img class="acq-card-logo" alt="" loading="lazy" data-acq-id="${escapeHtml(a.id)}"/>
+        </div>
+        <div class="acq-card-name">${escapeHtml(a.company)}</div>
+        <div class="acq-card-year">${escapeHtml(a.announced.slice(0, 7))}</div>
+        ${a.valueUsd ? `<div class="acq-card-value">${formatValue(a.valueUsd)}</div>` : ""}
+      </div>`;
+    setLogoImg(card.querySelector(".acq-card-logo"), a);
+    card.addEventListener("click", () => focusAcquisition(a.id));
+    return card;
+  }
+
+  function renderExplore(inner, list, mid) {
+    const canvas = $("#acq-canvas");
+    const placements = layoutExploreCards(list, { mid });
+    if (ACQ.anchorYear != null) {
+      const year = String(ACQ.anchorYear);
+      const promoted = placements.find(placement =>
+        placement.overflow && placement.year === year && placement.acq.featured);
+      const replaced = placements.slice().reverse().find(placement =>
+        !placement.overflow &&
+        placement.acq.announced.startsWith(year) &&
+        !placement.acq.featured);
+      if (promoted && replaced) {
+        promoted.overflow = false;
+        promoted.y = replaced.y;
+        replaced.overflow = true;
+        replaced.year = year;
+      }
+    }
+    const viewportWidth = canvas?.clientWidth || 1440;
+    const scrollLeft = canvas?.scrollLeft || 0;
+    const minX = scrollLeft - viewportWidth;
+    const maxX = scrollLeft + viewportWidth * 2;
+    const overflows = new Map();
+
+    placements.forEach((placement, index) => {
+      if (placement.overflow) {
+        const bucket = overflows.get(placement.year) || [];
+        bucket.push(placement);
+        overflows.set(placement.year, bucket);
+        return;
+      }
+      if (placement.x + ACQ.cardW < minX || placement.x > maxX) return;
+      inner.appendChild(createAcquisitionCard(placement, index));
+    });
+
+    overflows.forEach((items, year) => {
+      const x = yearX(Number(year), 6);
+      if (x < minX || x > maxX) return;
+      const marker = document.createElement("button");
+      marker.type = "button";
+      marker.className = "acq-overflow-marker";
+      marker.style.setProperty("--tx", `${x}px`);
+      marker.textContent = `+${items.length}`;
+      marker.setAttribute("aria-label", `Show ${items.length} more acquisitions from ${year}`);
+      marker.addEventListener("click", () => {
+        ACQ.anchorYear = Number(year);
+        setAcqZoom(ACQ.zoom * 1.35);
+        if (canvas) {
+          canvas.scrollLeft = Math.max(0, yearX(Number(year), 6) - canvas.clientWidth / 2);
+        }
+      });
+      inner.appendChild(marker);
+    });
+  }
+
   function renderCards(inner) {
-    inner.querySelectorAll(".acq-card, .acq-cluster").forEach(e => e.remove());
+    inner.querySelectorAll(".acq-card, .acq-year-marker, .acq-overflow-marker, .acq-cluster").forEach(e => e.remove());
     const list = filteredList();
     const canvas = $("#acq-canvas");
     const mid = canvas ? canvas.clientHeight / 2 : 210;
-
-    if (clusterMode()) {
-      const byYear = new Map();
-      list.forEach(a => {
-        const y = a.announced.slice(0, 4);
-        if (!byYear.has(y)) byYear.set(y, []);
-        byYear.get(y).push(a);
-      });
-      byYear.forEach((items, y) => {
-        const x = yearX(+y, 6);
-        const el = document.createElement("div");
-        el.className = "acq-cluster";
-        el.style.setProperty("--tx", `${x}px`);
-        el.style.setProperty("--ty", `${mid - 26}px`);
-        el.dataset.year = y;
-        const bubble = document.createElement("div");
-        bubble.className = "acq-cluster-bubble";
-        bubble.textContent = `+${items.length}`;
-        el.appendChild(bubble);
-        const logos = document.createElement("div");
-        logos.className = "acq-cluster-logos";
-        items.slice(0, 4).forEach(a => {
-          const img = document.createElement("img");
-          img.alt = "";
-          img.loading = "lazy";
-          setLogoImg(img, a);
-          logos.appendChild(img);
-        });
-        el.appendChild(logos);
-        el.addEventListener("click", () => {
-          ACQ.zoom = 1.1;
-          updateZoomUi();
-          renderAcquisitionTimeline();
-          const cx = yearX(+y, 6) - canvas.clientWidth / 2;
-          canvas.scrollLeft = Math.max(0, cx);
-        });
-        inner.appendChild(el);
-      });
-      return;
-    }
-
-    const lane = [ -1, 1, -1.8, 1.8, -2.6, 2.6 ];
-    list.forEach((a, i) => {
-      const x = dateX(a.announced);
-      const laneOff = lane[i % lane.length];
-      const ty = mid + laneOff * (a.featured ? 92 : 72) - 44;
-      const card = document.createElement("div");
-      card.className = "acq-card" + (a.featured ? " featured" : "") + (ACQ.focusedId && ACQ.focusedId !== a.id ? " dim" : "");
-      if (ACQ.focusedId === a.id) card.classList.add("focused");
-      card.style.setProperty("--tx", `${x}px`);
-      card.style.setProperty("--ty", `${ty}px`);
-      card.style.setProperty("--acq-card-w", a.featured ? "104px" : "88px");
-      card.dataset.id = a.id;
-      card.dataset.depth = String(0.15 + (i % 5) * 0.08);
-      card.dataset.phase = String((i * 0.7) % (Math.PI * 2));
-
-      const u = logoUrl(a);
-      card.innerHTML = `
-        <div class="acq-card-shell">
-          <div class="acq-card-logo-wrap">
-            <img class="acq-card-logo" alt="" loading="lazy" data-acq-id="${escapeHtml(a.id)}"/>
-          </div>
-          <div class="acq-card-name">${escapeHtml(a.company)}</div>
-          <div class="acq-card-year">${escapeHtml(a.announced.slice(0, 7))}</div>
-          ${a.valueUsd ? `<div class="acq-card-value">${formatValue(a.valueUsd)}</div>` : ""}
-        </div>`;
-      setLogoImg(card.querySelector(".acq-card-logo"), a);
-
-      card.addEventListener("click", () => focusAcquisition(a.id));
-      inner.appendChild(card);
-    });
+    ACQ.level = getSemanticLevel();
+    inner.dataset.represented = String(list.length);
+    if (ACQ.level === "overview") renderOverview(inner, list, mid);
+    else renderExplore(inner, list, mid);
   }
 
   function renderMinimap() {
@@ -265,20 +359,13 @@
     const inner = $("#acq-inner");
     if (!canvas || !inner) return;
     const x = canvas.scrollLeft;
-    const t = performance.now();
-
     inner.querySelectorAll(".acq-layer[data-depth]").forEach(layer => {
       const d = +layer.dataset.depth || 0.3;
       layer.style.transform = `translate3d(${-x * d * 0.12}px, 0, 0)`;
     });
 
-    inner.querySelectorAll(".acq-card").forEach(card => {
-      const phase = +card.dataset.phase || 0;
-      const bob = Math.sin(t / 1400 + phase) * 3;
-      card.style.setProperty("--bob", `${bob}px`);
-    });
-
     $("#acq-particles")?.querySelectorAll(".acq-particle").forEach((p, i) => {
+      const t = performance.now();
       const ph = +p.dataset.phase || 0;
       const dx = Math.sin(t / 3000 + ph) * 12 + ACQ.scrollVel * 0.3;
       const dy = Math.cos(t / 4000 + ph) * 8;
@@ -291,7 +378,11 @@
   function onScroll() {
     ACQ.scrollVel = 0;
     cancelAnimationFrame(ACQ.raf);
-    ACQ.raf = requestAnimationFrame(updateParallax);
+    ACQ.raf = requestAnimationFrame(() => {
+      const inner = $("#acq-inner");
+      if (inner && getSemanticLevel() !== "overview") renderCards(inner);
+      updateParallax();
+    });
   }
 
   function updateZoomUi() {
@@ -319,8 +410,8 @@
   function fitAcqZoom() {
     const canvas = $("#acq-canvas");
     if (!canvas) return;
-    const track = innerWidth() - 240;
-    ACQ.zoom = Math.max(ACQ.minZoom, Math.min(1, (canvas.clientWidth - 80) / track));
+    ACQ.zoom = ACQ.minZoom;
+    ACQ.level = "overview";
     updateZoomUi();
     renderAcquisitionTimeline();
     updateParallax();
@@ -340,6 +431,28 @@
     renderYearTicks(inner);
     renderCards(inner);
     updateParallax();
+  }
+
+  function testState() {
+    const nodes = [...document.querySelectorAll(".acq-year-marker, .acq-card")];
+    const rects = nodes.map(node => node.getBoundingClientRect());
+    let overlapCount = 0;
+    for (let i = 0; i < rects.length; i += 1) {
+      for (let j = i + 1; j < rects.length; j += 1) {
+        const a = rects[i], b = rects[j];
+        if (a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top) {
+          overlapCount += 1;
+        }
+      }
+    }
+    return {
+      level: getSemanticLevel(),
+      totalCount: window.CPN_ACQUISITIONS.acquisitions.length,
+      representedCount: Number(document.querySelector("#acq-inner")?.dataset.represented || 0),
+      renderedCards: document.querySelectorAll(".acq-card").length,
+      visibleIds: [...document.querySelectorAll(".acq-card")].map(el => el.dataset.id),
+      overlapCount,
+    };
   }
 
   function buildAcquisitionTimelineView() {
@@ -499,5 +612,9 @@
     close: closeAcquisitionTimeline,
     render: renderAcquisitionTimeline,
     setZoom: setAcqZoom,
+    getSemanticLevel,
+    layoutOverviewByYear,
+    layoutExploreCards,
+    testState,
   };
 })();
