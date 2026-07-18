@@ -251,7 +251,7 @@
     const showRest = expandedMore && rest.length;
 
     const personaChips = P.PERSONAS.map(pp =>
-      `<button type="button" class="oc-persona${pp.id === persona ? " on" : ""}" data-oc-persona="${escapeAttr(pp.id)}">${escapeHtml(pp.label)}</button>`
+      `<button type="button" role="tab" aria-selected="${pp.id === persona ? "true" : "false"}" class="oc-persona${pp.id === persona ? " on" : ""}" data-oc-persona="${escapeAttr(pp.id)}">${escapeHtml(pp.label)}</button>`
     ).join("");
 
     const moreBtn = rest.length && !expandedMore
@@ -264,7 +264,10 @@
         <div class="oc-title">${escapeHtml(famName)}</div>
         <div class="oc-meta">${escapeHtml(personaMetaLabel(persona, P))}</div>
       </div>
-      <div class="oc-personas" role="group" aria-label="Frame for persona">${personaChips}</div>
+      <div class="oc-persona-block">
+        <div class="oc-persona-label">View as</div>
+        <div class="oc-personas" role="tablist" aria-label="Frame outcome for persona">${personaChips}</div>
+      </div>
       <div class="oc-problems">
         ${problemBlockHtml(primary, persona, P)}
         ${showRest ? rest.map((p, i) => problemBlockHtml(p, persona, P, { withDivider: true })).join("") : ""}

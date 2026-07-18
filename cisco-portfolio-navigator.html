@@ -9,7 +9,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.0.0";
+  window.__CPN_BUILD="3.0.1";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -413,46 +413,60 @@
       padding:18px 20px 16px;backdrop-filter:blur(20px)}
     #outcome-card .oc-close{position:absolute;top:12px;right:12px;font-family:inherit;font-size:18px;line-height:1;
       cursor:pointer;border:none;background:transparent;color:var(--muted);padding:2px 6px;border-radius:6px}
-    #outcome-card .oc-close:hover{color:var(--fg);background:rgba(255,255,255,.06)}
+    #outcome-card .oc-close:hover{color:var(--text);background:rgba(255,255,255,.06)}
     #outcome-card .oc-head{margin:0 32px 14px 0}
-    #outcome-card .oc-title{font-size:18px;font-weight:700;line-height:1.2;letter-spacing:-.02em;color:var(--fg)}
-    #outcome-card .oc-meta{font-size:11px;color:var(--subtle);margin-top:3px}
-    #outcome-card .oc-personas{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
-    #outcome-card .oc-persona{font-family:inherit;font-size:10px;font-weight:600;cursor:pointer;
-      padding:4px 0;background:none;border:none;border-bottom:2px solid transparent;color:var(--subtle);transition:all .15s}
-    #outcome-card .oc-persona:hover{color:var(--fg)}
-    #outcome-card .oc-persona.on{color:var(--fg);border-bottom-color:var(--fg)}
+    #outcome-card .oc-title{font-size:18px;font-weight:700;line-height:1.2;letter-spacing:-.02em;color:var(--text)}
+    #outcome-card .oc-meta{font-size:11px;color:#b4b9c0;margin-top:3px}
+    #outcome-card .oc-persona-block{margin-bottom:16px}
+    #outcome-card .oc-persona-label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+      color:#94a3b8;margin-bottom:7px}
+    #outcome-card .oc-personas{display:flex;gap:6px;flex-wrap:wrap;padding:4px;
+      border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+    #outcome-card .oc-persona{font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;
+      padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.04);color:#b4b9c0;transition:all .15s;flex:1;min-width:0;text-align:center}
+    #outcome-card .oc-persona:hover{border-color:rgba(2,200,255,.35);color:var(--text);background:rgba(2,200,255,.08)}
+    #outcome-card .oc-persona.on{background:rgba(2,200,255,.2);border-color:rgba(2,200,255,.55);color:#fff;
+      box-shadow:0 0 0 1px rgba(2,200,255,.15)}
     #outcome-card .oc-prob-divider{height:1px;background:rgba(255,255,255,.08);margin:16px 0}
-    #outcome-card .oc-quote{font-size:14px;line-height:1.55;color:var(--muted);margin-bottom:14px;font-weight:400}
-    #outcome-card .oc-quote em{font-style:normal;color:rgba(255,255,255,.85)}
-    #outcome-card .oc-headline{font-size:15px;font-weight:700;line-height:1.45;margin-bottom:12px;color:var(--fg)}
+    #outcome-card .oc-quote{font-size:14px;line-height:1.55;color:#b4b9c0;margin-bottom:14px;font-weight:400}
+    #outcome-card .oc-quote em{font-style:normal;color:rgba(255,255,255,.92)}
+    #outcome-card .oc-headline{font-size:15px;font-weight:700;line-height:1.45;margin-bottom:12px;color:var(--text)}
     #outcome-card .oc-compare{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:14px;font-size:11px;line-height:1.4}
     #outcome-card .oc-compare-box{padding:10px;border-radius:8px}
     #outcome-card .oc-compare-before{background:rgba(255,0,127,.08);color:#ffb3d9}
     #outcome-card .oc-compare-after{background:rgba(2,200,255,.08);color:#7ee8ff}
     #outcome-card .oc-compare-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;opacity:.7;margin-bottom:4px}
-    #outcome-card .oc-compare-arrow{color:var(--subtle);font-size:14px;text-align:center}
+    #outcome-card .oc-compare-arrow{color:#94a3b8;font-size:14px;text-align:center}
     #outcome-card .oc-prob-next{display:block;width:100%;margin-top:0;text-align:left;font-family:inherit;
       font-size:12px;font-weight:400;cursor:pointer;padding:12px 0 0;border:none;border-top:1px solid rgba(255,255,255,.08);
-      background:transparent;color:var(--muted)}
+      background:transparent;color:#b4b9c0}
     #outcome-card .oc-prob-next b{color:var(--accent);font-weight:600}
-    #outcome-card .oc-prob-next:hover{color:var(--fg)}
+    #outcome-card .oc-prob-next:hover{color:var(--text)}
     #outcome-card .oc-more{display:block;width:100%;margin-top:12px;font-family:inherit;font-size:11px;font-weight:600;
       color:var(--accent);background:none;border:none;cursor:pointer;text-align:center;padding:6px}
     #outcome-card .oc-more:hover{text-decoration:underline}
     #outcome-card .oc-journey{margin-top:16px}
-    #outcome-card .oc-journey-label{font-size:10px;font-weight:600;color:var(--subtle);margin-bottom:8px}
+    #outcome-card .oc-journey-label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+      color:#94a3b8;margin-bottom:8px}
     #outcome-card .oc-journey-flow{display:flex;align-items:center;gap:0;overflow-x:auto;padding-bottom:4px}
     #outcome-card .oc-j-line{width:16px;height:1px;background:rgba(255,255,255,.15);flex-shrink:0}
     #outcome-card .oc-j-node{flex-shrink:0;font-family:inherit;font-size:10px;font-weight:600;padding:6px 10px;
-      border-radius:999px;background:rgba(255,255,255,.06);color:var(--fg);border:none;cursor:pointer;
+      border-radius:999px;background:rgba(255,255,255,.06);color:var(--text);border:none;cursor:pointer;
       white-space:nowrap;text-decoration:none;transition:background .15s}
     #outcome-card .oc-j-node:hover{background:rgba(255,255,255,.12)}
     #outcome-card .oc-j-node--canvas{background:rgba(2,200,255,.1);color:#7ee8ff}
     #outcome-card .oc-j-node--canvas:hover{background:rgba(2,200,255,.18)}
-    #outcome-card .oc-note{font-size:10px;color:var(--subtle);margin-top:14px}
+    #outcome-card .oc-note{font-size:10px;color:#94a3b8;margin-top:14px;line-height:1.4}
     [data-theme="light"] #outcome-card{background:rgba(255,255,255,.97);border-color:rgba(7,24,45,.1);
       box-shadow:0 16px 48px rgba(7,24,45,.12)}
+    [data-theme="light"] #outcome-card .oc-meta{color:#525e6c}
+    [data-theme="light"] #outcome-card .oc-persona-label,[data-theme="light"] #outcome-card .oc-journey-label,
+    [data-theme="light"] #outcome-card .oc-note{color:#64748b}
+    [data-theme="light"] #outcome-card .oc-personas{background:rgba(7,24,45,.04);border-color:rgba(7,24,45,.1)}
+    [data-theme="light"] #outcome-card .oc-persona{color:#525e6c;border-color:rgba(7,24,45,.14);background:#fff}
+    [data-theme="light"] #outcome-card .oc-persona.on{background:rgba(0,110,143,.12);border-color:rgba(0,110,143,.45);color:#07182d}
+    [data-theme="light"] #outcome-card .oc-quote{color:#525e6c}
     [data-theme="light"] #outcome-card .oc-quote em{color:#07182d}
     [data-theme="light"] #outcome-card .oc-compare-before{background:rgba(255,0,127,.06);color:#9d174d}
     [data-theme="light"] #outcome-card .oc-compare-after{background:rgba(2,200,255,.08);color:#0369a1}
@@ -17328,11 +17342,11 @@ window.__cpnV2 = {
 };
 })();
 </script>
-<script src="assets/cpn-problems.js?v=3.0.0"></script>
-<script src="assets/cpn-outcome-card.js?v=3.0.0"></script>
-<script src="assets/cpn-cloud-control-ops.js?v=3.0.0"></script>
-<script src="assets/cpn-lazy-load.js?v=3.0.0"></script>
-<script src="assets/cpn-kiosk.js?v=3.0.0"></script>
+<script src="assets/cpn-problems.js?v=3.0.1"></script>
+<script src="assets/cpn-outcome-card.js?v=3.0.1"></script>
+<script src="assets/cpn-cloud-control-ops.js?v=3.0.1"></script>
+<script src="assets/cpn-lazy-load.js?v=3.0.1"></script>
+<script src="assets/cpn-kiosk.js?v=3.0.1"></script>
 <script src="assets/cpn-logo-intro.js?v=2.91.6"></script>
 </body>
 </html>
