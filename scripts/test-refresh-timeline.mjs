@@ -116,6 +116,22 @@ try {
   const build = await page.evaluate(() => window.__CPN_BUILD);
   if (!build || !String(build).startsWith("3.5")) errors.push(`expected build 3.5.x, got ${build}`);
 
+  await page.locator("#tl-sort-btn").click();
+  await page.locator('.tl-sort-opt[data-sort="mainFamily"]').click();
+  await page.waitForTimeout(100);
+  const mainFamilySort = await page.evaluate(() => {
+    const headers = [...document.querySelectorAll(".tl-row-cat")].map(el => el.dataset.cat);
+    const rows = [...document.querySelectorAll(".tl-row:not(.tl-row-cat) .tl-row-lbl .nm")]
+      .map(el => el.textContent.trim());
+    return { headers, firstRow: rows[0], headerCount: headers.length };
+  });
+  if (mainFamilySort.headerCount < 3) {
+    errors.push(`expected main-family section headers, got ${mainFamilySort.headerCount}`);
+  }
+  if (mainFamilySort.headers[0] !== "networking") {
+    errors.push(`expected Networking first, got ${mainFamilySort.headers[0]}`);
+  }
+
   await page.evaluate(() => window.CPN_RefreshTimeline.close());
   await page.waitForFunction(() => !document.querySelector("#tl-wrap.show"));
 

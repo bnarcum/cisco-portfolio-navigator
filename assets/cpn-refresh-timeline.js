@@ -11,10 +11,20 @@
     maxZoom: 6,
     onlyStack: false,
     families: new Set(),
+    sortBy: "alpha",
     yearSpan: 0,
     startY: 0,
     endY: 0,
     hoverId: null,
+  };
+
+  const MAIN_CAT_ORDER = ["networking", "security", "collaboration", "computing", "observability"];
+  const MAIN_CAT_LABELS = {
+    networking: "Networking",
+    security: "Security",
+    collaboration: "Collaboration",
+    computing: "Computing",
+    observability: "Observability",
   };
 
   const TL_BASE_PX_PER_YEAR = 90;
@@ -134,6 +144,52 @@
     return TL_LABEL_W + TL_GAP + dataW + TL_PAD_R;
   }
 
+  function catSortIndex(category) {
+    const i = MAIN_CAT_ORDER.indexOf(category);
+    return i === -1 ? MAIN_CAT_ORDER.length : i;
+  }
+
+  function sortTimelineFamilyEntries(entries) {
+    if (TL.sortBy !== "mainFamily") {
+      return [...entries].sort((a, b) =>
+        (nodeById(a[0])?.name || "").localeCompare(nodeById(b[0])?.name || ""));
+    }
+    return [...entries].sort((a, b) => {
+      const na = nodeById(a[0]);
+      const nb = nodeById(b[0]);
+      const ca = catSortIndex(na?.category);
+      const cb = catSortIndex(nb?.category);
+      if (ca !== cb) return ca - cb;
+      return (na?.name || "").localeCompare(nb?.name || "");
+    });
+  }
+
+  function categoryHeaderHtml(catId) {
+    const label = MAIN_CAT_LABELS[catId] || catId;
+    return `<div class="tl-row tl-row-cat" data-cat="${escapeHtml(catId)}">
+      <div class="tl-row-lbl">
+        <span class="ld" style="background:${catColor(catId)}"></span>
+        <span class="nm tl-cat-name">${escapeHtml(label)}</span>
+      </div>
+      <div class="tl-row-track tl-cat-track" aria-hidden="true"></div>
+    </div>`;
+  }
+
+  function timelineFamilyCheckboxRow(famId) {
+    const n = nodeById(famId);
+    if (!n) return "";
+    const checked = TL.families.has(famId) ? "checked" : "";
+    return `<label class="fac-row"><input type="checkbox" data-fam="${famId}" ${checked}>
+      <span class="ld" style="width:7px;height:7px;border-radius:50%;background:${catColor(n.category)};flex-shrink:0"></span>
+      ${escapeHtml(n.name)}</label>`;
+  }
+
+  function updateTimelineSortBtn() {
+    const btn = $("#tl-sort-btn");
+    if (!btn) return;
+    btn.textContent = TL.sortBy === "mainFamily" ? "Main family ▾" : "A–Z ▾";
+    btn.setAttribute("aria-label", `Sort families: ${TL.sortBy === "mainFamily" ? "Main family" : "A–Z"}`);
+  }
   function timelineFamiliesForFilter() {
     const stack = getStack();
     const ids = new Set();
@@ -163,15 +219,38 @@
     if (!tlFamList) return;
     const query = q.trim().toLowerCase();
     const famIds = timelineFamiliesForFilter();
-    tlFamList.innerHTML = famIds.map(famId => {
-      const n = nodeById(famId);
-      if (!n) return "";
-      if (query && !n.name.toLowerCase().includes(query)) return "";
-      const checked = TL.families.has(famId) ? "checked" : "";
-      return `<label class="fac-row"><input type="checkbox" data-fam="${famId}" ${checked}>
-        <span class="ld" style="width:7px;height:7px;border-radius:50%;background:${catColor(n.category)};flex-shrink:0"></span>
-        ${escapeHtml(n.name)}</label>`;
-    }).join("") || `<div style="font-size:11px;color:var(--subtle);padding:6px 2px">No matching families</div>`;
+    let html = "";
+
+    if (!query) {
+      const byCat = {};
+      famIds.forEach(famId => {
+        const n = nodeById(famId);
+        if (!n) return;
+        const cat = n.category || "other";
+        (byCat[cat] = byCat[cat] || []).push(famId);
+      });
+      const cats = [
+        ...MAIN_CAT_ORDER.filter(c => byCat[c]?.length),
+        ...Object.keys(byCat).filter(c => !MAIN_CAT_ORDER.includes(c)),
+      ];
+      html = cats.map(cat => {
+        const label = MAIN_CAT_LABELS[cat] || cat;
+        const rows = byCat[cat]
+          .sort((a, b) => (nodeById(a)?.name || "").localeCompare(nodeById(b)?.name || ""))
+          .map(timelineFamilyCheckboxRow)
+          .join("");
+        return `<div class="tl-fam-grp-hdr">${escapeHtml(label)}</div>${rows}`;
+      }).join("");
+    } else {
+      html = famIds.map(famId => {
+        const n = nodeById(famId);
+        if (!n || !n.name.toLowerCase().includes(query)) return "";
+        return timelineFamilyCheckboxRow(famId);
+      }).join("");
+    }
+
+    tlFamList.innerHTML = html ||
+      `<div style="font-size:11px;color:var(--subtle);padding:6px 2px">No matching families</div>`;
     tlFamList.querySelectorAll("input[data-fam]").forEach(inp => {
       inp.addEventListener("change", () => {
         const id = inp.dataset.fam;
@@ -414,11 +493,17 @@
       </div>
     </div>`;
 
-    const rowHtml = Object.entries(fams)
-      .sort((a, b) => (nodeById(a[0])?.name || "").localeCompare(nodeById(b[0])?.name || ""))
-      .map(([famId, prods]) => {
+    const rowHtml = (() => {
+      const sorted = sortTimelineFamilyEntries(Object.entries(fams));
+      let lastCat = null;
+      const parts = [];
+      sorted.forEach(([famId, prods]) => {
         const n = nodeById(famId);
-        if (!n) return "";
+        if (!n) return;
+        if (TL.sortBy === "mainFamily" && n.category !== lastCat) {
+          lastCat = n.category;
+          parts.push(categoryHeaderHtml(n.category));
+        }
         const blocks = prods.map(p => {
           let left = null;
           let right = null;
@@ -483,7 +568,7 @@
         }).join("");
 
         const todayX = ((now.getTime() - startMs) / totalMs) * 100;
-        return `<div class="tl-row">
+        parts.push(`<div class="tl-row">
           <div class="tl-row-lbl">
             <span class="ld" style="background:${catColor(n.category)}"></span>
             <span class="nm" title="${escapeHtml(n.name)}">${escapeHtml(n.name)}</span>
@@ -492,8 +577,10 @@
             <div class="tl-today" style="left:${todayX}%"></div>
             ${blocksHtml}
           </div>
-        </div>`;
-      }).join("");
+        </div>`);
+      });
+      return parts.join("");
+    })();
 
     const totalShown = Object.values(fams).reduce((a, b) => a + b.length, 0);
     const eolCount = Object.values(fams).flat().filter(p => p.status === "eol").length;
@@ -541,6 +628,8 @@
   function closeTimelineView() {
     $("#tl-fam-drop")?.classList.remove("show");
     $("#tl-fam-btn")?.setAttribute("aria-expanded", "false");
+    $("#tl-sort-drop")?.classList.remove("show");
+    $("#tl-sort-btn")?.setAttribute("aria-expanded", "false");
     window.closePanel?.();
     $("#tl-wrap")?.classList.remove("show");
     document.body.classList.remove("tl-open");
@@ -576,6 +665,13 @@
             <div class="tl-zoom-lvl" id="tl-zoom-lvl">100%</div>
             <button type="button" id="tl-zoom-in" title="Zoom in (+)">+</button>
             <button type="button" id="tl-zoom-fit" title="Fit data span to viewport" style="border-left:1px solid var(--border);font-size:10px;letter-spacing:.04em">FIT</button>
+          </div>
+          <div class="tl-sort-wrap">
+            <button type="button" class="tbs tl-sort-btn" id="tl-sort-btn" title="Sort families" aria-haspopup="true" aria-expanded="false" aria-label="Sort families: A–Z">A–Z ▾</button>
+            <div id="tl-sort-drop" class="tl-sort-drop" role="menu" aria-label="Sort order">
+              <button type="button" class="tl-sort-opt" role="menuitemradio" data-sort="alpha" aria-checked="true">A–Z</button>
+              <button type="button" class="tl-sort-opt" role="menuitemradio" data-sort="mainFamily" aria-checked="false">Main family</button>
+            </div>
           </div>
           <div class="tl-fam-wrap">
             <button type="button" class="tbs tl-fam-btn" id="tl-fam-btn" title="Filter by product family" aria-haspopup="true" aria-expanded="false">All families ▾</button>
@@ -615,12 +711,42 @@
     const tlFamDrop = $("#tl-fam-drop");
     const tlFamSearch = $("#tl-fam-search");
     const tlFamClr = $("#tl-fam-clr");
+    const tlSortBtn = $("#tl-sort-btn");
+    const tlSortDrop = $("#tl-sort-drop");
+
+    function openTimelineSortDrop(open) {
+      const show = open ?? !tlSortDrop.classList.contains("show");
+      tlSortDrop.classList.toggle("show", show);
+      tlSortBtn.setAttribute("aria-expanded", show ? "true" : "false");
+      if (show) openTimelineFamilyDrop(false);
+    }
+
+    function setTimelineSort(mode) {
+      TL.sortBy = mode === "mainFamily" ? "mainFamily" : "alpha";
+      updateTimelineSortBtn();
+      tlSortDrop.querySelectorAll(".tl-sort-opt").forEach(btn => {
+        const active = btn.dataset.sort === TL.sortBy;
+        btn.classList.toggle("active", active);
+        btn.setAttribute("aria-checked", active ? "true" : "false");
+      });
+      renderTimeline();
+    }
+
+    tlSortBtn.addEventListener("click", ev => { ev.stopPropagation(); openTimelineSortDrop(); });
+    tlSortDrop.querySelectorAll(".tl-sort-opt").forEach(btn => {
+      btn.addEventListener("click", () => {
+        setTimelineSort(btn.dataset.sort);
+        openTimelineSortDrop(false);
+      });
+    });
+    setTimelineSort(TL.sortBy);
 
     function openTimelineFamilyDrop(open) {
       const show = open ?? !tlFamDrop.classList.contains("show");
       tlFamDrop.classList.toggle("show", show);
       tlFamBtn.setAttribute("aria-expanded", show ? "true" : "false");
       if (show) {
+        openTimelineSortDrop(false);
         populateTimelineFamilyList(tlFamSearch.value);
         tlFamSearch.focus();
       } else tlFamSearch.value = "";
@@ -638,6 +764,10 @@
       renderTimeline();
     });
     document.addEventListener("click", ev => {
+      if (tlSortDrop.classList.contains("show") &&
+          !tlSortDrop.contains(ev.target) && ev.target !== tlSortBtn) {
+        openTimelineSortDrop(false);
+      }
       if (tlFamDrop.classList.contains("show") &&
           !tlFamDrop.contains(ev.target) && ev.target !== tlFamBtn) {
         openTimelineFamilyDrop(false);
@@ -687,6 +817,9 @@
           tlFamDrop.classList.remove("show");
           tlFamBtn.setAttribute("aria-expanded", "false");
           tlFamSearch.value = "";
+        } else if ($("#tl-sort-drop")?.classList.contains("show")) {
+          tlSortDrop.classList.remove("show");
+          tlSortBtn.setAttribute("aria-expanded", "false");
         } else {
           closeTimelineView();
         }
