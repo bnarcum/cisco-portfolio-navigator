@@ -9,7 +9,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.11";
+  window.__CPN_BUILD="3.5.10";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -64,7 +64,6 @@
   <link rel="stylesheet" href="assets/cpn-logo-intro.css?v=2.91.6"/>
   <link rel="stylesheet" href="assets/cpn-acquisitions-timeline.css?v=3.5.10"/>
   <link rel="stylesheet" href="assets/cpn-refresh-timeline.css?v=3.5.9"/>
-  <link rel="stylesheet" href="assets/cpn-solutions.css?v=3.5.11"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     @font-face{
@@ -281,7 +280,7 @@
     .tbs{background:var(--surface2);border:1px solid var(--border);border-radius:6px;
       color:var(--text);font-size:12px;padding:5px 7px;outline:none;cursor:pointer}
     .tbs option{background:var(--surface)}
-    #planner-btn,#guided-btn,#solutions-btn,#ai-btn,#design-studio-btn,#theme-toggle,#rst,#plans-btn,#dcloud-btn{
+    #planner-btn,#guided-btn,#ai-btn,#design-studio-btn,#theme-toggle,#rst,#plans-btn,#dcloud-btn{
       flex-shrink:0}
 
     /* VIEW-MODE SEGMENTED CONTROL */
@@ -1475,14 +1474,6 @@
       <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/>
       <path d="M8 4.5V8l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
     </svg><span id="guided-btn-label">Guided Plan</span>
-  </button>
-  <button id="solutions-btn" type="button" title="Solutions by use case — see what products solve each outcome">
-    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3"/>
-      <circle cx="8" cy="8" r="2.2" fill="currentColor"/>
-      <path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-    </svg>
-    <span>Solutions</span>
   </button>
   <button id="ai-btn" type="button" title="Ask AI — generate stacks, justify recs (BYOK)">
     <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -9466,7 +9457,7 @@ function showDetailPanel(d) {
     <div class="p-name">${d.name}</div>
     <p class="p-desc">${d.desc}</p>
     ${prodsHtml}
-    <div class="p-sec"><div class="p-sec-t">Use Cases</div><div class="tr">${d.useCases.map(u=>`<span class="tg" onclick="viewUseCaseSolution('${u.replace(/'/g, "\\'")}')">${u}</span>`).join("")}</div></div>
+    <div class="p-sec"><div class="p-sec-t">Use Cases</div><div class="tr">${d.useCases.map(u=>`<span class="tg" onclick="filterTagUC('${u}')">${u}</span>`).join("")}</div></div>
     <div class="p-sec"><div class="p-sec-t">Industries</div><div class="tr">${d.industries.map(i=>`<span class="tg" onclick="filterTagInd('${i}')">${i}</span>`).join("")}</div></div>
     ${renderConnectionsSection(d)}
     <div class="p-sec"><div class="p-sec-t">Learn More</div><div class="lb">
@@ -9576,13 +9567,6 @@ window.jumpTo = (id, opts = {}) => {
 };
 window.closePanel = closePanel;
 window.filterTagUC  = uc  => { activeUC=uc;   ucEl.value=uc;   applyFilters(); };
-window.viewUseCaseSolution = uc => {
-  activeUC = uc;
-  ucEl.value = uc;
-  applyFilters();
-  if (window.__cpnSolutions?.openDetail) window.__cpnSolutions.openDetail(uc);
-  else filterTagUC(uc);
-};
 window.filterTagInd = ind => { activeInd=ind; indEl.value=ind; applyFilters(); };
 
 // ── Filtering
@@ -16684,35 +16668,6 @@ function boot(){
   }
   if (window.CPN_RefreshTimeline?.build) window.CPN_RefreshTimeline.build();
   if (window.CPN_AcquisitionTimeline?.build) window.CPN_AcquisitionTimeline.build();
-  if (typeof window.__cpnSolutionsEnrichRefArch === "function") window.__cpnSolutionsEnrichRefArch(REF_ARCH);
-  if (window.CPN_Solutions?.init) {
-    window.CPN_Solutions.init({
-      refArch: () => REF_ARCH,
-      getUseCases: () => allUCs,
-      nodes: NODES,
-      nodeById,
-      bundles: BUNDLES,
-      problems: () => window.__cpnProblems,
-      escapeHtml,
-      familyPillar,
-      pillarMeta,
-      applyRefArch,
-      clearRefArch,
-      highlightProblemFamilies,
-      highlightForUseCase: uc => {
-        const setIds = NODES.filter(n => (n.useCases || []).includes(uc)).map(n => n.id);
-        highlightProblemFamilies({ families: setIds, outcome: uc, useCases: [uc] });
-      },
-      setUseCaseFilter: uc => { activeUC = uc; if ($("#ucs")) $("#ucs").value = uc; applyFilters(); },
-      addToStack,
-      showToast,
-      closePanel,
-      jumpTo: (id, opts) => window.jumpTo(id, opts),
-      exploreProblem,
-      renderLearningPathBanner,
-      setPersona: v => { if (typeof setPersona === "function") setPersona(v); },
-    });
-  }
   buildDiffModal();
   buildFacets();
   buildAiAssistant();
@@ -16776,10 +16731,8 @@ window.__cpnV2 = {
 };
 })();
 </script>
-<script src="assets/cpn-solutions-refarch.js?v=3.5.11"></script>
 <script src="assets/cpn-problems.js?v=3.5.9"></script>
 <script src="assets/cpn-outcome-card.js?v=3.5.9"></script>
-<script src="assets/cpn-solutions.js?v=3.5.11"></script>
 <script src="assets/cpn-cloud-control-ops.js?v=3.3.0"></script>
 <script src="assets/cpn-lazy-load.js?v=3.3.0"></script>
 <script src="assets/cpn-kiosk.js?v=3.3.0"></script>
