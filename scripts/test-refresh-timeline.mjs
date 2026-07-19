@@ -54,6 +54,15 @@ try {
   const readoutName = await page.locator("#tl-readout-name").innerText();
   if (!readoutName) errors.push("readout name empty after hover");
 
+  await page.locator(".tl-block").first().click();
+  await page.waitForTimeout(200);
+  const outcomeVisible = await page.evaluate(() =>
+    window.__cpnOutcomeCard?.isVisible?.() === true
+  );
+  if (outcomeVisible) errors.push("outcome card should not open from timeline product click");
+  await page.evaluate(() => window.closePanel?.());
+  await page.waitForTimeout(100);
+
   const beforeScroll = await page.evaluate(() => {
     const canvas = document.querySelector("#tl-canvas");
     return { left: canvas.scrollLeft, canScroll: canvas.scrollWidth > canvas.clientWidth + 4 };

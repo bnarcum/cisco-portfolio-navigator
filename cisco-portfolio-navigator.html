@@ -9,7 +9,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.1";
+  window.__CPN_BUILD="3.5.2";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -62,8 +62,8 @@
   <link rel="stylesheet" href="assets/cpn-light.css?v=2.87.5"/>
   <link rel="stylesheet" href="assets/cpn-iq-theme.css?v=2.87.5"/>
   <link rel="stylesheet" href="assets/cpn-logo-intro.css?v=2.91.6"/>
-  <link rel="stylesheet" href="assets/cpn-acquisitions-timeline.css?v=3.5.1"/>
-  <link rel="stylesheet" href="assets/cpn-refresh-timeline.css?v=3.5.1"/>
+  <link rel="stylesheet" href="assets/cpn-acquisitions-timeline.css?v=3.5.2"/>
+  <link rel="stylesheet" href="assets/cpn-refresh-timeline.css?v=3.5.2"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     @font-face{
@@ -12209,10 +12209,16 @@ function enhancePanelAuto(){
 }
 // Wrap window.* navigation functions so we know what was last opened.
 const _origShowPD = window.showProductDetail;
-window.showProductDetail = function(id){
+window.showProductDetail = function(id, opts = {}) {
   ensureProductBreadcrumbContext(id);
   _origShowPD(id);
-  const pb = $("#pbody"); if (pb){ pb.dataset.lastId = id; pb.dataset.lastKind = "product"; }
+  const pb = $("#pbody");
+  if (pb) {
+    pb.dataset.lastId = id;
+    pb.dataset.lastKind = "product";
+    if (opts.skipOutcomeCard) pb.dataset.skipOutcomeCard = "1";
+    else delete pb.dataset.skipOutcomeCard;
+  }
   pushRecent(id); pushBreadcrumb({type:"product", id}); enhancePanelAuto();
 };
 const _origJump = window.jumpTo;
@@ -14798,6 +14804,11 @@ window.setPersona = setPersona;
    legacy side-panel block and refreshes the canvas card for product-only opens. */
 function insertProblemsSolved(id, kind){
   $("#pbody")?.querySelector(".p-prob")?.remove();
+  const pb = $("#pbody");
+  if (pb?.dataset.skipOutcomeCard === "1") {
+    window.__cpnOutcomeCard?.hide?.();
+    return;
+  }
   const familyId = kind === "product" ? prodById[id]?.family : id;
   if (!familyId || !window.__cpnOutcomeCard?.show) return;
   const node = nodeById[familyId];
@@ -16651,7 +16662,7 @@ function boot(){
       catColor,
       escapeHtml,
       productVisibleInTimeline,
-      showProductDetail: id => window.showProductDetail(id),
+      showProductDetail: (id, opts) => window.showProductDetail(id, opts),
     });
   }
   if (window.CPN_RefreshTimeline?.build) window.CPN_RefreshTimeline.build();
@@ -16719,14 +16730,14 @@ window.__cpnV2 = {
 };
 })();
 </script>
-<script src="assets/cpn-problems.js?v=3.5.1"></script>
-<script src="assets/cpn-outcome-card.js?v=3.5.1"></script>
+<script src="assets/cpn-problems.js?v=3.5.2"></script>
+<script src="assets/cpn-outcome-card.js?v=3.5.2"></script>
 <script src="assets/cpn-cloud-control-ops.js?v=3.3.0"></script>
 <script src="assets/cpn-lazy-load.js?v=3.3.0"></script>
 <script src="assets/cpn-kiosk.js?v=3.3.0"></script>
 <script src="assets/cpn-acquisitions-data.js?v=3.3.5"></script>
-<script src="assets/cpn-refresh-timeline.js?v=3.5.1"></script>
-<script src="assets/cpn-acquisitions-timeline.js?v=3.5.1"></script>
+<script src="assets/cpn-refresh-timeline.js?v=3.5.2"></script>
+<script src="assets/cpn-acquisitions-timeline.js?v=3.5.2"></script>
 <script src="assets/cpn-logo-intro.js?v=2.91.6"></script>
 </body>
 </html>

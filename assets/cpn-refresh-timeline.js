@@ -56,9 +56,10 @@
     return Boolean(p);
   }
 
-  function showProductDetail(id) {
-    if (typeof CTX?.showProductDetail === "function") CTX.showProductDetail(id);
-    else if (typeof window.showProductDetail === "function") window.showProductDetail(id);
+  function showProductDetail(id, opts = {}) {
+    window.__cpnOutcomeCard?.hide?.();
+    if (typeof CTX?.showProductDetail === "function") CTX.showProductDetail(id, opts);
+    else if (typeof window.showProductDetail === "function") window.showProductDetail(id, opts);
   }
 
   function prefersReducedMotion() {
@@ -709,19 +710,19 @@
     inner.addEventListener("click", ev => {
       const block = ev.target.closest?.(".tl-block");
       if (!block) return;
-      showProductDetail(block.dataset.id);
+      showProductDetail(block.dataset.id, { skipOutcomeCard: true });
     });
     inner.addEventListener("keydown", ev => {
       const block = ev.target.closest?.(".tl-block");
       if (!block) return;
       if (ev.key === "Enter" || ev.key === " ") {
         ev.preventDefault();
-        showProductDetail(block.dataset.id);
+        showProductDetail(block.dataset.id, { skipOutcomeCard: true });
       }
     });
 
     $("#tl-readout-detail").addEventListener("click", () => {
-      if (TL.hoverId) showProductDetail(TL.hoverId);
+      if (TL.hoverId) showProductDetail(TL.hoverId, { skipOutcomeCard: true });
     });
 
     const minimapTrack = $("#tl-minimap-track");
