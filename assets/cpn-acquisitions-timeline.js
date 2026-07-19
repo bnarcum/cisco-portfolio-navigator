@@ -284,28 +284,20 @@
       `<a href="${escapeHtml(cisco)}" target="_blank" rel="noopener noreferrer">Cisco</a>`;
   }
 
-  function renderEraBands(layer, { viewport = false } = {}) {
+  function renderEraBands(layer, { innerW = 0 } = {}) {
     const bands = window.CPN_ACQUISITIONS?.eraBands || [];
     if (!layer) return;
     layer.innerHTML = "";
-    const span = ACQ.yearMax - ACQ.yearMin + 1;
     bands.forEach((b, index) => {
+      const x1 = yearX(b.from, 1);
+      const x2 = index === bands.length - 1
+        ? Math.max(yearX(b.to + 1, 1), innerW)
+        : yearX(b.to + 1, 1);
+      const width = Math.max(40, x2 - x1);
       const el = document.createElement("div");
       el.className = "acq-era-band";
-      if (viewport) {
-        const leftPct = ((b.from - ACQ.yearMin) / span) * 100;
-        const endYear = index === bands.length - 1 ? ACQ.yearMax + 1 : b.to + 1;
-        const widthPct = ((endYear - b.from) / span) * 100;
-        el.style.left = `${leftPct}%`;
-        el.style.width = index === bands.length - 1
-          ? `calc(100% - ${leftPct}%)`
-          : `${widthPct}%`;
-      } else {
-        const x1 = yearX(b.from, 1);
-        const x2 = yearX(b.to + 1, 1);
-        el.style.left = `${x1}px`;
-        el.style.width = `${Math.max(40, x2 - x1)}px`;
-      }
+      el.style.left = `${x1}px`;
+      el.style.width = `${width}px`;
       el.style.setProperty("--acq-era-color", b.color);
       const flow = document.createElement("div");
       flow.className = "acq-era-flow";
@@ -313,8 +305,10 @@
       layer.appendChild(el);
       const lbl = document.createElement("div");
       lbl.className = "acq-era-lbl";
-      lbl.style.left = viewport ? `${((b.from - ACQ.yearMin) / span) * 100}%` : `${yearX(b.from, 1) + 12}px`;
+      lbl.style.left = `${x1 + 8}px`;
+      lbl.style.maxWidth = `${Math.max(48, width - 16)}px`;
       lbl.textContent = b.label;
+      lbl.title = b.label;
       layer.appendChild(lbl);
     });
   }
@@ -1151,8 +1145,10 @@
     ACQ.yearMin = 1993;
     ACQ.yearMax = Math.max(2026, ...data.acquisitions.map(a => +a.announced.slice(0, 4))) + 1;
 
-    inner.style.width = `${innerWidth()}px`;
-    renderEraBands($("#acq-viewport-eras"), { viewport: true });
+    const canvas = $("#acq-canvas");
+    const trackW = Math.max(innerWidth(), canvas?.clientWidth || 0);
+    inner.style.width = `${trackW}px`;
+    renderEraBands($("#acq-layer-eras"), { innerW: trackW });
     renderYearTicks(inner);
     renderCards(inner);
     updateParallax();
@@ -1414,9 +1410,9 @@
       </div>
       <div id="acq-canvas-area">
         <div id="acq-canvas" tabindex="-1" role="region" aria-label="Acquisition timeline">
-          <div id="acq-viewport-eras" aria-hidden="true"></div>
           <div id="acq-viewport-flow" aria-hidden="true"></div>
           <div id="acq-inner">
+            <div id="acq-layer-eras" aria-hidden="true"></div>
             <div id="acq-spine-wrap" class="acq-layer" data-depth="0.04"><div id="acq-spine"></div></div>
           </div>
         </div>

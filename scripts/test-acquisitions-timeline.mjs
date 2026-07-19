@@ -858,7 +858,7 @@ await page.waitForSelector("#acq-wrap.show");
 const polish = await page.evaluate(() => ({
   date: window.CPN_AcquisitionTimeline.formatAnnouncedDate("2019-06-17"),
   viewportFlow: Boolean(document.querySelector("#acq-viewport-flow")),
-  viewportEras: document.querySelectorAll("#acq-viewport-eras .acq-era-band").length,
+  viewportEras: document.querySelectorAll("#acq-layer-eras .acq-era-band").length,
   sourceLinks: document.querySelectorAll("#acq-head .acq-sub a").length,
   helpFabHidden: getComputedStyle(document.querySelector("#help-fab")).display === "none",
 }));

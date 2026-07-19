@@ -90,17 +90,13 @@ body.acq-open #help-fab {
   animation: acqFlow 5s linear infinite;
 }
 
-/* Viewport-fixed scan lines — always span the visible canvas width (1A). */
-#acq-viewport-flow,
-#acq-viewport-eras {
+/* Viewport-fixed scan lines — always span the visible canvas width. */
+#acq-viewport-flow {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
-}
-
-#acq-viewport-flow {
   opacity: 0.38;
   background-image: repeating-linear-gradient(180deg,
     rgba(2, 200, 255, 0.16) 0 1px,
@@ -115,22 +111,26 @@ body.acq-open #help-fab {
     transparent 1px 34px);
 }
 
-#acq-viewport-eras .acq-era-lbl {
-  margin-left: 12px;
+#acq-layer-eras {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: visible;
 }
 
 .acq-era-lbl {
   position: absolute;
-  top: 88px;
-  font-size: 10px;
+  top: 10px;
+  font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted);
-  opacity: 0.6;
+  opacity: 0.72;
   white-space: nowrap;
-  transform: rotate(-90deg);
-  transform-origin: left top;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 #acq-head {
