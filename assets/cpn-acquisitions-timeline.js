@@ -313,14 +313,14 @@
     }, new Map());
   }
 
-  function layoutOverviewByYear(list, { mid, minGap = 58 }) {
-    let lastX = -Infinity;
-    return [...groupByYear(list)].map(([year, items]) => {
-      const trueX = yearX(year, 6);
-      const x = Math.max(trueX, lastX + minGap);
-      lastX = x;
-      return { year, items, x, y: mid, representedCount: items.length };
-    });
+  function layoutOverviewByYear(list, { mid } = {}) {
+    return [...groupByYear(list)].map(([year, items]) => ({
+      year,
+      items,
+      x: yearX(year, 6),
+      y: mid,
+      representedCount: items.length,
+    }));
   }
 
   function layoutExploreCards(list, { mid, cardW = 88, gap = 12, laneH = 128, lanes = [-1, 1, -2, 2, -3, 3] }) {
@@ -1081,6 +1081,22 @@
     const inn = $("#acq-zoom-in");
     if (out) out.disabled = ACQ.zoom <= ACQ.minZoom + 0.01;
     if (inn) inn.disabled = ACQ.zoom >= ACQ.maxZoom - 0.01;
+    updateOverviewMarkerScale();
+  }
+
+  function updateOverviewMarkerScale() {
+    const canvas = $("#acq-canvas");
+    if (!canvas) return;
+    if (getSemanticLevel() !== "overview") {
+      canvas.style.removeProperty("--acq-year-marker-scale");
+      return;
+    }
+    const spacing = ACQ.pxPerYear * ACQ.zoom;
+    const footprint = 66;
+    canvas.style.setProperty(
+      "--acq-year-marker-scale",
+      String(Math.min(1, spacing / footprint))
+    );
   }
 
   function setAcqZoom(z, anchorClientX = null) {

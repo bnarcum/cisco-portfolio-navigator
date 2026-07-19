@@ -627,7 +627,8 @@ body.acq-open #help-fab {
 .acq-year-marker,
 .acq-overflow-marker {
   position: absolute;
-  transform: translate3d(calc(var(--tx, 0) - 50%), calc(var(--ty, 0) - 50%), 0);
+  transform: translate3d(calc(var(--tx, 0) - 50%), calc(var(--ty, 0) - 50%), 0)
+    scale(var(--acq-year-marker-scale, 1));
   cursor: pointer;
   font-family: inherit;
 }
@@ -697,7 +698,8 @@ body.acq-open #help-fab {
   border-color: #02c8ff;
   outline: 2px solid rgba(2, 200, 255, 0.3);
   outline-offset: 2px;
-  transform: translate3d(calc(var(--tx, 0) - 50%), calc(var(--ty, 0) - 50%), 0) scale(1.08);
+  transform: translate3d(calc(var(--tx, 0) - 50%), calc(var(--ty, 0) - 50%), 0)
+    scale(calc(var(--acq-year-marker-scale, 1) * 1.08));
 }
 
 .acq-year-marker.active {

@@ -900,6 +900,40 @@ if (!eraScrollCoverage.covered) {
   errors.push("no era band covers right-scrolled viewport");
 }
 
+for (const zoom of [0.35, 0.55, 1, 1.5]) {
+  await page.evaluate(z => window.CPN_AcquisitionTimeline.setZoom(z), zoom);
+  await page.waitForTimeout(60);
+  const eraAlignment = await page.evaluate(() => {
+    const zoom = window.CPN_AcquisitionTimeline.testState().zoom;
+    const yearMin = 1993;
+    const pxPerYear = 72;
+    const calendarX = (year, month = 6) => {
+      const frac = year + (month - 1) / 12;
+      return (frac - yearMin) * pxPerYear * zoom + 120;
+    };
+    const markerDrift = [...document.querySelectorAll(".acq-year-marker")].map(marker => {
+      const year = Number(marker.dataset.year);
+      const actual = parseFloat(getComputedStyle(marker).getPropertyValue("--tx")) || 0;
+      return Math.abs(actual - calendarX(year, 6));
+    });
+    const eraDrift = (window.CPN_ACQUISITIONS?.eraBands || []).map((band, index) => {
+      const bandEl = [...document.querySelectorAll("#acq-layer-eras .acq-era-band")][index];
+      if (!bandEl) return Infinity;
+      return Math.abs(parseFloat(bandEl.style.left) - calendarX(band.from, 1));
+    });
+    return {
+      maxMarkerDrift: markerDrift.length ? Math.max(...markerDrift) : 0,
+      maxEraDrift: eraDrift.length ? Math.max(...eraDrift) : 0,
+    };
+  });
+  if (eraAlignment.maxMarkerDrift > 2) {
+    errors.push(`era/year marker drift at zoom ${zoom}: ${eraAlignment.maxMarkerDrift}px`);
+  }
+  if (eraAlignment.maxEraDrift > 2) {
+    errors.push(`era band drift at zoom ${zoom}: ${eraAlignment.maxEraDrift}px`);
+  }
+}
+
 await browser.close();
 if (errors.length) {
   console.error(`FAIL test-acquisitions-timeline\n${errors.join("\n")}`);
