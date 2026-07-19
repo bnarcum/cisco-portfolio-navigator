@@ -766,28 +766,27 @@ body.acq-open #tools {
   position: absolute;
   width: var(--acq-card-w, 88px);
   padding: 7px 10px 6px;
-  border: 0;
-  clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
+  border: 1px solid color-mix(in srgb, var(--acq-era-color, #02c8ff) 45%, rgba(2, 200, 255, 0.25));
+  border-radius: 4px;
   background: linear-gradient(158deg, rgba(6, 20, 38, 0.94), rgba(6, 20, 38, 0.74));
   color: var(--text);
   text-align: left;
   font: inherit;
   cursor: pointer;
   transform: translate3d(var(--tx, 0), var(--ty, 0), 0) scale(var(--scale, 1));
-  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, opacity 0.18s ease;
   will-change: transform;
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--acq-era-color, #02c8ff) 55%, rgba(2, 200, 255, 0.2)),
-    0 8px 20px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
 }
 
 .acq-card::before {
   content: "";
   position: absolute;
   top: 0;
-  left: 7px;
-  right: 16px;
+  left: 0;
+  right: 0;
   height: 2px;
+  border-radius: 3px 3px 0 0;
   background: var(--acq-era-color, #02c8ff);
   box-shadow: 0 0 6px var(--acq-era-color, #02c8ff);
 }
@@ -809,15 +808,15 @@ body.acq-open #tools {
   --scale: 1.08;
   z-index: 5;
   outline: none;
+  border-color: var(--acq-era-color, #02c8ff);
   box-shadow:
-    inset 0 0 0 1px var(--acq-era-color, #02c8ff),
     0 12px 28px rgba(2, 200, 255, 0.22),
     0 0 18px color-mix(in srgb, var(--acq-era-color, #02c8ff) 45%, transparent);
 }
 
 .acq-card.focused {
+  border-color: var(--acq-era-color, #02c8ff);
   box-shadow:
-    inset 0 0 0 1px var(--acq-era-color, #02c8ff),
     0 0 0 2px color-mix(in srgb, var(--acq-era-color, #02c8ff) 55%, transparent),
     0 0 20px color-mix(in srgb, var(--acq-era-color, #02c8ff) 55%, transparent);
 }
