@@ -56,6 +56,14 @@ try {
 
   await page.locator(".tl-block").first().click();
   await page.waitForTimeout(200);
+  const panelOpen = await page.evaluate(() => document.querySelector("#panel")?.classList.contains("open"));
+  if (!panelOpen) errors.push("panel should open on product bar click");
+
+  await page.locator(".tl-axis").click({ position: { x: 40, y: 12 } });
+  await page.waitForTimeout(150);
+  const panelClosed = await page.evaluate(() => !document.querySelector("#panel")?.classList.contains("open"));
+  if (!panelClosed) errors.push("panel should close on canvas background click");
+
   const outcomeVisible = await page.evaluate(() =>
     window.__cpnOutcomeCard?.isVisible?.() === true
   );

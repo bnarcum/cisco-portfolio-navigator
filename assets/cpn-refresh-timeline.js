@@ -711,6 +711,14 @@
       if (!block) return;
       showProductDetail(block.dataset.id, { skipOutcomeCard: true });
     });
+    canvas.addEventListener("click", ev => {
+      if (!$("#tl-wrap")?.classList.contains("show")) return;
+      if (ev.target.closest(".tl-block")) return;
+      if ($("#panel")?.classList.contains("open")) {
+        window.closePanel?.();
+        setReadout(null);
+      }
+    });
     inner.addEventListener("keydown", ev => {
       const block = ev.target.closest?.(".tl-block");
       if (!block) return;
