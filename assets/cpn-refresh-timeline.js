@@ -539,6 +539,9 @@
   }
 
   function closeTimelineView() {
+    $("#tl-fam-drop")?.classList.remove("show");
+    $("#tl-fam-btn")?.setAttribute("aria-expanded", "false");
+    window.closePanel?.();
     $("#tl-wrap")?.classList.remove("show");
     document.body.classList.remove("tl-open");
     $("#tools-timeline")?.classList.remove("active");
@@ -679,11 +682,23 @@
     document.addEventListener("keydown", ev => {
       if (!$("#tl-wrap")?.classList.contains("show")) return;
       const tag = (ev.target.tagName || "").toLowerCase();
+      if (ev.key === "Escape") {
+        if ($("#tl-fam-drop")?.classList.contains("show")) {
+          tlFamDrop.classList.remove("show");
+          tlFamBtn.setAttribute("aria-expanded", "false");
+          tlFamSearch.value = "";
+        } else {
+          closeTimelineView();
+        }
+        ev.preventDefault();
+        ev.stopPropagation();
+        return;
+      }
       if (tag === "input" || tag === "textarea" || tag === "select") return;
       if (ev.key === "+" || ev.key === "=") { setTimelineZoom(TL.zoom * 1.4); ev.preventDefault(); }
       else if (ev.key === "-" || ev.key === "_") { setTimelineZoom(TL.zoom / 1.4); ev.preventDefault(); }
       else if (ev.key === "0") { setTimelineZoom(1.0); ev.preventDefault(); }
-    });
+    }, true);
 
     const inner = $("#tl-inner");
     inner.addEventListener("mouseover", ev => {

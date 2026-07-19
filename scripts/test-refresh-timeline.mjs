@@ -118,6 +118,13 @@ try {
 
   await page.evaluate(() => window.CPN_RefreshTimeline.close());
   await page.waitForFunction(() => !document.querySelector("#tl-wrap.show"));
+
+  await page.evaluate(() => window.CPN_RefreshTimeline.open());
+  await page.waitForSelector("#tl-wrap.show");
+  await page.keyboard.press("Escape");
+  await page.waitForFunction(() => !document.querySelector("#tl-wrap.show"));
+  const closedByEsc = await page.evaluate(() => !document.querySelector("#tl-wrap.show"));
+  if (!closedByEsc) errors.push("Escape should close Refresh Timeline");
 } catch (err) {
   errors.push(err.message);
 } finally {
