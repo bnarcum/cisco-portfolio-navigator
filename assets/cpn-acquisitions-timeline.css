@@ -15,7 +15,7 @@
 
 #acq-wrap.show {
   display: flex;
-  bottom: 60px;
+  bottom: 12px;
 }
 
 body.planner-open #acq-wrap {
@@ -34,7 +34,7 @@ body.acq-open #hint {
 
 body:has(#acq-wrap.show) #tools,
 body.acq-open #tools {
-  bottom: 18px !important;
+  display: none !important;
 }
 
 #acq-ambient {
@@ -391,6 +391,12 @@ body.acq-open #tools {
   flex-direction: column;
 }
 
+#acq-canvas-area:has(#acq-shelf:not([hidden])) #acq-canvas {
+  flex: 1 1 42%;
+  max-height: 50%;
+  min-height: 96px;
+}
+
 #acq-canvas {
   flex: 1;
   position: relative;
@@ -422,8 +428,9 @@ body.acq-open #tools {
 }
 
 #acq-shelf {
-  flex-shrink: 0;
-  max-height: 42%;
+  flex: 1 1 0;
+  min-height: 160px;
+  max-height: 52%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -439,6 +446,7 @@ body.acq-open #tools {
 }
 
 .acq-shelf-head {
+  flex-shrink: 0;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -455,6 +463,8 @@ body.acq-open #tools {
 }
 
 .acq-shelf-list {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 0 10px 10px;
   display: flex;
@@ -905,6 +915,10 @@ body.acq-open #tools {
   position: relative;
   width: 88px;
   transform: none;
+}
+
+#acq-wrap:has(#acq-focus.show) #acq-minimap {
+  display: none;
 }
 
 #acq-minimap {

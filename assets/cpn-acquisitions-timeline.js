@@ -457,7 +457,7 @@
     const head = document.createElement("div");
     head.className = "acq-shelf-head";
     head.innerHTML = `<strong>${year} · ${items.length} acquisition${items.length !== 1 ? "s" : ""}</strong>
-      <span class="acq-shelf-hint">Typography-first browse — select a company for the story</span>`;
+      <span class="acq-shelf-hint">Sorted by disclosed value · Select a company for details</span>`;
     shelf.appendChild(head);
 
     const listEl = document.createElement("div");

@@ -368,6 +368,25 @@ if (initial.renderedCards >= initial.totalCount) errors.push("overview rendered 
 
 await clickYearMarker(page, "2012");
 await page.waitForFunction(() => window.CPN_AcquisitionTimeline.testState().level === "explore");
+const shelfUi = await page.evaluate(() => {
+  const tools = document.querySelector("#tools");
+  const shelf = document.querySelector("#acq-shelf");
+  const head = shelf?.querySelector(".acq-shelf-hint")?.textContent?.trim() || "";
+  const rows = [...document.querySelectorAll("#acq-shelf .acq-shelf-row")];
+  const list = shelf?.querySelector(".acq-shelf-list");
+  return {
+    toolsHidden: !tools || getComputedStyle(tools).display === "none",
+    rowCount: rows.length,
+    listHeight: list?.getBoundingClientRect().height || 0,
+    hint: head,
+  };
+});
+if (!shelfUi.toolsHidden) errors.push("tools bar visible over acquisition timeline");
+if (shelfUi.rowCount < 1) errors.push("explore shelf missing company rows");
+if (shelfUi.listHeight < 40) errors.push(`explore shelf list too short: ${shelfUi.listHeight}`);
+if (shelfUi.hint.includes("Typography-first")) {
+  errors.push(`shelf hint uses internal jargon: ${shelfUi.hint}`);
+}
 const explore = await page.evaluate(() => window.CPN_AcquisitionTimeline.testState());
 if (!explore.visibleIds.includes("meraki")) errors.push("2012 explore missing Meraki");
 if (explore.overlapCount !== 0) errors.push(`explore overlaps: ${explore.overlapCount}`);
@@ -525,6 +544,9 @@ const minimapRole = await minimap.getAttribute("role");
 const minimapLabel = await minimap.getAttribute("aria-label");
 if (minimapRole !== "slider" || !minimapLabel) {
   errors.push(`minimap accessibility: ${minimapRole}/${minimapLabel}`);
+}
+if (await page.locator("#acq-focus.show").count()) {
+  await page.locator("#acq-focus-clear").evaluate(el => el.click());
 }
 await minimap.focus();
 await page.keyboard.press("Home");
