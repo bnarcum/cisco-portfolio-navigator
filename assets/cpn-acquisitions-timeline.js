@@ -273,22 +273,48 @@
     }
   }
 
-  function renderEraBands(layer) {
+  function buildSourcesSub(count) {
+    const sources = window.CPN_ACQUISITIONS?.sources || [];
+    const wiki = sources.find(url => /wikipedia/i.test(url))
+      || "https://en.wikipedia.org/wiki/List_of_acquisitions_by_Cisco";
+    const cisco = sources.find(url => /cisco\.com/i.test(url))
+      || "https://www.cisco.com/site/us/en/about/corporate-development/acquisitions/acquisitions-list-years/index.html";
+    return `${count} companies · scroll to zoom · drag to pan · click a node to explore · sources: ` +
+      `<a href="${escapeHtml(wiki)}" target="_blank" rel="noopener noreferrer">Wikipedia</a> &amp; ` +
+      `<a href="${escapeHtml(cisco)}" target="_blank" rel="noopener noreferrer">Cisco</a>`;
+  }
+
+  function renderEraBands(layer, { viewport = false } = {}) {
     const bands = window.CPN_ACQUISITIONS?.eraBands || [];
+    if (!layer) return;
     layer.innerHTML = "";
-    bands.forEach(b => {
-      const x1 = yearX(b.from, 1);
-      const x2 = yearX(b.to + 1, 1);
+    const span = ACQ.yearMax - ACQ.yearMin + 1;
+    bands.forEach((b, index) => {
       const el = document.createElement("div");
       el.className = "acq-era-band";
-      el.style.left = `${x1}px`;
-      el.style.width = `${Math.max(40, x2 - x1)}px`;
+      if (viewport) {
+        const leftPct = ((b.from - ACQ.yearMin) / span) * 100;
+        const endYear = index === bands.length - 1 ? ACQ.yearMax + 1 : b.to + 1;
+        const widthPct = ((endYear - b.from) / span) * 100;
+        el.style.left = `${leftPct}%`;
+        el.style.width = index === bands.length - 1
+          ? `calc(100% - ${leftPct}%)`
+          : `${widthPct}%`;
+      } else {
+        const x1 = yearX(b.from, 1);
+        const x2 = yearX(b.to + 1, 1);
+        el.style.left = `${x1}px`;
+        el.style.width = `${Math.max(40, x2 - x1)}px`;
+      }
       el.style.setProperty("--acq-era-color", b.color);
+      const flow = document.createElement("div");
+      flow.className = "acq-era-flow";
+      el.appendChild(flow);
+      layer.appendChild(el);
       const lbl = document.createElement("div");
       lbl.className = "acq-era-lbl";
-      lbl.style.left = `${x1 + 12}px`;
+      lbl.style.left = viewport ? `${((b.from - ACQ.yearMin) / span) * 100}%` : `${yearX(b.from, 1) + 12}px`;
       lbl.textContent = b.label;
-      layer.appendChild(el);
       layer.appendChild(lbl);
     });
   }
@@ -1126,7 +1152,7 @@
     ACQ.yearMax = Math.max(2026, ...data.acquisitions.map(a => +a.announced.slice(0, 4))) + 1;
 
     inner.style.width = `${innerWidth()}px`;
-    renderEraBands($("#acq-layer-eras"));
+    renderEraBands($("#acq-viewport-eras"), { viewport: true });
     renderYearTicks(inner);
     renderCards(inner);
     updateParallax();
@@ -1332,12 +1358,11 @@
     wrap.innerHTML = `
       <div id="acq-ambient" aria-hidden="true">
         <div id="acq-particles" class="acq-layer" data-depth="0.05"></div>
-        <div id="acq-layer-eras" class="acq-layer" data-depth="0.08"></div>
       </div>
       <div id="acq-head">
         <div class="acq-heading">
           <div class="acq-title">Acquisition History</div>
-          <div class="acq-sub">${window.CPN_ACQUISITIONS.acquisitions.length} companies · scroll to zoom · drag to pan · click a node to explore · sources: Wikipedia & Cisco</div>
+          <div class="acq-sub">${buildSourcesSub(window.CPN_ACQUISITIONS.acquisitions.length)}</div>
           <div id="acq-current-period" aria-live="polite"></div>
           <div id="acq-spend-ticker" aria-live="polite"></div>
         </div>
@@ -1389,6 +1414,7 @@
       </div>
       <div id="acq-canvas-area">
         <div id="acq-canvas" tabindex="-1" role="region" aria-label="Acquisition timeline">
+          <div id="acq-viewport-eras" aria-hidden="true"></div>
           <div id="acq-viewport-flow" aria-hidden="true"></div>
           <div id="acq-inner">
             <div id="acq-spine-wrap" class="acq-layer" data-depth="0.04"><div id="acq-spine"></div></div>

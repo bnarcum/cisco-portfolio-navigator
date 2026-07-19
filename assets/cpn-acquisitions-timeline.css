@@ -37,6 +37,11 @@ body.acq-open #tools {
   display: none !important;
 }
 
+body:has(#acq-wrap.show) #help-fab,
+body.acq-open #help-fab {
+  display: none !important;
+}
+
 #acq-ambient {
   position: absolute;
   inset: 0;
@@ -86,12 +91,16 @@ body.acq-open #tools {
 }
 
 /* Viewport-fixed scan lines — always span the visible canvas width (1A). */
-#acq-viewport-flow {
+#acq-viewport-flow,
+#acq-viewport-eras {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
+}
+
+#acq-viewport-flow {
   opacity: 0.38;
   background-image: repeating-linear-gradient(180deg,
     rgba(2, 200, 255, 0.16) 0 1px,
@@ -104,6 +113,10 @@ body.acq-open #tools {
   background-image: repeating-linear-gradient(180deg,
     rgba(2, 120, 180, 0.14) 0 1px,
     transparent 1px 34px);
+}
+
+#acq-viewport-eras .acq-era-lbl {
+  margin-left: 12px;
 }
 
 .acq-era-lbl {
@@ -143,6 +156,15 @@ body.acq-open #tools {
   color: var(--muted);
   margin-top: 2px;
   max-width: 520px;
+}
+
+#acq-head .acq-sub a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+#acq-head .acq-sub a:hover {
+  text-decoration: underline;
 }
 
 .acq-heading {

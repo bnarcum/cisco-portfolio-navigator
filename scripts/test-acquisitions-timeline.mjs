@@ -853,12 +853,20 @@ if (reduced.behavior !== "auto") errors.push(`reduced-motion focus behavior: ${r
 if (reduced.particleTransforms.length) errors.push("reduced-motion particles transformed");
 if (reduced.layerTransforms.length) errors.push("reduced-motion layers transformed");
 
+await page.evaluate(() => window.CPN_AcquisitionTimeline.open());
+await page.waitForSelector("#acq-wrap.show");
 const polish = await page.evaluate(() => ({
   date: window.CPN_AcquisitionTimeline.formatAnnouncedDate("2019-06-17"),
   viewportFlow: Boolean(document.querySelector("#acq-viewport-flow")),
+  viewportEras: document.querySelectorAll("#acq-viewport-eras .acq-era-band").length,
+  sourceLinks: document.querySelectorAll("#acq-head .acq-sub a").length,
+  helpFabHidden: getComputedStyle(document.querySelector("#help-fab")).display === "none",
 }));
 if (polish.date !== "2019 - Jun") errors.push(`date format: ${polish.date}`);
 if (!polish.viewportFlow) errors.push("viewport flow layer missing");
+if (polish.viewportEras < 4) errors.push(`viewport era bands: ${polish.viewportEras}`);
+if (polish.sourceLinks !== 2) errors.push(`source links: ${polish.sourceLinks}`);
+if (!polish.helpFabHidden) errors.push("help fab visible over acquisition timeline");
 
 await browser.close();
 if (errors.length) {
