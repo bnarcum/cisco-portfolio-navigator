@@ -292,8 +292,17 @@ body.acq-open #help-fab {
 }
 
 .acq-nav-btn {
+  flex: 0 0 auto;
   min-width: 30px;
   padding-inline: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+#acq-tour {
+  min-width: 52px;
 }
 
 /* ── Focus panel: HUD / terminal readout ──────────────────────────── */
