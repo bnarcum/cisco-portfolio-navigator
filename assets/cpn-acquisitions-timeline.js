@@ -1,5 +1,5 @@
 /**
- * Cisco Acquisition History — parallax timeline (Shorthand-inspired).
+ * Cisco Acquisition History — "network signal map" timeline.
  * Requires window.CPN_ACQUISITIONS from assets/cpn-acquisitions-data.js
  */
 (function () {
@@ -19,7 +19,6 @@
     level: "overview",
     anchorYear: null,
     expandedYear: null,
-    shelfYear: null,
     searchQuery: "",
     searchActiveIndex: -1,
     searchHighlightIds: null,
@@ -156,10 +155,7 @@
     const current = list.findIndex(acq => acq.id === ACQ.focusedId);
     const index = current < 0 ? (delta > 0 ? -1 : 0) : current;
     const next = list[(index + delta + list.length) % list.length];
-    if (next) {
-      ACQ.expandedYear = null;
-      focusAcquisition(next.id);
-    }
+    if (next) focusAcquisition(next.id);
   }
 
   function isVisible(node) {
@@ -176,7 +172,7 @@
   function restoreCardFocus(id, attempts = 90) {
     const tryFocus = remaining => {
       if (!$("#acq-wrap")?.classList.contains("show") || ACQ.focusedId !== id) return;
-      const card = $(`#acq-shelf .acq-shelf-row[data-id="${CSS.escape(id)}"]`);
+      const card = $(`#acq-inner .acq-card[data-id="${CSS.escape(id)}"]`);
       if (focusVisible(card) || remaining <= 0) return;
       requestAnimationFrame(() => tryFocus(remaining - 1));
     };
@@ -186,31 +182,6 @@
   function getSemanticLevel(zoom = ACQ.zoom) {
     if (ACQ.focusedId) return "focus";
     return zoom < 0.78 ? "overview" : "explore";
-  }
-
-  function syncShelfYear() {
-    if (getSemanticLevel() === "overview") {
-      ACQ.shelfYear = null;
-      return;
-    }
-    const center = getCenterYear();
-    if (ACQ.expandedYear != null) {
-      ACQ.shelfYear = ACQ.expandedYear;
-      return;
-    }
-    if (ACQ.anchorYear != null) {
-      ACQ.shelfYear = ACQ.anchorYear;
-      return;
-    }
-    ACQ.shelfYear = center;
-  }
-
-  function hideYearShelf() {
-    const shelf = $("#acq-shelf");
-    if (shelf) {
-      shelf.hidden = true;
-      shelf.innerHTML = "";
-    }
   }
 
   function exploreCardWidth(zoom = ACQ.zoom) {
@@ -229,6 +200,15 @@
   function updateCanvasNameTier() {
     const canvas = $("#acq-canvas");
     if (canvas) canvas.dataset.nameTier = nameDisplayTier();
+  }
+
+  // Worst-case rendered .acq-card height for the current name tier (card
+  // padding + line-clamped name block + meta row), used to keep lane
+  // spacing collision-safe without measuring the live DOM every frame.
+  function estimateExploreCardHeight() {
+    const tier = nameDisplayTier();
+    const nameH = tier === "full" ? 43 : tier === "3" ? 39 : tier === "2" ? 26 : 13;
+    return 13 + nameH + 4 + 11;
   }
 
   function prefersReducedMotion() {
@@ -255,8 +235,7 @@
     });
   }
 
-  function layoutExploreCards(list, { mid, cardW = 88, gap = 12, laneH = 128 }) {
-    const lanes = [-1, 1, -2, 2, -3, 3];
+  function layoutExploreCards(list, { mid, cardW = 88, gap = 12, laneH = 128, lanes = [-1, 1, -2, 2, -3, 3] }) {
     const laneRight = new Map(lanes.map(lane => [lane, -Infinity]));
     return list.map(acq => {
       const x = dateX(acq.announced);
@@ -289,7 +268,10 @@
       el.className = "acq-era-band";
       el.style.left = `${x1}px`;
       el.style.width = `${Math.max(40, x2 - x1)}px`;
-      el.style.background = b.color;
+      el.style.setProperty("--acq-era-color", b.color);
+      const flow = document.createElement("div");
+      flow.className = "acq-era-flow";
+      el.appendChild(flow);
       const lbl = document.createElement("div");
       lbl.className = "acq-era-lbl";
       lbl.style.left = `${x1 + 12}px`;
@@ -311,27 +293,27 @@
     }
   }
 
-  function renderYearMarkers(inner, list, mid, { explore = false } = {}) {
+  function renderYearMarkers(inner, list, mid, { explore = false, mergedYears = null } = {}) {
     const canvas = $("#acq-canvas");
     const placements = layoutOverviewByYear(list, { mid });
-    const viewportWidth = canvas?.clientWidth || 1440;
-    const scrollLeft = canvas?.scrollLeft || 0;
-    const minX = scrollLeft - viewportWidth * 0.5;
-    const maxX = scrollLeft + viewportWidth * 1.5;
 
     placements.forEach(placement => {
-      if (placement.x < minX || placement.x > maxX) return;
+      const merged = Boolean(mergedYears?.has(String(placement.year)));
       const marker = document.createElement("button");
       marker.type = "button";
       marker.className = "acq-year-marker" +
-        (explore && ACQ.shelfYear === placement.year ? " active" : "") +
+        (explore ? " compact" : "") +
+        (explore && ACQ.anchorYear === placement.year ? " active" : "") +
+        (merged ? " has-overflow" : "") +
         (yearDealWeight(placement.items) >= 2 ? " acq-year-marker--heavy" : "");
       marker.dataset.year = String(placement.year);
       marker.setAttribute("role", "button");
       marker.tabIndex = 0;
       marker.style.setProperty("--tx", `${placement.x}px`);
       marker.style.setProperty("--ty", `${placement.y}px`);
-      marker.setAttribute("aria-label", `Explore ${placement.year}: ${placement.representedCount} acquisitions`);
+      marker.setAttribute("aria-label", merged
+        ? `Explore ${placement.year}: ${placement.representedCount} acquisitions, tap to expand list`
+        : `Explore ${placement.year}: ${placement.representedCount} acquisitions`);
 
       const year = document.createElement("span");
       year.className = "acq-year-marker-year";
@@ -344,8 +326,10 @@
 
       marker.addEventListener("click", () => {
         ACQ.anchorYear = placement.year;
-        ACQ.expandedYear = placement.year;
-        ACQ.shelfYear = placement.year;
+        // When the canvas is too short to float a separate overflow hub
+        // without colliding (see `cramped` in renderExplore), the marker
+        // itself becomes the drill-in affordance for that year's overflow.
+        ACQ.expandedYear = merged ? placement.year : null;
         if (ACQ.zoom < 0.78) {
           ACQ.zoom = 1.05;
           updateZoomUi();
@@ -355,7 +339,6 @@
           canvas.scrollLeft = Math.max(0, yearX(placement.year, 6) - canvas.clientWidth / 2);
         }
         renderCards(inner);
-        renderYearShelf(list);
         updateParallax();
       });
       inner.appendChild(marker);
@@ -371,14 +354,13 @@
       const el = document.createElement("button");
       el.type = "button";
       el.className = "acq-landmark" + (acq.featured ? " featured" : "");
+      el.dataset.id = acq.id;
       el.style.setProperty("--tx", `${dateX(acq.announced)}px`);
       el.style.setProperty("--acq-era-color", eraColorFor(acq.era));
       el.textContent = acq.company.length > 22 ? `${acq.company.slice(0, 20)}…` : acq.company;
       el.setAttribute("aria-label", `${acq.company}, ${acq.announced.slice(0, 4)}`);
       el.addEventListener("click", () => {
         ACQ.anchorYear = Number(acq.announced.slice(0, 4));
-        ACQ.expandedYear = ACQ.anchorYear;
-        ACQ.shelfYear = ACQ.anchorYear;
         if (ACQ.zoom < 0.78) ACQ.zoom = 1.05;
         updateZoomUi();
         renderAcquisitionTimeline();
@@ -389,61 +371,93 @@
   }
 
   function renderOverview(inner, list, mid) {
-    hideYearShelf();
     renderYearMarkers(inner, list, mid, { explore: false });
     if (ACQ.zoom >= 0.45) renderLandmarks(inner, list);
   }
 
-  function createShelfRow(acq) {
-    const row = document.createElement("button");
-    row.type = "button";
-    row.className = "acq-shelf-row acq-card" +
-      (acq.featured ? " featured" : "") +
-      (ACQ.focusedId && ACQ.focusedId !== acq.id ? " dim" : "") +
-      (ACQ.focusedId === acq.id ? " focused" : "");
-    row.dataset.id = acq.id;
-    row.dataset.identity = acq.visualIdentity?.kind || "";
-    row.style.setProperty("--acq-era-color", eraColorFor(acq.era));
-    row.setAttribute("role", "button");
-    row.tabIndex = 0;
-    row.setAttribute("aria-label", [
-      acq.company,
-      `announced ${acq.announced}`,
-      acq.business,
-      acq.valueUsd ? formatValue(acq.valueUsd) : "",
+  function createAcquisitionCard(placement, index) {
+    const { acq: a, x, y } = placement;
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "acq-card" +
+      (a.featured ? " featured" : "") +
+      (ACQ.focusedId && ACQ.focusedId !== a.id ? " dim" : "") +
+      (ACQ.focusedId === a.id ? " focused" : "");
+    card.dataset.id = a.id;
+    card.style.setProperty("--tx", `${x}px`);
+    card.style.setProperty("--ty", `${y}px`);
+    card.style.setProperty("--acq-card-w", `${exploreCardWidth()}px`);
+    card.style.setProperty("--acq-era-color", eraColorFor(a.era));
+    card.setAttribute("role", "button");
+    card.tabIndex = 0;
+    card.setAttribute("aria-label", [
+      a.company,
+      `announced ${a.announced}`,
+      a.business,
+      a.valueUsd ? formatValue(a.valueUsd) : "",
     ].filter(Boolean).join(", "));
 
     const spotlight = ACQ.searchHighlightIds;
-    if (spotlight && !spotlight.has(acq.id)) row.classList.add("spotlight-dim");
+    if (spotlight) card.classList.add(spotlight.has(a.id) ? "locked" : "spotlight-dim");
 
-    row.innerHTML = `
-      <span class="acq-shelf-stripe" aria-hidden="true"></span>
-      <span class="acq-shelf-main">
-        <span class="acq-shelf-name">${escapeHtml(acq.company)}</span>
-        <span class="acq-shelf-meta">${escapeHtml([acq.business, eraLabelFor(acq.era)].filter(Boolean).join(" · "))}</span>
-      </span>
-      <span class="acq-shelf-side">
-        ${acq.valueUsd ? `<span class="acq-shelf-value">${formatValue(acq.valueUsd)}</span>` : ""}
-        <span class="acq-shelf-date">${escapeHtml(acq.announced.slice(0, 7))}</span>
+    card.innerHTML = `
+      <span class="acq-card-name">${escapeHtml(a.company)}</span>
+      <span class="acq-card-meta">
+        <span class="acq-card-date">${escapeHtml(a.announced.slice(0, 7))}</span>
+        ${a.valueUsd ? `<span class="acq-card-value">${formatValue(a.valueUsd)}</span>` : ""}
       </span>`;
-
-    row.addEventListener("click", () => focusAcquisition(acq.id));
-    row.addEventListener("keydown", event => {
+    card.addEventListener("click", () => focusAcquisition(a.id));
+    card.addEventListener("keydown", event => {
       if (event.key !== "Enter" && event.key !== " ") return;
       event.preventDefault();
-      focusAcquisition(acq.id);
+      focusAcquisition(a.id);
     });
-    return row;
+    return card;
   }
 
-  function renderYearShelf(list) {
-    const shelf = $("#acq-shelf");
-    if (!shelf || getSemanticLevel() === "overview") {
-      hideYearShelf();
-      return;
+  function renderOverflowCluster(inner, year, items, y) {
+    const x = yearX(Number(year), 6);
+    const hub = document.createElement("button");
+    hub.type = "button";
+    hub.className = "acq-overflow-marker";
+    hub.setAttribute("role", "button");
+    hub.tabIndex = 0;
+    hub.style.setProperty("--tx", `${x}px`);
+    hub.style.setProperty("--ty", `${y}px`);
+    hub.setAttribute("aria-label", `Show ${items.length} more acquisitions from ${year}`);
+
+    const satelliteCount = Math.min(6, items.length);
+    for (let i = 0; i < satelliteCount; i++) {
+      const angle = (Math.PI * 2 * i) / satelliteCount - Math.PI / 2;
+      const dot = document.createElement("span");
+      dot.className = "acq-overflow-dot";
+      dot.setAttribute("aria-hidden", "true");
+      dot.style.setProperty("--dx", `${Math.cos(angle) * 14}px`);
+      dot.style.setProperty("--dy", `${Math.sin(angle) * 14}px`);
+      hub.appendChild(dot);
     }
-    syncShelfYear();
-    const year = String(ACQ.shelfYear || getCenterYear());
+    const label = document.createElement("span");
+    label.className = "acq-overflow-label";
+    label.textContent = `+${items.length}`;
+    hub.appendChild(label);
+
+    function expand() {
+      ACQ.anchorYear = Number(year);
+      ACQ.expandedYear = Number(year);
+      renderCards(inner);
+      updateParallax();
+    }
+    hub.addEventListener("click", expand);
+    hub.addEventListener("keydown", event => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      expand();
+    });
+    inner.appendChild(hub);
+  }
+
+  function renderExpandedYear(inner, list, canvas) {
+    const year = String(ACQ.expandedYear);
     const items = list
       .filter(acq => acq.announced.startsWith(year))
       .slice()
@@ -451,37 +465,186 @@
         (b.valueUsd || 0) - (a.valueUsd || 0) ||
         a.company.localeCompare(b.company));
 
-    shelf.hidden = false;
-    shelf.innerHTML = "";
+    const tray = document.createElement("section");
+    tray.className = "acq-year-expansion";
+    tray.style.left = `${(canvas?.scrollLeft || 0) + 16}px`;
+    tray.style.width = `${Math.max(280, (canvas?.clientWidth || 1440) - 32)}px`;
+    tray.setAttribute("aria-label", `${year} acquisitions`);
 
     const head = document.createElement("div");
-    head.className = "acq-shelf-head";
-    head.innerHTML = `<strong>${year} · ${items.length} acquisition${items.length !== 1 ? "s" : ""}</strong>
-      <span class="acq-shelf-hint">Sorted by disclosed value · Select a company for details</span>`;
-    shelf.appendChild(head);
+    head.className = "acq-year-expansion-head";
+    const title = document.createElement("strong");
+    title.textContent = `${year} · ${items.length} acquisition${items.length !== 1 ? "s" : ""}`;
+    head.appendChild(title);
+    const close = document.createElement("button");
+    close.type = "button";
+    close.className = "acq-year-expansion-close";
+    close.textContent = "Return to timeline";
+    close.addEventListener("click", () => {
+      ACQ.expandedYear = null;
+      renderCards(inner);
+      updateParallax();
+    });
+    head.appendChild(close);
+    tray.appendChild(head);
 
-    const listEl = document.createElement("div");
-    listEl.className = "acq-shelf-list";
-    listEl.setAttribute("role", "list");
-    items.forEach(acq => listEl.appendChild(createShelfRow(acq)));
-    shelf.appendChild(listEl);
+    const grid = document.createElement("div");
+    grid.className = "acq-year-expansion-grid";
+    items.forEach((acq, index) => {
+      grid.appendChild(createAcquisitionCard({ acq, x: 0, y: 0 }, index));
+    });
+    tray.appendChild(grid);
+    inner.appendChild(tray);
   }
 
   function renderExplore(inner, list, mid) {
-    syncShelfYear();
-    renderYearMarkers(inner, list, mid, { explore: true });
+    const canvas = $("#acq-canvas");
+    const cardW = exploreCardWidth();
+    const gap = 12;
+    const HUB_HALF = 20; // overflow cluster (hub + satellite dots) half-extent
+    const HUB_GAP = 8;
+    const MARKER_CLEARANCE = 25; // compact marker radius (17px) + margin
+    // Cards render with --ty as their *top* edge, so a lane above the mid
+    // line grows downward toward the year-marker row as its rendered height
+    // (tier-dependent) increases. Keep laneH big enough that even the
+    // tallest current tier can't reach the compact marker.
+    const cardH = estimateExploreCardHeight();
+    const desiredLaneH = Math.round(128 * Math.min(1.45, cardW / ACQ.cardW));
+    const laneH = Math.max(desiredLaneH, 2 * (cardH + MARKER_CLEARANCE));
+    const placements = layoutExploreCards(list, { mid, cardW, gap, laneH });
+
+    // A promotion swap only reuses another card's lane slot (y); it never
+    // re-validates horizontal spacing at the new x. Guard against introducing
+    // an overlap with whatever else already occupies that lane row.
+    const fitsLane = (y, x, excludeId) => !placements.some(placement =>
+      !placement.overflow && placement.y === y && placement.acq.id !== excludeId &&
+      Math.abs(placement.x - x) < cardW + gap);
+
+    if (ACQ.focusedId) {
+      const selected = placements.find(placement =>
+        placement.overflow && placement.acq.id === ACQ.focusedId);
+      const replacement = selected && placements.slice().reverse().find(placement =>
+        !placement.overflow &&
+        placement.acq.announced.slice(0, 4) === selected.year &&
+        placement.acq.id !== ACQ.focusedId &&
+        fitsLane(placement.y, selected.x, placement.acq.id));
+      if (selected && replacement) {
+        selected.overflow = false;
+        selected.y = replacement.y;
+        replacement.overflow = true;
+        replacement.year = selected.year;
+      }
+    }
+    if (ACQ.anchorYear != null) {
+      const year = String(ACQ.anchorYear);
+      const promoted = placements.find(placement =>
+        placement.overflow && placement.year === year && placement.acq.featured);
+      const replaced = promoted && placements.slice().reverse().find(placement =>
+        !placement.overflow &&
+        placement.acq.announced.startsWith(year) &&
+        !placement.acq.featured &&
+        placement.acq.id !== ACQ.focusedId &&
+        fitsLane(placement.y, promoted.x, placement.acq.id));
+      if (promoted && replaced) {
+        promoted.overflow = false;
+        promoted.y = replaced.y;
+        replaced.overflow = true;
+        replaced.year = year;
+      }
+    }
+
+    const overflows = new Map();
+    placements.forEach(placement => {
+      if (!placement.overflow) return;
+      const bucket = overflows.get(placement.year) || [];
+      bucket.push(placement);
+      overflows.set(placement.year, bucket);
+    });
+
+    // When the canvas is too short for any y to clear both a card lane and
+    // the year-marker band (e.g. mobile with the focus panel docked below
+    // the canvas), a floating hub can never avoid colliding with something.
+    // In that squeeze, merge the "+N" affordance directly onto the year
+    // marker instead of rendering an independent node, which guarantees
+    // zero added collision risk since no new element is placed at all.
+    const cramped = mid < HUB_HALF + MARKER_CLEARANCE;
+    const mergedYears = cramped ? new Set(overflows.keys()) : new Set();
+
+    renderYearMarkers(inner, list, mid, { explore: true, mergedYears });
     renderLandmarks(inner, list);
-    renderYearShelf(list);
+    if (ACQ.expandedYear != null) {
+      renderExpandedYear(inner, list, canvas);
+      return;
+    }
+
+    const viewportWidth = canvas?.clientWidth || 1440;
+    const scrollLeft = canvas?.scrollLeft || 0;
+    const minX = scrollLeft - viewportWidth;
+    const maxX = scrollLeft + viewportWidth * 2;
+
+    placements.forEach((placement, index) => {
+      if (placement.overflow) return;
+      if (placement.x + cardW < minX || placement.x > maxX) return;
+      inner.appendChild(createAcquisitionCard(placement, index));
+    });
+
+    // Prefer slotting each overflow cluster's hub into whichever real lane
+    // has room at its x (outermost lanes first, so precious inner lanes stay
+    // free for cards), using a full 2D box check (not just the lane's y)
+    // so the hub can't overlap a card's actual rendered height either. If
+    // no lane has room, fall back to scanning for any clear vertical slot
+    // on the canvas, clear of both cards and the year-marker row.
+    const laneOrder = [-3, 3, -2, 2, -1, 1];
+    const hubLaneY = laneOrder.map(lane => mid + lane * laneH / 2);
+    const placedHubs = [];
+    const fitsHub = (y, x, skipMarkerClearance) =>
+      y - HUB_HALF >= 0 && y + HUB_HALF <= 2 * mid &&
+      (skipMarkerClearance || Math.abs(y - mid) >= MARKER_CLEARANCE + HUB_HALF) &&
+      !placements.some(placement =>
+        !placement.overflow &&
+        x - HUB_HALF < placement.x + cardW && x + HUB_HALF > placement.x &&
+        y - HUB_HALF < placement.y + cardH && y + HUB_HALF > placement.y) &&
+      !placedHubs.some(hub =>
+        Math.abs(hub.y - y) < HUB_HALF * 2 + HUB_GAP && Math.abs(hub.x - x) < HUB_HALF * 2 + HUB_GAP);
+    const findHubY = x => {
+      const laneMatch = hubLaneY.find(y => fitsHub(y, x));
+      if (laneMatch != null) return laneMatch;
+      for (let y = HUB_HALF; y <= 2 * mid - HUB_HALF; y += 4) {
+        if (fitsHub(y, x)) return y;
+      }
+      // Last resort: allow encroaching on the year-marker clearance band (a
+      // rare, tight overlap with a marker is far less disruptive than a
+      // guaranteed collision with a card) but still respect card/hub bounds.
+      for (let y = HUB_HALF; y <= 2 * mid - HUB_HALF; y += 4) {
+        if (fitsHub(y, x, true)) return y;
+      }
+      return Math.max(HUB_HALF, Math.min(2 * mid - HUB_HALF, mid - laneH * 1.5 - HUB_HALF - HUB_GAP));
+    };
+
+    overflows.forEach((items, year) => {
+      if (mergedYears.has(year)) return; // handled by the year marker itself
+      const x = yearX(Number(year), 6);
+      if (x < minX || x > maxX) return;
+      const y = findHubY(x);
+      placedHubs.push({ x, y });
+      renderOverflowCluster(inner, year, items, y);
+    });
   }
 
   function renderCards(inner) {
     const active = document.activeElement;
-    const focusTarget = active?.classList?.contains("acq-card") || active?.classList?.contains("acq-shelf-row")
+    const focusTarget = active?.classList?.contains("acq-card")
       ? { type: "card", value: active.dataset.id }
       : active?.classList?.contains("acq-year-marker")
         ? { type: "year", value: active.dataset.year }
-        : null;
-    inner.querySelectorAll(".acq-year-marker, .acq-landmark").forEach(e => e.remove());
+        : active?.classList?.contains("acq-landmark")
+          ? { type: "landmark", value: active.dataset.id }
+          : active?.classList?.contains("acq-overflow-marker")
+            ? { type: "overflow", value: active.getAttribute("aria-label") }
+            : null;
+    inner.querySelectorAll(
+      ".acq-year-marker, .acq-landmark, .acq-card, .acq-overflow-marker, .acq-year-expansion"
+    ).forEach(e => e.remove());
     const list = filteredList();
     const canvas = $("#acq-canvas");
     const mid = canvas ? canvas.clientHeight / 2 : 210;
@@ -493,10 +656,14 @@
     if (focusTarget) {
       let target = null;
       if (focusTarget.type === "card") {
-        target = $(`#acq-shelf .acq-shelf-row[data-id="${CSS.escape(focusTarget.value)}"]`) ||
-          inner.querySelector(`.acq-shelf-row[data-id="${CSS.escape(focusTarget.value)}"]`);
+        target = inner.querySelector(`.acq-card[data-id="${CSS.escape(focusTarget.value)}"]`);
       } else if (focusTarget.type === "year") {
         target = inner.querySelector(`.acq-year-marker[data-year="${CSS.escape(focusTarget.value)}"]`);
+      } else if (focusTarget.type === "landmark") {
+        target = inner.querySelector(`.acq-landmark[data-id="${CSS.escape(focusTarget.value)}"]`);
+      } else if (focusTarget.type === "overflow") {
+        target = [...inner.querySelectorAll(".acq-overflow-marker")]
+          .find(marker => marker.getAttribute("aria-label") === focusTarget.value);
       }
       target?.focus({ preventScroll: true });
     }
@@ -540,6 +707,29 @@
     );
   }
 
+  function showMinimapScan(clientX) {
+    const track = $("#acq-minimap-track");
+    const scan = $("#acq-minimap-scan");
+    if (!track || !scan || prefersReducedMotion()) return;
+    const rect = track.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / Math.max(1, rect.width)));
+    scan.style.left = `${pct * 100}%`;
+    scan.classList.add("show");
+  }
+
+  function hideMinimapScan() {
+    $("#acq-minimap-scan")?.classList.remove("show");
+  }
+
+  function flashMinimapScanAt(pct) {
+    const scan = $("#acq-minimap-scan");
+    if (!scan || prefersReducedMotion()) return;
+    scan.style.left = `${Math.max(0, Math.min(1, pct)) * 100}%`;
+    scan.classList.add("show");
+    clearTimeout(scan._acqHideTimer);
+    scan._acqHideTimer = setTimeout(() => scan.classList.remove("show"), 420);
+  }
+
   function updateFocusIdentity(a) {
     const logo = $("#acq-focus-logo");
     const wordmark = $("#acq-focus-wordmark");
@@ -559,16 +749,22 @@
 
   function renderFocusLives(a) {
     const lives = $("#acq-focus-lives");
+    const path = $("#acq-focus-path");
     if (!lives) return;
     lives.innerHTML = "";
-    if (!a.families?.length) {
+    const hasFamilies = Boolean(a.families?.length);
+    if (path) {
+      path.hidden = !hasFamilies;
+      path.classList.remove("animate");
+    }
+    if (!hasFamilies) {
       lives.hidden = true;
       return;
     }
     lives.hidden = false;
     const label = document.createElement("span");
     label.className = "acq-focus-lives-label";
-    label.textContent = "Lives on as";
+    label.textContent = "Signal continues as";
     lives.appendChild(label);
     a.families.slice(0, 4).forEach(famId => {
       const fam = window.nodeById?.[famId];
@@ -577,22 +773,23 @@
       chip.textContent = fam?.name || famId;
       lives.appendChild(chip);
     });
+    if (path) requestAnimationFrame(() => path.classList.add("animate"));
   }
 
   function focusAcquisition(id) {
-    const activeCard = document.activeElement?.closest?.(".acq-shelf-row, .acq-card");
+    const activeCard = document.activeElement?.closest?.(".acq-card");
     ACQ.focusReturnId = activeCard?.dataset.id || id;
     ACQ.focusedId = id;
     const a = window.CPN_ACQUISITIONS?.acquisitions?.find(x => x.id === id);
     const panel = $("#acq-focus");
     if (!a || !panel) return;
     ACQ.anchorYear = Number(a.announced.slice(0, 4));
-    ACQ.expandedYear = ACQ.anchorYear;
-    ACQ.shelfYear = ACQ.anchorYear;
+    ACQ.expandedYear = null;
     panel.hidden = false;
     panel.inert = false;
     panel.setAttribute("aria-hidden", "false");
     panel.classList.add("show");
+    panel.style.setProperty("--acq-era-color", eraColorFor(a.era));
     updateFocusIdentity(a);
     $("#acq-focus-title").textContent = a.company;
     const headline = $("#acq-focus-headline");
@@ -701,19 +898,23 @@
     if (!q) {
       ACQ.searchHighlightIds = null;
       wrap.classList.remove("acq-spotlight");
+      $("#acq-inner")?.querySelectorAll(".acq-card, .acq-landmark").forEach(node => {
+        node.classList.remove("locked", "spotlight-dim");
+      });
       return;
     }
     const ids = new Set(searchAcquisitions(q).map(a => a.id));
     ACQ.searchHighlightIds = ids;
     wrap.classList.add("acq-spotlight");
-    $("#acq-shelf")?.querySelectorAll(".acq-shelf-row").forEach(row => {
-      row.classList.toggle("spotlight-dim", !ids.has(row.dataset.id));
+    $("#acq-inner")?.querySelectorAll(".acq-card").forEach(card => {
+      const match = ids.has(card.dataset.id);
+      card.classList.toggle("locked", match);
+      card.classList.toggle("spotlight-dim", !match);
     });
     $("#acq-inner")?.querySelectorAll(".acq-landmark").forEach(node => {
-      const acq = window.CPN_ACQUISITIONS.acquisitions.find(a =>
-        a.company === node.textContent.replace(/…$/, "") ||
-        node.getAttribute("aria-label")?.startsWith(a.company));
-      node.classList.toggle("spotlight-dim", acq ? !ids.has(acq.id) : true);
+      const match = ids.has(node.dataset.id);
+      node.classList.toggle("locked", match);
+      node.classList.toggle("spotlight-dim", !match);
     });
   }
 
@@ -722,6 +923,9 @@
     ACQ.tourTimer = null;
     ACQ.tourIndex = -1;
     $("#acq-tour")?.classList.remove("active");
+    $("#acq-inner")?.querySelectorAll(".acq-landmark.tour-active").forEach(el => {
+      el.classList.remove("tour-active");
+    });
   }
 
   function startTour() {
@@ -737,6 +941,10 @@
       if (ACQ.zoom < 0.85) ACQ.zoom = 1.05;
       updateZoomUi();
       focusAcquisition(acq.id);
+      $("#acq-inner")?.querySelectorAll(".acq-landmark.tour-active").forEach(el => {
+        el.classList.remove("tour-active");
+      });
+      $(`#acq-inner .acq-landmark[data-id="${CSS.escape(acq.id)}"]`)?.classList.add("tour-active");
       ACQ.tourIndex = (ACQ.tourIndex + 1) % stops.length;
     };
     advance();
@@ -748,20 +956,7 @@
     cancelAnimationFrame(ACQ.raf);
     ACQ.raf = requestAnimationFrame(() => {
       const inner = $("#acq-inner");
-      const canvas = $("#acq-canvas");
-      const level = getSemanticLevel();
-      if (inner && canvas && level !== "focus") {
-        const list = filteredList();
-        const mid = canvas.clientHeight / 2;
-        inner.querySelectorAll(".acq-year-marker, .acq-landmark").forEach(e => e.remove());
-        renderYearMarkers(inner, list, mid, { explore: level === "explore" });
-        if (ACQ.zoom >= 0.45) renderLandmarks(inner, list);
-      }
-      if (level !== "overview" && ACQ.expandedYear == null) {
-        const prev = ACQ.shelfYear;
-        syncShelfYear();
-        if (prev !== ACQ.shelfYear) renderYearShelf(filteredList());
-      }
+      if (inner && getSemanticLevel() !== "overview") renderCards(inner);
       updateParallax();
     });
   }
@@ -818,9 +1013,7 @@
 
     function isPanTarget(el) {
       return el?.closest("#acq-canvas") &&
-        !el.closest(
-          ".acq-shelf-row, .acq-year-marker, .acq-landmark, .acq-year-expansion, button, a, input"
-        );
+        !el.closest(".acq-year-expansion, button, a, input");
     }
 
     canvas.addEventListener("wheel", ev => {
@@ -876,7 +1069,6 @@
     clearAcquisitionFocus({ restoreFocus: false });
     ACQ.anchorYear = null;
     ACQ.expandedYear = null;
-    ACQ.shelfYear = null;
     ACQ.zoom = ACQ.minZoom;
     ACQ.level = "overview";
     updateZoomUi();
@@ -884,9 +1076,14 @@
     canvas.scrollTo({ left: 0, behavior: "auto" });
     canvas.scrollLeft = 0;
     renderCards($("#acq-inner"));
-    hideYearShelf();
     updateParallax();
     updateCanvasNameTier();
+    // The inner track shrinks when zooming to fit; Chrome's scroll-anchoring
+    // heuristic can nudge scrollLeft off 0 on the next frame to compensate.
+    // Re-assert after layout settles.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (canvas.scrollLeft !== 0) canvas.scrollLeft = 0;
+    }));
   }
 
   function clearAcquisitionFocus({ restoreFocus = true } = {}) {
@@ -902,7 +1099,7 @@
     renderAcquisitionTimeline();
     if (!restoreFocus) return;
     const card = returnId
-      ? $(`#acq-shelf .acq-shelf-row[data-id="${CSS.escape(returnId)}"]`)
+      ? $(`#acq-inner .acq-card[data-id="${CSS.escape(returnId)}"]`)
       : null;
     if (!focusVisible(card)) focusVisible($("#acq-canvas"));
   }
@@ -929,8 +1126,7 @@
     if (!canvas || !acq) return;
     ACQ.zoom = Math.max(1.05, ACQ.zoom);
     ACQ.anchorYear = Number(acq.announced.slice(0, 4));
-    ACQ.expandedYear = ACQ.anchorYear;
-    ACQ.shelfYear = ACQ.anchorYear;
+    ACQ.expandedYear = null;
     updateZoomUi();
     renderAcquisitionTimeline();
     canvas.scrollLeft = Math.max(0, dateX(acq.announced) - canvas.clientWidth / 2);
@@ -984,8 +1180,7 @@
     }
     ACQ.searchQuery = "";
     ACQ.searchActiveIndex = -1;
-    ACQ.searchHighlightIds = null;
-    $("#acq-wrap")?.classList.remove("acq-spotlight");
+    applySearchSpotlight();
   }
 
   function setActiveSearchOption(index) {
@@ -1031,7 +1226,6 @@
 
   function selectSearchResult(acq) {
     setFilter("all", "All", { render: false, restoreFocus: false });
-    ACQ.expandedYear = null;
     clearSearchResults();
     focusAcquisition(acq.id);
   }
@@ -1080,10 +1274,12 @@
     const intersectsCanvas = rect => canvasRect &&
       rect.left < canvasRect.right && rect.right > canvasRect.left &&
       rect.top < canvasRect.bottom && rect.bottom > canvasRect.top;
-    const nodes = [...document.querySelectorAll(".acq-year-marker, .acq-landmark")];
+    const nodes = [...document.querySelectorAll(".acq-year-marker, .acq-card, .acq-overflow-marker, .acq-landmark")];
     const rects = nodes.map(node => node.getBoundingClientRect()).filter(intersectsCanvas);
-    const mountedIds = [...document.querySelectorAll("#acq-shelf .acq-shelf-row")].map(el => el.dataset.id);
-    const visibleIds = mountedIds.slice();
+    const mountedIds = [...document.querySelectorAll(".acq-card")].map(el => el.dataset.id);
+    const visibleIds = [...document.querySelectorAll(".acq-card")]
+      .filter(el => intersectsCanvas(el.getBoundingClientRect()))
+      .map(el => el.dataset.id);
     let overlapCount = 0;
     for (let i = 0; i < rects.length; i += 1) {
       for (let j = i + 1; j < rects.length; j += 1) {
@@ -1097,11 +1293,10 @@
       level: getSemanticLevel(),
       totalCount: window.CPN_ACQUISITIONS.acquisitions.length,
       representedCount: Number(document.querySelector("#acq-inner")?.dataset.represented || 0),
-      renderedCards: document.querySelectorAll("#acq-shelf .acq-shelf-row").length,
+      renderedCards: document.querySelectorAll(".acq-card").length,
       mountedIds,
       visibleIds,
       overflowMarkers: document.querySelectorAll(".acq-overflow-marker").length,
-      shelfYear: ACQ.shelfYear,
       overlapCount,
       zoom: ACQ.zoom,
       maxZoom: ACQ.maxZoom,
@@ -1130,7 +1325,7 @@
       <div id="acq-head">
         <div class="acq-heading">
           <div class="acq-title">Acquisition History</div>
-          <div class="acq-sub">${window.CPN_ACQUISITIONS.acquisitions.length} companies · scroll to zoom · drag to pan · click a year to browse · sources: Wikipedia & Cisco</div>
+          <div class="acq-sub">${window.CPN_ACQUISITIONS.acquisitions.length} companies · scroll to zoom · drag to pan · click a node to explore · sources: Wikipedia & Cisco</div>
           <div id="acq-current-period" aria-live="polite"></div>
           <div id="acq-spend-ticker" aria-live="polite"></div>
         </div>
@@ -1169,6 +1364,7 @@
             <h3 id="acq-focus-title"></h3>
             <div id="acq-focus-headline"></div>
             <div id="acq-focus-meta"></div>
+            <div id="acq-focus-path" aria-hidden="true" hidden></div>
             <div id="acq-focus-lives" hidden></div>
             <div id="acq-focus-summary"></div>
             <a id="acq-focus-source" target="_blank" rel="noopener noreferrer" hidden></a>
@@ -1188,10 +1384,10 @@
             aria-label="Timeline viewport year" aria-valuemin="${ACQ.yearMin}"
             aria-valuemax="${ACQ.yearMax}" aria-valuenow="${ACQ.yearMin}">
             <div id="acq-minimap-dots"></div><div id="acq-minimap-viewport"></div>
+            <div id="acq-minimap-scan" aria-hidden="true"></div>
           </div>
           <div id="acq-minimap-labels"><span>${ACQ.yearMin}</span><span>${ACQ.yearMax}</span></div>
         </div>
-        <aside id="acq-shelf" hidden aria-label="Year acquisitions"></aside>
       </div>`;
     document.body.appendChild(wrap);
 
@@ -1309,14 +1505,22 @@
     canvas?.addEventListener("scroll", onScroll, { passive: true });
     bindCanvasNavigation(canvas);
 
-    $("#acq-minimap-track")?.addEventListener("click", ev => {
-      const track = ev.currentTarget;
-      const rect = track.getBoundingClientRect();
+    const minimapTrack = $("#acq-minimap-track");
+    minimapTrack?.addEventListener("click", ev => {
+      const rect = minimapTrack.getBoundingClientRect();
       const pct = (ev.clientX - rect.left) / rect.width;
       const innerW = innerWidth();
       canvas.scrollLeft = pct * innerW - canvas.clientWidth / 2;
+      flashMinimapScanAt(pct);
+      onScroll();
     });
-    $("#acq-minimap-track")?.addEventListener("keydown", event => {
+    minimapTrack?.addEventListener("pointerdown", ev => showMinimapScan(ev.clientX));
+    minimapTrack?.addEventListener("pointermove", ev => {
+      if (ev.buttons) showMinimapScan(ev.clientX);
+    });
+    minimapTrack?.addEventListener("pointerup", hideMinimapScan);
+    minimapTrack?.addEventListener("pointerleave", hideMinimapScan);
+    minimapTrack?.addEventListener("keydown", event => {
       const maxScroll = Math.max(0, canvas.scrollWidth - canvas.clientWidth);
       const yearStep = ACQ.pxPerYear * ACQ.zoom;
       let left = null;
@@ -1333,6 +1537,8 @@
       event.preventDefault();
       event.stopPropagation();
       canvas.scrollLeft = Math.max(0, Math.min(maxScroll, left));
+      const innerW = innerWidth();
+      flashMinimapScanAt((canvas.scrollLeft + canvas.clientWidth / 2) / innerW);
       onScroll();
     });
 

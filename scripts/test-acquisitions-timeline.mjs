@@ -6,7 +6,6 @@ import { fileURLToPath } from "url";
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const html = path.join(root, "cisco-portfolio-navigator.html");
 const MAX_ZOOM = 5;
-const REACHABILITY_ZOOM = 2;
 const errors = [];
 const browser = await chromium.launch();
 
@@ -51,6 +50,56 @@ async function ensureYearMarker(page, year) {
 async function clickYearMarker(page, year) {
   await ensureYearMarker(page, year);
   await page.locator(`.acq-year-marker[data-year="${year}"]`).evaluate(marker => marker.click());
+}
+
+// Clicks an acquisition's canvas card, opening its year's overflow cluster
+// first if the card isn't currently promoted into a visible lane.
+async function clickAcquisitionCard(page, id, year) {
+  let locator = page.locator(`.acq-card[data-id="${id}"]`);
+  if (!(await locator.count())) {
+    const hubs = await page.locator(".acq-overflow-marker").all();
+    for (const hub of hubs) {
+      const label = await hub.getAttribute("aria-label");
+      if (label?.endsWith(`from ${year}`)) {
+        await hub.evaluate(el => el.click());
+        await page.waitForSelector(".acq-year-expansion");
+        break;
+      }
+    }
+    locator = page.locator(`.acq-card[data-id="${id}"]`);
+  }
+  await locator.first().evaluate(el => el.click());
+}
+
+// Clicks a year marker, opens its overflow cluster (if present), and returns
+// the set of acquisition ids that became reachable as canvas cards. Closes
+// the overflow tray again before returning so canvas state is left tidy.
+async function getReachableIdsForYear(page, year) {
+  await clickYearMarker(page, year);
+  await page.waitForFunction(expectedYear => {
+    const state = window.CPN_AcquisitionTimeline.testState();
+    return state.level !== "overview" && state.anchorYear === Number(expectedYear);
+  }, year);
+  await page.evaluate(() => new Promise(resolve =>
+    requestAnimationFrame(() => requestAnimationFrame(resolve))));
+
+  const hubs = await page.locator(".acq-overflow-marker").all();
+  let openedTray = false;
+  for (const hub of hubs) {
+    const label = await hub.getAttribute("aria-label");
+    if (label?.endsWith(`from ${year}`)) {
+      await hub.evaluate(el => el.click());
+      await page.waitForSelector(".acq-year-expansion");
+      openedTray = true;
+      break;
+    }
+  }
+  const ids = await page.evaluate(() =>
+    [...document.querySelectorAll(".acq-card")].map(card => card.dataset.id));
+  if (openedTray) {
+    await page.locator(".acq-year-expansion-close").first().evaluate(el => el.click());
+  }
+  return ids;
 }
 
 async function assertOverviewCoverage(page, label, { strict = true } = {}) {
@@ -153,10 +202,10 @@ async function assertLayout(page, label, { focus = false } = {}) {
       "#acq-close", "#acq-minimap",
     ];
     if (checkFocus) {
-      selectors.push(
-        "#acq-focus", "#acq-focus-inner", "#acq-focus-actions",
-        "#acq-focus-source", "#acq-focus-jump", "#acq-focus-clear"
-      );
+      // Only "#acq-focus" itself is checked here — its scrollable interior
+      // (see focusClipped below) may legitimately extend content past the
+      // visible viewport when the panel scrolls.
+      selectors.push("#acq-focus");
     }
     const tolerance = 1;
     const outOfBounds = selectors.flatMap(selector => {
@@ -229,20 +278,11 @@ async function assertAllAcquisitionsReachable(page, label) {
   const reached = new Set();
 
   for (const { year, ids } of yearGroups) {
-    await clickYearMarker(page, year);
-    await page.waitForFunction(expectedYear => {
-      const state = window.CPN_AcquisitionTimeline.testState();
-      return state.level !== "overview" && state.shelfYear === Number(expectedYear);
-    }, year);
-    await page.evaluate(() => new Promise(resolve =>
-      requestAnimationFrame(() => requestAnimationFrame(resolve))));
-
-    const shelfIds = await page.locator("#acq-shelf .acq-shelf-row")
-      .evaluateAll(cards => cards.map(card => card.dataset.id));
-    shelfIds.forEach(id => reached.add(id));
-    const missingFromShelf = ids.filter(id => !shelfIds.includes(id));
-    if (missingFromShelf.length) {
-      errors.push(`${label}: ${year} shelf missing ${missingFromShelf.join(",")}`);
+    const cardIds = await getReachableIdsForYear(page, year);
+    cardIds.forEach(id => reached.add(id));
+    const missing = ids.filter(id => !cardIds.includes(id));
+    if (missing.length) {
+      errors.push(`${label}: ${year} missing ${missing.join(",")}`);
     }
 
     await page.evaluate(() => window.CPN_AcquisitionTimeline.setZoom(0.55));
@@ -326,17 +366,16 @@ for (const testCase of cases) {
     await assertLayout(casePage, `${testCase.name} explore`);
 
     if (testCase.theme === "light") {
-      const usesShelfRow = await casePage.evaluate(() => {
-        const row = document.querySelector(".acq-shelf-row");
-        return !!row?.querySelector(".acq-shelf-stripe") &&
-          !!row?.querySelector(".acq-shelf-name")?.textContent;
+      const usesCardTypography = await casePage.evaluate(() => {
+        const card = document.querySelector(".acq-card");
+        return !!card?.querySelector(".acq-card-name") && !!card?.querySelector(".acq-card-meta");
       });
-      if (!usesShelfRow) {
-        errors.push(`${testCase.name}: shelf rows missing typography layout`);
+      if (!usesCardTypography) {
+        errors.push(`${testCase.name}: cards missing typography layout`);
       }
     }
 
-    await casePage.locator('#acq-shelf .acq-shelf-row[data-id="meraki"]').evaluate(el => el.click());
+    await casePage.locator('.acq-card[data-id="meraki"]').evaluate(el => el.click());
     await casePage.waitForSelector("#acq-focus.show");
     await casePage.locator("#acq-focus").evaluate(element =>
       Promise.all(element.getAnimations().map(animation => animation.finished)));
@@ -368,31 +407,25 @@ if (initial.renderedCards >= initial.totalCount) errors.push("overview rendered 
 
 await clickYearMarker(page, "2012");
 await page.waitForFunction(() => window.CPN_AcquisitionTimeline.testState().level === "explore");
-const shelfUi = await page.evaluate(() => {
+const exploreUi = await page.evaluate(() => {
   const tools = document.querySelector("#tools");
-  const shelf = document.querySelector("#acq-shelf");
-  const head = shelf?.querySelector(".acq-shelf-hint")?.textContent?.trim() || "";
-  const rows = [...document.querySelectorAll("#acq-shelf .acq-shelf-row")];
-  const list = shelf?.querySelector(".acq-shelf-list");
+  const cards = [...document.querySelectorAll("#acq-canvas .acq-card")];
   return {
     toolsHidden: !tools || getComputedStyle(tools).display === "none",
-    rowCount: rows.length,
-    listHeight: list?.getBoundingClientRect().height || 0,
-    hint: head,
+    cardCount: cards.length,
+    hasTypography: cards.every(card =>
+      card.querySelector(".acq-card-name") && card.querySelector(".acq-card-meta")),
   };
 });
-if (!shelfUi.toolsHidden) errors.push("tools bar visible over acquisition timeline");
-if (shelfUi.rowCount < 1) errors.push("explore shelf missing company rows");
-if (shelfUi.listHeight < 40) errors.push(`explore shelf list too short: ${shelfUi.listHeight}`);
-if (shelfUi.hint.includes("Typography-first")) {
-  errors.push(`shelf hint uses internal jargon: ${shelfUi.hint}`);
-}
+if (!exploreUi.toolsHidden) errors.push("tools bar visible over acquisition timeline");
+if (exploreUi.cardCount < 1) errors.push("explore mode rendered no canvas cards");
+if (!exploreUi.hasTypography) errors.push("explore cards missing typography layout");
 const explore = await page.evaluate(() => window.CPN_AcquisitionTimeline.testState());
 if (!explore.visibleIds.includes("meraki")) errors.push("2012 explore missing Meraki");
 if (explore.overlapCount !== 0) errors.push(`explore overlaps: ${explore.overlapCount}`);
 if (explore.anchorYear !== 2012) errors.push(`anchor year: ${explore.anchorYear}`);
 
-await page.locator('.acq-shelf-row[data-id="meraki"]').evaluate(el => el.click());
+await page.locator('.acq-card[data-id="meraki"]').evaluate(el => el.click());
 await page.waitForFunction(() => window.CPN_AcquisitionTimeline.testState().focusedId === "meraki");
 await page.click("#acq-zoom-fit");
 await page.waitForFunction(() => window.CPN_AcquisitionTimeline.testState().level === "overview");
@@ -450,7 +483,7 @@ else {
 
 await clickYearMarker(page, "2012");
 await page.waitForFunction(() => window.CPN_AcquisitionTimeline.testState().level === "explore");
-await page.locator('.acq-shelf-row[data-id="meraki"]').evaluate(el => el.click());
+await page.locator('.acq-card[data-id="meraki"]').evaluate(el => el.click());
 await page.waitForFunction(() => window.CPN_AcquisitionTimeline.testState().focusedId === "meraki");
 await page.click("#acq-focus-clear");
 const clearedFocus = await page.evaluate(() => {
@@ -472,19 +505,15 @@ if (clearedFocus.activeId !== "meraki" && clearedFocus.activeId !== "acq-canvas"
 }
 
 await page.evaluate(maxZoom => window.CPN_AcquisitionTimeline.setZoom(maxZoom), MAX_ZOOM);
-await clickYearMarker(page, "2012");
-await page.waitForFunction(() => window.CPN_AcquisitionTimeline.testState().shelfYear === 2012);
-const shelf2012 = await page.evaluate(() =>
-  [...document.querySelectorAll("#acq-shelf .acq-shelf-row")].map(row => row.dataset.id));
+const cardIds2012 = await getReachableIdsForYear(page, "2012");
 const year2012 = await page.evaluate(() =>
   window.CPN_ACQUISITIONS.acquisitions.filter(a => a.announced.startsWith("2012")).map(a => a.id));
-const shelfMissing = year2012.filter(id => !shelf2012.includes(id));
-if (shelfMissing.length) errors.push(`2012 shelf missing: ${shelfMissing.join(",")}`);
-const maxZoom = await page.evaluate(() => window.CPN_AcquisitionTimeline.testState());
-if (maxZoom.overlapCount !== 0) errors.push(`max-zoom marker overlaps: ${maxZoom.overlapCount}`);
-if (maxZoom.overflowMarkers !== 0) errors.push(`unexpected overflow markers: ${maxZoom.overflowMarkers}`);
+const missing2012 = year2012.filter(id => !cardIds2012.includes(id));
+if (missing2012.length) errors.push(`2012 cards missing: ${missing2012.join(",")}`);
+const maxZoomState = await page.evaluate(() => window.CPN_AcquisitionTimeline.testState());
+if (maxZoomState.overlapCount !== 0) errors.push(`max-zoom marker overlaps: ${maxZoomState.overlapCount}`);
 
-await page.locator('#acq-shelf .acq-shelf-row[data-id="meraki"]').evaluate(el => el.click());
+await page.locator('.acq-card[data-id="meraki"]').evaluate(el => el.click());
 await page.waitForFunction(() => window.CPN_AcquisitionTimeline.testState().focusedId === "meraki");
 
 await page.locator("#acq-focus-clear").evaluate(el => el.click());
@@ -693,14 +722,14 @@ await page.keyboard.press("Enter");
 await page.locator("#acq-focus-clear").evaluate(el => el.click());
 await page.evaluate(maxZoom => window.CPN_AcquisitionTimeline.setZoom(maxZoom), MAX_ZOOM);
 await clickYearMarker(page, "2012");
-await page.waitForFunction(() => window.CPN_AcquisitionTimeline.testState().shelfYear === 2012);
+await page.waitForFunction(() => window.CPN_AcquisitionTimeline.testState().anchorYear === 2012);
 const crossYear = await page.evaluate(() => {
   const list = window.CPN_ACQUISITIONS.acquisitions
     .slice().sort((a, b) => a.announced.localeCompare(b.announced) || a.id.localeCompare(b.id));
   const currentIndex = list.map(acq => acq.announced.slice(0, 4)).lastIndexOf("2012");
   return { current: list[currentIndex].id, next: list[currentIndex + 1].id };
 });
-await page.locator(`#acq-shelf .acq-shelf-row[data-id="${crossYear.current}"]`).evaluate(el => el.click());
+await clickAcquisitionCard(page, crossYear.current, "2012");
 await page.click("#acq-next");
 const crossYearReached = await page.waitForFunction(id => {
   const state = window.CPN_AcquisitionTimeline.testState();
@@ -712,8 +741,8 @@ if (!crossYearReached) {
   const activeId = await page.evaluate(() => document.activeElement?.dataset?.id);
   errors.push(`cross-year reachability: ${crossYearState.focusedId}/${activeId}`);
 }
-if (crossYearState.shelfYear !== 2013 && crossYearState.shelfYear !== 2012) {
-  errors.push(`cross-year navigation changed shelf year: ${crossYearState.shelfYear}`);
+if (crossYearState.anchorYear !== 2013 && crossYearState.anchorYear !== 2012) {
+  errors.push(`cross-year navigation changed anchor year: ${crossYearState.anchorYear}`);
 }
 
 await page.locator("#acq-focus-clear").evaluate(el => el.click());
@@ -730,14 +759,14 @@ if (exactPeriod.trim() !== "2012") errors.push(`centered temporal year: ${exactP
 
 const accessibility = await page.evaluate(() => {
   const marker = document.querySelector(".acq-year-marker");
-  const shelfRow = document.querySelector("#acq-shelf .acq-shelf-row");
+  const card = document.querySelector(".acq-card");
   return {
     markerRole: marker?.getAttribute("role"),
     markerTabIndex: marker?.tabIndex,
     markerLabel: marker?.getAttribute("aria-label"),
-    shelfRowRole: shelfRow?.getAttribute("role"),
-    shelfRowTabIndex: shelfRow?.tabIndex,
-    shelfRowLabel: shelfRow?.getAttribute("aria-label"),
+    cardRole: card?.getAttribute("role"),
+    cardTabIndex: card?.tabIndex,
+    cardLabel: card?.getAttribute("aria-label"),
   };
 });
 if (accessibility.markerRole && accessibility.markerRole !== "button") {
@@ -747,13 +776,13 @@ if (accessibility.markerTabIndex != null && accessibility.markerTabIndex !== 0) 
   errors.push(`marker tabindex: ${accessibility.markerTabIndex}`);
 }
 if (accessibility.markerRole && !accessibility.markerLabel) errors.push("marker label missing");
-if (accessibility.shelfRowRole && accessibility.shelfRowRole !== "button") {
-  errors.push(`shelf row role: ${accessibility.shelfRowRole}`);
+if (accessibility.cardRole && accessibility.cardRole !== "button") {
+  errors.push(`card role: ${accessibility.cardRole}`);
 }
-if (accessibility.shelfRowTabIndex != null && accessibility.shelfRowTabIndex !== 0) {
-  errors.push(`shelf row tabindex: ${accessibility.shelfRowTabIndex}`);
+if (accessibility.cardTabIndex != null && accessibility.cardTabIndex !== 0) {
+  errors.push(`card tabindex: ${accessibility.cardTabIndex}`);
 }
-if (accessibility.shelfRowRole && !accessibility.shelfRowLabel) errors.push("shelf row label missing");
+if (accessibility.cardRole && !accessibility.cardLabel) errors.push("card label missing");
 
 const focusIdentity = await page.evaluate(() => {
   const meraki = window.CPN_ACQUISITIONS.acquisitions.find(a => a.id === "meraki");
@@ -767,8 +796,8 @@ const focusIdentity = await page.evaluate(() => {
 });
 if (focusIdentity.merakiKind !== "name-tile") errors.push("meraki should be name-tile identity");
 if (focusIdentity.verifiedKind !== "verified-logo") errors.push("opendns should remain verified-logo");
-if (focusIdentity.canvasCards !== 0) errors.push("canvas should not render acquisition cards");
-if (focusIdentity.canvasLogos !== 0) errors.push("canvas should not render logos");
+if (focusIdentity.canvasCards === 0) errors.push("canvas should render acquisition cards in explore mode");
+if (focusIdentity.canvasLogos !== 0) errors.push("canvas cards should be typography-only (no logos)");
 
 const invalidVerifiedSources = await page.evaluate(() => {
   const allowed = new Set(["official", "wikimedia", "wikipedia", "manual"]);
@@ -809,7 +838,7 @@ await reducedPage.evaluate(() => {
   const canvas = document.querySelector("#acq-canvas");
   canvas.scrollTo = options => { window.__acqScrollOptions = options; };
 });
-await reducedPage.locator('.acq-shelf-row[data-id="meraki"]').evaluate(el => el.click());
+await reducedPage.locator('.acq-card[data-id="meraki"]').evaluate(el => el.click());
 const reduced = await reducedPage.evaluate(() => ({
   state: window.CPN_AcquisitionTimeline.testState(),
   behavior: window.__acqScrollOptions?.behavior,
