@@ -796,7 +796,7 @@
     lives.hidden = false;
     const label = document.createElement("span");
     label.className = "acq-focus-lives-label";
-    label.textContent = "Signal continues as";
+    label.textContent = "Now offered as";
     lives.appendChild(label);
     a.families.slice(0, 4).forEach(famId => {
       const fam = window.nodeById?.[famId];
