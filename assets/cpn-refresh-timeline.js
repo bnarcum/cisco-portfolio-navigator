@@ -595,7 +595,6 @@
           <span id="tl-readout-status"></span>
           <span id="tl-readout-name"></span>
           <span id="tl-readout-meta"></span>
-          <button type="button" class="rc-btn" id="tl-readout-detail">View details →</button>
         </div>
         <div id="tl-minimap">
           <div id="tl-minimap-track" role="slider" tabindex="0"
@@ -719,10 +718,6 @@
         ev.preventDefault();
         showProductDetail(block.dataset.id, { skipOutcomeCard: true });
       }
-    });
-
-    $("#tl-readout-detail").addEventListener("click", () => {
-      if (TL.hoverId) showProductDetail(TL.hoverId, { skipOutcomeCard: true });
     });
 
     const minimapTrack = $("#tl-minimap-track");
