@@ -10,7 +10,6 @@
     minZoom: 0.2,
     maxZoom: 6,
     onlyStack: false,
-    families: new Set(),
     mainCat: null,
     yearSpan: 0,
     startY: 0,
@@ -155,88 +154,6 @@
     const label = TL.mainCat ? (MAIN_CAT_LABELS[TL.mainCat] || TL.mainCat) : "All portfolios";
     btn.textContent = `${label} ▾`;
     btn.setAttribute("aria-label", `Filter by portfolio: ${label}`);
-  }
-
-  function timelineFamiliesForFilter() {
-    const n = nodeById(famId);
-    if (!n) return "";
-    const checked = TL.families.has(famId) ? "checked" : "";
-    return `<label class="fac-row"><input type="checkbox" data-fam="${famId}" ${checked}>
-      <span class="ld" style="width:7px;height:7px;border-radius:50%;background:${catColor(n.category)};flex-shrink:0"></span>
-      ${escapeHtml(n.name)}</label>`;
-  }
-
-  function timelineFamilyCheckboxRow(famId) {
-    const stack = getStack();
-    const ids = new Set();
-    getProducts().forEach(p => {
-      if (TL.onlyStack && !stack.has(p.id) && !stack.has(p.family)) return;
-      if (!productVisibleInTimeline(p)) return;
-      if (!productMatchesMainCat(p)) return;
-      ids.add(p.family);
-    });
-    return [...ids].sort((a, b) => (nodeById(a)?.name || "").localeCompare(nodeById(b)?.name || ""));
-  }
-
-  function updateTimelineFamilyBtn() {
-    const tlFamBtn = $("#tl-fam-btn");
-    const tlFamClr = $("#tl-fam-clr");
-    if (!tlFamBtn) return;
-    const n = TL.families.size;
-    if (n === 0) tlFamBtn.textContent = "All families ▾";
-    else if (n === 1) {
-      const id = [...TL.families][0];
-      tlFamBtn.textContent = (nodeById(id)?.name || id) + " ▾";
-    } else tlFamBtn.textContent = `${n} families ▾`;
-    if (tlFamClr) tlFamClr.hidden = n === 0;
-  }
-
-  function populateTimelineFamilyList(q = "") {
-    const tlFamList = $("#tl-fam-list");
-    if (!tlFamList) return;
-    const query = q.trim().toLowerCase();
-    const famIds = timelineFamiliesForFilter();
-    let html = "";
-
-    if (!query) {
-      const byCat = {};
-      famIds.forEach(famId => {
-        const n = nodeById(famId);
-        if (!n) return;
-        const cat = n.category || "other";
-        (byCat[cat] = byCat[cat] || []).push(famId);
-      });
-      const cats = [
-        ...MAIN_CAT_ORDER.filter(c => byCat[c]?.length),
-        ...Object.keys(byCat).filter(c => !MAIN_CAT_ORDER.includes(c)),
-      ];
-      html = cats.map(cat => {
-        const label = MAIN_CAT_LABELS[cat] || cat;
-        const rows = byCat[cat]
-          .sort((a, b) => (nodeById(a)?.name || "").localeCompare(nodeById(b)?.name || ""))
-          .map(timelineFamilyCheckboxRow)
-          .join("");
-        return `<div class="tl-fam-grp-hdr">${escapeHtml(label)}</div>${rows}`;
-      }).join("");
-    } else {
-      html = famIds.map(famId => {
-        const n = nodeById(famId);
-        if (!n || !n.name.toLowerCase().includes(query)) return "";
-        return timelineFamilyCheckboxRow(famId);
-      }).join("");
-    }
-
-    tlFamList.innerHTML = html ||
-      `<div style="font-size:11px;color:var(--subtle);padding:6px 2px">No matching families</div>`;
-    tlFamList.querySelectorAll("input[data-fam]").forEach(inp => {
-      inp.addEventListener("change", () => {
-        const id = inp.dataset.fam;
-        if (inp.checked) TL.families.add(id);
-        else TL.families.delete(id);
-        updateTimelineFamilyBtn();
-        renderTimeline();
-      });
-    });
   }
 
   function updateStatsTicker(totalShown, famCount, eolCount, eosCount) {
@@ -406,7 +323,6 @@
     const visibleProducts = getProducts().filter(p => {
       if (TL.onlyStack && !stack.has(p.id) && !stack.has(p.family)) return false;
       if (!productMatchesMainCat(p)) return false;
-      if (TL.families.size > 0 && !TL.families.has(p.family)) return false;
       return productVisibleInTimeline(p);
     });
 
@@ -589,15 +505,11 @@
     $("#tl-wrap")?.classList.add("show");
     document.body.classList.add("tl-open");
     $("#tools-timeline")?.classList.add("active");
-    $("#tl-fam-drop")?.classList.remove("show");
-    $("#tl-fam-btn")?.setAttribute("aria-expanded", "false");
     setTimelineZoom(TL.zoom);
     requestAnimationFrame(() => renderMinimapFromScroll());
   }
 
   function closeTimelineView() {
-    $("#tl-fam-drop")?.classList.remove("show");
-    $("#tl-fam-btn")?.setAttribute("aria-expanded", "false");
     $("#tl-cat-drop")?.classList.remove("show");
     $("#tl-cat-btn")?.setAttribute("aria-expanded", "false");
     window.closePanel?.();
@@ -644,14 +556,6 @@
                 <span class="ld" style="background:${catColor(cat)}"></span>${MAIN_CAT_LABELS[cat]}</button>`).join("")}
             </div>
           </div>
-          <div class="tl-fam-wrap">
-            <button type="button" class="tbs tl-fam-btn" id="tl-fam-btn" title="Filter by product family" aria-haspopup="true" aria-expanded="false">All families ▾</button>
-            <div id="tl-fam-drop" class="tl-fam-drop" role="dialog" aria-label="Family filter">
-              <input type="search" id="tl-fam-search" class="tl-fam-search" placeholder="Search families…" autocomplete="off">
-              <div id="tl-fam-list" class="tl-fam-list"></div>
-              <button type="button" class="fac-clr" id="tl-fam-clr" hidden>Clear family filter</button>
-            </div>
-          </div>
           <button type="button" class="rc-btn" id="tl-only-stack">Show only stack items</button>
           <button type="button" class="rc-btn" id="tl-close">Close</button>
         </div>
@@ -678,10 +582,6 @@
       </div>`;
     document.body.appendChild(tl);
 
-    const tlFamBtn = $("#tl-fam-btn");
-    const tlFamDrop = $("#tl-fam-drop");
-    const tlFamSearch = $("#tl-fam-search");
-    const tlFamClr = $("#tl-fam-clr");
     const tlCatBtn = $("#tl-cat-btn");
     const tlCatDrop = $("#tl-cat-drop");
 
@@ -689,17 +589,11 @@
       const show = open ?? !tlCatDrop.classList.contains("show");
       tlCatDrop.classList.toggle("show", show);
       tlCatBtn.setAttribute("aria-expanded", show ? "true" : "false");
-      if (show) openTimelineFamilyDrop(false);
     }
 
     function setTimelineMainCat(cat) {
       TL.mainCat = cat || null;
-      if (TL.mainCat && TL.families.size > 0) {
-        const allowed = new Set(timelineFamiliesForFilter());
-        TL.families.forEach(id => { if (!allowed.has(id)) TL.families.delete(id); });
-      }
       updateTimelineMainCatBtn();
-      updateTimelineFamilyBtn();
       tlCatDrop.querySelectorAll(".tl-cat-opt").forEach(btn => {
         const active = (btn.dataset.cat || null) === (TL.mainCat || null);
         btn.classList.toggle("active", active);
@@ -717,36 +611,10 @@
     });
     setTimelineMainCat(TL.mainCat);
 
-    function openTimelineFamilyDrop(open) {
-      const show = open ?? !tlFamDrop.classList.contains("show");
-      tlFamDrop.classList.toggle("show", show);
-      tlFamBtn.setAttribute("aria-expanded", show ? "true" : "false");
-      if (show) {
-        openTimelineCatDrop(false);
-        populateTimelineFamilyList(tlFamSearch.value);
-        tlFamSearch.focus();
-      } else tlFamSearch.value = "";
-    }
-
-    tlFamBtn.addEventListener("click", ev => { ev.stopPropagation(); openTimelineFamilyDrop(); });
-    tlFamSearch.addEventListener("input", () => populateTimelineFamilyList(tlFamSearch.value));
-    tlFamSearch.addEventListener("keydown", ev => {
-      if (ev.key === "Escape") openTimelineFamilyDrop(false);
-    });
-    tlFamClr.addEventListener("click", () => {
-      TL.families.clear();
-      updateTimelineFamilyBtn();
-      populateTimelineFamilyList();
-      renderTimeline();
-    });
     document.addEventListener("click", ev => {
       if (tlCatDrop.classList.contains("show") &&
           !tlCatDrop.contains(ev.target) && ev.target !== tlCatBtn) {
         openTimelineCatDrop(false);
-      }
-      if (tlFamDrop.classList.contains("show") &&
-          !tlFamDrop.contains(ev.target) && ev.target !== tlFamBtn) {
-        openTimelineFamilyDrop(false);
       }
     });
 
@@ -789,11 +657,7 @@
       if (!$("#tl-wrap")?.classList.contains("show")) return;
       const tag = (ev.target.tagName || "").toLowerCase();
       if (ev.key === "Escape") {
-        if ($("#tl-fam-drop")?.classList.contains("show")) {
-          tlFamDrop.classList.remove("show");
-          tlFamBtn.setAttribute("aria-expanded", "false");
-          tlFamSearch.value = "";
-        } else if ($("#tl-cat-drop")?.classList.contains("show")) {
+        if ($("#tl-cat-drop")?.classList.contains("show")) {
           tlCatDrop.classList.remove("show");
           tlCatBtn.setAttribute("aria-expanded", "false");
         } else {
