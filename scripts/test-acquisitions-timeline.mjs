@@ -868,6 +868,38 @@ if (polish.viewportEras < 4) errors.push(`viewport era bands: ${polish.viewportE
 if (polish.sourceLinks !== 2) errors.push(`source links: ${polish.sourceLinks}`);
 if (!polish.helpFabHidden) errors.push("help fab visible over acquisition timeline");
 
+await page.evaluate(() => window.CPN_AcquisitionTimeline.setZoom(2));
+await page.waitForTimeout(80);
+await page.evaluate(() => {
+  const canvas = document.querySelector("#acq-canvas");
+  canvas.scrollLeft = canvas.scrollWidth - canvas.clientWidth;
+  canvas.dispatchEvent(new Event("scroll"));
+});
+await page.waitForTimeout(80);
+const eraScrollCoverage = await page.evaluate(() => {
+  const canvas = document.querySelector("#acq-canvas");
+  const layer = document.querySelector("#acq-layer-eras");
+  const canvasRect = canvas.getBoundingClientRect();
+  const scrollRight = canvas.scrollLeft + canvas.clientWidth;
+  const bands = [...document.querySelectorAll("#acq-layer-eras .acq-era-band")];
+  const covered = bands.some(band => {
+    const r = band.getBoundingClientRect();
+    return r.left < canvasRect.right && r.right > canvasRect.left + canvasRect.width * 0.25;
+  });
+  return {
+    layerW: layer?.offsetWidth || 0,
+    innerW: document.querySelector("#acq-inner")?.offsetWidth || 0,
+    scrollRight,
+    covered,
+  };
+});
+if (eraScrollCoverage.layerW < eraScrollCoverage.scrollRight - 4) {
+  errors.push(`era layer too narrow when scrolled: ${eraScrollCoverage.layerW}/${eraScrollCoverage.scrollRight}`);
+}
+if (!eraScrollCoverage.covered) {
+  errors.push("no era band covers right-scrolled viewport");
+}
+
 await browser.close();
 if (errors.length) {
   console.error(`FAIL test-acquisitions-timeline\n${errors.join("\n")}`);

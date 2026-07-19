@@ -141,6 +141,79 @@
     return (ACQ.yearMax - ACQ.yearMin + 2) * ACQ.pxPerYear * ACQ.zoom + 240;
   }
 
+  function maxTimelineContentX(list) {
+    const canvas = $("#acq-canvas");
+    const mid = canvas ? canvas.clientHeight / 2 : 300;
+    let maxX = yearX(ACQ.yearMax + 1, 12);
+    if (getSemanticLevel() === "overview") {
+      layoutOverviewByYear(list, { mid }).forEach(p => {
+        maxX = Math.max(maxX, p.x + 72);
+      });
+    } else {
+      list.forEach(acq => {
+        maxX = Math.max(maxX, dateX(acq.announced) + exploreCardWidth() + 24);
+      });
+    }
+    return maxX;
+  }
+
+  function timelineTrackWidth(list) {
+    const canvas = $("#acq-canvas");
+    const contentW = Math.max(innerWidth(), maxTimelineContentX(list));
+    return Math.max(contentW, canvas?.clientWidth || 0);
+  }
+
+  function layoutEraLayer(layer, trackW) {
+    if (!layer) return;
+    layer.style.left = "0";
+    layer.style.top = "0";
+    layer.style.right = "auto";
+    layer.style.bottom = "0";
+    layer.style.width = `${trackW}px`;
+    layer.style.minWidth = `${trackW}px`;
+    layer.style.height = "100%";
+  }
+
+  function measureInnerContentRight(inner) {
+    if (!inner) return 0;
+    const innerRect = inner.getBoundingClientRect();
+    let maxRight = yearX(ACQ.yearMax + 1, 12);
+    inner.querySelectorAll(
+      ".acq-year-marker, .acq-card, .acq-landmark, .acq-overflow-marker, .acq-year-tick"
+    ).forEach(el => {
+      const rect = el.getBoundingClientRect();
+      if (rect.width > 0) maxRight = Math.max(maxRight, rect.right - innerRect.left);
+    });
+    return maxRight + 32;
+  }
+
+  function syncEraBandsToTrack(forceWidth) {
+    const inner = $("#acq-inner");
+    const layer = $("#acq-layer-eras");
+    const canvas = $("#acq-canvas");
+    if (!inner || !layer) return forceWidth || inner.offsetWidth;
+
+    const list = filteredList();
+    let trackW = forceWidth ||
+      Math.max(timelineTrackWidth(list), measureInnerContentRight(inner), canvas?.clientWidth || 0);
+    inner.style.width = `${trackW}px`;
+    layoutEraLayer(layer, trackW);
+    renderEraBands(layer, { innerW: trackW });
+
+    const measured = Math.max(
+      measureInnerContentRight(inner),
+      canvas?.scrollWidth || 0,
+      (canvas?.scrollLeft || 0) + (canvas?.clientWidth || 0)
+    );
+    if (measured > trackW + 1) {
+      trackW = Math.max(measured, canvas?.clientWidth || 0);
+      inner.style.width = `${trackW}px`;
+      layoutEraLayer(layer, trackW);
+      renderEraBands(layer, { innerW: trackW });
+    }
+    return trackW;
+  }
+
   function filteredList() {
     const data = window.CPN_ACQUISITIONS;
     if (!data?.acquisitions) return [];
@@ -987,6 +1060,14 @@
     updateCurrentPeriod();
     cancelAnimationFrame(ACQ.raf);
     ACQ.raf = requestAnimationFrame(() => {
+      const canvas = $("#acq-canvas");
+      const layer = $("#acq-layer-eras");
+      if (canvas && layer) {
+        const scrollRight = canvas.scrollLeft + canvas.clientWidth;
+        if (scrollRight > layer.offsetWidth - 8) {
+          syncEraBandsToTrack(Math.max(scrollRight, canvas.scrollWidth));
+        }
+      }
       const inner = $("#acq-inner");
       if (inner && getSemanticLevel() !== "overview") renderCards(inner);
       updateParallax();
@@ -1145,12 +1226,11 @@
     ACQ.yearMin = 1993;
     ACQ.yearMax = Math.max(2026, ...data.acquisitions.map(a => +a.announced.slice(0, 4))) + 1;
 
-    const canvas = $("#acq-canvas");
-    const trackW = Math.max(innerWidth(), canvas?.clientWidth || 0);
-    inner.style.width = `${trackW}px`;
-    renderEraBands($("#acq-layer-eras"), { innerW: trackW });
+    const list = filteredList();
+    syncEraBandsToTrack(timelineTrackWidth(list));
     renderYearTicks(inner);
     renderCards(inner);
+    syncEraBandsToTrack();
     updateParallax();
     updateCanvasNameTier();
   }
