@@ -224,7 +224,7 @@
         metric: "Threat dwell time & analyst effort",
         before: "Siloed tools; manual correlation across consoles",
         after: "One correlated incident with guided/automated response",
-        source: "Cisco XDR + Secure Network Analytics + Splunk positioning"
+        source: "Cisco XDR + Secure Network Analytics positioning"
       },
       personas: {
         netops: {
@@ -245,7 +245,7 @@
       },
       useCases: ["Threat Detection & Response"],
       bundles: ["Threat Defense Platform"],
-      families: ["xdr", "secure-endpoint", "splunk", "talos", "stealthwatch"],
+      families: ["xdr", "secure-endpoint", "talos", "stealthwatch"],
       signals: { has: ["secure-endpoint"], missing: ["xdr"] },
       dcloudPath: "zero-trust",
       maturityNext: "unknown-assets"
@@ -923,6 +923,11 @@
     if (p.proof) p.proof.sourceUrl = OFFICIAL_SOURCE_URLS[p.id] || "";
   });
 
+  // Prefer observability-first narratives for families that span security and ops.
+  const FAMILY_PROBLEM_ORDER = {
+    splunk: ["observability-blindspots", "app-performance"]
+  };
+
   // Fast lookups
   const BY_ID = {};
   const BY_FAMILY = {};
@@ -933,6 +938,19 @@
     });
   });
 
+  function sortProblemsForFamily(familyId, list) {
+    const order = FAMILY_PROBLEM_ORDER[familyId];
+    if (!order || !list.length) return list;
+    return list.slice().sort((a, b) => {
+      const ia = order.indexOf(a.id);
+      const ib = order.indexOf(b.id);
+      if (ia === -1 && ib === -1) return 0;
+      if (ia === -1) return 1;
+      if (ib === -1) return -1;
+      return ia - ib;
+    });
+  }
+
   // Symptom-first discovery: plain-language pains → problem id.
   const SYMPTOMS = PROBLEMS.map(p => ({ id: p.id, text: p.symptom, problem: p.id }));
 
@@ -941,7 +959,8 @@
     return id && BY_ID[id] ? BY_ID[id] : null;
   }
   function problemsForFamily(familyId) {
-    return (familyId && BY_FAMILY[familyId]) ? BY_FAMILY[familyId].slice() : [];
+    const list = (familyId && BY_FAMILY[familyId]) ? BY_FAMILY[familyId].slice() : [];
+    return sortProblemsForFamily(familyId, list);
   }
   function problemsForProduct(productId, familyId) {
     return problemsForFamily(familyId);

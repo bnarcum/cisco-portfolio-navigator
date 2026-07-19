@@ -97,7 +97,9 @@
         </div>`
       : "";
     const next = prob.maturityNext ? P.getProblem(prob.maturityNext) : null;
-    const chain = next
+    const familyId = opts?.familyId;
+    const chainRelevant = next && (!familyId || (next.families || []).includes(familyId));
+    const chain = chainRelevant
       ? `<button type="button" class="oc-prob-next" data-ocj-explore="${escapeAttr(next.id)}">Then explore <b>${escapeHtml(next.outcome)}</b> →</button>`
       : "";
     const divider = opts?.withDivider ? `<div class="oc-prob-divider" role="separator"></div>` : "";
@@ -180,8 +182,8 @@
         <div class="oc-personas" role="tablist" aria-label="Frame outcome for persona">${personaChips}</div>
       </div>
       <div class="oc-problems">
-        ${problemBlockHtml(primary, persona, P)}
-        ${showRest ? rest.map((p, i) => problemBlockHtml(p, persona, P, { withDivider: true })).join("") : ""}
+        ${problemBlockHtml(primary, persona, P, { familyId })}
+        ${showRest ? rest.map((p, i) => problemBlockHtml(p, persona, P, { withDivider: true, familyId })).join("") : ""}
         ${moreBtn}
       </div>
       <div class="oc-note" title="${escapeAttr(P.DISCLAIMER)}">Directional talking points · not guarantees</div>`;

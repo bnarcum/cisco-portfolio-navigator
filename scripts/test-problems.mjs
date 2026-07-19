@@ -69,6 +69,9 @@ try {
             !byId("flat-network-breach")?.families?.includes("hypershield") &&
             !byId("flat-network-breach")?.families?.includes("secure-workload"),
           hyperflexLifecycle: P.topProblemForFamily("hyperflex")?.id === "hyperflex-migration",
+          splunkObservabilityFirst:
+            P.topProblemForFamily("splunk")?.id === "observability-blindspots" &&
+            !P.problemsForFamily("splunk").some(p => p.id === "threat-dwell-time"),
           hyperflexCatalogStatus: typeof PRODUCTS !== "undefined" &&
             PRODUCTS.filter(p => p.family === "hyperflex").every(p => p.status !== "current"),
           roomSource: /Control Hub.*ThousandEyes/i.test(byId("room-quality")?.proof?.source || ""),
@@ -179,6 +182,7 @@ try {
   if (!model.editorial.aiSecuritySplit) errors.push("catalog: AI Defense and Hypershield need separate problems");
   if (!model.editorial.campusSegmentationScoped) errors.push("catalog: campus segmentation should not imply workload-security products");
   if (!model.editorial.hyperflexLifecycle) errors.push("catalog: HyperFlex should lead with its current migration/EOL motion");
+  if (!model.editorial.splunkObservabilityFirst) errors.push("catalog: Splunk should lead with observability problems, not Threat Defense stack");
   if (!model.editorial.hyperflexCatalogStatus) errors.push("catalog: HyperFlex products must not remain marked current after HXDP end of maintenance");
   if (!model.editorial.roomSource) errors.push("catalog: room-quality proof should cite Control Hub + ThousandEyes");
   if (!model.editorial.cloudControlQualified) errors.push("catalog: Cloud Control claims must disclose Controlled Availability");
@@ -238,6 +242,24 @@ try {
   if (!card.proofChanged) errors.push("canvas: persona toggle did not change before/after proof");
   if (!card.iconsRestored) errors.push("canvas: persona toggle left graph icons dimmed");
   if (!card.noPanelBlock) errors.push("side panel should not contain .p-prob block");
+
+  // 2b) Splunk outcome card uses observability narrative, not Cisco IQ chain
+  const splunkCard = await page.evaluate(() => {
+    document.querySelector('[data-vm="families"]')?.click();
+    window.setPersona("cio");
+    window.__cpnOutcomeCard.show("splunk", window.nodeById["splunk"]);
+    const el = document.getElementById("outcome-card");
+    const text = el?.textContent || "";
+    return {
+      headline: el?.querySelector(".oc-headline")?.textContent || "",
+      hasCiscoIqChain: /consolidated Cisco asset view/i.test(text),
+      hasThreatDwell: /Detect and contain incidents before they become headlines/i.test(text),
+      hasObservability: /war room|Cross-domain observability|Less downtime/i.test(text)
+    };
+  });
+  if (splunkCard.hasThreatDwell) errors.push("splunk card: should not show Threat Defense primary narrative");
+  if (splunkCard.hasCiscoIqChain) errors.push("splunk card: should not chain to Cisco IQ asset view");
+  if (!splunkCard.hasObservability) errors.push("splunk card: expected observability-first CIO narrative");
 
   // 3) Analyze a stack -> Outcomes tab + reframed suggestions/bundles
   const analysis = await page.evaluate(() => {
