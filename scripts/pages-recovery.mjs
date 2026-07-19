@@ -92,7 +92,7 @@ function expectedSha(opts, slug) {
 
 function listDeployments(owner, name) {
   const data = ghGraphql(
-    `query { repository(owner:"${owner}", name:"${name}") { deployments(first:12, environments:["github-pages"], orderBy:{field:CREATED_AT, direction:DESC}) { nodes { id commitOid latestStatus { state } } } } }`
+    `query { repository(owner:"${owner}", name:"${name}") { deployments(first:30, environments:["github-pages"], orderBy:{field:CREATED_AT, direction:DESC}) { nodes { id commitOid latestStatus { state } } } } }`
   );
   return data?.repository?.deployments?.nodes || [];
 }
@@ -113,17 +113,18 @@ function inactivateDeployment(id) {
   );
 }
 
-function latestPagesWorkflowRun(slug, sha) {
-  try {
-    const raw = execSync(
-      `gh run list --repo ${slug} --workflow pages-build-deployment --limit 6 --json databaseId,conclusion,headSha,status`,
-      { encoding: "utf8", cwd: ROOT }
-    );
-    const runs = JSON.parse(raw);
-    return runs.find(r => r.headSha?.startsWith(sha.slice(0, 7)) || r.headSha === sha) || runs[0] || null;
-  } catch {
-    return null;
+function clearDeployment(d) {
+  const state = d.latestStatus?.state;
+  if (state === "FAILURE" || state === "ERROR") {
+    if (deleteDeployment(d.id)) return `deleted ${state} ${d.commitOid?.slice(0, 7)}`;
+    inactivateDeployment(d.id);
+    return `inactivated ${state} ${d.commitOid?.slice(0, 7)}`;
   }
+  if (state === "IN_PROGRESS" || state === "QUEUED" || state === "PENDING") {
+    inactivateDeployment(d.id);
+    return `inactivated ${state} ${d.commitOid?.slice(0, 7)}`;
+  }
+  return null;
 }
 
 function isWedged(pagesMeta, build, deployments, expectedShaFull) {
@@ -132,6 +133,10 @@ function isWedged(pagesMeta, build, deployments, expectedShaFull) {
 
   const sha7 = expectedShaFull?.slice(0, 7);
   const failures = deployments.filter(d => d.latestStatus?.state === "FAILURE");
+  const errors = deployments.filter(d => d.latestStatus?.state === "ERROR");
+  const inProgress = deployments.filter(d =>
+    ["IN_PROGRESS", "QUEUED", "PENDING"].includes(d.latestStatus?.state)
+  );
   const successOther = deployments.find(
     d => d.latestStatus?.state === "SUCCESS" && !d.commitOid?.startsWith(sha7)
   );
@@ -139,6 +144,8 @@ function isWedged(pagesMeta, build, deployments, expectedShaFull) {
     d => d.latestStatus?.state === "SUCCESS" && d.commitOid?.startsWith(sha7)
   );
 
+  if (inProgress.length > 0) return true;
+  if (errors.length > 0 && !successExpected) return true;
   if (failures.length > 0 && !successExpected) return true;
   if (successOther && !successExpected) return true;
   if (build?.status === "building" && (build.duration === 0 || build.duration == null)) return true;
@@ -183,14 +190,13 @@ export async function recoverPages(target, opts = {}) {
     return { recovered: false, reason: "healthy" };
   }
 
-  // 1) Delete FAILURE deployments (safe; clears wedged failure nodes)
-  for (const d of deployments.filter(x => x.latestStatus?.state === "FAILURE")) {
-    if (deleteDeployment(d.id)) {
-      actions.push(`deleted FAILURE ${d.commitOid?.slice(0, 7)}`);
-    }
+  // 1) Clear wedged deployment nodes (IN_PROGRESS / ERROR / FAILURE)
+  for (const d of deployments) {
+    const msg = clearDeployment(d);
+    if (msg) actions.push(msg);
   }
 
-  // Refresh after deletes
+  // Refresh after clears
   deployments = listDeployments(owner, name);
   const sha7 = sha?.slice(0, 7);
   const hasSuccessForExpected = deployments.some(
@@ -222,24 +228,15 @@ export async function recoverPages(target, opts = {}) {
     log(`  legacy reaffirm failed: ${err.message}`, quiet);
   }
 
-  // 4) Rerun failed pages-build-deployment for expected commit, else queue legacy build
-  const run = sha ? latestPagesWorkflowRun(cfg.slug, sha) : null;
-  if (run?.conclusion === "failure" && run.status === "completed") {
-    try {
-      execSync(`gh run rerun ${run.databaseId} --repo ${cfg.slug} --failed`, {
-        cwd: ROOT, stdio: quiet ? "ignore" : "inherit"
-      });
-      actions.push(`reran pages-build-deployment #${run.databaseId}`);
-    } catch (err) {
-      log(`  workflow rerun failed: ${err.message}`, quiet);
-      try {
-        ghApi(`repos/${cfg.slug}/pages/builds`, { method: "POST" });
-        actions.push("queued legacy pages build (fallback)");
-      } catch (e2) {
-        log(`  legacy build queue failed: ${e2.message}`, quiet);
-      }
-    }
-  } else if (pagesMeta?.status === "errored" || build?.status === "building") {
+  // 4) Queue a legacy build. Do NOT rerun pages-build-deployment — it uses
+  // actions/deploy-pages and piles up github-pages deployments that block
+  // legacy builds with "in progress deployment" / "cancel … first" errors.
+  const needsLegacyBuild =
+    pagesMeta?.status === "errored" ||
+    build?.status === "building" ||
+    build?.status === "errored" ||
+    !hasSuccessForExpected;
+  if (needsLegacyBuild) {
     try {
       ghApi(`repos/${cfg.slug}/pages/builds`, { method: "POST" });
       actions.push("queued legacy pages build");
