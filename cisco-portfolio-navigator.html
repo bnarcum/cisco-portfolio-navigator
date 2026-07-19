@@ -9,7 +9,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.4.5";
+  window.__CPN_BUILD="3.5.0";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -62,7 +62,8 @@
   <link rel="stylesheet" href="assets/cpn-light.css?v=2.87.5"/>
   <link rel="stylesheet" href="assets/cpn-iq-theme.css?v=2.87.5"/>
   <link rel="stylesheet" href="assets/cpn-logo-intro.css?v=2.91.6"/>
-  <link rel="stylesheet" href="assets/cpn-acquisitions-timeline.css?v=3.4.4"/>
+  <link rel="stylesheet" href="assets/cpn-acquisitions-timeline.css?v=3.5.0"/>
+  <link rel="stylesheet" href="assets/cpn-refresh-timeline.css?v=3.5.0"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     @font-face{
@@ -9598,6 +9599,10 @@ function productMatchesFilters(p){
   }
   return true;
 }
+function productVisibleInTimeline(p){
+  if (!productMatchesFilters(p)) return false;
+  return ["current", "eos", "eol"].includes(p.status);
+}
 /* Refresh the Timeline view if it's open. renderTimeline lives inside the
    v2 IIFE while applyFilters() is in the outer scope, so we reach it through
    the documented `window.__cpnV2.phases.renderTimeline` export rather than a
@@ -11716,199 +11721,9 @@ STYLE.textContent = `
     50%{r:calc(var(--orig-r,18) * 1.18)}}
   .nd.pulse circle.mc{animation:searchPulse 1.05s ease-in-out infinite}
 
-  /* Timeline view — opaque panel so the graph never bleeds through */
-  #tl-wrap{position:fixed;top:var(--topbar-h);left:0;right:0;bottom:0;background:var(--bg);
-    display:none;overflow:hidden;z-index:40;flex-direction:column}
-  #tl-ambient{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;
-    background:linear-gradient(165deg,#04101f 0%,#07182d 42%,#0b2a4a 100%);opacity:1}
-  [data-theme="light"] #tl-ambient{background:linear-gradient(165deg,#e8f0fa 0%,#f4f7fb 100%)}
-  #tl-head{position:relative;z-index:2;padding:12px 22px;border-bottom:1px solid var(--border);
-    display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;flex-wrap:nowrap;
-    background:var(--surface)}
-  /* Lift the timeline so the horizontal scrollbar at the bottom of #tl-canvas
-     isn't covered by other fixed chrome (#v2-footer, #tools, #hint), which
-     all paint above #tl-wrap (z-index 45–50 vs. tl-wrap's 40). The
-     :has(#tl-wrap.show) selectors run purely off DOM state and don't depend
-     on the JS adding a body class. body.tl-open is kept as a fallback for
-     any edge case (older browser w/o :has, or programmatic open that skips
-     the JS path). !important defeats later same-id selectors like
-     "#tools{bottom:42px}" further down in the cascade. */
-  #tl-wrap.show{display:flex;bottom:60px}
-  body.planner-open #tl-wrap{right:490px}
-  body:has(#tl-wrap.show) #v2-footer,
-  body.tl-open #v2-footer{display:none !important}
-  body:has(#tl-wrap.show) #hint,
-  body.tl-open #hint{display:none !important}
-  body:has(#tl-wrap.show) #tools,
-  body.tl-open #tools{bottom:18px !important}
-  #tl-head > div:last-child{display:flex;gap:6px;align-items:center;flex-shrink:0;flex-wrap:nowrap}
-  #tl-head .tl-title{font-size:14px;font-weight:700}
-  #tl-head .tl-sub{font-size:11px;color:var(--muted);margin-top:2px}
-  #tl-canvas{flex:1;position:relative;z-index:1;background:var(--bg);
-    /* overflow-x:scroll (vs auto) permanently reserves a track at the bottom.
-       We deliberately do NOT set scrollbar-color/scrollbar-width here: in
-       Chrome 113+ those properties opt the element into the new "Fluent"
-       scrollbar path which respects macOS auto-hide and ignores the
-       ::-webkit-scrollbar rules below. By keeping only the webkit pseudos,
-       Chrome and Safari render a classic always-visible scrollbar that we
-       can style. Firefox is handled by the @supports block below. */
-    overflow-x:scroll;overflow-y:auto;padding:0 0 30px;position:relative}
-  /* High-contrast classic scrollbar for Chrome / Safari (macOS + everywhere) */
-  #tl-canvas::-webkit-scrollbar{-webkit-appearance:none;height:16px;width:12px;
-    background:#07182D}
-  #tl-canvas::-webkit-scrollbar-track{background:#07182D;
-    border-top:1px solid rgba(255,255,255,.10);
-    box-shadow:inset 0 1px 0 rgba(0,0,0,.6)}
-  #tl-canvas::-webkit-scrollbar-thumb{
-    background:linear-gradient(180deg, rgba(2,200,255,.85) 0%, rgba(0,122,153,.85) 100%);
-    border-radius:8px;border:2px solid #07182D;background-clip:padding-box;
-    box-shadow:0 0 0 1px rgba(0,0,0,.6) inset, 0 0 6px rgba(2,200,255,.35)}
-  #tl-canvas::-webkit-scrollbar-thumb:hover{
-    background:linear-gradient(180deg, rgba(0,212,255,1) 0%, rgba(0,150,190,1) 100%);
-    background-clip:padding-box}
-  #tl-canvas::-webkit-scrollbar-thumb:active{
-    background:#00d4ff;background-clip:padding-box}
-  #tl-canvas::-webkit-scrollbar-corner{background:#07182D}
-  /* Firefox-only: scoped via @supports so Chrome doesn't pick up these
-     properties and switch off the webkit path above. */
-  @supports (-moz-appearance:none){
-    #tl-canvas{scrollbar-width:auto;
-      scrollbar-color:rgba(2,200,255,.85) #07182D}
-  }
-  .tl-zoom{display:inline-flex;align-items:center;gap:0;background:var(--surface2);
-    border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-right:4px}
-  .tl-zoom button{background:transparent;border:none;color:var(--muted);
-    font-size:13px;font-weight:700;padding:5px 9px;cursor:pointer;line-height:1;
-    transition:background .12s,color .12s;min-width:28px}
-  .tl-zoom button:hover:not(:disabled){background:var(--surface3);color:var(--accent)}
-  .tl-zoom button:disabled{opacity:.35;cursor:not-allowed}
-  .tl-zoom .tl-zoom-lvl{font-size:11px;color:var(--muted);padding:0 8px;border-left:1px solid var(--border);border-right:1px solid var(--border);min-width:46px;text-align:center}
-  .tl-fam-wrap{position:relative;display:inline-flex;align-items:center}
-  .tl-fam-btn{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .tl-fam-drop{position:absolute;top:calc(100% + 6px);right:0;width:min(280px,calc(100vw - 40px));
-    background:var(--surface);border:1px solid var(--border);border-radius:9px;
-    box-shadow:0 10px 28px rgba(0,0,0,.55);z-index:20;padding:10px;display:none;
-    max-height:min(340px,50vh);flex-direction:column;gap:8px}
-  .tl-fam-drop.show{display:flex}
-  .tl-fam-search{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;
-    color:var(--text);font-size:12px;padding:6px 8px;outline:none;font-family:inherit}
-  .tl-fam-search:focus{border-color:var(--accent)}
-  .tl-fam-list{overflow-y:auto;display:flex;flex-direction:column;gap:2px;min-height:0;flex:1}
-  .tl-fam-list .fac-row{padding:3px 2px;border-radius:4px}
-  .tl-fam-list .fac-row:hover{background:var(--surface2)}
-  .tl-fam-drop .fac-clr{align-self:flex-start;margin-top:2px}
-  /* Inner sized container that scales with zoom. Width is explicitly set by
-     renderTimeline() in pixels (= LABEL_W + GAP + dataW + RIGHT_GUTTER) so
-     the canvas's overflow:auto produces a horizontal scrollbar whenever the
-     pixel-per-year math exceeds the viewport. */
-  #tl-inner{position:relative;min-width:100%}
-  /* Grid: column 1 is 222px wide (200 visible + 22 padding-left baked in so
-     position:sticky; left:0 pins the label cell flush to the viewport edge
-     instead of sliding 22px before sticking). Column 2 is 1fr → the data
-     track. Right padding (22px) lives on the row itself as a gutter. */
-  .tl-axis{display:grid;grid-template-columns:222px 1fr;gap:14px;
-    border-bottom:1px solid var(--border);position:sticky;top:0;
-    background:var(--bg);z-index:5;margin-bottom:14px;padding:0 22px 0 0}
-  /* Empty first cell of the axis — sticky so its background covers row-label
-     borders/shadows that bleed up when the user scrolls horizontally. */
-  .tl-axis-lbl{position:sticky;left:0;background:var(--bg);z-index:7;
-    border-right:1px solid var(--border);
-    box-shadow:6px 0 8px -6px rgba(0,0,0,.55)}
-  .tl-axis-track{position:relative;height:24px}
-  .tl-axis-tick{position:absolute;font-size:10px;color:var(--subtle);
-    font-weight:700;padding:5px 0;text-transform:uppercase;letter-spacing:.06em;
-    transform:translateX(-50%);white-space:nowrap;top:0}
-  .tl-axis-tick.major{color:var(--muted)}
-  .tl-axis-tick::before{content:"";position:absolute;left:50%;top:100%;
-    width:1px;height:8px;background:var(--border)}
-  .tl-row{display:grid;grid-template-columns:222px 1fr;gap:14px;align-items:stretch;
-    padding:4px 22px 4px 0;border-bottom:1px solid rgba(255,255,255,.03)}
-  .tl-row:hover{background:rgba(255,255,255,.015)}
-  /* Row label cell — sticky on horizontal scroll so the family name stays
-     readable when the user scrolls out to year 2030. z-index sits above the
-     bars (which can reach z-index:11 on narrow:hover) and the today line
-     (z-index:2) so labels never get visually clipped by content scrolling
-     underneath. Solid bg + right border + small drop shadow give a clear
-     boundary between the sticky labels column and the scrolling data area. */
-  .tl-row-lbl{font-size:12px;font-weight:500;color:var(--text);
-    display:flex;align-items:center;gap:7px;overflow:hidden;
-    padding:6px 0 0 22px;
-    position:sticky;left:0;background:var(--bg);z-index:15;
-    border-right:1px solid var(--border);
-    box-shadow:6px 0 8px -6px rgba(0,0,0,.55)}
-  .tl-row-lbl .ld{flex-shrink:0;width:8px;height:8px;border-radius:50%}
-  .tl-row-lbl .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  /* Recessed channel: subtle inner gradient (darker at top, faint highlight at bottom)
-     plus a 1px highlight on the bottom inner edge — gives the bars a "trough" to sit in. */
-  .tl-row-track{position:relative;
-    background:linear-gradient(180deg, rgba(0,0,0,.18), rgba(255,255,255,.015));
-    box-shadow:0 1px 0 rgba(255,255,255,.04) inset, 0 -1px 0 rgba(0,0,0,.35) inset;
-    border-radius:4px;min-height:24px}
-  .tl-block{position:absolute;height:16px;line-height:16px;border-radius:4px;font-size:9.5px;
-    color:#fff;display:block;padding:0 6px;cursor:pointer;
-    overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:600;
-    /* Glassy pill: highlight on the top edge, fade to a soft shade near the bottom.
-       background-image is layered on top of background-color from the status classes
-       below (.cur/.eos/.eol), so the colored fill still drives the meaning.
-       Vertical centering uses line-height (not flex) so that text-overflow:ellipsis
-       can truncate the direct text node — flex children wouldn't ellipsis without
-       an extra wrapper element. */
-    background-image:linear-gradient(180deg, rgba(255,255,255,.18) 0%, rgba(255,255,255,0) 35%, rgba(0,0,0,.18) 100%);
-    box-shadow:
-      0 1px 0 rgba(255,255,255,.10) inset,
-      0 -1px 0 rgba(0,0,0,.22) inset,
-      0 1px 2px rgba(0,0,0,.4);
-    transition:transform .12s,box-shadow .12s,filter .12s}
-  .tl-block:hover{transform:translateY(-2px);
-    box-shadow:
-      0 1px 0 rgba(255,255,255,.14) inset,
-      0 -1px 0 rgba(0,0,0,.25) inset,
-      0 8px 18px rgba(0,0,0,.55);
-    z-index:10;filter:brightness(1.18)}
-  .tl-block.cur{background-color:rgba(45,206,92,.65);color:#fff}
-  .tl-block.eos{background-color:rgba(245,158,11,.7);color:#1a1a1a}
-  .tl-block.eol{background-color:rgba(239,68,68,.78)}
-  .tl-block.narrow{padding:0;font-size:0;min-width:3px}
-  .tl-block.narrow:hover{padding:0 6px;font-size:9.5px;min-width:auto;z-index:11}
-  /* TBD / unscheduled milestone treatment.
-     unknown-right: EOS known, EOL TBD — solid at the anchor, fades to nothing on the right.
-     unknown-left:  EOS TBD, EOL known — fades in from the left to the anchor.
-     unknown-both:  both TBD — diagonal stripes near "today" with a "?" badge,
-                    so the bar reads as "scheduled, but no firm dates yet". */
-  .tl-block.unknown-right{
-    -webkit-mask-image:linear-gradient(90deg, #000 60%, transparent 100%);
-            mask-image:linear-gradient(90deg, #000 60%, transparent 100%);
-  }
-  .tl-block.unknown-left{
-    -webkit-mask-image:linear-gradient(90deg, transparent 0%, #000 40%);
-            mask-image:linear-gradient(90deg, transparent 0%, #000 40%);
-  }
-  .tl-block.unknown-both{
-    background-image:
-      repeating-linear-gradient(45deg,
-        rgba(255,255,255,.10) 0,
-        rgba(255,255,255,.10) 4px,
-        rgba(0,0,0,.22) 4px,
-        rgba(0,0,0,.22) 8px),
-      linear-gradient(180deg, rgba(255,255,255,.18) 0%, rgba(255,255,255,0) 35%, rgba(0,0,0,.18) 100%);
-  }
-  .tl-block.unknown-both::after{
-    content:"?";position:absolute;right:5px;top:50%;transform:translateY(-50%);
-    font-weight:800;font-size:11px;color:#fff;line-height:1;
-    text-shadow:0 1px 2px rgba(0,0,0,.7);pointer-events:none;
-  }
-  /* Today line: glows like a marker pen so the eye finds "now" instantly. */
-  .tl-today{position:absolute;top:0;bottom:0;width:2px;
-    background:#02C8FF;
-    box-shadow:0 0 0 1px rgba(2,200,255,.25), 0 0 14px rgba(2,200,255,.55);
-    pointer-events:none;z-index:2}
-  .tl-axis-today{position:absolute;top:0;bottom:0;width:2px;
-    background:var(--accent);
-    box-shadow:0 0 0 1px rgba(2,200,255,.30), 0 0 14px rgba(2,200,255,.60);
-    pointer-events:none;z-index:6}
-  .tl-axis-today::after{content:"TODAY";position:absolute;top:50%;left:50%;
-    transform:translate(-50%,-50%);font-size:9px;font-weight:700;color:#07182D;
-    background:var(--accent);padding:1px 6px;border-radius:3px;letter-spacing:.08em;white-space:nowrap}
+  /* Refresh Timeline styles → assets/cpn-refresh-timeline.css */
+
+  /* Stack diff */(--accent);padding:1px 6px;border-radius:3px;letter-spacing:.08em;white-space:nowrap}
 
   /* Stack diff */
   #diff-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9100;
@@ -15821,524 +15636,7 @@ function buildContextMenu(){
   document.addEventListener("keydown", ev => { if (ev.key === "Escape") m.classList.remove("show"); });
 }
 
-/* ════════════════════════════════════════════════════════════════════════
-   [19] TIMELINE view (EOS/EOL)
-   ════════════════════════════════════════════════════════════════════════*/
-/* Timeline state — zoom (1.0 = comfortable density default), only-stack filter,
-   and the live year span that the FIT button + cursor-anchored wheel zoom both
-   need. yearSpan is refreshed by every renderTimeline() pass; minZoom is
-   recomputed each render so the user can always zoom out to fit-to-data even
-   if their window is wider than the default 1620 px (18yrs × 90 px/yr). */
-const TL = { zoom: 1.0, minZoom: 0.2, maxZoom: 6, onlyStack: false, families: new Set(), yearSpan: 0 };
-
-/* Layout constants used by both the renderer and the zoom math. Keep these in
-   sync with the .tl-axis / .tl-row CSS: column 1 is TL_LABEL_W wide, gap is
-   TL_GAP wide, column 2 (the 1fr data track) holds the bars, and TL_PAD_R is
-   the right-side gutter that lives on the row itself. The total #tl-inner
-   width is therefore TL_LABEL_W + TL_GAP + dataW + TL_PAD_R, where
-   dataW = yearSpan × TL_BASE_PX_PER_YEAR × zoom. We pick 90 px/year as the
-   comfortable-density default — about a third wider than the old fit-to-canvas
-   density, enough to fit most product names on a 5-year EOS→EOL band without
-   looking sparse on a 1-year bar. */
-const TL_BASE_PX_PER_YEAR = 90;
-const TL_LABEL_W = 222; // 200 visible + 22 padding-left baked into the cell
-const TL_GAP     = 14;
-const TL_PAD_R   = 22;
-
-function buildTimelineView(){
-  const tl = document.createElement("div");
-  tl.id = "tl-wrap";
-  tl.innerHTML = `
-    <div id="tl-ambient" aria-hidden="true"></div>
-    <div id="tl-head">
-      <div>
-        <div class="tl-title">Refresh Timeline</div>
-        <div class="tl-sub">Current, End-of-Sale, and End-of-Life products by family. Scroll horizontally to pan years · hover narrow blocks for names · ⌘/Ctrl + scroll to zoom.</div>
-      </div>
-      <div style="display:flex;gap:6px;align-items:center">
-        <div class="tl-zoom" role="group" aria-label="Zoom">
-          <button id="tl-zoom-out" title="Zoom out (−)">−</button>
-          <div class="tl-zoom-lvl" id="tl-zoom-lvl">100%</div>
-          <button id="tl-zoom-in" title="Zoom in (+)">+</button>
-          <button id="tl-zoom-fit" title="Fit data span to viewport (no horizontal scroll)" style="border-left:1px solid var(--border);font-size:10px;letter-spacing:.04em">FIT</button>
-        </div>
-        <div class="tl-fam-wrap">
-          <button type="button" class="tbs tl-fam-btn" id="tl-fam-btn" title="Filter by product family" aria-haspopup="true" aria-expanded="false">All families ▾</button>
-          <div id="tl-fam-drop" class="tl-fam-drop" role="dialog" aria-label="Family filter">
-            <input type="search" id="tl-fam-search" class="tl-fam-search" placeholder="Search families…" autocomplete="off">
-            <div id="tl-fam-list" class="tl-fam-list"></div>
-            <button type="button" class="fac-clr" id="tl-fam-clr" hidden>Clear family filter</button>
-          </div>
-        </div>
-        <button class="rc-btn" id="tl-only-stack">Show only stack items</button>
-        <button class="rc-btn" id="tl-close">Close</button>
-      </div>
-    </div>
-    <div id="tl-canvas"><div id="tl-inner"></div></div>
-  `;
-  document.body.appendChild(tl);
-
-  const tlFamBtn   = $("#tl-fam-btn");
-  const tlFamDrop  = $("#tl-fam-drop");
-  const tlFamList  = $("#tl-fam-list");
-  const tlFamSearch = $("#tl-fam-search");
-  const tlFamClr   = $("#tl-fam-clr");
-
-  function timelineFamiliesForFilter(){
-    const ids = new Set();
-    PRODUCTS.forEach(p => {
-      if (TL.onlyStack && !stack.has(p.id) && !stack.has(p.family)) return;
-      if (!productVisibleInTimeline(p)) return;
-      ids.add(p.family);
-    });
-    return [...ids].sort((a, b) => (nodeById[a]?.name || "").localeCompare(nodeById[b]?.name || ""));
-  }
-
-  function updateTimelineFamilyBtn(){
-    const n = TL.families.size;
-    if (n === 0) tlFamBtn.textContent = "All families ▾";
-    else if (n === 1){
-      const id = [...TL.families][0];
-      tlFamBtn.textContent = (nodeById[id]?.name || id) + " ▾";
-    } else tlFamBtn.textContent = `${n} families ▾`;
-    tlFamClr.hidden = n === 0;
-  }
-
-  function populateTimelineFamilyList(q = ""){
-    const query = q.trim().toLowerCase();
-    const famIds = timelineFamiliesForFilter();
-    tlFamList.innerHTML = famIds.map(famId => {
-      const n = nodeById[famId]; if (!n) return "";
-      if (query && !n.name.toLowerCase().includes(query)) return "";
-      const checked = TL.families.has(famId) ? "checked" : "";
-      return `<label class="fac-row"><input type="checkbox" data-fam="${famId}" ${checked}>
-        <span class="ld" style="width:7px;height:7px;border-radius:50%;background:${catColor(n.category)};flex-shrink:0"></span>
-        ${escapeHtml(n.name)}</label>`;
-    }).join("") || `<div style="font-size:11px;color:var(--subtle);padding:6px 2px">No matching families</div>`;
-    tlFamList.querySelectorAll("input[data-fam]").forEach(inp => {
-      inp.addEventListener("change", () => {
-        const id = inp.dataset.fam;
-        if (inp.checked) TL.families.add(id); else TL.families.delete(id);
-        updateTimelineFamilyBtn();
-        renderTimeline();
-      });
-    });
-  }
-
-  function openTimelineFamilyDrop(open){
-    const show = open ?? !tlFamDrop.classList.contains("show");
-    tlFamDrop.classList.toggle("show", show);
-    tlFamBtn.setAttribute("aria-expanded", show ? "true" : "false");
-    if (show){ populateTimelineFamilyList(tlFamSearch.value); tlFamSearch.focus(); }
-    else tlFamSearch.value = "";
-  }
-
-  tlFamBtn.addEventListener("click", ev => { ev.stopPropagation(); openTimelineFamilyDrop(); });
-  tlFamSearch.addEventListener("input", () => populateTimelineFamilyList(tlFamSearch.value));
-  tlFamSearch.addEventListener("keydown", ev => { if (ev.key === "Escape") openTimelineFamilyDrop(false); });
-  tlFamClr.addEventListener("click", () => {
-    TL.families.clear();
-    updateTimelineFamilyBtn();
-    populateTimelineFamilyList();
-    renderTimeline();
-  });
-  document.addEventListener("click", ev => {
-    if (tlFamDrop.classList.contains("show") && !tlFamDrop.contains(ev.target) && ev.target !== tlFamBtn)
-      openTimelineFamilyDrop(false);
-  });
-
-  $("#tl-only-stack").addEventListener("click", () => {
-    TL.onlyStack = !TL.onlyStack;
-    $("#tl-only-stack").textContent = TL.onlyStack ? "Show all" : "Show only stack items";
-    renderTimeline();
-  });
-  $("#tl-close").addEventListener("click", closeTimelineView);
-  $("#tl-zoom-in").addEventListener("click",  () => setTimelineZoom(TL.zoom * 1.4));
-  $("#tl-zoom-out").addEventListener("click", () => setTimelineZoom(TL.zoom / 1.4));
-  // FIT now means "shrink the data to fit the current viewport" — it computes
-  // the zoom that exactly fills the canvas track width with the full year span,
-  // which may be below 1.0 on small viewports. The "0" keyboard shortcut below
-  // resets to the comfortable-density default (1.0 = TL_BASE_PX_PER_YEAR).
-  $("#tl-zoom-fit").addEventListener("click", () => setTimelineZoom(fitTimelineZoom()));
-
-  // ⌘/Ctrl + scroll zooms with the cursor as the anchor; plain scroll pans naturally.
-  $("#tl-canvas").addEventListener("wheel", ev => {
-    if (!(ev.ctrlKey || ev.metaKey)) return;
-    ev.preventDefault();
-    const canvas = $("#tl-canvas");
-    const prevZ = TL.zoom;
-    const factor = ev.deltaY > 0 ? 1/1.15 : 1.15;
-    const newZ = Math.max(TL.minZoom, Math.min(TL.maxZoom, prevZ * factor));
-    if (newZ === prevZ) return;
-    // Anchor zoom at cursor: keep the date under the cursor in the same screen x.
-    // The data track lives in the 1fr column, which starts at TL_LABEL_W + TL_GAP
-    // inside #tl-inner. Its width = TL.yearSpan × TL_BASE_PX_PER_YEAR × zoom (no
-    // longer canvas-relative), so we anchor the cursor's ratio across that new
-    // pixel range and update scrollLeft so the same date stays under the cursor.
-    const trackOffset = TL_LABEL_W + TL_GAP;
-    const oldTrackW = TL.yearSpan * TL_BASE_PX_PER_YEAR * prevZ;
-    const sx = ev.clientX - canvas.getBoundingClientRect().left;
-    // If the cursor is over the sticky label column (or the year span is zero,
-    // which shouldn't happen but guards against div-by-zero on first paint),
-    // just zoom in place — there's no data under the cursor to anchor to.
-    if (sx < TL_LABEL_W || oldTrackW <= 0){ setTimelineZoom(newZ); return; }
-    const xWithinTrack = canvas.scrollLeft + sx - trackOffset;
-    const ratio = xWithinTrack / oldTrackW;
-    setTimelineZoom(newZ);
-    const newTrackW = TL.yearSpan * TL_BASE_PX_PER_YEAR * newZ;
-    canvas.scrollLeft = ratio * newTrackW + trackOffset - sx;
-  }, { passive: false });
-
-  // Keyboard shortcuts while timeline is open: +, -, 0
-  // "0" resets to 1.0 (the new comfortable-density default = TL_BASE_PX_PER_YEAR).
-  // To fit the whole data span into the viewport instead, use the FIT button.
-  document.addEventListener("keydown", ev => {
-    if (!$("#tl-wrap").classList.contains("show")) return;
-    const tag = (ev.target.tagName || "").toLowerCase();
-    if (tag === "input" || tag === "textarea" || tag === "select") return;
-    if (ev.key === "+" || ev.key === "=") { setTimelineZoom(TL.zoom * 1.4); ev.preventDefault(); }
-    else if (ev.key === "-" || ev.key === "_") { setTimelineZoom(TL.zoom / 1.4); ev.preventDefault(); }
-    else if (ev.key === "0") { setTimelineZoom(1.0); ev.preventDefault(); }
-  });
-
-  // Toolbar button (replaces old legend toggle)
-  const tBtn = document.createElement("button");
-  tBtn.className = "tools-btn";
-  tBtn.id = "tools-timeline";
-  tBtn.innerHTML = `<span class="ti">⏱</span><span>Refresh Timeline</span>`;
-  tBtn.title = "Open Refresh Timeline — current, EOS, and EOL dates across the portfolio (T)";
-  tBtn.addEventListener("click", () => {
-    const open = $("#tl-wrap").classList.contains("show");
-    if (open) { closeTimelineView(); tBtn.classList.remove("active"); }
-    else      { openTimelineView();  tBtn.classList.add("active"); }
-  });
-  $("#tools").appendChild(tBtn);
-}
-function setTimelineZoom(z){
-  TL.zoom = Math.max(TL.minZoom, Math.min(TL.maxZoom, z));
-  $("#tl-zoom-lvl").textContent = Math.round(TL.zoom * 100) + "%";
-  $("#tl-zoom-out").disabled = TL.zoom <= TL.minZoom + 0.001;
-  $("#tl-zoom-in").disabled  = TL.zoom >= TL.maxZoom - 0.001;
-  renderTimeline();
-}
-/* Compute the zoom value that exactly fits the full data range (TL.yearSpan)
-   into the visible canvas track width. Used by the FIT button and by
-   renderTimeline() to lower TL.minZoom so bird's-eye viewing is always
-   reachable, even when the data span is wider than the viewport at 1.0. */
-function fitTimelineZoom(){
-  const canvas = $("#tl-canvas");
-  if (!canvas || TL.yearSpan <= 0) return 1;
-  const trackPx = canvas.clientWidth - TL_LABEL_W - TL_GAP - TL_PAD_R;
-  if (trackPx <= 0) return 1;
-  return Math.max(0.05, trackPx / (TL.yearSpan * TL_BASE_PX_PER_YEAR));
-}
-function openTimelineView(){
-  $("#tl-wrap").classList.add("show");
-  document.body.classList.add("tl-open");
-  $("#tools-timeline")?.classList.add("active");
-  $("#tl-fam-drop")?.classList.remove("show");
-  $("#tl-fam-btn")?.setAttribute("aria-expanded", "false");
-  setTimelineZoom(TL.zoom);
-}
-function closeTimelineView(){
-  $("#tl-wrap").classList.remove("show");
-  document.body.classList.remove("tl-open");
-  $("#tools-timeline")?.classList.remove("active");
-}
-
-/* Pack a set of {left%, right%} blocks into the minimum number of horizontal
-   lanes such that no two blocks in the same lane overlap. Returns the lane
-   count and assigns .lane to each block. */
-function packIntoLanes(blocks){
-  // Drop any non-finite blocks defensively — the timeline builder already
-  // filters these out, but if a future code path forgets the guard, NaN
-  // coordinates would silently put bars in their own lane forever.
-  const safe = blocks.filter(b => Number.isFinite(b.left) && Number.isFinite(b.right));
-  const sorted = [...safe].sort((a,b) => a.left - b.left);
-  const lanes = []; // each = end of last block in that lane (%)
-  sorted.forEach(b => {
-    let lane = -1;
-    for (let i = 0; i < lanes.length; i++){
-      if (lanes[i] <= b.left + 0.05){ // small tolerance to avoid pixel kissing
-        lane = i; break;
-      }
-    }
-    if (lane === -1){ lane = lanes.length; lanes.push(0); }
-    lanes[lane] = b.right;
-    b.lane = lane;
-  });
-  return lanes.length;
-}
-
-function productVisibleInTimeline(p){
-  if (!p) return false;
-  if (!activeCats.has(p.category)) return false;
-  const fam = nodeById[p.family];
-  if (activeUC && !((fam?.useCases || []).includes(activeUC))) return false;
-  if (activeInd && !((fam?.industries || []).includes(activeInd))) return false;
-  if (!["current", "eos", "eol"].includes(p.status)) return false;
-  if (facetState.tier.size > 0){
-    const tiers = window.__cpnV2?.TIERS;
-    const tier = tiers?.[p.family]?.tier || "";
-    if (![...facetState.tier].some(label => tier.toLowerCase().includes(label.toLowerCase()))) return false;
-  }
-  return true;
-}
-
-function renderTimeline(){
-  const inner = $("#tl-inner"); if (!inner) return;
-  const canvas = $("#tl-canvas");
-  // innerW is set below once the data year span is known — see "Window sizing".
-  // The new sizing is years × TL_BASE_PX_PER_YEAR × zoom rather than canvas-
-  // relative, so the timeline always renders at a comfortable density and the
-  // canvas's overflow:auto produces a native horizontal scrollbar as needed.
-
-  const now = new Date();
-
-  /* Tolerant date parser used by the timeline.
-     Returns a Date or null. Handles:
-       ISO              "2026-10-31"
-       Long-form        "Oct 28, 2026", "Aug 2, 2021"
-       Month + year     "Aug 2017", "Oct 2019"
-       Bare year        "2017"
-       Approximate      "~2016"          → 2016-06-30 (mid-year)
-       Approximate range"~2018-2021"     → 2019-06-30 (midpoint, mid-year)
-       Unknown          "TBD", "TBD …"   → null
-
-     IMPORTANT: every supported format is parsed by explicit regex below — we
-     deliberately do NOT rely on `new Date(string)` because non-ISO formats
-     ("Oct 2019", "2017", etc.) parse inconsistently across engines. V8/Chrome
-     is lenient and returns valid dates, Safari and some older WebKit builds
-     return Invalid Date for the same input. Without explicit parsing, products
-     whose EOS/EOL dates use "MMM YYYY" (e.g. MX700, MX800, ASA-5505) would
-     silently collapse to unknown-both mode in Safari and render as 8% striped
-     bars near "today" instead of their actual lifecycle bands. The native Date
-     parser is only used as a last-resort fallback and returns null on NaN. */
-  const MONTH_MAP = {
-    jan:0, feb:1, mar:2, apr:3, may:4, jun:5,
-    jul:6, aug:7, sep:8, sept:8, oct:9, nov:10, dec:11,
-    january:0, february:1, march:2, april:3, june:5,
-    july:6, august:7, september:8, october:9, november:10, december:11
-  };
-  const parseFuzzyDate = (s) => {
-    if (!s || typeof s !== "string") return null;
-    const t = s.trim();
-    if (!t || /^TBD\b/i.test(t)) return null;
-    let m;
-    // Approximate single year: "~2016" → 2016-06-30
-    if ((m = t.match(/^~\s*(\d{4})$/)))
-      return new Date(+m[1], 5, 30);
-    // Approximate range: "~2018-2021" → midpoint, mid-year
-    if ((m = t.match(/^~\s*(\d{4})\s*-\s*(\d{4})$/)))
-      return new Date(Math.round((+m[1] + +m[2]) / 2), 5, 30);
-    // ISO calendar date: "2026-10-31"
-    if ((m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/)))
-      return new Date(+m[1], +m[2] - 1, +m[3]);
-    // Long-form with explicit day: "Oct 28, 2026" or "October 28 2026"
-    if ((m = t.match(/^([A-Za-z]+)\s+(\d{1,2}),?\s+(\d{4})$/))) {
-      const mon = MONTH_MAP[m[1].toLowerCase()];
-      if (mon != null) return new Date(+m[3], mon, +m[2]);
-    }
-    // Month + year only: "Aug 2017", "October 2019"
-    if ((m = t.match(/^([A-Za-z]+)\s+(\d{4})$/))) {
-      const mon = MONTH_MAP[m[1].toLowerCase()];
-      if (mon != null) return new Date(+m[2], mon, 1);
-    }
-    // Bare year: "2017"
-    if ((m = t.match(/^(\d{4})$/)))
-      return new Date(+m[1], 0, 1);
-    // Last-resort fallback for anything we haven't anticipated
-    const d = new Date(t);
-    return Number.isNaN(d.getTime()) ? null : d;
-  };
-
-  /* Window sizing.
-     Floor at now-5 / now+6 so the default still feels familiar when no old
-     data is present, but EXPAND outward when products have older EOLs or
-     further-out EOS milestones. Without this, ~19 legacy products with
-     pre-2021 EOS dates clamp visually to the left edge instead of landing
-     at their real position. */
-  // Apply the same category / use-case / industry / stack filters the graph
-  // view uses, so toggling a chip or dropdown updates Timeline immediately.
-  // productMatchesFilters() is defined alongside applyFilters() — single
-  // source of truth so timeline + graph can never disagree.
-  const visibleProducts = PRODUCTS.filter(p => {
-    if (TL.onlyStack && !stack.has(p.id) && !stack.has(p.family)) return false;
-    if (TL.families.size > 0 && !TL.families.has(p.family)) return false;
-    return productVisibleInTimeline(p);
-  });
-
-  let startY = now.getFullYear() - 5;
-  let endY   = now.getFullYear() + 6;
-  visibleProducts.forEach(p => {
-    for (const s of [p.eosDate, p.eolDate]) {
-      const d = parseFuzzyDate(s); if (!d) continue;
-      const y = d.getFullYear();
-      if (y     < startY) startY = y;
-      if (y + 1 > endY)   endY   = y + 1;
-    }
-  });
-
-  /* Now that we know the year span, size #tl-inner in pixels (px-per-year
-     model) and refresh the dynamic minZoom so the user can always zoom
-     out to fit-the-data. The data track itself (the 1fr column) is
-     `dataW` wide; #tl-inner adds the sticky label column (TL_LABEL_W),
-     grid gap (TL_GAP), and a right-side gutter (TL_PAD_R). If TL.zoom is
-     currently below the fresh fit-zoom (e.g. the user resized the window
-     smaller after zooming out), clamp it back into range and let the next
-     setTimelineZoom call repaint cleanly. */
-  TL.yearSpan = endY - startY;
-  const fitZ = fitTimelineZoom();
-  TL.minZoom = Math.min(1, fitZ);
-  if (TL.zoom < TL.minZoom) TL.zoom = TL.minZoom;
-  const dataW  = TL.yearSpan * TL_BASE_PX_PER_YEAR * TL.zoom;
-  const innerW = TL_LABEL_W + TL_GAP + dataW + TL_PAD_R;
-  inner.style.width = innerW + "px";
-  // Keep the zoom-out button enabled state correct against the new minZoom.
-  const zoomOutBtn = $("#tl-zoom-out");
-  if (zoomOutBtn) zoomOutBtn.disabled = TL.zoom <= TL.minZoom + 0.001;
-
-  const totalMs = (endY - startY) * 365.25 * 86400e3;
-  const startMs = new Date(startY, 0, 1).getTime();
-  const xFromDate = (s) => {
-    const d = parseFuzzyDate(s);
-    if (!d) return null;
-    return Math.max(0, Math.min(100, ((d.getTime() - startMs) / totalMs) * 100));
-  };
-
-  // Group products by family — uses the pre-filtered set so families with
-  // zero matching products don't render an empty row.
-  const fams = {};
-  visibleProducts.forEach(p => {
-    (fams[p.family] = fams[p.family] || []).push(p);
-  });
-
-  // Tick density adapts to zoom: more zoom → more ticks shown
-  const yearStep = TL.zoom < 1   ? 2
-                 : TL.zoom < 2.5 ? 1
-                 : TL.zoom < 4   ? 0.5
-                 :                 0.25;
-  const ticks = [];
-  for (let y = startY; y <= endY; y += yearStep){
-    const pct = ((new Date(y, 0, 1).getTime() - startMs) / totalMs) * 100;
-    const isMajor = Math.abs(y - Math.round(y)) < 0.01;
-    ticks.push({ y, pct, label: isMajor ? String(Math.round(y)) : "", major: isMajor });
-  }
-  const todayPct = ((now.getTime() - startMs) / totalMs) * 100;
-  // The empty first cell gets a class so it can be position:sticky on
-  // horizontal scroll, matching the .tl-row-lbl behavior below.
-  const axisHtml = `<div class="tl-axis">
-    <div class="tl-axis-lbl"></div>
-    <div class="tl-axis-track">
-      ${ticks.map(t => `<div class="tl-axis-tick ${t.major?"major":""}" style="left:${t.pct}%">${t.label}</div>`).join("")}
-      <div class="tl-axis-today" style="left:${todayPct}%"></div>
-    </div>
-  </div>`;
-
-  // Per-row HTML, with lane packing so blocks never overlap
-  const rowHtml = Object.entries(fams).sort((a,b) => (nodeById[a[0]]?.name||"").localeCompare(nodeById[b[0]]?.name||""))
-    .map(([famId, prods]) => {
-      const n = nodeById[famId]; if (!n) return "";
-      // Build block geometry. Each block resolves to {left, right} percentages
-      // plus optional unknownLeft/unknownRight flags that drive the dashed-fade
-      // CSS treatment for products with TBD / unscheduled milestones.
-      const blocks = prods.map(p => {
-        let left = null, right = null, unknownLeft = false, unknownRight = false;
-        if (p.status === "current"){
-          // Current products anchor at "two years ago" and run to the right edge.
-          left  = xFromDate(new Date(now.getFullYear() - 2, 0, 1).toISOString());
-          right = 100;
-        } else {
-          const eosX = xFromDate(p.eosDate);
-          const eolX = xFromDate(p.eolDate);
-          if (eosX != null && eolX != null){
-            // Both milestones known — draw the full lifecycle band.
-            left = eosX; right = eolX;
-          } else if (eosX != null){
-            // EOS known, EOL TBD — anchor at EOS, extend ~12% rightward and fade.
-            left = eosX; right = Math.min(100, eosX + 12); unknownRight = true;
-          } else if (eolX != null){
-            // EOL known, EOS TBD — anchor at EOL, extend ~12% leftward and fade.
-            right = eolX; left = Math.max(0, eolX - 12); unknownLeft = true;
-          } else {
-            // Both TBD — center on "today" with stripes + ? badge so the user
-            // sees "scheduled but unscheduled" instead of a ghost bar at year 0.
-            left  = Math.max(0, todayPct - 4);
-            right = Math.min(100, todayPct + 4);
-            unknownLeft = unknownRight = true;
-          }
-        }
-        // Defensive: anything still non-finite is dropped rather than emitted
-        // with NaN coordinates (which CSS treats as "auto" and ghosts at left:0).
-        if (!Number.isFinite(left) || !Number.isFinite(right)) return null;
-        // Floor at 1.2% of the timeline window so same-day EOS/EOL products
-        // (e.g. SecureX, where EOS and EOL both land on Jul 31, 2024) still
-        // render as a recognizable marker instead of a sub-pixel sliver. At
-        // an 18-year window that floor is ≈80 days — still clearly "instant"
-        // but visible on screen and clickable.
-        return { p, left, right: Math.max(right, left + 1.2), unknownLeft, unknownRight };
-      }).filter(Boolean);
-      const laneCount = packIntoLanes(blocks);
-      const laneH = 18, laneGap = 2;
-      const trackH = laneCount * laneH + (laneCount - 1) * laneGap + 4;
-      // Decide which blocks get text labels: only when block is wide enough
-      // in PIXELS to fit the name (rough proxy: width-percent * trackPx >= 28).
-      // The data track (the 1fr column) is exactly dataW wide, so the bar's
-      // pixel width is widthPct/100 * dataW.
-      const trackPx = dataW;
-      const blocksHtml = blocks.map(b => {
-        const widthPct = b.right - b.left;
-        const widthPx = widthPct/100 * trackPx;
-        // Threshold of 28 px — bars wider than this show their name with
-        // a clean text-overflow:ellipsis when needed. Below 28 px even "..."
-        // doesn't render usefully, so we hide the label and rely on the
-        // existing tooltip + .narrow:hover expand-on-hover behavior.
-        const narrow = widthPx < 28;
-        const top = b.lane * (laneH + laneGap);
-        const label = narrow ? "" : escapeHtml(b.p.name);
-        // If either milestone is unknown, tag the block so CSS can fade the
-        // ambiguous edge (or stripe the whole bar if both ends are TBD).
-        const unkCls = (b.unknownLeft && b.unknownRight) ? " unknown-both"
-                     : b.unknownLeft  ? " unknown-left"
-                     : b.unknownRight ? " unknown-right"
-                     : "";
-        return `<div class="tl-block ${b.p.status}${narrow?" narrow":""}${unkCls}"
-                  style="left:${b.left}%;width:${widthPct}%;top:${top}px;height:${laneH}px"
-                  title="${escapeHtml(b.p.name)} — ${b.p.status.toUpperCase()}${b.p.eosDate?" · EOS "+b.p.eosDate:""}${b.p.eolDate?" · EOL "+b.p.eolDate:""}"
-                  onclick="window.showProductDetail('${b.p.id}')">${label}</div>`;
-      }).join("");
-      const todayX = ((now.getTime() - startMs) / totalMs) * 100;
-      return `<div class="tl-row">
-        <div class="tl-row-lbl">
-          <span class="ld" style="background:${catColor(n.category)}"></span>
-          <span class="nm" title="${escapeHtml(n.name)}">${escapeHtml(n.name)}</span>
-        </div>
-        <div class="tl-row-track" style="height:${trackH}px">
-          <div class="tl-today" style="left:${todayX}%"></div>
-          ${blocksHtml}
-        </div>
-      </div>`;
-    }).join("");
-
-  // Stats line
-  const totalShown = Object.values(fams).reduce((a,b) => a + b.length, 0);
-  const eolCount = Object.values(fams).flat().filter(p => p.status === "eol").length;
-  const eosCount = Object.values(fams).flat().filter(p => p.status === "eos").length;
-  const stats = `<div style="padding:18px 22px 6px;font-size:11px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap">
-    Showing <strong style="color:var(--text)">${totalShown}</strong> product${totalShown!==1?"s":""} across <strong style="color:var(--text)">${Object.keys(fams).length}</strong> famil${Object.keys(fams).length!==1?"ies":"y"}
-    · <strong style="color:#ef4444">${eolCount}</strong> EOL · <strong style="color:#FF9000">${eosCount}</strong> EOS
-  </div>`;
-
-  const legend = `<div style="margin:14px 22px;display:flex;gap:14px;font-size:11px;color:var(--muted);flex-wrap:wrap">
-    <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:12px;height:10px;background:rgba(45,206,92,.65);border-radius:2px"></span>Current</span>
-    <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:12px;height:10px;background:rgba(245,158,11,.7);border-radius:2px"></span>End of Sale</span>
-    <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:12px;height:10px;background:rgba(239,68,68,.78);border-radius:2px"></span>End of Life</span>
-    <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:3px;height:10px;background:#02C8FF"></span>Today</span>
-    <span style="margin-left:auto;color:var(--subtle)">Zoom: <code style="background:var(--surface2);padding:1px 5px;border-radius:3px">+</code> / <code style="background:var(--surface2);padding:1px 5px;border-radius:3px">−</code> / <code style="background:var(--surface2);padding:1px 5px;border-radius:3px">0</code> reset · <code style="background:var(--surface2);padding:1px 5px;border-radius:3px">FIT</code> fit-to-data · <code style="background:var(--surface2);padding:1px 5px;border-radius:3px">⌘/Ctrl+scroll</code></span>
-  </div>`;
-
-  inner.innerHTML = stats + axisHtml + rowHtml + legend;
-}
+/* [19] Refresh Timeline → assets/cpn-refresh-timeline.js */
 
 /* ════════════════════════════════════════════════════════════════════════
    [20] STACK DIFF (snapshot vs current)
@@ -16949,7 +16247,10 @@ function wireKeyboardA11y(){
     if (ev.key === "/"){ ev.preventDefault(); $("#search").focus(); $("#search").select(); }
     else if (ev.key.toLowerCase() === "p"){ $("#planner-btn").click(); }
     else if (ev.key.toLowerCase() === "g"){ openGuidedWizard(); }
-    else if (ev.key.toLowerCase() === "t"){ $("#tl-wrap")?.classList.contains("show") ? closeTimelineView() : openTimelineView(); }
+    else if (ev.key.toLowerCase() === "t"){
+      if ($("#tl-wrap")?.classList.contains("show")) window.CPN_RefreshTimeline?.close?.();
+      else window.CPN_RefreshTimeline?.open?.();
+    }
     else if (ev.key.toLowerCase() === "m"){
       if ($("#acq-wrap")?.classList.contains("show")) window.CPN_AcquisitionTimeline?.close?.();
       else window.CPN_AcquisitionTimeline?.open?.();
@@ -17329,7 +16630,18 @@ function boot(){
   buildLearningPathBanner();
   buildRefArchBadge();
   buildContextMenu();
-  buildTimelineView();
+  if (window.CPN_RefreshTimeline?.init) {
+    window.CPN_RefreshTimeline.init({
+      getProducts: () => PRODUCTS,
+      getStack: () => stack,
+      nodeById,
+      catColor,
+      escapeHtml,
+      productVisibleInTimeline,
+      showProductDetail: id => window.showProductDetail(id),
+    });
+  }
+  if (window.CPN_RefreshTimeline?.build) window.CPN_RefreshTimeline.build();
   if (window.CPN_AcquisitionTimeline?.build) window.CPN_AcquisitionTimeline.build();
   buildDiffModal();
   buildFacets();
@@ -17383,8 +16695,11 @@ window.__cpnV2 = {
     addToCompare, closeCompare, clearCompareList, renderCompare, enhanceDetailPanel, renderMigratePlan, renderCompatWarnings,
     pushBreadcrumb, navHistory, bootRestore, buildPlansMenu, buildExportMenu,
     buildProfileBox, buildTemplatesStrip, buildQuickStartSection, buildComparePanel, buildRecentPinned,
-    addPlannerTabs, refreshPlansBtn, applyRefArch, clearRefArch, renderTimeline,
-    openTimelineView, closeTimelineView, setTimelineZoom,
+    addPlannerTabs, refreshPlansBtn, applyRefArch, clearRefArch,
+    renderTimeline: () => window.CPN_RefreshTimeline?.render?.(),
+    openTimelineView: () => window.CPN_RefreshTimeline?.open?.(),
+    closeTimelineView: () => window.CPN_RefreshTimeline?.close?.(),
+    setTimelineZoom: z => window.CPN_RefreshTimeline?.setZoom?.(z),
     showStackDiff, sendAi, openAiWithPrompt, buildPlanContext, boot, savePlan, loadPlan, deletePlan,
     listPlans, planSummary, pillarLayoutSelfTest: __cpnPillarLayoutSelfTest,
     compositionSelfTest: __cpnCompositionSelfTest }
@@ -17397,7 +16712,8 @@ window.__cpnV2 = {
 <script src="assets/cpn-lazy-load.js?v=3.3.0"></script>
 <script src="assets/cpn-kiosk.js?v=3.3.0"></script>
 <script src="assets/cpn-acquisitions-data.js?v=3.3.5"></script>
-<script src="assets/cpn-acquisitions-timeline.js?v=3.4.5"></script>
+<script src="assets/cpn-refresh-timeline.js?v=3.5.0"></script>
+<script src="assets/cpn-acquisitions-timeline.js?v=3.5.0"></script>
 <script src="assets/cpn-logo-intro.js?v=2.91.6"></script>
 </body>
 </html>

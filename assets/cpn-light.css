@@ -257,6 +257,12 @@
 [data-theme="light"] .tl-axis-lbl {
   box-shadow: 6px 0 8px -6px rgba(7, 24, 45, 0.08);
 }
+[data-theme="light"] .tl-decade-band {
+  border-left-color: color-mix(in srgb, var(--tl-decade-color, #02c8ff) 40%, transparent);
+}
+[data-theme="light"] #tl-readout {
+  background: var(--surface);
+}
 
 /* ── Footer & tools ──────────────────────────────────────────── */
 [data-theme="light"] #pf {
