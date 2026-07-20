@@ -9,7 +9,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.20";
+  window.__CPN_BUILD="3.5.21";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -6167,13 +6167,6 @@ function updateCompositionLabelVisibility(_k){
   });
 }
 
-function pillarZoneStats(items){
-  const families = items.length;
-  const cur = items.reduce((n, id) =>
-    n + PRODUCTS.filter(p => p.family === id && productMatchesFilters(p) && p.status === "current").length, 0);
-  return `${families} families · ${cur} current`;
-}
-
 function ambientFilterIntensity(){
   const totalCats = Object.keys(CATS).length;
   let n = 0;
@@ -6728,11 +6721,6 @@ function updatePillarGuides(){
       .style("pointer-events", "none");
     appendPillarZoneHeader(zg, z, x, y, lz.w, headerOp);
     if (singlePillarFocused() && hot && !dim) appendPillarContextChrome(zg, z, x, y, lz, headerOp);
-    const statsPad = 16;
-    zg.append("text").attr("class", "zone-stats")
-      .attr("x", x + lz.w - statsPad).attr("y", y + lz.h - statsPad)
-      .attr("text-anchor", "end").attr("fill-opacity", dim ? 0.35 : 0.75)
-      .text(pillarZoneStats(items));
     zg.append("rect").attr("class", "zone-hit")
       .attr("x", x).attr("y", y).attr("width", lz.w).attr("height", lz.h)
       .attr("rx", z.gradient ? 8 : 6)
