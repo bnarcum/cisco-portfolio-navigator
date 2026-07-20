@@ -107,15 +107,18 @@
   background: rgba(91, 140, 255, 0.1);
 }
 
-/* Panels — solid IQ cards */
+/* Panels — floating IQ cards */
 :root:not([data-theme="light"]) #panel,
 :root:not([data-theme="light"]) #planner {
   background: var(--surface);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-left-color: var(--border);
-  border-radius: 14px 0 0 14px;
-  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+:root:not([data-theme="light"]) #panel-backdrop {
+  background: rgba(6, 11, 20, 0.38);
 }
 :root:not([data-theme="light"]) #panel::before,
 :root:not([data-theme="light"]) #planner::before {

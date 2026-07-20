@@ -9,7 +9,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.10";
+  window.__CPN_BUILD="3.5.11";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -62,7 +62,7 @@
   <link rel="stylesheet" href="assets/cpn-light.css?v=2.87.5"/>
   <link rel="stylesheet" href="assets/cpn-iq-theme.css?v=2.87.5"/>
   <link rel="stylesheet" href="assets/cpn-logo-intro.css?v=2.91.6"/>
-  <link rel="stylesheet" href="assets/cpn-acquisitions-timeline.css?v=3.5.10"/>
+  <link rel="stylesheet" href="assets/cpn-acquisitions-timeline.css?v=3.5.11"/>
   <link rel="stylesheet" href="assets/cpn-refresh-timeline.css?v=3.5.9"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -476,15 +476,70 @@
     [data-theme="light"] #outcome-card .oc-prob-next{border-top-color:rgba(7,24,45,.1)}
     @media (prefers-reduced-motion:reduce){#outcome-card{transition:none}}
 
-    #panel{position:fixed;top:var(--topbar-h);right:0;bottom:0;width:390px;
+    #panel-backdrop{position:fixed;inset:var(--topbar-h) 0 0 0;z-index:59;background:rgba(6,11,20,.38);
+      opacity:0;pointer-events:none;transition:opacity .22s ease}
+    #panel-backdrop.open{opacity:1;pointer-events:auto}
+    #panel{position:fixed;top:calc(var(--topbar-h) + 16px);right:16px;width:400px;max-width:calc(100vw - 32px);
+      max-height:calc(100vh - var(--topbar-h) - 32px);
       background:var(--glass-bg);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-      border-left:1px solid var(--glass-edge);
-      overflow-y:auto;transform:translateX(100%);
-      transition:transform .25s cubic-bezier(.4,0,.2,1);z-index:60;padding:20px 20px 40px;
-      box-shadow:-12px 0 40px rgba(0,0,0,.35)}
+      border:1px solid var(--glass-edge);border-radius:12px;
+      overflow:hidden;display:flex;flex-direction:column;
+      transform:translateX(calc(100% + 24px));
+      transition:transform .25s cubic-bezier(.4,0,.2,1);z-index:60;
+      box-shadow:0 16px 48px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.04) inset}
     #panel::before{content:"";position:absolute;top:0;bottom:0;left:0;width:2px;
+      border-radius:12px 0 0 12px;
       background:linear-gradient(180deg, var(--accent), rgba(10,96,255,.35));opacity:.65;pointer-events:none}
     #panel.open{transform:translateX(0)}
+    #phead{flex-shrink:0;padding:18px 18px 0;background:inherit;border-bottom:1px solid rgba(255,255,255,.06)}
+    #pbody{flex:1 1 auto;min-height:0;overflow-y:auto;padding:16px 18px}
+    #pfooter{flex-shrink:0;padding:12px 18px;border-top:1px solid var(--border);
+      background:rgba(10,34,64,.55);display:flex;gap:8px;align-items:center}
+    #pfooter .add-stack-btn,#pfooter .p-footer-btn{flex:1;height:40px;margin:0;font-size:12px}
+    #pfooter .p-footer-icon{width:40px;height:40px;flex-shrink:0;border-radius:8px;border:1px solid var(--border);
+      background:transparent;color:#c8cfd8;font:inherit;font-size:14px;cursor:pointer;font-family:inherit}
+    #pfooter .p-footer-icon:hover{border-color:var(--accent);color:var(--text)}
+    #pfooter .p-extra{display:flex;gap:6px;flex:1;margin:0}
+    #pfooter .p-extra .rc-btn{flex:1;height:40px;font-size:11px}
+    .p-head-badges{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:8px;padding-right:36px}
+    .p-stats-row{display:flex;flex-wrap:wrap;gap:16px;padding:10px 0;margin-bottom:8px;
+      border-top:1px solid rgba(255,255,255,.06);font-size:11px;color:#a8b2bf}
+    .p-stats-row b{color:var(--text);font-weight:700}
+    .p-head-actions{display:flex;gap:8px;margin-bottom:12px}
+    .p-head-actions .explore-btn,.p-head-actions .p-head-add{flex:1;margin:0;height:36px;font-size:12px}
+    .p-head-add{padding:9px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;
+      background:linear-gradient(90deg,#0a60ff,var(--accent));color:#001a24;font-family:inherit}
+    .p-head-add:hover{filter:brightness(1.06)}
+    .p-head-add.added{background:transparent;border:1px solid var(--accent);color:var(--accent)}
+    .p-tabs{display:flex;gap:2px;padding:3px;background:var(--surface2);border-radius:8px;margin-bottom:0}
+    .p-tab{flex:1;padding:8px 4px;border:none;border-radius:6px;background:transparent;color:#a8b2bf;
+      font:inherit;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit}
+    .p-tab.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.2)}
+    .p-tab-pane{display:none}
+    .p-tab-pane.on{display:block}
+    .p-outcome-teaser{padding:12px 14px;border-radius:10px;margin-bottom:18px;cursor:pointer;
+      background:rgba(2,200,255,.1);border:1px solid rgba(2,200,255,.22);transition:border-color .15s}
+    .p-outcome-teaser:hover{border-color:rgba(2,200,255,.4)}
+    .p-outcome-label{font-size:11px;font-weight:700;color:#d8e8f4;letter-spacing:.02em;margin-bottom:6px}
+    .p-outcome-sym{font-size:12px;line-height:1.45;color:#c8d4dc;font-style:italic;margin-bottom:6px}
+    .p-outcome-head{font-size:13px;font-weight:700;line-height:1.45;color:#e8f6ff}
+    .p-outcome-link{font-size:11px;color:var(--accent);font-weight:600;margin-top:8px}
+    .p-eol-toggle{width:100%;text-align:left;padding:10px 0;border:none;background:none;color:var(--orange);
+      font:inherit;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px}
+    .p-eol-toggle::before{content:"▸";font-size:10px;transition:transform .15s}
+    .p-eol-toggle.open::before{transform:rotate(90deg)}
+    .p-eol-body{display:none;padding-bottom:8px}
+    .p-eol-body.open{display:block}
+    [data-theme="light"] #panel-backdrop{background:rgba(7,24,45,.22)}
+    [data-theme="light"] #phead{border-bottom-color:rgba(7,24,45,.08)}
+    [data-theme="light"] #pfooter{background:rgba(255,255,255,.88)}
+    [data-theme="light"] .p-outcome-teaser{background:rgba(0,110,143,.08);border-color:rgba(0,110,143,.22)}
+    [data-theme="light"] .p-outcome-label{color:#0f3d52}
+    [data-theme="light"] .p-outcome-sym{color:#334155}
+    [data-theme="light"] .p-outcome-head{color:#07182d}
+    [data-theme="light"] .p-stats-row{color:#64748b;border-top-color:rgba(7,24,45,.08)}
+    [data-theme="light"] .p-tab{color:#64748b}
+    [data-theme="light"] .p-tab.on{color:#07182d}
     #pcl{position:absolute;top:14px;right:14px;width:32px;height:32px;
       background:var(--surface2);border:1px solid var(--border);border-radius:6px;
       color:var(--muted);font-size:18px;cursor:pointer;
@@ -569,24 +624,25 @@
     .p-banner-title{font-size:12px;font-weight:700;margin-bottom:3px}
     .p-banner-body{font-size:11px;color:var(--muted);line-height:1.5}
     .p-name{font-size:20px;font-weight:700;line-height:1.2;margin-bottom:10px}
-    .p-desc{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:16px}
+    .p-desc{font-size:13px;color:#c8cfd8;line-height:1.65;margin-bottom:12px}
     .p-sec{margin-bottom:16px}
-    .p-sec-t{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
-      color:var(--subtle);margin-bottom:7px}
-    #pbody .p-sec-t{color:var(--subtle)}
-    #pbody .p-desc{color:var(--muted)}
-    #pbody .rt{color:var(--muted)}
-    #pbody .p-tier-note{color:var(--muted)}
-    #pbody .la>span:not(.la-dcloud-main):not(.la-dcloud-meta):not(.la-matrix-main):not(.la-matrix-meta):not(.la-learn-main):not(.la-learn-meta){color:var(--muted)}
+    .p-sec-t{font-size:11px;font-weight:600;letter-spacing:.01em;
+      color:#b8c4d0;margin-bottom:8px}
+    #phead .p-desc,#pbody .p-desc{color:#c8cfd8}
+    #phead .p-sec-t,#pbody .p-sec-t{color:#b8c4d0}
+    #pbody .rt{color:#a8b2bf}
+    #pbody .p-tier-note{color:#a8b2bf}
+    #pbody .p-banner-body{color:#c8cfd8}
+    #pbody .la>span:not(.la-dcloud-main):not(.la-dcloud-meta):not(.la-matrix-main):not(.la-matrix-meta):not(.la-learn-main):not(.la-learn-meta){color:#a8b2bf}
     .tr{display:flex;flex-wrap:wrap;gap:5px}
-    .tg{padding:3px 9px;background:var(--surface2);border:1px solid var(--border);
-      border-radius:5px;font-size:11px;cursor:pointer;transition:all .12s;user-select:none}
-    .tg:hover{border-color:var(--accent);color:var(--accent)}
-    .rl{display:flex;flex-direction:column;gap:6px}
-    .ri{display:flex;align-items:center;gap:9px;padding:9px 11px;
-      background:var(--surface2);border:1px solid var(--border);border-radius:7px;
-      cursor:pointer;transition:border-color .12s}
-    .ri:hover{border-color:var(--accent)}
+    .tg{padding:4px 10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+      border-radius:999px;font-size:11px;font-weight:600;color:#c8cfd8;cursor:pointer;transition:all .12s;user-select:none}
+    .tg:hover{border-color:var(--accent);color:var(--accent);background:rgba(2,200,255,.1)}
+    .rl{display:flex;flex-direction:column;gap:0}
+    .ri{display:flex;align-items:center;gap:9px;padding:10px 8px;
+      background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.06);border-radius:0;
+      cursor:pointer;transition:background .12s;margin:0 -8px}
+    .ri:hover{background:rgba(255,255,255,.04)}
     .ri-ext{border-style:dashed;opacity:.95}
     .conn-depth-btn{
       width:100%;margin-bottom:10px;padding:7px 10px;border-radius:7px;font-size:11px;font-weight:600;
@@ -594,20 +650,20 @@
       font-family:inherit;transition:all .15s}
     .conn-depth-btn:hover{border-color:var(--accent);background:rgba(2,200,255,.14);color:var(--text)}
     .conn-sub-t{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
-      color:var(--subtle);margin:8px 0 6px}
+      color:#a8b2bf;margin:8px 0 6px}
     .conn-hop{font-size:9px;font-weight:700;padding:1px 6px;border-radius:999px;
       background:var(--cpn-hover);color:var(--accent);margin-left:6px;vertical-align:1px}
     .rd{width:9px;height:9px;border-radius:50%;flex-shrink:0}
     .rif{flex:1;min-width:0}
     .rn{font-size:12px;font-weight:500}
-    .rt{font-size:11px;color:var(--muted);margin-top:1px}
-    .ra{color:var(--subtle);font-size:16px;flex-shrink:0}
-    .lb{display:flex;flex-direction:column;gap:7px}
+    .rt{font-size:11px;color:#a8b2bf;margin-top:2px}
+    .ra{color:#8b95a5;font-size:16px;flex-shrink:0}
+    .lb{display:flex;flex-direction:column;gap:0}
     .la{display:flex;align-items:center;justify-content:space-between;
-      padding:9px 13px;background:var(--surface2);border:1px solid var(--border);
-      border-radius:7px;color:var(--text);text-decoration:none;font-size:13px;transition:all .12s}
-    .la:hover{border-color:var(--accent);color:var(--accent)}
-    .la span{font-size:11px;color:var(--muted)}
+      padding:10px 8px;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.06);
+      border-radius:0;color:var(--text);text-decoration:none;font-size:13px;transition:all .12s;margin:0 -8px}
+    .la:hover{color:var(--accent);background:rgba(255,255,255,.03)}
+    .la span{font-size:11px;color:#a8b2bf}
     .add-stack-btn{width:100%;padding:8px;border-radius:7px;font-size:12px;font-weight:600;
       cursor:pointer;border:1px solid var(--border);background:transparent;
       color:var(--muted);transition:all .15s;margin-top:8px}
@@ -620,12 +676,11 @@
     .explore-btn:hover{background:var(--accent);color:#000}
     .explore-btn-secondary{border-color:var(--border);color:var(--muted);background:transparent;margin-top:8px}
     .explore-btn-secondary:hover{border-color:var(--accent);color:var(--accent);background:rgba(2,200,255,.08)}
-    .fam-prod-list{display:flex;flex-direction:column;gap:5px;max-height:min(42vh,320px);overflow-y:auto;
-      padding-right:2px;margin-top:2px}
-    .fam-prod-row{display:block;flex:1;text-align:left;padding:8px 10px;background:var(--surface2);
-      border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:border-color .12s,background .12s;
-      font-size:12px;font-weight:500;color:var(--text);font-family:inherit}
-    .fam-prod-row:hover{border-color:var(--accent);background:rgba(2,200,255,.06)}
+    .fam-prod-list{display:flex;flex-direction:column;gap:0;max-height:none;overflow:visible;padding-right:0;margin-top:0}
+    .fam-prod-row{display:block;flex:1;text-align:left;padding:10px 8px;background:transparent;
+      border:none;border-bottom:1px solid rgba(255,255,255,.06);border-radius:0;cursor:pointer;
+      transition:background .12s;font-size:12px;font-weight:600;color:var(--text);font-family:inherit;margin:0 -8px}
+    .fam-prod-row:hover{background:rgba(2,200,255,.06)}
     .fam-prod-row-wrap{display:flex;align-items:stretch;gap:6px}
     .fam-prod-matrix{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
     .fam-matrix-btn,.matrix-mini-btn{
@@ -1530,9 +1585,12 @@
 </div>
 <div id="outcome-card" aria-hidden="true"></div>
 
+<div id="panel-backdrop" aria-hidden="true"></div>
 <div id="panel">
   <button id="pcl">&#xd7;</button>
+  <div id="phead"></div>
   <div id="pbody"></div>
+  <div id="pfooter"></div>
 </div>
 
 <div id="planner">
@@ -7279,7 +7337,7 @@ function renderConnectionRow(r){
     <div class="ra">›</div></div>`;
 }
 
-function renderConnectionsSection(d){
+function renderConnectionsSectionBody(d){
   const depth = connectionHighlightDepth;
   const { direct, extended, extTotal } = buildConnectionRels(d.id, depth);
   const total = direct.length + extended.length;
@@ -7287,11 +7345,128 @@ function renderConnectionsSection(d){
     ? "Show direct connections only"
     : `Show extended ecosystem${extTotal ? ` (+${extTotal} at 2 hops)` : ""}`;
   let body = `<button type="button" class="conn-depth-btn" onclick="toggleConnectionDepth('${d.id}')">${toggleLabel}</button>`;
-  body += `<div class="conn-sub-t">Direct (${direct.length})</div><div class="rl">${direct.map(renderConnectionRow).join("") || `<div class="rt" style="padding:4px 2px">None mapped.</div>`}</div>`;
+  body += `<div class="conn-sub-t">Direct (${direct.length})</div><div class="rl">${direct.map(renderConnectionRow).join("") || `<div class="rt" style="padding:4px 2px;color:#a8b2bf">None mapped.</div>`}</div>`;
   if (depth >= 2 && extended.length){
     body += `<div class="conn-sub-t">Extended — 2 hops (${extended.length})</div><div class="rl">${extended.map(renderConnectionRow).join("")}</div>`;
   }
-  return `<div class="p-sec"><div class="p-sec-t">Connected Technologies (${total})</div>${body}</div>`;
+  return { body, total };
+}
+
+function renderConnectionsSection(d){
+  const { body, total } = renderConnectionsSectionBody(d);
+  return `<div class="p-sec"><div class="p-sec-t">Connected technologies (${total})</div>${body}</div>`;
+}
+
+function panelHead(){ return document.getElementById("phead"); }
+function panelFooter(){ return document.getElementById("pfooter"); }
+function panelPane(tab){
+  const pb = document.getElementById("pbody");
+  return pb?.querySelector(`.p-tab-pane[data-tab="${tab}"]`) || pb;
+}
+function panelResourcesHost(){
+  return panelPane("resources")?.querySelector(".p-resources-extra") || panelPane("resources") || document.getElementById("pbody");
+}
+
+function openPanel(){
+  document.getElementById("panel")?.classList.add("open");
+  document.getElementById("panel-backdrop")?.classList.add("open");
+}
+function closePanel(){
+  document.getElementById("panel")?.classList.remove("open");
+  document.getElementById("panel-backdrop")?.classList.remove("open");
+}
+
+function switchPanelTab(tab){
+  const ph = panelHead();
+  ph?.querySelectorAll(".p-tab").forEach(b => {
+    b.classList.toggle("on", b.dataset.tab === tab);
+    b.setAttribute("aria-selected", b.dataset.tab === tab ? "true" : "false");
+  });
+  document.getElementById("pbody")?.querySelectorAll(".p-tab-pane").forEach(p => {
+    p.classList.toggle("on", p.dataset.tab === tab);
+  });
+  const pb = document.getElementById("pbody");
+  if (pb) pb.dataset.activeTab = tab;
+}
+
+function bindPanelTabs(){
+  panelHead()?.querySelectorAll(".p-tab").forEach(btn => {
+    btn.addEventListener("click", () => switchPanelTab(btn.dataset.tab));
+  });
+}
+
+function renderPanelTabsHtml(activeTab, tabs){
+  const labels = { overview: "Overview", products: "Products", connections: "Connections", resources: "Resources" };
+  return `<nav class="p-tabs" role="tablist">${tabs.map(t =>
+    `<button type="button" class="p-tab${t === activeTab ? " on" : ""}" data-tab="${t}" role="tab" aria-selected="${t === activeTab}">${labels[t] || t}</button>`
+  ).join("")}</nav>`;
+}
+
+function renderOutcomeTeaser(familyId){
+  const P = window.__cpnProblems;
+  if (!P) return "";
+  const prob = P.topProblemForFamily(familyId);
+  if (!prob) return "";
+  const persona = typeof currentPersona === "function" ? currentPersona() : "";
+  const headline = persona ? P.personaLine(prob, persona) : prob.outcome;
+  const personaObj = persona && prob.personas?.[persona];
+  const symptom = typeof personaObj === "object" ? personaObj?.symptom : (typeof personaObj === "string" ? null : prob.symptom);
+  const showSym = symptom && symptom !== headline;
+  return `<div class="p-outcome-teaser" role="button" tabindex="0" data-outcome-family="${escapeHtml(familyId)}">
+    <div class="p-outcome-label">What problem this solves</div>
+    ${showSym ? `<div class="p-outcome-sym">${escapeHtml(symptom)}</div>` : ""}
+    <div class="p-outcome-head">${escapeHtml(headline)}</div>
+    <div class="p-outcome-link">View full outcome framing →</div>
+  </div>`;
+}
+
+function wireOutcomeTeaser(familyId){
+  const el = panelPane("overview")?.querySelector(".p-outcome-teaser");
+  if (!el) return;
+  const open = () => {
+    const node = nodeById[familyId];
+    if (node && window.__cpnOutcomeCard?.show) window.__cpnOutcomeCard.show(familyId, node);
+  };
+  el.addEventListener("click", open);
+  el.addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
+  });
+}
+
+function renderPanelStats(prodCount, useCaseCount, linkCount){
+  return `<div class="p-stats-row">
+    <span><b>${prodCount}</b> products</span>
+    <span><b>${useCaseCount}</b> use cases</span>
+    <span><b>${linkCount}</b> direct links</span>
+  </div>`;
+}
+
+function renderPanelFooter(id, kind, inStk){
+  const pf = panelFooter();
+  if (!pf) return;
+  pf.innerHTML = `
+    <button type="button" class="add-stack-btn p-footer-btn${inStk ? " added" : ""}">${inStk ? "✓ Already listed" : "+ Add to their products"}</button>`;
+  pf.querySelector(".add-stack-btn")?.addEventListener("click", () => {
+    if (!inStk){
+      addToStack(id, kind);
+      const btn = pf.querySelector(".add-stack-btn");
+      if (btn){ btn.textContent = "✓ Already listed"; btn.classList.add("added"); }
+      const headBtn = panelHead()?.querySelector(".p-head-add");
+      if (headBtn){ headBtn.textContent = "✓ In plan"; headBtn.classList.add("added"); }
+    }
+  });
+}
+
+function wirePanelHeaderAdd(id, kind, inStk){
+  panelHead()?.querySelector(".p-head-add")?.addEventListener("click", () => {
+    if (!inStk){
+      addToStack(id, kind);
+      const btn = panelHead()?.querySelector(".p-head-add");
+      const foot = panelFooter()?.querySelector(".add-stack-btn");
+      if (btn){ btn.textContent = "✓ In plan"; btn.classList.add("added"); }
+      if (foot){ foot.textContent = "✓ Already listed"; foot.classList.add("added"); }
+    }
+  });
 }
 
 window.toggleConnectionDepth = function(nodeId){
@@ -7301,6 +7476,7 @@ window.toggleConnectionDepth = function(nodeId){
   if (selected?.id === nodeId){
     applyConnectionHighlight(d, connectionHighlightDepth);
     showDetailPanel(d);
+    window.__cpnV2?.phases?.enhanceDetailPanel?.();
   } else selectNode(d, { connectionDepth: connectionHighlightDepth });
 };
 
@@ -9406,9 +9582,16 @@ function openFamilyProductDrawer(familyId){
 }
 
 function showDetailPanel(d) {
+  const ph = panelHead();
+  const pb = document.getElementById("pbody");
+  const pf = panelFooter();
+  if (!ph || !pb) return;
+
   if (d._kind === "pillar"){
     const p = PILLAR_BY_ID[d._pillarId];
-    document.getElementById("pbody").innerHTML = `
+    ph.innerHTML = "";
+    pf.innerHTML = "";
+    pb.innerHTML = `
       <div class="p-badge" style="background:${p.color};color:${d._pillarId === "ai-dc" ? "#fff" : "#000"}">One Cisco</div>
       <div class="p-name">${p.label}</div>
       <p class="p-desc">${p.promise}</p>
@@ -9420,8 +9603,8 @@ function showDetailPanel(d) {
     expBtn.className = "explore-btn";
     expBtn.textContent = "Explore all families in this pillar →";
     expBtn.addEventListener("click", () => applyViewLevel("families"));
-    document.getElementById("pbody").appendChild(expBtn);
-    document.getElementById("panel").classList.add("open");
+    pb.appendChild(expBtn);
+    openPanel();
     return;
   }
 
@@ -9429,68 +9612,90 @@ function showDetailPanel(d) {
   const cat=CATS[d.category];
   const pm = pillarMeta(familyPillar(d.id));
   const inStk=stack.has(d.id);
+  const activeTab = pb.dataset.activeTab || "overview";
 
-  // Find specific products that belong to this family (respect status/tier facets)
   const famProds=PRODUCTS.filter(p=>p.family===d.id && productMatchesFilters(p));
   const curProds=famProds.filter(p=>p.status==="current");
   const eolProds=famProds.filter(p=>p.status==="eol");
+  const directCount = buildConnectionRels(d.id, 1).direct.length;
+  const conn = renderConnectionsSectionBody(d);
 
-  let prodsHtml="";
-  if(curProds.length){
-    prodsHtml+=`<div class="p-sec"><div class="p-sec-t">Products in this family (${curProds.length})</div>
-      <div class="fam-prod-list">
-      ${curProds.map(p => renderFamProdRow(p)).join("")}
-      </div></div>`;
+  let productsHtml = "";
+  if (curProds.length){
+    productsHtml += `<div class="p-sec"><div class="p-sec-t">Current products (${curProds.length})</div>
+      <div class="fam-prod-list">${curProds.map(p => renderFamProdRow(p)).join("")}</div></div>`;
+  } else {
+    productsHtml += `<div class="p-sec"><div class="p-sec-t">Current products</div><p class="p-desc" style="margin:0">No current products match filters.</p></div>`;
   }
-  if(eolProds.length){
-    prodsHtml+=`<div class="p-sec"><div class="p-sec-t" style="color:#FF9000">End of Life Products (${eolProds.length})</div>
-      <div style="display:flex;flex-direction:column;gap:5px">
-      ${eolProds.map(p=>`<div onclick="showProductDetail('${p.id}')" style="padding:7px 10px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.25);border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;color:var(--muted)" onmouseover="this.style.borderColor='#ef4444'" onmouseout="this.style.borderColor='rgba(239,68,68,.25)'">${p.name} <span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(239,68,68,.15);color:#ef4444;margin-left:5px">${p.status.toUpperCase()}</span></div>`).join("")}
-      </div></div>`;
+  if (eolProds.length){
+    productsHtml += `<button type="button" class="p-eol-toggle" id="p-eol-toggle">End of life products (${eolProds.length})</button>
+      <div class="p-eol-body" id="p-eol-body">
+      ${eolProds.map(p=>`<div class="fam-prod-row" onclick="showProductDetail('${p.id}')" style="color:#a8b2bf">${p.name} <span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(239,68,68,.15);color:#ef4444;margin-left:5px">${p.status.toUpperCase()}</span></div>`).join("")}
+      </div>`;
   }
 
-  document.getElementById("pbody").innerHTML = `
-    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-bottom:10px">
+  ph.innerHTML = `
+    <div class="p-head-badges">
       <div class="p-badge" style="background:${cat.color};color:${d.category==='computing'?'#fff':'#000'}">${cat.label}</div>
       ${pm ? `<div class="p-pillar" style="--pc:${pm.color}">${pm.shortLabel || pm.label}</div>` : ""}
     </div>
     <div class="p-name">${d.name}</div>
     <p class="p-desc">${d.desc}</p>
-    ${prodsHtml}
-    <div class="p-sec"><div class="p-sec-t">Use Cases</div><div class="tr">${d.useCases.map(u=>`<span class="tg" onclick="filterTagUC('${u}')">${u}</span>`).join("")}</div></div>
-    <div class="p-sec"><div class="p-sec-t">Industries</div><div class="tr">${d.industries.map(i=>`<span class="tg" onclick="filterTagInd('${i}')">${i}</span>`).join("")}</div></div>
-    ${renderConnectionsSection(d)}
-    <div class="p-sec"><div class="p-sec-t">Learn More</div><div class="lb">
-      <a class="la" href="${productPageUrl(d)}" target="_blank" rel="noopener">Product Page <span>cisco.com ↗</span></a>
-      <a class="la" href="${documentationUrl(d)}" target="_blank" rel="noopener">Documentation <span>docs ↗</span></a>
-    </div></div>`;
+    ${renderPanelStats(curProds.length, (d.useCases||[]).length, directCount)}
+    <div class="p-head-actions">
+      <button type="button" class="p-head-add${inStk ? " added" : ""}">${inStk ? "✓ In plan" : "+ Add to plan"}</button>
+    </div>
+    ${renderPanelTabsHtml(activeTab, ["overview","products","connections","resources"])}`;
 
-  // Graph explore — hidden when that family is already open on the canvas.
+  pb.innerHTML = `
+    <div class="p-tab-pane${activeTab === "overview" ? " on" : ""}" data-tab="overview" role="tabpanel">
+      ${renderOutcomeTeaser(d.id)}
+      <div class="p-sec"><div class="p-sec-t">Use cases</div><div class="tr">${(d.useCases||[]).map(u=>`<span class="tg" onclick="filterTagUC('${u}')">${u}</span>`).join("") || `<span class="p-desc" style="margin:0">None listed.</span>`}</div></div>
+      <div class="p-sec"><div class="p-sec-t">Industries</div><div class="tr">${(d.industries||[]).map(i=>`<span class="tg" onclick="filterTagInd('${i}')">${i}</span>`).join("") || `<span class="p-desc" style="margin:0">None listed.</span>`}</div></div>
+    </div>
+    <div class="p-tab-pane${activeTab === "products" ? " on" : ""}" data-tab="products" role="tabpanel">${productsHtml}</div>
+    <div class="p-tab-pane${activeTab === "connections" ? " on" : ""}" data-tab="connections" role="tabpanel">
+      <div class="p-sec"><div class="p-sec-t">Connected technologies (${conn.total})</div>${conn.body}</div>
+    </div>
+    <div class="p-tab-pane${activeTab === "resources" ? " on" : ""}" data-tab="resources" role="tabpanel">
+      <div class="p-sec"><div class="p-sec-t">Links</div><div class="lb">
+        <a class="la" href="${productPageUrl(d)}" target="_blank" rel="noopener">Product page <span>cisco.com ↗</span></a>
+        <a class="la" href="${documentationUrl(d)}" target="_blank" rel="noopener">Documentation <span>docs ↗</span></a>
+      </div></div>
+      <div class="p-resources-extra"></div>
+    </div>`;
+
+  bindPanelTabs();
+  wireOutcomeTeaser(d.id);
+  wirePanelHeaderAdd(d.id, "node", inStk);
+  renderPanelFooter(d.id, "node", inStk);
+
+  document.getElementById("p-eol-toggle")?.addEventListener("click", function(){
+    this.classList.toggle("open");
+    document.getElementById("p-eol-body")?.classList.toggle("open");
+  });
+
   if (famProds.length > 0){
     const inComp = viewMode === "composition" && viewFocus === d.id;
     const inSpatialOrbit = viewMode === "spatial" && spatialState.focusFamily === d.id;
-    if (!inComp && !inSpatialOrbit){
+    const actions = panelHead()?.querySelector(".p-head-actions");
+    if (actions && !inComp && !inSpatialOrbit){
       const expBtn = document.createElement("button");
       expBtn.className = "explore-btn";
-      expBtn.innerHTML = `Show ${famProds.length} product${famProds.length===1?"":"s"} on graph →`;
-      expBtn.title = "Open Composition view — products orbit this family with upgrade paths";
+      expBtn.innerHTML = `Explore →`;
+      expBtn.title = `Show ${famProds.length} product${famProds.length===1?"":"s"} on graph — Composition view`;
       expBtn.addEventListener("click", () => applyViewLevel("composition", { focusFamily: d.id }));
-      document.getElementById("pbody").appendChild(expBtn);
-    } else if (inComp && viewMode !== "spatial"){
+      actions.appendChild(expBtn);
+    } else if (actions && inComp && viewMode !== "spatial"){
       const spBtn = document.createElement("button");
       spBtn.className = "explore-btn explore-btn-secondary";
-      spBtn.textContent = "Open in Spatial view →";
+      spBtn.textContent = "Spatial →";
       spBtn.addEventListener("click", () => applyViewLevel("spatial", { focusFamily: d.id }));
-      document.getElementById("pbody").appendChild(spBtn);
+      actions.appendChild(spBtn);
     }
   }
 
-  const addBtn = document.createElement("button");
-  addBtn.className = "add-stack-btn" + (inStk?" added":"");
-  addBtn.textContent = inStk ? "✓ Already listed" : "+ Add to their products";
-  addBtn.addEventListener("click", ()=>{ if(!inStk){ addToStack(d.id,"node"); addBtn.textContent="✓ Already listed"; addBtn.classList.add("added"); } });
-  document.getElementById("pbody").appendChild(addBtn);
-  document.getElementById("panel").classList.add("open");
+  openPanel();
 }
 
 window.showProductDetail = function(id) {
@@ -9500,6 +9705,10 @@ window.showProductDetail = function(id) {
   const statusColor = p.status==="eol" ? "#ef4444" : p.status==="eos" ? "#FF9000" : "#2dce5c";
   const statusLabel = {current:"Current",eos:"End of Sale",eol:"End of Life"}[p.status];
   const inStk = stack.has(id);
+  const ph = panelHead();
+  const pb = document.getElementById("pbody");
+  if (!ph || !pb) return;
+  const activeTab = pb.dataset.activeTab === "resources" ? "resources" : "overview";
 
   let eolBanner = "";
   if(p.status === "eol" || p.status === "eos"){
@@ -9513,36 +9722,49 @@ window.showProductDetail = function(id) {
     </div>`;
   }
 
-  document.getElementById("pbody").innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+  ph.innerHTML = `
+    <div class="p-head-badges">
       <div class="p-badge" style="background:${cat.color};color:${p.category==='computing'?'#fff':'#000'}">${cat.label}</div>
       <div style="padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:${statusColor}22;color:${statusColor}">${statusLabel}</div>
     </div>
     ${eolBanner}
     <div class="p-name">${p.name}</div>
     <p class="p-desc">${p.desc}</p>
-    ${node?`<div class="p-sec"><div class="p-sec-t">Part of Portfolio Family</div>
-      <div class="ri" onclick="jumpTo('${node.id}', {connectionDepth: 2}); closePanel()">
-        <div class="rd" style="background:${catColor(node.category)}"></div>
-        <div class="rif"><div class="rn">${node.name}</div><div class="rt">View extended ecosystem in graph (2 hops)</div></div>
-        <div class="ra">›</div></div></div>`:""}
-    <div class="p-sec"><div class="p-sec-t">Product Resources</div><div class="lb">
-      <a class="la" href="${productPageUrl(p)}" target="_blank" rel="noopener">Product Page / EOL Notice <span>cisco.com ↗</span></a>
-      ${node ? `<a class="la" href="${resolveDocumentationUrl(p, node)}" target="_blank" rel="noopener">Documentation <span>docs ↗</span></a>` : ""}
-    </div></div>`;
+    <div class="p-head-actions">
+      <button type="button" class="p-head-add${inStk ? " added" : ""}">${inStk ? "✓ In plan" : "+ Add to plan"}</button>
+    </div>
+    ${renderPanelTabsHtml(activeTab, ["overview","resources"])}`;
 
-  const addBtn = document.createElement("button");
-  addBtn.className = "add-stack-btn" + (inStk?" added":"");
-  addBtn.textContent = inStk ? "✓ Already listed" : "+ Add to their products";
-  addBtn.addEventListener("click",()=>{
-    if(!inStk){ addToStack(id,"product"); addBtn.textContent="✓ Already listed"; addBtn.classList.add("added"); }
-  });
-  document.getElementById("pbody").appendChild(addBtn);
-  document.getElementById("panel").classList.add("open");
+  pb.innerHTML = `
+    <div class="p-tab-pane${activeTab === "overview" ? " on" : ""}" data-tab="overview" role="tabpanel">
+      ${node ? renderOutcomeTeaser(node.id) : ""}
+      ${node?`<div class="p-sec"><div class="p-sec-t">Portfolio family</div>
+        <div class="ri" onclick="jumpTo('${node.id}', {connectionDepth: 2}); closePanel()">
+          <div class="rd" style="background:${catColor(node.category)}"></div>
+          <div class="rif"><div class="rn">${node.name}</div><div class="rt">View extended ecosystem in graph (2 hops)</div></div>
+          <div class="ra">›</div></div></div>`:""}
+    </div>
+    <div class="p-tab-pane${activeTab === "resources" ? " on" : ""}" data-tab="resources" role="tabpanel">
+      <div class="p-sec"><div class="p-sec-t">Product resources</div><div class="lb">
+        <a class="la" href="${productPageUrl(p)}" target="_blank" rel="noopener">Product page / EOL notice <span>cisco.com ↗</span></a>
+        ${node ? `<a class="la" href="${resolveDocumentationUrl(p, node)}" target="_blank" rel="noopener">Documentation <span>docs ↗</span></a>` : ""}
+      </div></div>
+      <div class="p-resources-extra"></div>
+    </div>`;
+
+  bindPanelTabs();
+  if (node) wireOutcomeTeaser(node.id);
+  wirePanelHeaderAdd(id, "product", inStk);
+  renderPanelFooter(id, "product", inStk);
+  openPanel();
 };
 
-function closePanel() { document.getElementById("panel").classList.remove("open"); }
+function closePanel() {
+  document.getElementById("panel")?.classList.remove("open");
+  document.getElementById("panel-backdrop")?.classList.remove("open");
+}
 document.getElementById("pcl").addEventListener("click",()=>{ selected=null; clearLinkSelection(); resetHL(); closePanel(); });
+document.getElementById("panel-backdrop")?.addEventListener("click",()=>{ selected=null; clearLinkSelection(); resetHL(); closePanel(); });
 
 window.jumpTo = (id, opts = {}) => {
   const d=nodeById[id]; if(!d) return;
@@ -13781,8 +14003,8 @@ function navHistory(delta){
   pushBreadcrumb = savedPush;
 }
 function renderBreadcrumbs(){
-  const pb = $("#pbody"); if (!pb) return;
-  pb.querySelector(".p-bc")?.remove();
+  const host = panelHead() || $("#pbody"); if (!host) return;
+  host.querySelector(".p-bc")?.remove();
   const current = bcHistory[bcIndex];
   if (!current) return;
 
@@ -13811,7 +14033,7 @@ function renderBreadcrumbs(){
   const bcDiv = document.createElement("div");
   bcDiv.className = "p-bc";
   bcDiv.innerHTML = crumbs + navHtml;
-  pb.insertBefore(bcDiv, pb.firstChild);
+  host.insertBefore(bcDiv, host.firstChild);
   bcDiv.querySelectorAll(".p-bc-i[data-jump='family']").forEach(b => {
     b.addEventListener("click", () => goToFamilyBreadcrumb(b.dataset.id));
   });
@@ -14374,9 +14596,10 @@ function renderLearningSectionBody(entries, opts = {}){
 }
 
 function insertLearningSections(id, kind){
-  const pb = $("#pbody");
-  if (!pb) return;
-  pb.querySelectorAll(".p-learn").forEach(el => el.remove());
+  const host = panelResourcesHost();
+  if (!host) return;
+  host.closest("#pbody")?.querySelectorAll(".p-learn").forEach(el => el.remove());
+  host.parentElement?.querySelectorAll(".p-learn").forEach(el => el.remove());
   if (!LEARNING_ENTRIES.length) return;
 
   const product = kind === "product" ? prodById[id] : null;
@@ -14387,12 +14610,12 @@ function insertLearningSections(id, kind){
   );
   if (!skills.length && !partner.length) return;
 
-  const anchor = pb.querySelector(".p-dcloud") || pb.querySelector(".p-matrix-link") ||
-    pb.querySelector(".p-desc") || pb.querySelector(".add-stack-btn");
+  const anchor = host.querySelector(".p-dcloud") || host.querySelector(".p-matrix-link") ||
+    host.querySelector(".p-sec") || host;
 
   const insertAfter = (el, node) => {
     if (el) el.insertAdjacentElement("afterend", node);
-    else pb.appendChild(node);
+    else host.appendChild(node);
   };
 
   const skillsHint = tier.skillsHint || LEARNING_DEFAULTS.skillsHint;
@@ -14693,7 +14916,9 @@ function dcloudGuidedRecommendationsHtml(){
 }
 
 function insertDcloudLinks(id, kind){
-  const pb = $("#pbody"); if (!pb || pb.querySelector(".p-dcloud")) return;
+  const host = panelResourcesHost();
+  const pb = $("#pbody");
+  if (!host || !pb || host.querySelector(".p-dcloud") || pb.querySelector(".p-dcloud")) return;
   const product = kind === "product" ? prodById[id] : null;
   const familyId = kind === "product" ? product?.family : id;
   const tier = panelLearningTier(kind);
@@ -14721,17 +14946,9 @@ function insertDcloudLinks(id, kind){
 
     wireDcloudPanelSection(sec, entries, browseQuery);
 
-    const matrix = pb.querySelector(".p-matrix-link");
+    const matrix = host.querySelector(".p-matrix-link") || pb.querySelector(".p-matrix-link");
     if (matrix){ matrix.insertAdjacentElement("afterend", sec); }
-    else {
-      const desc = pb.querySelector(".p-desc");
-      if (desc){ desc.insertAdjacentElement("afterend", sec); }
-      else {
-        const anchor = pb.querySelector(".add-stack-btn");
-        if (anchor) pb.insertBefore(sec, anchor);
-        else pb.appendChild(sec);
-      }
-    }
+    else host.appendChild(sec);
   }
   insertLearningSections(id, kind);
 }
@@ -14740,10 +14957,12 @@ function refreshDcloudPanelIfOpen(){
   const pb = $("#pbody");
   const panel = $("#panel");
   if (!pb || !panel?.classList.contains("open") || !pb.dataset.lastId) return;
-  pb.querySelector(".p-dcloud")?.remove();
+  pb.querySelectorAll(".p-dcloud").forEach(el => el.remove());
   pb.querySelectorAll(".p-learn").forEach(el => el.remove());
+  panelResourcesHost()?.querySelectorAll(".p-dcloud,.p-learn").forEach(el => el.remove());
   insertDcloudLinks(pb.dataset.lastId, pb.dataset.lastKind || "node");
-  pb.querySelector(".p-ops")?.remove();
+  pb.querySelectorAll(".p-ops").forEach(el => el.remove());
+  panelPane("overview")?.querySelectorAll(".p-ops").forEach(el => el.remove());
   insertCloudControlOps(pb.dataset.lastId, pb.dataset.lastKind || "node");
 }
 
@@ -14887,8 +15106,9 @@ window.openSymptomPicker = openSymptomPicker;
 
 function insertCloudControlOps(id, kind){
   const ops = window.__cpnOps;
+  const overview = panelPane("overview");
   const pb = $("#pbody");
-  if (!ops || !pb || pb.querySelector(".p-ops")) return;
+  if (!ops || !overview || overview.querySelector(".p-ops") || pb?.querySelector(".p-ops")) return;
   const familyId = kind === "product" ? prodById[id]?.family : id;
   const profile = ops.getOpsProfile(familyId);
   if (!profile) return;
@@ -14938,17 +15158,9 @@ function insertCloudControlOps(id, kind){
     </div>`;
   sec.querySelector("[data-cc-open]")?.addEventListener("click", () => openCloudControlBriefing(familyId));
 
-  const dcloud = pb.querySelector(".p-dcloud");
-  if (dcloud){ dcloud.insertAdjacentElement("afterend", sec); }
-  else {
-    const matrix = pb.querySelector(".p-matrix-link");
-    if (matrix){ matrix.insertAdjacentElement("afterend", sec); }
-    else {
-      const anchor = pb.querySelector(".add-stack-btn");
-      if (anchor) pb.insertBefore(sec, anchor);
-      else pb.appendChild(sec);
-    }
-  }
+  const industries = overview.querySelector(".p-sec:last-of-type");
+  if (industries) industries.insertAdjacentElement("afterend", sec);
+  else overview.appendChild(sec);
 }
 window.insertCloudControlOps = insertCloudControlOps;
 
@@ -15087,9 +15299,9 @@ function productMatrixHeroUrl(id){
 }
 
 function insertProductHero(id, kind){
-  const pb = $("#pbody"); if (!pb) return;
-  pb.querySelector(".p-hero")?.remove();
-  pb.querySelector(".p-photo")?.remove();
+  const host = panelHead() || $("#pbody"); if (!host) return;
+  host.querySelector(".p-hero")?.remove();
+  host.querySelector(".p-photo")?.remove();
   const n = (kind === "product") ? prodById[id] : nodeById[id];
   if (!n) return;
   const cat = catOf(id);
@@ -15145,9 +15357,9 @@ function insertProductHero(id, kind){
     hero.className = "p-hero p-hero--icon-only";
     hero.innerHTML = `${fallbackHtml}${metaHtml}`;
   }
-  const nameEl = pb.querySelector(".p-name");
-  if (nameEl) pb.insertBefore(hero, nameEl);
-  else pb.prepend(hero);
+  const nameEl = host.querySelector(".p-name");
+  if (nameEl) host.insertBefore(hero, nameEl);
+  else host.prepend(hero);
 }
 function heroIconBadgeHtml(symId, iconFill){
   return `<div class="p-hero-icon-badge" style="background:${escapeHtml(iconFill)}">
@@ -15176,8 +15388,10 @@ function heroCategoryGradient(hex){
 }
 function insertMatrixLink(id, kind){
   if (kind !== "product") return;
-  const pb = $("#pbody"); if (!pb) return;
-  pb.querySelector(".p-matrix-link")?.remove();
+  const host = panelResourcesHost();
+  if (!host) return;
+  host.querySelector(".p-matrix-link")?.remove();
+  $("#pbody")?.querySelector(".p-matrix-link")?.remove();
   if (!matrixDeviceUrl(id)) return;
   const sec = document.createElement("div");
   sec.className = "p-sec p-matrix-link";
@@ -15200,61 +15414,59 @@ function insertMatrixLink(id, kind){
         </button>
       </div>
     </div>`;
-  const hero = pb.querySelector(".p-hero") || pb.querySelector(".p-name");
-  if (hero?.nextSibling) hero.parentNode.insertBefore(sec, hero.nextSibling);
-  else pb.appendChild(sec);
+  host.appendChild(sec);
 }
 function insertPhotoPlaceholder(id, kind){ insertProductHero(id, kind); }
 window.insertProductHero = insertProductHero;
 function insertTierBadge(nodeId){
   const t = TIERS[nodeId]; if (!t) return;
-  const pb = $("#pbody"); if (!pb || pb.querySelector(".p-tier")) return;
+  const overview = panelPane("overview");
+  if (!overview || overview.querySelector(".p-tier")) return;
   const sec = document.createElement("div");
   sec.className = "p-sec";
   sec.innerHTML = `
-    <div class="p-sec-t">Licensing / Subscription</div>
+    <div class="p-sec-t">Licensing / subscription</div>
     <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:5px">
       ${t.tier.split("/").map(x => `<span class="p-tier"><span class="dot"></span>${escapeHtml(x.trim())}</span>`).join("")}
     </div>
     <div class="p-tier-note">Model: ${escapeHtml(t.model)}${t.note?` · ${escapeHtml(t.note)}`:""}</div>
   `;
-  // Insert after description (find first p-sec or .p-desc)
-  const desc = pb.querySelector(".p-desc");
-  if (desc && desc.nextSibling) desc.parentNode.insertBefore(sec, desc.nextSibling);
-  else pb.appendChild(sec);
+  overview.appendChild(sec);
 }
 function insertFieldNotice(productId){
   const fn = FIELD_NOTICE_BY_PROD[productId]; if (!fn) return;
-  const pb = $("#pbody"); if (!pb || pb.querySelector(".p-fn")) return;
+  const overview = panelPane("overview");
+  if (!overview || overview.querySelector(".p-fn")) return;
   const div = document.createElement("div");
   div.className = "p-fn";
   div.innerHTML = `<strong>⚠ ${escapeHtml(fn.label)}</strong> (${fn.date}) — ${escapeHtml(fn.title)}
     <br><a href="${fn.url}" target="_blank" rel="noopener">View on cisco.com ↗</a>`;
-  pb.appendChild(div);
+  overview.appendChild(div);
 }
 function insertPinAndCompareBtns(id, kind){
-  const pb = $("#pbody"); if (!pb || pb.querySelector(".p-extra")) return;
+  const pf = panelFooter();
+  if (!pf || pf.querySelector(".p-extra")) return;
   const div = document.createElement("div");
   div.className = "p-extra";
-  div.style.cssText = "display:flex;gap:6px;margin-top:8px";
   div.innerHTML = `
-    <button class="rc-btn pe-pin">☆ Pin</button>
-    <button class="rc-btn pe-cmp">⇆ Show in Compare</button>
+    <button type="button" class="rc-btn pe-pin">☆ Pin</button>
+    <button type="button" class="rc-btn pe-cmp">⇆ Compare</button>
   `;
-  pb.appendChild(div);
-  const pinBtn = div.querySelector(".pe-pin");
-  const cmpBtn = div.querySelector(".pe-cmp");
-  pinBtn.addEventListener("click", () => {
+  pf.appendChild(div);
+  div.querySelector(".pe-pin")?.addEventListener("click", () => {
     togglePin(id);
     refreshDetailPinButtons(id);
   });
-  cmpBtn.addEventListener("click", () => addToCompare(id, kind));
+  div.querySelector(".pe-cmp")?.addEventListener("click", () => addToCompare(id));
   refreshDetailPinButtons(id);
 }
 
 function refreshDetailPinButtons(id){
-  const pb = $("#pbody"); if (!pb || pb.dataset.lastId !== id) return;
-  const extra = pb.querySelector(".p-extra"); if (!extra) return;
+  const pf = panelFooter();
+  const pb = $("#pbody");
+  if ((!pf && !pb) || pb?.dataset.lastId !== id) return;
+  const extra = pf?.querySelector(".p-extra") || pb?.querySelector(".p-extra");
+  if (!extra) return;
   const pinned = lsGet(STORAGE_KEYS.pinned, []).includes(id);
   const inCompare = compareItems().includes(id);
   const pinBtn = extra.querySelector(".pe-pin");
@@ -15265,7 +15477,6 @@ function refreshDetailPinButtons(id){
 
 function enhanceDetailPanel(){
   const pb = $("#pbody"); if (!pb) return;
-  if (pb.querySelector(".p-extra")) return;
   const marker = pb.dataset.lastId;
   if (!marker) return;
   const kind = pb.dataset.lastKind || "node";
@@ -16738,7 +16949,7 @@ window.__cpnV2 = {
 <script src="assets/cpn-kiosk.js?v=3.3.0"></script>
 <script src="assets/cpn-acquisitions-data.js?v=3.3.5"></script>
 <script src="assets/cpn-refresh-timeline.js?v=3.5.9"></script>
-<script src="assets/cpn-acquisitions-timeline.js?v=3.5.10"></script>
+<script src="assets/cpn-acquisitions-timeline.js?v=3.5.11"></script>
 <script src="assets/cpn-logo-intro.js?v=2.91.6"></script>
 </body>
 </html>
