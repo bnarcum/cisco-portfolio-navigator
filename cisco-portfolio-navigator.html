@@ -9,7 +9,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.13";
+  window.__CPN_BUILD="3.5.14";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -5980,6 +5980,7 @@ function refitGraphForChrome(animate){
   if (viewMode === "composition") fitCompositionView(immediate);
   else if (viewMode === "families" && usePillarLayout()) fitPillarLayoutView(immediate);
   else if (viewMode === "families") fitVisibleGraphView(0.78, immediate);
+  else if (viewMode === "all-products") fitAllProductsView();
 }
 window.refitGraphForChrome = refitGraphForChrome;
 
@@ -9480,7 +9481,7 @@ function selectNode(d, opts = {}) {
     return;
   }
   const {w,h}=getDims(), t=d3.zoomTransform(svgEl);
-  const pw=plannerOpen?490:390;
+  const pw=panelOffsetW();
   svg.transition().duration(500).call(zoom.transform,
     d3.zoomIdentity.translate(-d.x*t.k+(w-pw)/2,-d.y*t.k+h/2).scale(t.k))
     .on("end", () => window.__cpnOutcomeCard?.reposition?.());
@@ -9786,6 +9787,7 @@ function closePanel() {
   document.getElementById("panel")?.classList.remove("open");
   document.getElementById("panel-backdrop")?.classList.remove("open");
   window.__cpnOutcomeCard?.hide?.();
+  if (viewMode !== "spatial" && viewMode !== "overview") refitGraphForChrome(true);
 }
 document.getElementById("pcl").addEventListener("click",()=>{ selected=null; clearLinkSelection(); resetHL(); closePanel(); });
 document.getElementById("panel-backdrop")?.addEventListener("click",()=>{ selected=null; clearLinkSelection(); resetHL(); closePanel(); });
@@ -10221,6 +10223,7 @@ function closePlanner(){
   plannerBtn.classList.remove("active");
   plannerBtn.innerHTML=`<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" fill="currentColor"/><rect x="9" y="2" width="5" height="5" rx="1" fill="currentColor" opacity=".6"/><rect x="2" y="9" width="5" height="5" rx="1" fill="currentColor" opacity=".6"/><rect x="9" y="9" width="5" height="5" rx="1" fill="currentColor"/></svg> Account Planner`;
   selected=null; resetHL();
+  if (viewMode !== "spatial" && viewMode !== "overview") refitGraphForChrome(true);
 }
 document.getElementById("pln-edit-stack")?.addEventListener("click", () => {
   plannerSetupExpanded = true;
