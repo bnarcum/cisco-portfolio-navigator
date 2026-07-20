@@ -1,76 +1,24 @@
 /**
- * Node-attached outcome card — "Problems this solves" on the graph canvas.
- * One primary problem (+ expand) and persona framing.
- *
- * In Composition / Families views, opening the card reserves right chrome and
- * animates the graph left; closing animates back.
+ * Outcome framing — lives in the detail panel Overview tab (expand on demand).
+ * Legacy #outcome-card canvas element is kept hidden; offsetW() is always 0.
  */
 (function () {
   "use strict";
 
-  const CARD_GAP = 16;
-  const CARD_FALLBACK_W = 360;
-
-  let activeFamilyId = null;
-  let expandedMore = false;
-  let anchorNode = null;
-  let graphWasPushed = false;
+  let panelFamilyId = null;
+  let panelExpanded = false;
+  let panelExpandedMore = false;
 
   function cardEl() {
     return document.getElementById("outcome-card");
   }
 
   function isVisible() {
-    const card = cardEl();
-    return !!(card && card.style.display !== "none" && card.getAttribute("aria-hidden") !== "true");
+    const block = document.querySelector("#pbody .p-outcome-block.is-expanded");
+    return !!block;
   }
 
   function offsetW() {
-    if (!isVisible()) return 0;
-    const card = cardEl();
-    const w = card?.offsetWidth || CARD_FALLBACK_W;
-    return w + CARD_GAP;
-  }
-
-  function viewMode() {
-    try {
-      if (typeof window.viewMode === "string") return window.viewMode;
-    } catch (e) { /* noop */ }
-    const active = document.querySelector("[data-vm].active");
-    return active?.dataset?.vm || "";
-  }
-
-  function shouldPushGraph() {
-    const vm = viewMode();
-    return vm === "composition" || vm === "families";
-  }
-
-  function refitGraph(animate) {
-    if (!shouldPushGraph()) return;
-    if (typeof window.refitGraphForChrome === "function") {
-      window.refitGraphForChrome(animate);
-    }
-  }
-
-  function nodeScreenPosition(d) {
-    if (!d || d.x == null || d.y == null) return null;
-    const gw = document.getElementById("gw");
-    const svg = document.getElementById("gs");
-    if (!gw || !svg || typeof d3 === "undefined") return null;
-    const rect = gw.getBoundingClientRect();
-    const t = d3.zoomTransform(svg);
-    return {
-      x: rect.left + d.x * t.k + t.x,
-      y: rect.top + d.y * t.k + t.y
-    };
-  }
-
-  function panelRightWidth() {
-    try {
-      if (typeof plannerOpen !== "undefined" && plannerOpen) return 490;
-      const panel = document.getElementById("panel");
-      if (panel && panel.classList.contains("open")) return 390;
-    } catch (e) { /* noop */ }
     return 0;
   }
 
@@ -81,7 +29,11 @@
   function escapeAttr(s) { return escapeHtml(s); }
 
   function problemBlockHtml(prob, persona, P, opts) {
-    const view = P.personaView ? P.personaView(prob, persona) : { symptom: prob.symptom, line: persona ? P.personaLine(prob, persona) : prob.outcome, proof: prob.proof };
+    const view = P.personaView ? P.personaView(prob, persona) : {
+      symptom: prob.symptom,
+      line: persona ? P.personaLine(prob, persona) : prob.outcome,
+      proof: prob.proof
+    };
     const symptom = view.symptom || prob.symptom;
     const line = view.line || prob.outcome;
     const proof = view.proof || prob.proof;
@@ -110,157 +62,153 @@
       ${chain}`;
   }
 
-  function personaMetaLabel(persona, P) {
-    if (!persona) return "Problems this solves";
-    const p = P.PERSONAS.find(x => x.id === persona);
-    return `Problems this solves · ${p?.label || persona} view`;
+  function teaserSummary(prob, persona, P) {
+    const headline = persona ? P.personaLine(prob, persona) : prob.outcome;
+    const personaObj = persona && prob.personas?.[persona];
+    const symptom = typeof personaObj === "object" ? personaObj?.symptom : null;
+    const showSym = symptom && symptom !== headline;
+    return { headline, symptom: showSym ? symptom : null };
   }
 
-  function wireCard(card, familyId, primaryProb) {
-    card.querySelector(".oc-close")?.addEventListener("click", () => hideOutcomeCard());
-    card.querySelectorAll("[data-oc-persona]").forEach(btn => {
-      btn.addEventListener("click", () => {
+  function buildPanelHtml(familyId) {
+    const P = window.__cpnProblems;
+    if (!P) return "";
+    const problems = P.problemsForFamily(familyId);
+    if (!problems.length) return "";
+
+    const persona = typeof currentPersona === "function" ? currentPersona() : "";
+    const primary = problems[0];
+    const rest = problems.slice(1);
+    const showRest = panelExpandedMore && rest.length;
+    const { headline, symptom } = teaserSummary(primary, persona, P);
+
+    const personaChips = P.PERSONAS.map(pp =>
+      `<button type="button" role="tab" aria-selected="${pp.id === persona ? "true" : "false"}" class="oc-persona${pp.id === persona ? " on" : ""}" data-oc-persona="${escapeAttr(pp.id)}">${escapeHtml(pp.label)}</button>`
+    ).join("");
+
+    const moreBtn = rest.length && !panelExpandedMore
+      ? `<button type="button" class="oc-more" data-oc-more>+ ${rest.length} more problem${rest.length > 1 ? "s" : ""}</button>`
+      : "";
+
+    const toggleLabel = panelExpanded ? "Hide outcome framing" : "Show full outcome framing";
+
+    return `<div class="p-outcome-block${panelExpanded ? " is-expanded" : ""}" data-outcome-family="${escapeAttr(familyId)}">
+      <button type="button" class="p-outcome-teaser" aria-expanded="${panelExpanded ? "true" : "false"}">
+        <div class="p-outcome-label">What problem this solves</div>
+        ${symptom ? `<div class="p-outcome-sym">${escapeHtml(symptom)}</div>` : ""}
+        <div class="p-outcome-head">${escapeHtml(headline)}</div>
+        <div class="p-outcome-link">${toggleLabel} ${panelExpanded ? "↑" : "→"}</div>
+      </button>
+      <div class="p-outcome-body"${panelExpanded ? "" : " hidden"}>
+        <div class="oc-persona-block">
+          <div class="oc-persona-label">View as</div>
+          <div class="oc-personas" role="tablist" aria-label="Frame outcome for persona">${personaChips}</div>
+        </div>
+        <div class="oc-problems">
+          ${problemBlockHtml(primary, persona, P, { familyId })}
+          ${showRest ? rest.map(p => problemBlockHtml(p, persona, P, { withDivider: true, familyId })).join("") : ""}
+          ${moreBtn}
+        </div>
+        <div class="oc-note" title="${escapeAttr(P.DISCLAIMER)}">Directional talking points · not guarantees</div>
+      </div>
+    </div>`;
+  }
+
+  function wirePanelBlock(host, familyId) {
+    if (!host) return;
+    host.querySelector(".p-outcome-teaser")?.addEventListener("click", () => {
+      panelExpanded = !panelExpanded;
+      remountPanel(host, familyId);
+    });
+    host.querySelectorAll("[data-oc-persona]").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
         const val = btn.dataset.ocPersona;
         const cur = typeof currentPersona === "function" ? currentPersona() : "";
         if (typeof setPersona === "function") setPersona(val === cur ? "" : val);
         if (typeof restoreGraphNodeIcons === "function") restoreGraphNodeIcons();
-        showOutcomeCard(familyId, anchorNode, { skipGraphPush: true });
+        remountPanel(host, familyId);
       });
     });
-    card.querySelector("[data-oc-more]")?.addEventListener("click", () => {
-      expandedMore = true;
-      showOutcomeCard(familyId, anchorNode, { skipGraphPush: true });
+    host.querySelector("[data-oc-more]")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      panelExpandedMore = true;
+      panelExpanded = true;
+      remountPanel(host, familyId);
     });
-    card.querySelectorAll("[data-ocj-explore]").forEach(btn => {
-      btn.addEventListener("click", () => {
+    host.querySelectorAll("[data-ocj-explore]").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
         if (typeof exploreProblem === "function") exploreProblem(btn.dataset.ocjExplore);
         if (typeof restoreGraphNodeIcons === "function") restoreGraphNodeIcons();
       });
     });
   }
 
-  function showOutcomeCard(familyId, node, opts) {
-    const P = window.__cpnProblems;
-    const card = cardEl();
-    if (!P || !card) return;
+  function remountPanel(host, familyId) {
+    host.innerHTML = buildPanelHtml(familyId);
+    wirePanelBlock(host, familyId);
+  }
 
-    const problems = P.problemsForFamily(familyId);
-    if (!problems.length) {
-      hideOutcomeCard();
+  function mountPanelOutcome(host, familyId, opts) {
+    if (!host || !familyId) return;
+    const P = window.__cpnProblems;
+    if (!P || !P.problemsForFamily(familyId).length) {
+      host.innerHTML = "";
       return;
     }
-
-    const wasVisible = isVisible();
-    const pushGraph = shouldPushGraph() && !opts?.skipGraphPush;
-
-    if (familyId !== activeFamilyId) expandedMore = false;
-    activeFamilyId = familyId;
-    anchorNode = node || (typeof nodeById !== "undefined" ? nodeById[familyId] : null);
-
-    const persona = typeof currentPersona === "function" ? currentPersona() : "";
-    const famName = P.nameOr(familyId);
-    const primary = problems[0];
-    const rest = problems.slice(1);
-    const showRest = expandedMore && rest.length;
-
-    const personaChips = P.PERSONAS.map(pp =>
-      `<button type="button" role="tab" aria-selected="${pp.id === persona ? "true" : "false"}" class="oc-persona${pp.id === persona ? " on" : ""}" data-oc-persona="${escapeAttr(pp.id)}">${escapeHtml(pp.label)}</button>`
-    ).join("");
-
-    const moreBtn = rest.length && !expandedMore
-      ? `<button type="button" class="oc-more" data-oc-more>+ ${rest.length} more problem${rest.length > 1 ? "s" : ""}</button>`
-      : "";
-
-    card.innerHTML = `
-      <button type="button" class="oc-close" aria-label="Dismiss outcome card">×</button>
-      <div class="oc-head">
-        <div class="oc-title">${escapeHtml(famName)}</div>
-        <div class="oc-meta">${escapeHtml(personaMetaLabel(persona, P))}</div>
-      </div>
-      <div class="oc-persona-block">
-        <div class="oc-persona-label">View as</div>
-        <div class="oc-personas" role="tablist" aria-label="Frame outcome for persona">${personaChips}</div>
-      </div>
-      <div class="oc-problems">
-        ${problemBlockHtml(primary, persona, P, { familyId })}
-        ${showRest ? rest.map((p, i) => problemBlockHtml(p, persona, P, { withDivider: true, familyId })).join("") : ""}
-        ${moreBtn}
-      </div>
-      <div class="oc-note" title="${escapeAttr(P.DISCLAIMER)}">Directional talking points · not guarantees</div>`;
-
-    wireCard(card, familyId, primary);
-    card.style.display = "block";
-    card.setAttribute("aria-hidden", "false");
-    card.classList.toggle("oc-dock", shouldPushGraph());
-
-    if (pushGraph && (!wasVisible || !graphWasPushed)) {
-      graphWasPushed = true;
-      refitGraph(true);
+    if (familyId !== panelFamilyId) {
+      panelFamilyId = familyId;
+      panelExpanded = !!opts?.startExpanded;
+      panelExpandedMore = false;
+    } else if (opts?.startExpanded) {
+      panelExpanded = true;
     }
-
-    requestAnimationFrame(() => {
-      repositionOutcomeCard();
-      if (pushGraph && !wasVisible) {
-        requestAnimationFrame(() => repositionOutcomeCard());
-      }
-    });
+    remountPanel(host, familyId);
   }
 
   function hideOutcomeCard() {
     const card = cardEl();
-    if (!card) return;
-    const hadPush = graphWasPushed && shouldPushGraph();
-    card.style.display = "none";
-    card.setAttribute("aria-hidden", "true");
-    card.classList.remove("oc-dock");
-    activeFamilyId = null;
-    anchorNode = null;
-    expandedMore = false;
-    graphWasPushed = false;
-    if (hadPush) refitGraph(true);
-  }
-
-  function repositionOutcomeCard() {
-    const card = cardEl();
-    if (!card || card.style.display === "none" || !anchorNode) return;
-    const pos = nodeScreenPosition(anchorNode);
-    if (!pos) return;
-
-    const cw = card.offsetWidth || CARD_FALLBACK_W;
-    const ch = card.offsetHeight || 220;
-    const panelW = panelRightWidth();
-    const edgePad = 12;
-
-    let x;
-    let y = pos.y - ch * 0.45;
-
-    if (shouldPushGraph()) {
-      const rightLimit = window.innerWidth - panelW - edgePad;
-      x = rightLimit - cw;
-    } else {
-      const rightLimit = window.innerWidth - panelW - edgePad;
-      x = pos.x + 28;
-      if (x + cw > rightLimit) x = pos.x - cw - 28;
+    if (card) {
+      card.style.display = "none";
+      card.setAttribute("aria-hidden", "true");
     }
-
-    if (x < edgePad) x = edgePad;
-    if (y < 72) y = 72;
-    if (y + ch > window.innerHeight - edgePad) y = window.innerHeight - ch - edgePad;
-
-    card.style.left = x + "px";
-    card.style.top = y + "px";
+    panelFamilyId = null;
+    panelExpanded = false;
+    panelExpandedMore = false;
   }
 
-  window.addEventListener("resize", () => {
-    if (!isVisible()) return;
-    repositionOutcomeCard();
-  });
+  /** @deprecated Canvas card — redirects to panel mount when possible */
+  function showOutcomeCard(familyId, node, opts) {
+    hideOutcomeCard();
+    const slot = document.querySelector("#pbody .p-outcome-slot[data-outcome-family=\"" + familyId + "\"]")
+      || document.querySelector("#pbody .p-outcome-slot");
+    if (slot) {
+      mountPanelOutcome(slot, familyId, { startExpanded: true });
+      return;
+    }
+    const overview = document.querySelector('#pbody .p-tab-pane[data-tab="overview"]');
+    if (overview) {
+      let slotEl = overview.querySelector(".p-outcome-slot");
+      if (!slotEl) {
+        slotEl = document.createElement("div");
+        slotEl.className = "p-outcome-slot";
+        slotEl.dataset.outcomeFamily = familyId;
+        overview.insertBefore(slotEl, overview.firstChild);
+      }
+      mountPanelOutcome(slotEl, familyId, { startExpanded: true });
+    }
+  }
+
+  function repositionOutcomeCard() { /* no-op — panel-local */ }
 
   window.__cpnOutcomeCard = {
     show: showOutcomeCard,
     hide: hideOutcomeCard,
     reposition: repositionOutcomeCard,
     offsetW,
-    isVisible
+    isVisible,
+    mountPanel: mountPanelOutcome,
+    buildPanelHtml
   };
 })();

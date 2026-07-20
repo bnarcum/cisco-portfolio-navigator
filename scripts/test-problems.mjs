@@ -194,72 +194,81 @@ try {
   if (!model.editorial.appDynamicsBrand) errors.push("catalog: AppDynamics family must use current Splunk branding");
   if (!model.editorial.noGuaranteeLanguage) errors.push("catalog: remove absolute/guarantee language");
 
-  // 2) Canvas outcome card renders + persona toggle (not side panel)
+  // 2) In-panel outcome block expands + persona toggle (canvas card stays hidden)
   const card = await page.evaluate(async () => {
     await new Promise(r => setTimeout(r, 800)); // dCloud/learning links load
     document.querySelector('[data-vm="families"]')?.click();
     await new Promise(r => setTimeout(r, 350));
     window.setPersona("");
-    window.__cpnOutcomeCard.show("sdwan", window.nodeById["sdwan"]);
-    const el = document.getElementById("outcome-card");
+    window.jumpTo("sdwan");
+    await new Promise(r => setTimeout(r, 400));
+    const canvas = document.getElementById("outcome-card");
+    document.querySelector("#pbody .p-outcome-teaser")?.click();
+    await new Promise(r => setTimeout(r, 100));
+    const block = document.querySelector("#pbody .p-outcome-block");
     // Simulate stale dimmed icons from an explore highlight.
     document.querySelectorAll("use.icn").forEach(n => n.setAttribute("opacity", "0.1"));
     const out = {
-      visible: el?.style.display !== "none",
-      hasProof: !!el?.querySelector(".oc-compare"),
-      personaChips: el?.querySelectorAll(".oc-persona").length || 0,
-      noPanelBlock: !document.querySelector("#pbody .p-prob"),
-      noJourney: !el?.querySelector(".oc-journey")
+      canvasHidden: !canvas || canvas.style.display === "none",
+      expanded: block?.classList.contains("is-expanded"),
+      hasProof: !!block?.querySelector(".oc-compare"),
+      personaChips: block?.querySelectorAll(".oc-persona").length || 0,
+      noPanelProb: !document.querySelector("#pbody .p-prob"),
+      noJourney: !block?.querySelector(".oc-journey")
     };
     const grab = () => {
-      const c = document.getElementById("outcome-card");
+      const b = document.querySelector("#pbody .p-outcome-block");
       return {
-        headline: c?.querySelector(".oc-headline")?.textContent || "",
-        quote: c?.querySelector(".oc-quote")?.textContent || "",
-        after: c?.querySelector(".oc-compare-after")?.textContent || ""
+        headline: b?.querySelector(".oc-headline")?.textContent || "",
+        quote: b?.querySelector(".oc-quote")?.textContent || "",
+        after: b?.querySelector(".oc-compare-after")?.textContent || ""
       };
     };
-    el?.querySelector('[data-oc-persona="netops"]')?.click();
+    block?.querySelector('[data-oc-persona="netops"]')?.click();
     const net = grab();
-    document.getElementById("outcome-card")?.querySelector('[data-oc-persona="ciso"]')?.click();
+    block?.querySelector('[data-oc-persona="ciso"]')?.click();
     const ciso = grab();
     out.personaChanged = net.headline !== ciso.headline;
     out.quoteChanged = net.quote !== ciso.quote;
     out.proofChanged = net.after !== ciso.after;
-    // Persona toggle must restore graph icons (not leave them dimmed/blank).
     const icnOpacities = Array.from(document.querySelectorAll("#gs use.icn"))
       .map(n => parseFloat(n.getAttribute("opacity") || "1"));
     out.iconsRestored = icnOpacities.length > 0 && icnOpacities.every(o => o >= 0.9);
     window.setPersona("");
     return out;
   });
-  if (!card.visible) errors.push("canvas: outcome card did not show");
-  if (!card.noJourney) errors.push("canvas: journey section should be removed");
-  if (!card.hasProof) errors.push("canvas: no proof line");
-  if (card.personaChips !== 3) errors.push(`canvas: expected 3 persona chips, got ${card.personaChips}`);
-  if (!card.personaChanged) errors.push("canvas: persona toggle did not change outcome");
-  if (!card.quoteChanged) errors.push("canvas: persona toggle did not change symptom quote");
-  if (!card.proofChanged) errors.push("canvas: persona toggle did not change before/after proof");
-  if (!card.iconsRestored) errors.push("canvas: persona toggle left graph icons dimmed");
-  if (!card.noPanelBlock) errors.push("side panel should not contain .p-prob block");
+  if (!card.canvasHidden) errors.push("panel: canvas outcome card should stay hidden");
+  if (!card.expanded) errors.push("panel: outcome block did not expand");
+  if (!card.noJourney) errors.push("panel: journey section should be removed");
+  if (!card.hasProof) errors.push("panel: no proof line");
+  if (card.personaChips !== 3) errors.push(`panel: expected 3 persona chips, got ${card.personaChips}`);
+  if (!card.personaChanged) errors.push("panel: persona toggle did not change outcome");
+  if (!card.quoteChanged) errors.push("panel: persona toggle did not change symptom quote");
+  if (!card.proofChanged) errors.push("panel: persona toggle did not change before/after proof");
+  if (!card.iconsRestored) errors.push("panel: persona toggle left graph icons dimmed");
+  if (!card.noPanelProb) errors.push("side panel should not contain .p-prob block");
 
-  // 2b) Splunk outcome card uses observability narrative, not Cisco IQ chain
-  const splunkCard = await page.evaluate(() => {
+  // 2b) Splunk in-panel outcome uses observability narrative, not Cisco IQ chain
+  const splunkCard = await page.evaluate(async () => {
     document.querySelector('[data-vm="families"]')?.click();
+    await new Promise(r => setTimeout(r, 200));
     window.setPersona("cio");
-    window.__cpnOutcomeCard.show("splunk", window.nodeById["splunk"]);
-    const el = document.getElementById("outcome-card");
-    const text = el?.textContent || "";
+    window.jumpTo("splunk");
+    await new Promise(r => setTimeout(r, 400));
+    document.querySelector("#pbody .p-outcome-teaser")?.click();
+    await new Promise(r => setTimeout(r, 100));
+    const block = document.querySelector("#pbody .p-outcome-block");
+    const text = block?.textContent || "";
     return {
-      headline: el?.querySelector(".oc-headline")?.textContent || "",
+      headline: block?.querySelector(".oc-headline")?.textContent || "",
       hasCiscoIqChain: /consolidated Cisco asset view/i.test(text),
       hasThreatDwell: /Detect and contain incidents before they become headlines/i.test(text),
       hasObservability: /war room|Cross-domain observability|Less downtime/i.test(text)
     };
   });
-  if (splunkCard.hasThreatDwell) errors.push("splunk card: should not show Threat Defense primary narrative");
-  if (splunkCard.hasCiscoIqChain) errors.push("splunk card: should not chain to Cisco IQ asset view");
-  if (!splunkCard.hasObservability) errors.push("splunk card: expected observability-first CIO narrative");
+  if (splunkCard.hasThreatDwell) errors.push("splunk panel: should not show Threat Defense primary narrative");
+  if (splunkCard.hasCiscoIqChain) errors.push("splunk panel: should not chain to Cisco IQ asset view");
+  if (!splunkCard.hasObservability) errors.push("splunk panel: expected observability-first CIO narrative");
 
   // 3) Analyze a stack -> Outcomes tab + reframed suggestions/bundles
   const analysis = await page.evaluate(() => {

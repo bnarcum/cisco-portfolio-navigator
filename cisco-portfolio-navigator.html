@@ -9,7 +9,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.11";
+  window.__CPN_BUILD="3.5.12";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -62,7 +62,7 @@
   <link rel="stylesheet" href="assets/cpn-light.css?v=2.87.5"/>
   <link rel="stylesheet" href="assets/cpn-iq-theme.css?v=2.87.5"/>
   <link rel="stylesheet" href="assets/cpn-logo-intro.css?v=2.91.6"/>
-  <link rel="stylesheet" href="assets/cpn-acquisitions-timeline.css?v=3.5.11"/>
+  <link rel="stylesheet" href="assets/cpn-acquisitions-timeline.css?v=3.5.12"/>
   <link rel="stylesheet" href="assets/cpn-refresh-timeline.css?v=3.5.9"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -479,6 +479,7 @@
     #panel-backdrop{position:fixed;inset:var(--topbar-h) 0 0 0;z-index:59;background:rgba(6,11,20,.38);
       opacity:0;pointer-events:none;transition:opacity .22s ease}
     #panel-backdrop.open{opacity:1;pointer-events:auto}
+    body.tl-open #panel-backdrop.open{pointer-events:none;opacity:0;background:transparent}
     #panel{position:fixed;top:calc(var(--topbar-h) + 16px);right:16px;width:400px;max-width:calc(100vw - 32px);
       max-height:calc(100vh - var(--topbar-h) - 32px);
       background:var(--glass-bg);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
@@ -517,10 +518,46 @@
     .p-tab.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.2)}
     .p-tab-pane{display:none}
     .p-tab-pane.on{display:block}
-    .p-outcome-teaser{padding:12px 14px;border-radius:10px;margin-bottom:18px;cursor:pointer;
-      background:rgba(2,200,255,.1);border:1px solid rgba(2,200,255,.22);transition:border-color .15s}
+    .p-outcome-block{margin-bottom:18px}
+    .p-outcome-body{margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08)}
+    .p-outcome-body[hidden]{display:none}
+    #pbody .p-outcome-block .oc-persona-block{margin-bottom:14px}
+    #pbody .p-outcome-block .oc-persona-label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+      color:#b8c4d0;margin-bottom:7px}
+    #pbody .p-outcome-block .oc-personas{display:flex;gap:6px;flex-wrap:wrap;padding:4px;
+      border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+    #pbody .p-outcome-block .oc-persona{font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;
+      padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.04);color:#c8cfd8;transition:all .15s;flex:1;min-width:0;text-align:center}
+    #pbody .p-outcome-block .oc-persona:hover{border-color:rgba(2,200,255,.35);color:var(--text);background:rgba(2,200,255,.08)}
+    #pbody .p-outcome-block .oc-persona.on{background:rgba(2,200,255,.2);border-color:rgba(2,200,255,.55);color:#fff}
+    #pbody .p-outcome-block .oc-prob-divider{height:1px;background:rgba(255,255,255,.08);margin:14px 0}
+    #pbody .p-outcome-block .oc-quote{font-size:13px;line-height:1.55;color:#c8d4dc;margin-bottom:12px;font-weight:400}
+    #pbody .p-outcome-block .oc-quote em{font-style:normal;color:#e8f4ff}
+    #pbody .p-outcome-block .oc-headline{font-size:14px;font-weight:700;line-height:1.45;margin-bottom:12px;color:var(--text)}
+    #pbody .p-outcome-block .oc-compare{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:12px;font-size:11px;line-height:1.4}
+    #pbody .p-outcome-block .oc-compare-box{padding:10px;border-radius:8px}
+    #pbody .p-outcome-block .oc-compare-before{background:rgba(255,0,127,.08);color:#ffb3d9}
+    #pbody .p-outcome-block .oc-compare-after{background:rgba(2,200,255,.08);color:#7ee8ff}
+    #pbody .p-outcome-block .oc-compare-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;opacity:.8;margin-bottom:4px}
+    #pbody .p-outcome-block .oc-compare-arrow{color:#94a3b8;font-size:14px;text-align:center}
+    #pbody .p-outcome-block .oc-prob-next{display:block;width:100%;margin-top:8px;text-align:left;font-family:inherit;
+      font-size:11px;font-weight:600;cursor:pointer;padding:8px 10px;border-radius:8px;
+      border:1px dashed rgba(255,255,255,.12);background:transparent;color:#c8cfd8}
+    #pbody .p-outcome-block .oc-prob-next:hover{border-color:rgba(2,200,255,.35);color:var(--text)}
+    #pbody .p-outcome-block .oc-prob-next b{color:var(--accent);font-weight:600}
+    #pbody .p-outcome-block .oc-more{display:block;width:100%;margin-top:10px;font-family:inherit;font-size:11px;font-weight:600;
+      cursor:pointer;border:none;background:transparent;color:var(--accent);text-align:left;padding:4px 0}
+    #pbody .p-outcome-block .oc-note{font-size:10px;color:#a8b2bf;margin-top:12px;line-height:1.4}
+    [data-theme="light"] #pbody .p-outcome-block .oc-persona{color:#525e6c;border-color:rgba(7,24,45,.14);background:#fff}
+    [data-theme="light"] #pbody .p-outcome-block .oc-persona.on{background:rgba(0,110,143,.12);border-color:rgba(0,110,143,.45);color:#07182d}
+    [data-theme="light"] #pbody .p-outcome-block .oc-quote{color:#525e6c}
+    [data-theme="light"] #pbody .p-outcome-block .oc-quote em{color:#07182d}
+    .p-outcome-teaser{width:100%;text-align:left;padding:12px 14px;border-radius:10px;margin:0;cursor:pointer;
+      background:rgba(2,200,255,.1);border:1px solid rgba(2,200,255,.22);transition:border-color .15s;font-family:inherit}
+    .p-outcome-block.is-expanded .p-outcome-teaser{border-radius:10px 10px 0 0;border-bottom-color:transparent}
     .p-outcome-teaser:hover{border-color:rgba(2,200,255,.4)}
-    .p-outcome-label{font-size:11px;font-weight:700;color:#d8e8f4;letter-spacing:.02em;margin-bottom:6px}
+    .p-outcome-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#8ec8dc;margin-bottom:6px}
     .p-outcome-sym{font-size:12px;line-height:1.45;color:#c8d4dc;font-style:italic;margin-bottom:6px}
     .p-outcome-head{font-size:13px;font-weight:700;line-height:1.45;color:#e8f6ff}
     .p-outcome-link{font-size:11px;color:var(--accent);font-weight:600;margin-top:8px}
@@ -5771,13 +5808,15 @@ function resetStandardLabelStyles(){
 function panelOffsetW(){
   if (typeof plannerOpen !== "undefined" && plannerOpen) return 490;
   const panel = document.getElementById("panel");
-  return panel?.classList.contains("open") ? 390 : 0;
+  if (panel?.classList.contains("open")) {
+    const w = panel.offsetWidth || 400;
+    return w + 32;
+  }
+  return 0;
 }
 
 function outcomeCardOffsetW(){
-  try {
-    return window.__cpnOutcomeCard?.offsetW?.() || 0;
-  } catch (e) { return 0; }
+  return 0;
 }
 
 /** Left/top chrome that should stay clear of the graph (pillar legend in Families). */
@@ -7371,10 +7410,6 @@ function openPanel(){
   document.getElementById("panel")?.classList.add("open");
   document.getElementById("panel-backdrop")?.classList.add("open");
 }
-function closePanel(){
-  document.getElementById("panel")?.classList.remove("open");
-  document.getElementById("panel-backdrop")?.classList.remove("open");
-}
 
 function switchPanelTab(tab){
   const ph = panelHead();
@@ -7402,35 +7437,14 @@ function renderPanelTabsHtml(activeTab, tabs){
   ).join("")}</nav>`;
 }
 
-function renderOutcomeTeaser(familyId){
-  const P = window.__cpnProblems;
-  if (!P) return "";
-  const prob = P.topProblemForFamily(familyId);
-  if (!prob) return "";
-  const persona = typeof currentPersona === "function" ? currentPersona() : "";
-  const headline = persona ? P.personaLine(prob, persona) : prob.outcome;
-  const personaObj = persona && prob.personas?.[persona];
-  const symptom = typeof personaObj === "object" ? personaObj?.symptom : (typeof personaObj === "string" ? null : prob.symptom);
-  const showSym = symptom && symptom !== headline;
-  return `<div class="p-outcome-teaser" role="button" tabindex="0" data-outcome-family="${escapeHtml(familyId)}">
-    <div class="p-outcome-label">What problem this solves</div>
-    ${showSym ? `<div class="p-outcome-sym">${escapeHtml(symptom)}</div>` : ""}
-    <div class="p-outcome-head">${escapeHtml(headline)}</div>
-    <div class="p-outcome-link">View full outcome framing →</div>
-  </div>`;
+function renderOutcomeSlot(familyId){
+  return `<div class="p-outcome-slot" data-outcome-family="${escapeHtml(familyId)}"></div>`;
 }
 
-function wireOutcomeTeaser(familyId){
-  const el = panelPane("overview")?.querySelector(".p-outcome-teaser");
-  if (!el) return;
-  const open = () => {
-    const node = nodeById[familyId];
-    if (node && window.__cpnOutcomeCard?.show) window.__cpnOutcomeCard.show(familyId, node);
-  };
-  el.addEventListener("click", open);
-  el.addEventListener("keydown", e => {
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
-  });
+function mountPanelOutcomeBlock(familyId){
+  window.__cpnOutcomeCard?.hide?.();
+  const slot = panelPane("overview")?.querySelector(".p-outcome-slot");
+  if (slot && familyId) window.__cpnOutcomeCard?.mountPanel?.(slot, familyId);
 }
 
 function renderPanelStats(prodCount, useCaseCount, linkCount){
@@ -9436,9 +9450,7 @@ function selectNode(d, opts = {}) {
   applyConnectionHighlight(d, connectionHighlightDepth);
   if (usePillarLayout()) applyPillarNodeVisualState(d);
   showDetailPanel(d);
-  if (d._kind !== "pillar" && window.__cpnOutcomeCard?.show) {
-    window.__cpnOutcomeCard.show(d.id, d);
-  }
+  window.__cpnOutcomeCard?.hide?.();
   if (viewMode === "spatial"){
     focusSpatialNode(d.id, 700);
     if (spatialState.graph){
@@ -9649,7 +9661,7 @@ function showDetailPanel(d) {
 
   pb.innerHTML = `
     <div class="p-tab-pane${activeTab === "overview" ? " on" : ""}" data-tab="overview" role="tabpanel">
-      ${renderOutcomeTeaser(d.id)}
+      ${renderOutcomeSlot(d.id)}
       <div class="p-sec"><div class="p-sec-t">Use cases</div><div class="tr">${(d.useCases||[]).map(u=>`<span class="tg" onclick="filterTagUC('${u}')">${u}</span>`).join("") || `<span class="p-desc" style="margin:0">None listed.</span>`}</div></div>
       <div class="p-sec"><div class="p-sec-t">Industries</div><div class="tr">${(d.industries||[]).map(i=>`<span class="tg" onclick="filterTagInd('${i}')">${i}</span>`).join("") || `<span class="p-desc" style="margin:0">None listed.</span>`}</div></div>
     </div>
@@ -9666,7 +9678,7 @@ function showDetailPanel(d) {
     </div>`;
 
   bindPanelTabs();
-  wireOutcomeTeaser(d.id);
+  mountPanelOutcomeBlock(d.id);
   wirePanelHeaderAdd(d.id, "node", inStk);
   renderPanelFooter(d.id, "node", inStk);
 
@@ -9737,7 +9749,7 @@ window.showProductDetail = function(id) {
 
   pb.innerHTML = `
     <div class="p-tab-pane${activeTab === "overview" ? " on" : ""}" data-tab="overview" role="tabpanel">
-      ${node ? renderOutcomeTeaser(node.id) : ""}
+      ${node ? renderOutcomeSlot(node.id) : ""}
       ${node?`<div class="p-sec"><div class="p-sec-t">Portfolio family</div>
         <div class="ri" onclick="jumpTo('${node.id}', {connectionDepth: 2}); closePanel()">
           <div class="rd" style="background:${catColor(node.category)}"></div>
@@ -9753,7 +9765,7 @@ window.showProductDetail = function(id) {
     </div>`;
 
   bindPanelTabs();
-  if (node) wireOutcomeTeaser(node.id);
+  if (node) mountPanelOutcomeBlock(node.id);
   wirePanelHeaderAdd(id, "product", inStk);
   renderPanelFooter(id, "product", inStk);
   openPanel();
@@ -9762,6 +9774,7 @@ window.showProductDetail = function(id) {
 function closePanel() {
   document.getElementById("panel")?.classList.remove("open");
   document.getElementById("panel-backdrop")?.classList.remove("open");
+  window.__cpnOutcomeCard?.hide?.();
 }
 document.getElementById("pcl").addEventListener("click",()=>{ selected=null; clearLinkSelection(); resetHL(); closePanel(); });
 document.getElementById("panel-backdrop")?.addEventListener("click",()=>{ selected=null; clearLinkSelection(); resetHL(); closePanel(); });
@@ -15020,19 +15033,13 @@ function setPersona(id){
 window.currentPersona = currentPersona;
 window.setPersona = setPersona;
 
-/* Outcomes now render on the canvas card (#outcome-card). This stub clears any
-   legacy side-panel block and refreshes the canvas card for product-only opens. */
+/* Outcomes render in the detail panel Overview tab (#pbody .p-outcome-slot). */
 function insertProblemsSolved(id, kind){
   $("#pbody")?.querySelector(".p-prob")?.remove();
-  const pb = $("#pbody");
-  if (pb?.dataset.skipOutcomeCard === "1") {
-    window.__cpnOutcomeCard?.hide?.();
-    return;
-  }
+  window.__cpnOutcomeCard?.hide?.();
   const familyId = kind === "product" ? prodById[id]?.family : id;
-  if (!familyId || !window.__cpnOutcomeCard?.show) return;
-  const node = nodeById[familyId];
-  if (node) window.__cpnOutcomeCard.show(familyId, selected?.id === familyId ? selected : node);
+  if (!familyId) return;
+  mountPanelOutcomeBlock(familyId);
 }
 window.insertProblemsSolved = insertProblemsSolved;
 
@@ -16942,14 +16949,14 @@ window.__cpnV2 = {
 };
 })();
 </script>
-<script src="assets/cpn-problems.js?v=3.5.9"></script>
-<script src="assets/cpn-outcome-card.js?v=3.5.9"></script>
+<script src="assets/cpn-problems.js?v=3.5.12"></script>
+<script src="assets/cpn-outcome-card.js?v=3.5.12"></script>
 <script src="assets/cpn-cloud-control-ops.js?v=3.3.0"></script>
 <script src="assets/cpn-lazy-load.js?v=3.3.0"></script>
 <script src="assets/cpn-kiosk.js?v=3.3.0"></script>
 <script src="assets/cpn-acquisitions-data.js?v=3.3.5"></script>
-<script src="assets/cpn-refresh-timeline.js?v=3.5.9"></script>
-<script src="assets/cpn-acquisitions-timeline.js?v=3.5.11"></script>
+<script src="assets/cpn-refresh-timeline.js?v=3.5.12"></script>
+<script src="assets/cpn-acquisitions-timeline.js?v=3.5.12"></script>
 <script src="assets/cpn-logo-intro.js?v=2.91.6"></script>
 </body>
 </html>
