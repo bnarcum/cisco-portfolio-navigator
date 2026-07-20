@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Pillar focus — promise strip + expanded insight card (V1 peek, default expanded). */
+/** Pillar focus — centered promise strip + value-prop ribbon docked below the graph (Band A). */
 import { chromium } from "playwright";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -16,52 +16,50 @@ try {
   await page.goto(`file://${html}`, { waitUntil: "load", timeout: 60000 });
   await page.waitForFunction(() => window.__cpnV2?.APP_VERSION, { timeout: 60000 });
 
-  await page.evaluate(() => {
-    document.querySelector('[data-vm="families"]')?.click();
-    window.applyViewLevel?.("families", { focusPillar: "ai-dc" });
-  });
-  await page.waitForTimeout(900);
+  const check = async (pillar, minProps) => {
+    await page.evaluate((p) => {
+      document.querySelector('[data-vm="families"]')?.click();
+      window.applyViewLevel?.("families", { focusPillar: p });
+    }, pillar);
+    await page.waitForTimeout(900);
+    return page.evaluate(() => {
+      const strip = document.querySelector(".pillar-promise-strip");
+      const ribbon = document.querySelector(".pillar-vp-ribbon");
+      const cards = document.querySelectorAll(".pvp-card");
+      const stripBottom = strip?.getBoundingClientRect().bottom ?? 0;
+      const ribbonTop = ribbon?.getBoundingClientRect().top ?? 0;
+      return {
+        version: window.__cpnV2?.APP_VERSION,
+        strip: !!strip,
+        ribbon: !!ribbon,
+        cards: cards.length,
+        numbered: !!document.querySelector(".pvp-card .pic-num"),
+        legacyCard: !!document.querySelector(".pillar-insight-card"),
+        pillarFocus: document.body.classList.contains("pillar-focus"),
+        ribbonBelowStrip: ribbonTop > stripBottom
+      };
+    });
+  };
 
-  let state = await page.evaluate(() => ({
-    version: window.__cpnV2?.APP_VERSION,
-    strip: !!document.querySelector(".pillar-promise-strip"),
-    card: !!document.querySelector(".pillar-insight-card"),
-    items: document.querySelectorAll(".pic-item").length,
-    tab: !!document.querySelector(".pillar-insight-tab"),
-    pillarFocus: document.body.classList.contains("pillar-focus")
-  }));
+  let s = await check("ai-dc", 3);
+  if (s.version !== "3.5.20") errors.push(`expected 3.5.20, got ${s.version}`);
+  if (!s.pillarFocus) errors.push("expected pillar-focus body class");
+  if (!s.strip) errors.push("missing promise strip");
+  if (!s.ribbon) errors.push("missing value-prop ribbon");
+  if (s.cards < 3) errors.push(`ai-dc: expected >=3 value props, got ${s.cards}`);
+  if (s.numbered) errors.push("value-prop cards should not be numbered");
+  if (s.legacyCard) errors.push("legacy floating insight card should be gone");
+  if (!s.ribbonBelowStrip) errors.push("ribbon should sit below the promise strip");
 
-  if (state.version !== "3.5.19") errors.push(`expected 3.5.19, got ${state.version}`);
-  if (!state.pillarFocus) errors.push("expected pillar-focus body class");
-  if (!state.strip) errors.push("missing pillar promise strip");
-  if (!state.card) errors.push("missing expanded insight card");
-  if (state.items < 3) errors.push(`expected >=3 value props, got ${state.items}`);
-  if (state.tab) errors.push("minimized tab should not show when expanded");
-
-  await page.evaluate(() => window.__cpnPillarContextAction("minimize"));
-  await page.waitForTimeout(400);
-
-  state = await page.evaluate(() => ({
-    card: !!document.querySelector(".pillar-insight-card"),
-    tab: !!document.querySelector(".pillar-insight-tab"),
-    strip: !!document.querySelector(".pillar-promise-strip")
-  }));
-
-  if (state.card) errors.push("insight card should hide when minimized");
-  if (!state.tab) errors.push("missing minimize tab");
-  if (!state.strip) errors.push("promise strip should remain when minimized");
-
-  await page.evaluate(() => window.__cpnPillarContextAction("restore"));
-  await page.waitForTimeout(400);
-
-  const restored = await page.evaluate(() => !!document.querySelector(".pillar-insight-card"));
-  if (!restored) errors.push("insight card should restore from tab");
+  // Workplaces has 5 highlights — ribbon must still render them.
+  s = await check("workplaces", 5);
+  if (s.cards < 5) errors.push(`workplaces: expected >=5 value props, got ${s.cards}`);
 
   if (errors.length) {
     console.error("FAIL:", errors.join("; "));
     process.exit(1);
   }
-  console.log("PASS: pillar context expanded + minimize/restore");
+  console.log("PASS: pillar context ribbon-below (Band A)");
 } finally {
   await browser.close();
 }

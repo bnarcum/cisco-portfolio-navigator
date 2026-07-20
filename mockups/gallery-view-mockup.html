@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>CPN — Gallery View Mockup (mesh3d-inspired)</title>
+  <style>
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT"), local("CiscoSansTT"),
+           url("../fonts/CiscoSansTT-Regular.woff2") format("woff2");
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT Bold"), local("CiscoSansTT Bold"),
+           url("../fonts/CiscoSansTT-Bold.woff2") format("woff2");
+      font-weight: 700;
+      font-display: swap;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #050c18;
+      --surface: rgba(4, 12, 26, 0.82);
+      --border: rgba(2, 200, 255, 0.18);
+      --text: #f4f7fb;
+      --muted: #8b95a5;
+      --accent: #02c8ff;
+      --blue: #0a60ff;
+      --green: #2dce5c;
+      --orange: #ff9000;
+      --purple: #a855f7;
+      --net: #02c8ff;
+      --collab: #2dce5c;
+      --sec: #ff9000;
+      --comp: #0a60ff;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      min-height: 100vh;
+      font-family: "CiscoSansTT", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(ellipse 90% 60% at 50% -10%, rgba(2, 200, 255, 0.08), transparent 55%),
+        var(--bg);
+      color: var(--text);
+      padding: 20px 14px 48px;
+    }
+
+    .page-shell { max-width: 1240px; margin: 0 auto; }
+
+    .page-intro {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+    .page-intro h1 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #7eeaff;
+      letter-spacing: 0.02em;
+    }
+    .page-intro p {
+      margin-top: 6px;
+      font-size: 0.82rem;
+      line-height: 1.55;
+      color: var(--muted);
+      max-width: 62ch;
+      margin-inline: auto;
+    }
+    .page-intro .tag {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(168, 85, 247, 0.35);
+      background: rgba(168, 85, 247, 0.1);
+      color: #d8b4fe;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* ── Fake app chrome ── */
+    .chrome {
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      overflow: hidden;
+      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.45);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      flex-wrap: wrap;
+      background: rgba(2, 8, 18, 0.92);
+      position: relative;
+      z-index: 20;
+    }
+
+    .logo-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--blue));
+      flex-shrink: 0;
+    }
+
+    .topbar-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #7eeaff;
+      margin-right: auto;
+    }
+
+    .vm-seg {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 2px;
+      padding: 3px;
+      border-radius: 999px;
+      background: rgba(5, 14, 28, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .vm-seg button {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 999px;
+      cursor: default;
+      white-space: nowrap;
+    }
+
+    .vm-seg button.active {
+      background: linear-gradient(90deg, var(--purple), var(--blue));
+      color: #fff;
+    }
+
+    .vm-seg button.dim { opacity: 0.45; }
+
+    /* ── Gallery viewport ── */
+    .gallery-viewport {
+      position: relative;
+      height: min(78vh, 720px);
+      overflow: hidden;
+      background: #030810;
+    }
+
+    .gallery-scroll {
+      height: 100%;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scroll-snap-type: y mandatory;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(2, 200, 255, 0.35) transparent;
+    }
+
+    .gallery-scroll::-webkit-scrollbar { width: 6px; }
+    .gallery-scroll::-webkit-scrollbar-thumb {
+      background: rgba(2, 200, 255, 0.35);
+      border-radius: 999px;
+    }
+
+    .gallery-section {
+      min-height: 100%;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 48px 32px 56px;
+      overflow: hidden;
+    }
+
+    /* Mesh canvas backdrop */
+    #mesh-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0.55;
+    }
+
+    .section-inner {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 920px;
+      margin: 0 auto;
+    }
+
+    /* Section nav dots */
+    .section-nav {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 15;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .section-nav button {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: transparent;
+      padding: 0;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s, border-color 0.2s;
+    }
+
+    .section-nav button.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      transform: scale(1.35);
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 12;
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.35);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      animation: float-hint 2.4s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    .scroll-hint svg { opacity: 0.5; }
+
+    @keyframes float-hint {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(4px); }
+    }
+
+    /* ── Hero ── */
+    .hero-eyebrow {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 20px;
+    }
+
+    .hero-title {
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
+      font-weight: 700;
+      line-height: 0.95;
+      letter-spacing: -0.03em;
+    }
+
+    .hero-title .line2 {
+      display: block;
+      background: linear-gradient(90deg, #fff 0%, rgba(255, 255, 255, 0.55) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero-sub {
+      margin-top: 22px;
+      max-width: 42ch;
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+
+    .hero-meta {
+      margin-top: 28px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .hero-meta span {
+      font-size: 0.72rem;
+      color: rgba(255, 255, 255, 0.45);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.04);
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .pill .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    /* ── Stats ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    @media (max-width: 720px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .gallery-section { padding: 36px 20px 48px; }
+    }
+
+    .stat-card {
+      padding: 20px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(8px);
+    }
+
+    .stat-card .num {
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stat-card .num .suffix {
+      font-size: 0.55em;
+      color: var(--accent);
+      margin-left: 2px;
+    }
+
+    .stat-card .label {
+      margin-top: 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .stat-card .sub {
+      margin-top: 4px;
+      font-size: 0.68rem;
+      color: rgba(255, 255, 255, 0.35);
+    }
+
+    .section-head {
+      margin-bottom: 28px;
+    }
+
+    .section-head h2 {
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .section-head p {
+      margin-top: 8px;
+      font-size: 0.84rem;
+      color: var(--muted);
+      max-width: 48ch;
+      line-height: 1.55;
+    }
+
+    /* ── 3D Gallery wall ── */
+    .gallery-stage {
+      perspective: 1200px;
+      perspective-origin: 50% 40%;
+      height: 320px;
+      position: relative;
+      margin-top: 8px;
+    }
+
+    .gallery-wall {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+      transform: rotateX(8deg) rotateY(-12deg);
+      transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .gallery-section[data-active="wall"] .gallery-wall {
+      transform: rotateX(4deg) rotateY(-6deg);
+    }
+
+    .exhibit {
+      position: absolute;
+      width: 140px;
+      transform-style: preserve-3d;
+      cursor: pointer;
+      transition: transform 0.35s ease, filter 0.35s ease;
+    }
+
+    .exhibit:hover {
+      transform: translateZ(24px) scale(1.04);
+      filter: brightness(1.12);
+      z-index: 5;
+    }
+
+    .exhibit.selected {
+      transform: translateZ(36px) scale(1.06);
+      filter: brightness(1.18);
+      z-index: 6;
+    }
+
+    .exhibit-frame {
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+      overflow: hidden;
+      box-shadow:
+        0 20px 40px rgba(0, 0, 0, 0.45),
+        0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+      transform-style: preserve-3d;
+    }
+
+    .exhibit-thumb {
+      height: 88px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      position: relative;
+    }
+
+    .exhibit-thumb::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.55));
+    }
+
+    .exhibit-info {
+      padding: 10px 10px 11px;
+    }
+
+    .exhibit-cat {
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+
+    .exhibit-name {
+      font-size: 0.72rem;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .exhibit-depth {
+      position: absolute;
+      inset: 4px;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.35);
+      transform: translateZ(-8px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .exhibit-detail {
+      margin-top: 20px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(2, 200, 255, 0.25);
+      background: rgba(2, 200, 255, 0.06);
+      font-size: 0.78rem;
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.75);
+      min-height: 52px;
+    }
+
+    .exhibit-detail strong { color: #7eeaff; }
+
+    /* Position exhibits in 3D space */
+    .exhibit:nth-child(1) { left: 2%;  top: 8%;  transform: translateZ(20px); }
+    .exhibit:nth-child(2) { left: 22%; top: 2%;  transform: translateZ(60px); }
+    .exhibit:nth-child(3) { left: 42%; top: 12%; transform: translateZ(40px); }
+    .exhibit:nth-child(4) { left: 62%; top: 0;   transform: translateZ(80px); }
+    .exhibit:nth-child(5) { left: 78%; top: 18%; transform: translateZ(30px); }
+    .exhibit:nth-child(6) { left: 8%;  top: 52%; transform: translateZ(50px); }
+    .exhibit:nth-child(7) { left: 28%; top: 48%; transform: translateZ(90px); }
+    .exhibit:nth-child(8) { left: 50%; top: 55%; transform: translateZ(70px); }
+    .exhibit:nth-child(9) { left: 70%; top: 50%; transform: translateZ(45px); }
+
+    .cat-networking .exhibit-cat { color: var(--net); }
+    .cat-networking .exhibit-thumb { background: linear-gradient(135deg, #012636, #024a66); }
+    .cat-collaboration .exhibit-cat { color: var(--collab); }
+    .cat-collaboration .exhibit-thumb { background: linear-gradient(135deg, #0c3a22, #1a6640); }
+    .cat-security .exhibit-cat { color: var(--sec); }
+    .cat-security .exhibit-thumb { background: linear-gradient(135deg, #4a2400, #7a3d00); }
+    .cat-computing .exhibit-cat { color: var(--comp); }
+    .cat-computing .exhibit-thumb { background: linear-gradient(135deg, #082060, #0a3080); }
+
+    /* ── Picks ── */
+    .picks-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    @media (max-width: 720px) {
+      .picks-row { grid-template-columns: 1fr; }
+    }
+
+    .pick-card {
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.03);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .pick-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(2, 200, 255, 0.35);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    .pick-rank {
+      padding: 10px 14px 0;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--purple);
+      text-transform: uppercase;
+    }
+
+    .pick-visual {
+      height: 100px;
+      margin: 10px 14px 0;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.4rem;
+    }
+
+    .pick-body { padding: 14px; }
+
+    .pick-body h3 {
+      font-size: 0.88rem;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .pick-body p {
+      margin-top: 6px;
+      font-size: 0.72rem;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+
+    .pick-stat {
+      margin-top: 10px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    /* ── Pillars ── */
+    .pillar-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .pillar-row {
+      display: grid;
+      grid-template-columns: 140px 1fr 48px;
+      gap: 12px;
+      align-items: center;
+    }
+
+    @media (max-width: 560px) {
+      .pillar-row { grid-template-columns: 1fr; gap: 6px; }
+    }
+
+    .pillar-name {
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .pillar-track {
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      overflow: hidden;
+    }
+
+    .pillar-fill {
+      height: 100%;
+      border-radius: 999px;
+      width: 0;
+      transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .pillar-count {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: var(--muted);
+    }
+
+    .pillar-note {
+      margin-top: 24px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px dashed rgba(255, 255, 255, 0.12);
+      font-size: 0.74rem;
+      line-height: 1.55;
+      color: rgba(255, 255, 255, 0.45);
+    }
+
+    /* ── CTA footer section ── */
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .btn {
+      border: none;
+      font: inherit;
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 11px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn:active { transform: scale(0.98); }
+
+    .btn-primary {
+      background: linear-gradient(90deg, var(--blue), var(--accent));
+      color: #000;
+      box-shadow: 0 8px 24px rgba(2, 200, 255, 0.25);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    /* Mockup footer note */
+    .mockup-notes {
+      margin-top: 20px;
+      padding: 16px 18px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .mockup-notes h3 {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #7eeaff;
+      margin-bottom: 10px;
+    }
+
+    .mockup-notes ul {
+      list-style: none;
+      display: grid;
+      gap: 6px;
+    }
+
+    .mockup-notes li {
+      font-size: 0.74rem;
+      line-height: 1.45;
+      color: var(--muted);
+      padding-left: 14px;
+      position: relative;
+    }
+
+    .mockup-notes li::before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-size: 0.7rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="page-intro">
+      <span class="tag">Concept mockup — not wired to app</span>
+      <h1>Gallery view — “State of the Portfolio”</h1>
+      <p>
+        Inspired by <a href="https://mesh3d.gallery/the-state-of-the-gallery" target="_blank" rel="noopener noreferrer" style="color:#7eeaff">mesh3d.gallery</a>:
+        scroll-driven editorial 3D showcase. Scroll inside the frame or use the dots on the right.
+      </p>
+    </header>
+
+    <div class="chrome">
+      <div class="topbar">
+        <div class="logo-dot" aria-hidden="true"></div>
+        <div class="topbar-title">Cisco Portfolio Navigator</div>
+        <nav class="vm-seg" aria-label="View modes (mockup)">
+          <button type="button" class="dim">Overview</button>
+          <button type="button" class="dim">Families</button>
+          <button type="button" class="dim">Composition</button>
+          <button type="button" class="dim">All</button>
+          <button type="button" class="dim">Spatial</button>
+          <button type="button" class="active">Gallery</button>
+        </nav>
+      </div>
+
+      <div class="gallery-viewport">
+        <canvas id="mesh-canvas" aria-hidden="true"></canvas>
+
+        <nav class="section-nav" aria-label="Gallery sections">
+          <button type="button" data-section="0" class="active" title="Hero"></button>
+          <button type="button" data-section="1" title="Numbers"></button>
+          <button type="button" data-section="2" title="Exhibits"></button>
+          <button type="button" data-section="3" title="Picks"></button>
+          <button type="button" data-section="4" title="Pillars"></button>
+          <button type="button" data-section="5" title="Explore"></button>
+        </nav>
+
+        <div class="scroll-hint" id="scroll-hint">
+          <span>Scroll</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+        </div>
+
+        <div class="gallery-scroll" id="gallery-scroll">
+          <!-- §0 Hero -->
+          <section class="gallery-section" data-section="0">
+            <div class="section-inner">
+              <div class="hero-eyebrow">Optional view · Cisco Portfolio Navigator</div>
+              <h1 class="hero-title">
+                The state
+                <span class="line2">of the portfolio</span>
+              </h1>
+              <p class="hero-sub">
+                An overview in numbers and picks — what's catalogued across One Cisco,
+                which families carry the most depth, and where to dive next.
+              </p>
+              <div class="hero-meta">
+                <span class="pill"><span class="dot"></span> Live portfolio data</span>
+                <span class="pill">Scroll to explore</span>
+                <span>Mock stats from production dataset</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- §1 Numbers -->
+          <section class="gallery-section" data-section="1">
+            <div class="section-inner">
+              <div class="section-head">
+                <h2>In numbers</h2>
+                <p>Animated counters on scroll — the executive snapshot before you touch the graph.</p>
+              </div>
+              <div class="stats-grid">
+                <div class="stat-card">
+                  <div class="num"><span class="counter" data-target="58">0</span></div>
+                  <div class="label">Product families</div>
+                  <div class="sub">Across 4 categories</div>
+                </div>
+                <div class="stat-card">
+                  <div class="num"><span class="counter" data-target="340">0</span><span class="suffix">+</span></div>
+                  <div class="label">Named products</div>
+                  <div class="sub">SKUs &amp; platforms</div>
+                </div>
+                <div class="stat-card">
+                  <div class="num"><span class="counter" data-target="4">0</span></div>
+                  <div class="label">One Cisco pillars</div>
+                  <div class="sub">Strategic framing</div>
+                </div>
+                <div class="stat-card">
+                  <div class="num"><span class="counter" data-target="12">0</span></div>
+                  <div class="label">Major acquisitions</div>
+                  <div class="sub">Since 2010</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- §2 3D wall -->
+          <section class="gallery-section" data-section="2" id="wall-section">
+            <div class="section-inner">
+              <div class="section-head">
+                <h2>The gallery wall</h2>
+                <p>Floating exhibit panels in 3D space — click a family to preview. Real build uses product photos + WebGL.</p>
+              </div>
+              <div class="gallery-stage">
+                <div class="gallery-wall" id="gallery-wall">
+                  <article class="exhibit cat-networking" data-id="meraki-mx" data-desc="Cloud-managed SD-WAN + security — the branch edge story in one dashboard.">
+                    <div class="exhibit-depth"></div>
+                    <div class="exhibit-frame">
+                      <div class="exhibit-thumb">☁</div>
+                      <div class="exhibit-info">
+                        <div class="exhibit-cat">Networking</div>
+                        <div class="exhibit-name">Meraki MX</div>
+                      </div>
+                    </div>
+                  </article>
+                  <article class="exhibit cat-networking" data-id="catalyst-access" data-desc="Campus access switching — Catalyst 9200/9300 with AI ops and PoE at scale.">
+                    <div class="exhibit-depth"></div>
+                    <div class="exhibit-frame">
+                      <div class="exhibit-thumb">⬡</div>
+                      <div class="exhibit-info">
+                        <div class="exhibit-cat">Networking</div>
+                        <div class="exhibit-name">Catalyst Access</div>
+                      </div>
+                    </div>
+                  </article>
+                  <article class="exhibit cat-collaboration" data-id="webex-suite" data-desc="Meetings, calling, devices, and AI assistant — the hybrid work stack.">
+                    <div class="exhibit-depth"></div>
+                    <div class="exhibit-frame">
+                      <div class="exhibit-thumb">◉</div>
+                      <div class="exhibit-info">
+                        <div class="exhibit-cat">Collaboration</div>
+                        <div class="exhibit-name">Webex Suite</div>
+                      </div>
+                    </div>
+                  </article>
+                  <article class="exhibit cat-security" data-id="secure-access" data-desc="SASE + zero trust — Secure Access, Umbrella, and identity-aware policy.">
+                    <div class="exhibit-depth"></div>
+                    <div class="exhibit-frame">
+                      <div class="exhibit-thumb">⛨</div>
+                      <div class="exhibit-info">
+                        <div class="exhibit-cat">Security</div>
+                        <div class="exhibit-name">Secure Access</div>
+                      </div>
+                    </div>
+                  </article>
+                  <article class="exhibit cat-computing" data-id="nexus" data-desc="AI/ML-ready data center fabric — Nexus 9000 density and ACI policy.">
+                    <div class="exhibit-depth"></div>
+                    <div class="exhibit-frame">
+                      <div class="exhibit-thumb">▣</div>
+                      <div class="exhibit-info">
+                        <div class="exhibit-cat">Computing</div>
+                        <div class="exhibit-name">Nexus / ACI</div>
+                      </div>
+                    </div>
+                  </article>
+                  <article class="exhibit cat-networking" data-id="sdwan" data-desc="Application-aware WAN — ISR/vEdge to 8000 Secure Routers evolution.">
+                    <div class="exhibit-depth"></div>
+                    <div class="exhibit-frame">
+                      <div class="exhibit-thumb">↔</div>
+                      <div class="exhibit-info">
+                        <div class="exhibit-cat">Networking</div>
+                        <div class="exhibit-name">Cisco SD-WAN</div>
+                      </div>
+                    </div>
+                  </article>
+                  <article class="exhibit cat-security" data-id="xdr" data-desc="Extended detection &amp; response — Talos intel meets unified SOC workflows.">
+                    <div class="exhibit-depth"></div>
+                    <div class="exhibit-frame">
+                      <div class="exhibit-thumb">◎</div>
+                      <div class="exhibit-info">
+                        <div class="exhibit-cat">Security</div>
+                        <div class="exhibit-name">XDR / Talos</div>
+                      </div>
+                    </div>
+                  </article>
+                  <article class="exhibit cat-collaboration" data-id="room-devices" data-desc="Board Pro, Desk, and Room Bar — AI cameras and spatial audio for every room size.">
+                    <div class="exhibit-depth"></div>
+                    <div class="exhibit-frame">
+                      <div class="exhibit-thumb">▭</div>
+                      <div class="exhibit-info">
+                        <div class="exhibit-cat">Collaboration</div>
+                        <div class="exhibit-name">Room Devices</div>
+                      </div>
+                    </div>
+                  </article>
+                  <article class="exhibit cat-computing" data-id="intersight" data-desc="Cloud ops for UCS and hyperconverged — lifecycle from bare metal to Kubernetes.">
+                    <div class="exhibit-depth"></div>
+                    <div class="exhibit-frame">
+                      <div class="exhibit-thumb">◫</div>
+                      <div class="exhibit-info">
+                        <div class="exhibit-cat">Computing</div>
+                        <div class="exhibit-name">Intersight / UCS</div>
+                      </div>
+                    </div>
+                  </article>
+                </div>
+              </div>
+              <div class="exhibit-detail" id="exhibit-detail">
+                Click an exhibit above — selection opens the existing detail panel in the real app.
+              </div>
+            </div>
+          </section>
+
+          <!-- §3 Picks -->
+          <section class="gallery-section" data-section="3">
+            <div class="section-inner">
+              <div class="section-head">
+                <h2>Editor's picks</h2>
+                <p>Curated highlights — mesh3d-style “strongest work” cards. Camera would fly to each on click.</p>
+              </div>
+              <div class="picks-row">
+                <article class="pick-card">
+                  <div class="pick-rank">Pick 01</div>
+                  <div class="pick-visual" style="background:linear-gradient(135deg,#012636,#024a66)">⬡</div>
+                  <div class="pick-body">
+                    <h3>Catalyst 9000 Platform</h3>
+                    <p>Deepest product tree in campus networking — access, distribution, and wireless under one AI ops story.</p>
+                    <div class="pick-stat">24 products · Networking</div>
+                  </div>
+                </article>
+                <article class="pick-card">
+                  <div class="pick-rank">Pick 02</div>
+                  <div class="pick-visual" style="background:linear-gradient(135deg,#0c3a22,#1a6640)">◉</div>
+                  <div class="pick-body">
+                    <h3>Webex + Devices</h3>
+                    <p>End-to-end collaboration — cloud, on-prem, and AI-native room experiences for every footprint.</p>
+                    <div class="pick-stat">18 products · Collaboration</div>
+                  </div>
+                </article>
+                <article class="pick-card">
+                  <div class="pick-rank">Pick 03</div>
+                  <div class="pick-visual" style="background:linear-gradient(135deg,#4a2400,#7a3d00)">⛨</div>
+                  <div class="pick-body">
+                    <h3>Security Cloud</h3>
+                    <p>SASE, XDR, and identity — the resilience pillar in action across hybrid and multi-cloud.</p>
+                    <div class="pick-stat">31 products · Security</div>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </section>
+
+          <!-- §4 Pillars -->
+          <section class="gallery-section" data-section="4">
+            <div class="section-inner">
+              <div class="section-head">
+                <h2>By One Cisco pillar</h2>
+                <p>Family distribution mapped to strategic pillars — bars animate when this section enters view.</p>
+              </div>
+              <div class="pillar-bars">
+                <div class="pillar-row">
+                  <div class="pillar-name" style="color:#0A60FF">AI-Ready Data Centers</div>
+                  <div class="pillar-track"><div class="pillar-fill" data-width="72" style="background:linear-gradient(90deg,#0A60FF,#4d8cff)"></div></div>
+                  <div class="pillar-count"><span class="counter" data-target="14">0</span></div>
+                </div>
+                <div class="pillar-row">
+                  <div class="pillar-name" style="color:#2dce5c">Future-Proofed Workplaces</div>
+                  <div class="pillar-track"><div class="pillar-fill" data-width="88" style="background:linear-gradient(90deg,#2dce5c,#5ef090)"></div></div>
+                  <div class="pillar-count"><span class="counter" data-target="17">0</span></div>
+                </div>
+                <div class="pillar-row">
+                  <div class="pillar-name" style="color:#FF9000">Digital Resilience</div>
+                  <div class="pillar-track"><div class="pillar-fill" data-width="95" style="background:linear-gradient(90deg,#FF9000,#ffb84d)"></div></div>
+                  <div class="pillar-count"><span class="counter" data-target="19">0</span></div>
+                </div>
+                <div class="pillar-row">
+                  <div class="pillar-name" style="color:#02c8ff">Internet for the Future</div>
+                  <div class="pillar-track"><div class="pillar-fill" data-width="100" style="background:linear-gradient(90deg,#02c8ff,#66e8ff)"></div></div>
+                  <div class="pillar-count"><span class="counter" data-target="22">0</span></div>
+                </div>
+              </div>
+              <p class="pillar-note">
+                Pillar counts are illustrative for the mockup. Production view would compute from <code style="color:#7eeaff">familyPillar()</code> + active filters.
+              </p>
+            </div>
+          </section>
+
+          <!-- §5 CTA -->
+          <section class="gallery-section" data-section="5">
+            <div class="section-inner">
+              <div class="section-head">
+                <h2>Ready to explore?</h2>
+                <p>Gallery is the briefing layer — these actions jump into the existing navigator modes.</p>
+              </div>
+              <div class="cta-row">
+                <button type="button" class="btn btn-primary" id="btn-families">Open Families graph</button>
+                <button type="button" class="btn btn-ghost" id="btn-spatial">Switch to Spatial 3D</button>
+                <button type="button" class="btn btn-ghost" id="btn-timeline">Acquisitions timeline</button>
+              </div>
+              <p class="pillar-note" style="margin-top:20px">
+                In production: sixth tab in <code style="color:#7eeaff">#vm-seg</code>, separate from Spatial force-graph.
+                Scroll sections on desktop; section tabs or swipe on tablet.
+              </p>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <aside class="mockup-notes">
+      <h3>What this mockup proves</h3>
+      <ul>
+        <li>mesh3d-style editorial flow fits CPN without replacing Overview or Spatial</li>
+        <li>Scroll-snapped sections: hero → stats → 3D wall → picks → pillars → CTA</li>
+        <li>Exhibit click maps to family detail panel (same as graph selection)</li>
+        <li>Real build: Three.js planes + product photos, reuse Spatial texture pipeline</li>
+        <li>Mobile fallback: stacked 2D cards instead of perspective wall</li>
+      </ul>
+    </aside>
+  </div>
+
+  <script>
+    (function () {
+      const scrollEl = document.getElementById("gallery-scroll");
+      const sections = [...scrollEl.querySelectorAll(".gallery-section")];
+      const navBtns = [...document.querySelectorAll(".section-nav button")];
+      const scrollHint = document.getElementById("scroll-hint");
+      const wallSection = document.getElementById("wall-section");
+      const detailEl = document.getElementById("exhibit-detail");
+      const exhibits = [...document.querySelectorAll(".exhibit")];
+
+      /* ── Section nav + scroll sync ── */
+      let currentSection = 0;
+
+      function goToSection(i) {
+        currentSection = i;
+        sections[i]?.scrollIntoView({ behavior: "smooth", block: "start" });
+        navBtns.forEach((b, j) => b.classList.toggle("active", j === i));
+        scrollHint.style.opacity = i >= sections.length - 1 ? "0" : "1";
+      }
+
+      navBtns.forEach(btn => {
+        btn.addEventListener("click", () => goToSection(Number(btn.dataset.section)));
+      });
+
+      const io = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting || entry.intersectionRatio < 0.55) return;
+          const idx = Number(entry.target.dataset.section);
+          currentSection = idx;
+          navBtns.forEach((b, j) => b.classList.toggle("active", j === idx));
+          scrollHint.style.opacity = idx >= sections.length - 1 ? "0" : "1";
+          if (idx === 1) animateCounters(entry.target);
+          if (idx === 4) animatePillars(entry.target);
+          if (idx === 2) wallSection.dataset.active = "wall";
+        });
+      }, { root: scrollEl, threshold: [0.55] });
+
+      sections.forEach(s => io.observe(s));
+
+      /* ── Counter animation ── */
+      const animatedSets = new WeakSet();
+
+      function animateCounters(root) {
+        if (animatedSets.has(root)) return;
+        animatedSets.add(root);
+        root.querySelectorAll(".counter").forEach(el => {
+          const target = Number(el.dataset.target);
+          const dur = 1200;
+          const start = performance.now();
+          function tick(now) {
+            const t = Math.min(1, (now - start) / dur);
+            const eased = 1 - Math.pow(1 - t, 3);
+            el.textContent = Math.round(target * eased);
+            if (t < 1) requestAnimationFrame(tick);
+          }
+          requestAnimationFrame(tick);
+        });
+      }
+
+      function animatePillars(root) {
+        if (animatedSets.has(root)) return;
+        animateCounters(root);
+        root.querySelectorAll(".pillar-fill").forEach(bar => {
+          requestAnimationFrame(() => {
+            bar.style.width = bar.dataset.width + "%";
+          });
+        });
+      }
+
+      /* ── Exhibit selection ── */
+      exhibits.forEach(ex => {
+        ex.addEventListener("click", () => {
+          exhibits.forEach(e => e.classList.remove("selected"));
+          ex.classList.add("selected");
+          const name = ex.querySelector(".exhibit-name")?.textContent || "Family";
+          detailEl.innerHTML = "<strong>" + name + "</strong> — " + (ex.dataset.desc || "") +
+            " <em style=\"opacity:.6\">(Would open detail panel + optional camera fly-to.)</em>";
+        });
+      });
+
+      /* ── Parallax on gallery wall from scroll within wall section ── */
+      scrollEl.addEventListener("scroll", () => {
+        const wall = document.getElementById("gallery-wall");
+        if (!wall || !wallSection) return;
+        const rect = wallSection.getBoundingClientRect();
+        const parent = scrollEl.getBoundingClientRect();
+        const rel = (rect.top - parent.top) / parent.height;
+        const rotY = -12 + rel * 8;
+        const rotX = 8 - rel * 6;
+        if (Math.abs(rel) < 1.2) {
+          wall.style.transform = "rotateX(" + rotX.toFixed(1) + "deg) rotateY(" + rotY.toFixed(1) + "deg)";
+        }
+      }, { passive: true });
+
+      /* ── Mesh canvas (subtle wire grid) ── */
+      const canvas = document.getElementById("mesh-canvas");
+      const ctx = canvas.getContext("2d");
+      let w, h, t = 0;
+
+      function resizeCanvas() {
+        const vp = canvas.parentElement;
+        w = canvas.width = vp.clientWidth * devicePixelRatio;
+        h = canvas.height = vp.clientHeight * devicePixelRatio;
+        canvas.style.width = vp.clientWidth + "px";
+        canvas.style.height = vp.clientHeight + "px";
+        ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      }
+
+      function drawMesh() {
+        const cw = w / devicePixelRatio;
+        const ch = h / devicePixelRatio;
+        ctx.clearRect(0, 0, cw, ch);
+
+        const spacing = 48;
+        const offset = (t * 0.3) % spacing;
+
+        ctx.strokeStyle = "rgba(2, 200, 255, 0.06)";
+        ctx.lineWidth = 1;
+
+        for (let x = -offset; x < cw + spacing; x += spacing) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x + (x - cw / 2) * 0.15, ch);
+          ctx.stroke();
+        }
+        for (let y = -offset; y < ch + spacing; y += spacing) {
+          const wave = Math.sin(t * 0.008 + y * 0.02) * 12;
+          ctx.beginPath();
+          ctx.moveTo(0, y + wave);
+          ctx.lineTo(cw, y - wave);
+          ctx.stroke();
+        }
+
+        /* floating nodes */
+        for (let i = 0; i < 8; i++) {
+          const px = (cw * 0.15) + (i * cw * 0.1) + Math.sin(t * 0.01 + i) * 30;
+          const py = (ch * 0.3) + Math.cos(t * 0.012 + i * 1.3) * (ch * 0.25);
+          const r = 2 + Math.sin(t * 0.015 + i) * 1;
+          ctx.beginPath();
+          ctx.arc(px, py, r, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(2, 200, 255, " + (0.15 + Math.sin(t * 0.02 + i) * 0.1) + ")";
+          ctx.fill();
+        }
+
+        t++;
+        requestAnimationFrame(drawMesh);
+      }
+
+      resizeCanvas();
+      window.addEventListener("resize", resizeCanvas);
+      drawMesh();
+
+      /* ── CTA demo toasts ── */
+      function flash(msg) {
+        detailEl.textContent = msg;
+        detailEl.style.borderColor = "rgba(168, 85, 247, 0.4)";
+        detailEl.style.background = "rgba(168, 85, 247, 0.08)";
+        setTimeout(() => {
+          detailEl.style.borderColor = "";
+          detailEl.style.background = "";
+        }, 1800);
+      }
+
+      document.getElementById("btn-families")?.addEventListener("click", () =>
+        flash("→ applyViewLevel(\"families\") — returns to the force graph."));
+      document.getElementById("btn-spatial")?.addEventListener("click", () =>
+        flash("→ applyViewLevel(\"spatial\") — constellation 3D map (separate from Gallery)."));
+      document.getElementById("btn-timeline")?.addEventListener("click", () =>
+        flash("→ Opens Acquisitions Timeline tool — optional cross-link from Gallery CTA."));
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Band A — ribbon below</title>
+  <link rel="stylesheet" href="pillar-context-base.css"/>
+  <link rel="stylesheet" href="pillar-context-band.css"/>
+</head>
+<body>
+  <div class="mockup-shell">
+    <p class="back"><a href="pillar-context-band-gallery.html">← Above/below mockups</a></p>
+    <p class="pitch"><strong>Band A · Ribbon below</strong> — Value props sit in a full-width ribbon under the graph. Never overlaps nodes; promise text has room.</p>
+    <div class="controls"></div>
+    <div class="chrome">
+      <div class="topbar"></div>
+      <div class="actionbar"></div>
+      <div class="canvas-wrap" style="min-height:580px">
+        <div class="zone-panel band" id="zone">
+          <header class="band-header">
+            <div class="band-header-top"><img data-zone-icon src="" alt=""/><h2 data-zone-title></h2></div>
+            <div class="band-outcome"><span class="lbl">Outcome</span><p data-zone-promise></p></div>
+          </header>
+          <div class="band-graph" data-band-graph></div>
+          <div class="vp-ribbon" data-vp-ribbon></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="pillar-context-data.js"></script>
+  <script src="pillar-context-chrome.js"></script>
+  <script src="pillar-context-band-render.js"></script>
+  <script>
+    let pillarId = "ai-dc";
+    function render(){ renderBand(document.getElementById("zone"), PILLAR_CTX[pillarId]); }
+    initPillarMockup({ onPillar: id => { pillarId = id; render(); } });
+    render();
+  </script>
+</body>
+</html>

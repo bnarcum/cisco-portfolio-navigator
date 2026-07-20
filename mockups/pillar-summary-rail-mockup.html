@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>CPN — Pillar context mockup (non-intrusive)</title>
+  <style>
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT"), local("CiscoSansTT"),
+           url("../fonts/CiscoSansTT-Regular.woff2") format("woff2");
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT Bold"), local("CiscoSansTT Bold"),
+           url("../fonts/CiscoSansTT-Bold.woff2") format("woff2");
+      font-weight: 700;
+      font-display: swap;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #050c18;
+      --surface: rgba(4, 12, 26, 0.94);
+      --border: rgba(2, 200, 255, 0.18);
+      --text: #f4f7fb;
+      --muted: #8b95a5;
+      --subtle: #64748b;
+      --accent: #02c8ff;
+      --title-cyan: #7eeaff;
+      --blue: #0a60ff;
+      --green: #2dce5c;
+      --orange: #ff9000;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: "CiscoSansTT", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(ellipse 70% 45% at 50% -8%, rgba(2, 200, 255, 0.08), transparent 55%),
+        var(--bg);
+      color: var(--text);
+      padding: 16px 12px 40px;
+    }
+
+    .shell { max-width: 1320px; margin: 0 auto; }
+
+    .intro {
+      text-align: center;
+      margin-bottom: 14px;
+    }
+    .intro h1 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--title-cyan);
+    }
+    .intro p {
+      margin-top: 6px;
+      font-size: 0.78rem;
+      line-height: 1.55;
+      color: var(--muted);
+      max-width: 72ch;
+      margin-inline: auto;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .controls label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--subtle);
+    }
+    .pill-row {
+      display: inline-flex;
+      gap: 4px;
+      padding: 3px;
+      border-radius: 999px;
+      background: rgba(5, 14, 28, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .pill-row button {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pill-row button .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .pill-row button.on { background: rgba(255, 255, 255, 0.08); color: #fff; }
+    .pill-row button[data-pillar="ai-dc"].on { box-shadow: inset 0 0 0 1px rgba(10, 96, 255, 0.5); }
+    .pill-row button[data-pillar="workplaces"].on { box-shadow: inset 0 0 0 1px rgba(45, 206, 92, 0.5); }
+    .pill-row button[data-pillar="resilience"].on { box-shadow: inset 0 0 0 1px rgba(255, 144, 0, 0.5); }
+    .density-toggle button.on {
+      background: linear-gradient(90deg, var(--blue), var(--accent));
+      color: #000;
+    }
+
+    .chrome {
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      overflow: hidden;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      flex-wrap: wrap;
+      background: rgba(2, 8, 18, 0.98);
+    }
+    .logo-dot {
+      width: 26px; height: 26px; border-radius: 7px;
+      background: linear-gradient(135deg, var(--accent), var(--blue));
+      flex-shrink: 0;
+    }
+    .topbar-title { font-size: 0.76rem; font-weight: 700; color: var(--title-cyan); }
+    .topbar-spacer { flex: 1; min-width: 8px; }
+    .vm-seg {
+      display: inline-flex; gap: 2px; padding: 3px;
+      border-radius: 999px;
+      background: rgba(5, 14, 28, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .vm-seg span {
+      font-size: 0.64rem; font-weight: 600;
+      padding: 5px 9px; border-radius: 999px;
+      color: var(--muted);
+    }
+    .vm-seg span.on {
+      background: linear-gradient(90deg, var(--blue), var(--accent));
+      color: #000;
+    }
+
+    .actionbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      background: rgba(3, 10, 22, 0.85);
+      font-size: 0.64rem;
+    }
+    .pp {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--muted);
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .pp.on { color: #fff; border-color: rgba(2, 200, 255, 0.35); background: rgba(2, 200, 255, 0.08); }
+    .pp-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .pp-sep { width: 1px; height: 18px; background: rgba(255,255,255,.08); margin: 0 4px; }
+    .chip {
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.08);
+      color: var(--subtle);
+      font-weight: 600;
+    }
+
+    .canvas-wrap {
+      position: relative;
+      min-height: 580px;
+      background:
+        radial-gradient(circle at 22% 38%, rgba(10, 96, 255, 0.07), transparent 42%),
+        radial-gradient(circle at 78% 62%, rgba(2, 200, 255, 0.05), transparent 38%),
+        repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,.022) 39px, rgba(255,255,255,.022) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,.022) 39px, rgba(255,255,255,.022) 40px);
+    }
+
+    .zone-panel {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -48%);
+      width: min(960px, 96%);
+      min-height: 440px;
+      border-radius: 10px;
+      border: 2px solid var(--zone-color, var(--blue));
+      background: rgba(1, 10, 24, 0.72);
+      box-shadow: 0 0 40px color-mix(in srgb, var(--zone-color) 22%, transparent);
+      display: flex;
+      flex-direction: column;
+      overflow: visible;
+    }
+    .zone-panel.resilience-gradient {
+      border-image: linear-gradient(90deg, var(--accent), #d946ef, var(--orange)) 1;
+      border-width: 2px;
+      border-style: solid;
+    }
+
+    .zone-header {
+      padding: 14px 18px 0;
+      text-align: center;
+    }
+    .zone-header-top {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .zone-header img {
+      width: 28px; height: 28px;
+      filter: brightness(0) invert(1);
+      opacity: 0.92;
+    }
+    .zone-header h2 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--title-cyan);
+    }
+
+    /* Always-visible promise strip — low profile, proactive */
+    .promise-strip {
+      margin: 0 16px 12px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--zone-color) 8%, rgba(0, 0, 0, 0.25));
+      border: 1px solid color-mix(in srgb, var(--zone-color) 22%, transparent);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .promise-strip .badge {
+      flex-shrink: 0;
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--zone-color);
+      padding: 3px 7px;
+      border-radius: 4px;
+      background: color-mix(in srgb, var(--zone-color) 14%, transparent);
+      margin-top: 1px;
+    }
+    .promise-strip .text {
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: #dbeafe;
+      font-weight: 600;
+    }
+    .promise-strip .scope {
+      display: block;
+      margin-top: 4px;
+      font-size: 0.62rem;
+      font-weight: 400;
+      color: var(--muted);
+    }
+
+    .zone-body {
+      flex: 1;
+      position: relative;
+      min-height: 320px;
+      padding: 4px 12px 20px;
+    }
+
+    .family-grid {
+      display: grid;
+      gap: 14px 10px;
+      justify-content: center;
+      align-content: start;
+      padding-top: 8px;
+    }
+    .family-grid.cols-4 { grid-template-columns: repeat(4, 72px); }
+    .family-grid.cols-6 { grid-template-columns: repeat(6, 72px); }
+
+    .fam-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .fam-node .icon {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--zone-color) 35%, rgba(255,255,255,0.08));
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      display: grid;
+      place-items: center;
+      font-size: 0.55rem;
+      font-weight: 700;
+      color: #fff;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .fam-node:hover .icon,
+    .fam-node.sel .icon {
+      transform: scale(1.06);
+      box-shadow: 0 0 16px color-mix(in srgb, var(--zone-color) 45%, transparent);
+      border-color: #fff;
+    }
+    .fam-node .lbl {
+      font-size: 0.52rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      text-align: center;
+      line-height: 1.25;
+      max-width: 72px;
+    }
+
+    .zone-stats {
+      position: absolute;
+      left: 16px;
+      bottom: 8px;
+      font-size: 0.58rem;
+      font-weight: 600;
+      color: var(--subtle);
+    }
+
+    /* ── Floating insight card (overlay, not layout split) ── */
+    .insight-wrap {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 4;
+      display: flex;
+      flex-direction: row-reverse;
+      align-items: flex-start;
+      gap: 0;
+      max-width: calc(100% - 24px);
+      pointer-events: none;
+    }
+    .insight-wrap > * { pointer-events: auto; }
+
+    .insight-tab {
+      display: none;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      border: none;
+      cursor: pointer;
+      font: inherit;
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.75);
+      padding: 12px 7px;
+      border-radius: 8px 0 0 8px;
+      background: rgba(8, 16, 32, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-right: none;
+      backdrop-filter: blur(10px);
+    }
+    .insight-wrap.minimized .insight-tab { display: block; }
+
+    .insight-card {
+      width: 268px;
+      max-height: min(360px, 58vh);
+      border-radius: 10px;
+      background: rgba(6, 14, 28, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
+      transition: width 0.22s ease, opacity 0.2s ease, transform 0.22s ease;
+      transform-origin: top right;
+    }
+    .insight-wrap.minimized .insight-card {
+      width: 0;
+      opacity: 0;
+      transform: scale(0.96);
+      pointer-events: none;
+      border: none;
+    }
+    .insight-wrap.expanded .insight-card { width: 300px; }
+
+    .insight-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 12px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .insight-head span {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--subtle);
+    }
+    .insight-actions {
+      display: flex;
+      gap: 2px;
+    }
+    .insight-actions button {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.72rem;
+      line-height: 1;
+      padding: 4px 6px;
+      border-radius: 4px;
+    }
+    .insight-actions button:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .insight-peek {
+      padding: 10px 12px 12px;
+      min-height: 72px;
+    }
+    .peek-label {
+      font-size: 0.58rem;
+      font-weight: 700;
+      color: var(--zone-color);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
+    }
+    .peek-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #e2e8f0;
+      line-height: 1.35;
+      margin-bottom: 4px;
+    }
+    .peek-body {
+      font-size: 0.65rem;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+    .peek-dots {
+      display: flex;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    .peek-dots i {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.18);
+      transition: background 0.2s, transform 0.2s;
+    }
+    .peek-dots i.on {
+      background: var(--zone-color);
+      transform: scale(1.2);
+    }
+
+    .insight-list {
+      display: none;
+      padding: 6px 10px 10px;
+      overflow-y: auto;
+      max-height: 280px;
+    }
+    .insight-wrap.expanded .insight-peek { display: none; }
+    .insight-wrap.expanded .insight-list { display: block; }
+
+    .insight-item {
+      display: flex;
+      gap: 10px;
+      padding: 8px 6px;
+      border-radius: 6px;
+      cursor: default;
+    }
+    .insight-item + .insight-item {
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    .insight-item:hover { background: rgba(255, 255, 255, 0.03); }
+    .insight-num {
+      flex-shrink: 0;
+      width: 20px; height: 20px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      font-size: 0.58rem;
+      font-weight: 700;
+      color: var(--zone-color);
+      background: color-mix(in srgb, var(--zone-color) 16%, transparent);
+      margin-top: 1px;
+    }
+    .insight-item h4 {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #e2e8f0;
+      line-height: 1.3;
+      margin-bottom: 3px;
+    }
+    .insight-item p {
+      font-size: 0.62rem;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+
+    .insight-foot {
+      padding: 8px 12px 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .insight-foot button {
+      width: 100%;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.04);
+      color: #cbd5e1;
+      font: inherit;
+      font-size: 0.62rem;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .insight-foot button:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+    .insight-wrap.expanded .insight-foot button::before { content: "Show less"; }
+    .insight-wrap:not(.expanded) .insight-foot button::before { content: "See all value props"; }
+    .insight-wrap.minimized .insight-foot { display: none; }
+
+    /* All-pillars: bottom context bar */
+    .macro-bar {
+      display: none;
+      position: absolute;
+      left: 50%;
+      bottom: 14px;
+      transform: translateX(-50%);
+      width: min(880px, 92%);
+      gap: 8px;
+      z-index: 3;
+    }
+    .canvas-wrap.all-pillars .macro-bar { display: grid; grid-template-columns: repeat(3, 1fr); }
+    .canvas-wrap.all-pillars .zone-panel { display: none; }
+
+    .macro-chip {
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: rgba(6, 14, 28, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .macro-chip:hover {
+      border-color: color-mix(in srgb, var(--chip-color) 40%, transparent);
+      background: color-mix(in srgb, var(--chip-color) 6%, rgba(6, 14, 28, 0.92));
+    }
+    .macro-chip h3 {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--title-cyan);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .macro-chip h3 img { width: 16px; height: 16px; filter: brightness(0) invert(1); opacity: 0.85; }
+    .macro-chip p {
+      font-size: 0.62rem;
+      line-height: 1.4;
+      color: var(--muted);
+    }
+
+    .all-hint {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: var(--subtle);
+      font-size: 0.72rem;
+      line-height: 1.5;
+    }
+    .canvas-wrap.all-pillars .all-hint { display: block; }
+
+    .footnote {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px dashed rgba(2, 200, 255, 0.25);
+      background: rgba(2, 200, 255, 0.04);
+      font-size: 0.68rem;
+      line-height: 1.55;
+      color: var(--muted);
+    }
+    .footnote strong { color: #94a3b8; }
+
+    .canvas-footer {
+      position: absolute;
+      bottom: 10px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.58rem;
+      color: var(--subtle);
+      pointer-events: none;
+    }
+
+    @media (max-width: 720px) {
+      .insight-card { width: 240px; }
+      .insight-wrap.expanded .insight-card { width: min(280px, calc(100vw - 48px)); }
+      .macro-bar { grid-template-columns: 1fr; }
+      .promise-strip { flex-direction: column; gap: 6px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="intro">
+      <p style="margin-bottom:10px;font-size:.72rem"><a href="pillar-context-gallery.html" style="color:#02c8ff;text-decoration:none">← Compare all 6 versions</a></p>
+      <h1>V1 · Peek card</h1>
+      <p>
+        Proactive One Cisco messaging without blocking the graph: a slim promise strip under the zone header,
+        plus a floating insight card that peeks one value prop at a time (expand for all, minimize to a tab).
+      </p>
+    </header>
+
+    <div class="controls">
+      <label>Pillar</label>
+      <div class="pill-row pillar-toggle">
+        <button type="button" class="on" data-pillar="ai-dc"><span class="dot" style="background:#0a60ff"></span> AI-Ready DC</button>
+        <button type="button" data-pillar="workplaces"><span class="dot" style="background:#2dce5c"></span> Workplaces</button>
+        <button type="button" data-pillar="resilience"><span class="dot" style="background:#ff9000"></span> Resilience</button>
+        <button type="button" data-pillar="__all__"><span class="dot" style="background:linear-gradient(135deg,#0a60ff,#2dce5c,#ff9000)"></span> All</button>
+      </div>
+      <label>Card</label>
+      <div class="pill-row density-toggle">
+        <button type="button" class="on" data-density="peek">Peek (default)</button>
+        <button type="button" data-density="expanded">Expanded</button>
+        <button type="button" data-density="minimized">Minimized</button>
+      </div>
+    </div>
+
+    <div class="chrome">
+      <div class="topbar">
+        <div class="logo-dot" aria-hidden="true"></div>
+        <span class="topbar-title">Cisco Portfolio Navigator</span>
+        <span class="topbar-spacer"></span>
+        <div class="vm-seg" aria-hidden="true">
+          <span>Overview</span>
+          <span class="on">Families</span>
+          <span>Composition</span>
+          <span>Spatial</span>
+        </div>
+      </div>
+
+      <div class="actionbar" id="actionbar">
+        <button type="button" class="pp" data-pp="__all__"><span class="pp-dot" style="background:linear-gradient(135deg,#0a60ff,#2dce5c,#ff9000)"></span> All <span style="opacity:.6">58</span></button>
+        <button type="button" class="pp on" data-pp="ai-dc"><span class="pp-dot" style="background:#0a60ff"></span> AI-Ready DC <span style="opacity:.6">7</span></button>
+        <button type="button" class="pp" data-pp="workplaces"><span class="pp-dot" style="background:#2dce5c"></span> Workplaces <span style="opacity:.6">24</span></button>
+        <button type="button" class="pp" data-pp="resilience"><span class="pp-dot" style="background:#ff9000"></span> Resilience <span style="opacity:.6">26</span></button>
+        <span class="pp-sep"></span>
+        <span class="chip">Networking</span>
+        <span class="chip">Security</span>
+        <span class="chip">Collaboration</span>
+      </div>
+
+      <div class="canvas-wrap" id="canvasWrap">
+        <div class="all-hint">All pillars visible on canvas<br/><span style="font-size:.62rem;opacity:.8">Select a pillar below or use filter pills above</span></div>
+
+        <div class="macro-bar" id="macroBar"></div>
+
+        <div class="zone-panel" id="zonePanel">
+          <header class="zone-header">
+            <div class="zone-header-top">
+              <img id="zoneIcon" src="../assets/deck/slide12-ai-dc.svg" alt=""/>
+              <h2 id="zoneTitle">AI-Ready Data Centers</h2>
+            </div>
+            <div class="promise-strip" id="promiseStrip">
+              <span class="badge">Outcome</span>
+              <div class="text" id="promiseText"></div>
+            </div>
+          </header>
+
+          <div class="zone-body">
+            <div class="family-grid cols-4" id="familyGrid"></div>
+            <div class="zone-stats" id="zoneStats">7 families</div>
+
+            <div class="insight-wrap peek" id="insightWrap">
+              <button type="button" class="insight-tab" id="insightTab" aria-label="Show pillar context">Context</button>
+              <div class="insight-card">
+                <div class="insight-head">
+                  <span>Value props</span>
+                  <div class="insight-actions">
+                    <button type="button" id="btnMinimize" title="Minimize">−</button>
+                  </div>
+                </div>
+                <div class="insight-peek" id="insightPeek">
+                  <div class="peek-label" id="peekLabel">1 of 3</div>
+                  <div class="peek-title" id="peekTitle"></div>
+                  <div class="peek-body" id="peekBody"></div>
+                  <div class="peek-dots" id="peekDots"></div>
+                </div>
+                <div class="insight-list" id="insightList"></div>
+                <div class="insight-foot">
+                  <button type="button" id="btnToggle"></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="canvas-footer">
+          <span>Scroll to zoom · Drag to pan · Click node for details</span>
+          <span>Mockup — insight card overlays graph, does not resize layout</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="footnote">
+      <strong>Design intent:</strong> Promise strip = always-on executive framing. Floating card = optional depth without a permanent column split.
+      Default <em>peek</em> rotates highlights slowly; users expand once if curious, minimize if they want zero chrome.
+      In production: render strip in zone header SVG/HTML; attach card as absolutely positioned overlay inside focused zone.
+    </p>
+  </div>
+
+  <script>
+    const PILLARS = {
+      "ai-dc": {
+        label: "AI-Ready Data Centers",
+        color: "#0a60ff",
+        icon: "../assets/deck/slide12-ai-dc.svg",
+        familyCount: 7,
+        cols: 4,
+        families: [
+          { id: "aci", label: "ACI", abbr: "ACI" },
+          { id: "intersight", label: "Intersight", abbr: "IS" },
+          { id: "nexus-dashboard", label: "Nexus Dashboard", abbr: "ND" },
+          { id: "nexus-one", label: "Nexus One", abbr: "N1" },
+          { id: "nexus", label: "Nexus Switches", abbr: "NX" },
+          { id: "silicon-one", label: "Silicon One", abbr: "Si" },
+          { id: "ucs", label: "UCS Servers", abbr: "UC" }
+        ],
+        promise: "Transform data centers to power AI workloads anywhere",
+        scope: "Public and private clouds, edge, on-premises",
+        highlights: [
+          { title: "Comprehensive infrastructure", body: "Integrated networking, compute, and storage for every workload" },
+          { title: "Unified operations", body: "One management and observability layer across traditional and AI environments" },
+          { title: "Security everywhere", body: "Protect hyper-distributed workloads from ground to cloud" }
+        ]
+      },
+      workplaces: {
+        label: "Future-Proofed Workplaces",
+        color: "#2dce5c",
+        icon: "../assets/deck/slide12-workplaces.svg",
+        familyCount: 24,
+        cols: 6,
+        families: [
+          { id: "webex-app", label: "Webex Suite", abbr: "Wx" },
+          { id: "room-systems", label: "Room Systems", abbr: "Rm" },
+          { id: "catalyst-access", label: "Catalyst Access", abbr: "CA" },
+          { id: "catalyst-wireless", label: "Catalyst Wireless", abbr: "CW" },
+          { id: "catalyst-center", label: "Catalyst Center", abbr: "CC" },
+          { id: "sdwan", label: "Cisco SD-WAN", abbr: "SD" },
+          { id: "meraki-mx", label: "Meraki MX", abbr: "MX" },
+          { id: "ip-phones", label: "IP Phones", abbr: "IP" },
+          { id: "cloud-control", label: "Cloud Control", abbr: "Cl" },
+          { id: "desk-devices", label: "Desk Devices", abbr: "Dk" },
+          { id: "webex-calling", label: "Webex Calling", abbr: "WC" },
+          { id: "webex-cc", label: "Webex CC", abbr: "CX" }
+        ],
+        promise: "Modernize everywhere people work and serve customers",
+        scope: "Campuses, branches, factories, homes, and beyond",
+        highlights: [
+          { title: "Intelligent infrastructure", body: "Secure networking with real-time insights and closed-loop automation" },
+          { title: "User protection", body: "Frictionless zero-trust access from any location" },
+          { title: "Smart buildings", body: "More secure, sustainable workplaces with actionable insights" },
+          { title: "Collaboration devices", body: "Immersive experiences for every workspace" },
+          { title: "Hybrid work software", body: "Employee and customer experiences that scale" }
+        ]
+      },
+      resilience: {
+        label: "Digital Resilience",
+        color: "#ff9000",
+        icon: "../assets/deck/slide12-resilience.svg",
+        gradient: true,
+        familyCount: 26,
+        cols: 6,
+        families: [
+          { id: "hypershield", label: "Hypershield", abbr: "HS" },
+          { id: "ise", label: "Cisco ISE", abbr: "IS" },
+          { id: "umbrella", label: "Umbrella", abbr: "Um" },
+          { id: "duo", label: "Duo", abbr: "Du" },
+          { id: "xdr", label: "XDR", abbr: "XD" },
+          { id: "thousandeyes", label: "ThousandEyes", abbr: "TE" },
+          { id: "secure-access", label: "Secure Access", abbr: "SA" },
+          { id: "sf-fmc", label: "Secure Firewall", abbr: "FW" },
+          { id: "cisco-iq", label: "Cisco IQ", abbr: "IQ" },
+          { id: "splunk", label: "Splunk", abbr: "Sp" },
+          { id: "secure-workload", label: "Secure Workload", abbr: "SW" },
+          { id: "vuln-mgmt", label: "Vuln Mgmt", abbr: "VM" }
+        ],
+        promise: "Stay secure, reliable, and performing across your entire digital footprint",
+        scope: null,
+        highlights: [
+          { title: "Security", body: "Threat prevention, detection, and response at any maturity level" },
+          { title: "Assurance", body: "End-to-end connectivity to assure application and service delivery" },
+          { title: "Observability", body: "Visibility across owned and unowned environments to prevent downtime" }
+        ]
+      }
+    };
+
+    const MACRO_ORDER = ["ai-dc", "workplaces", "resilience"];
+
+    let pillarId = "ai-dc";
+    let density = "peek";
+    let peekIndex = 0;
+    let peekTimer = null;
+
+    const canvasWrap = document.getElementById("canvasWrap");
+    const zonePanel = document.getElementById("zonePanel");
+    const zoneTitle = document.getElementById("zoneTitle");
+    const zoneIcon = document.getElementById("zoneIcon");
+    const promiseText = document.getElementById("promiseText");
+    const zoneStats = document.getElementById("zoneStats");
+    const familyGrid = document.getElementById("familyGrid");
+    const insightWrap = document.getElementById("insightWrap");
+    const peekLabel = document.getElementById("peekLabel");
+    const peekTitle = document.getElementById("peekTitle");
+    const peekBody = document.getElementById("peekBody");
+    const peekDots = document.getElementById("peekDots");
+    const insightList = document.getElementById("insightList");
+    const macroBar = document.getElementById("macroBar");
+
+    function setDensity(d) {
+      density = d;
+      insightWrap.classList.remove("peek", "expanded", "minimized");
+      if (d === "expanded") insightWrap.classList.add("expanded");
+      else if (d === "minimized") insightWrap.classList.add("minimized");
+      else insightWrap.classList.add("peek");
+
+      document.querySelectorAll(".density-toggle button").forEach(btn => {
+        btn.classList.toggle("on", btn.dataset.density === d);
+      });
+
+      if (d === "peek") startPeekRotation();
+      else stopPeekRotation();
+    }
+
+    function startPeekRotation() {
+      stopPeekRotation();
+      peekTimer = setInterval(() => {
+        if (pillarId === "__all__" || density !== "peek") return;
+        const p = PILLARS[pillarId];
+        peekIndex = (peekIndex + 1) % p.highlights.length;
+        updatePeek(p);
+      }, 4500);
+    }
+
+    function stopPeekRotation() {
+      if (peekTimer) clearInterval(peekTimer);
+      peekTimer = null;
+    }
+
+    function updatePeek(p) {
+      const h = p.highlights[peekIndex];
+      peekLabel.textContent = `${peekIndex + 1} of ${p.highlights.length}`;
+      peekTitle.textContent = h.title;
+      peekBody.textContent = h.body;
+      peekDots.innerHTML = p.highlights.map((_, i) =>
+        `<i class="${i === peekIndex ? "on" : ""}"></i>`).join("");
+    }
+
+    function renderInsight(p) {
+      peekIndex = 0;
+      updatePeek(p);
+      insightList.innerHTML = p.highlights.map((h, i) => `
+        <article class="insight-item">
+          <span class="insight-num">${i + 1}</span>
+          <div>
+            <h4>${h.title}</h4>
+            <p>${h.body}</p>
+          </div>
+        </article>`).join("");
+    }
+
+    function renderFamilies(p) {
+      familyGrid.className = "family-grid cols-" + p.cols;
+      familyGrid.innerHTML = p.families.map(f => `
+        <div class="fam-node" data-id="${f.id}" title="${f.label}">
+          <div class="icon">${f.abbr}</div>
+          <span class="lbl">${f.label}</span>
+        </div>`).join("");
+    }
+
+    function renderMacroBar() {
+      macroBar.innerHTML = MACRO_ORDER.map(id => {
+        const p = PILLARS[id];
+        return `<button type="button" class="macro-chip" data-pillar="${id}" style="--chip-color:${p.color}">
+          <h3><img src="${p.icon}" alt=""/> ${p.label}</h3>
+          <p>${p.promise}</p>
+        </button>`;
+      }).join("");
+    }
+
+    function syncActionbar() {
+      document.querySelectorAll(".actionbar .pp").forEach(btn => {
+        btn.classList.toggle("on", btn.dataset.pp === (pillarId === "__all__" ? "__all__" : pillarId));
+      });
+      document.querySelectorAll(".pillar-toggle button").forEach(btn => {
+        btn.classList.toggle("on", btn.dataset.pillar === pillarId);
+      });
+    }
+
+    function render() {
+      const all = pillarId === "__all__";
+      canvasWrap.classList.toggle("all-pillars", all);
+
+      if (all) {
+        stopPeekRotation();
+        syncActionbar();
+        return;
+      }
+
+      const p = PILLARS[pillarId];
+      zonePanel.style.setProperty("--zone-color", p.color);
+      zonePanel.classList.toggle("resilience-gradient", !!p.gradient);
+
+      zoneTitle.textContent = p.label;
+      zoneIcon.src = p.icon;
+      promiseText.innerHTML = p.promise +
+        (p.scope ? `<span class="scope">${p.scope}</span>` : "");
+      zoneStats.textContent = `${p.familyCount} families`;
+
+      renderFamilies(p);
+      renderInsight(p);
+      syncActionbar();
+
+      if (density === "peek") startPeekRotation();
+    }
+
+    function selectPillar(id) {
+      pillarId = id;
+      if (id !== "__all__") setDensity(density === "minimized" && id ? density : density);
+      render();
+    }
+
+    document.querySelector(".pillar-toggle").addEventListener("click", e => {
+      const btn = e.target.closest("button[data-pillar]");
+      if (!btn) return;
+      selectPillar(btn.dataset.pillar);
+    });
+
+    document.querySelector(".density-toggle").addEventListener("click", e => {
+      const btn = e.target.closest("button[data-density]");
+      if (!btn || pillarId === "__all__") return;
+      setDensity(btn.dataset.density);
+    });
+
+    document.getElementById("actionbar").addEventListener("click", e => {
+      const btn = e.target.closest(".pp");
+      if (!btn) return;
+      selectPillar(btn.dataset.pp);
+    });
+
+    macroBar.addEventListener("click", e => {
+      const chip = e.target.closest(".macro-chip");
+      if (!chip) return;
+      selectPillar(chip.dataset.pillar);
+    });
+
+    document.getElementById("btnToggle").addEventListener("click", () => {
+      setDensity(density === "expanded" ? "peek" : "expanded");
+    });
+
+    document.getElementById("btnMinimize").addEventListener("click", () => {
+      setDensity("minimized");
+    });
+
+    document.getElementById("insightTab").addEventListener("click", () => {
+      setDensity("peek");
+    });
+
+    peekDots.addEventListener("click", e => {
+      if (e.target.tagName !== "I" || pillarId === "__all__") return;
+      const dots = [...peekDots.querySelectorAll("i")];
+      peekIndex = dots.indexOf(e.target);
+      if (peekIndex < 0) return;
+      updatePeek(PILLARS[pillarId]);
+      startPeekRotation();
+    });
+
+    familyGrid.addEventListener("click", e => {
+      const node = e.target.closest(".fam-node");
+      if (!node) return;
+      familyGrid.querySelectorAll(".fam-node").forEach(n => n.classList.remove("sel"));
+      node.classList.add("sel");
+    });
+
+    renderMacroBar();
+    setDensity("peek");
+    render();
+  </script>
+</body>
+</html>

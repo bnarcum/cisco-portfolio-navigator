@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Peek D — timer bar</title>
+  <link rel="stylesheet" href="pillar-context-base.css"/>
+  <link rel="stylesheet" href="pillar-context-zone.css"/>
+  <style>
+    .peek-bar {
+      margin: 10px 16px 0;
+      padding: 10px 14px 12px;
+      border-radius: 10px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.08);
+      position: relative;
+      overflow: hidden;
+    }
+    .peek-bar::before {
+      content: "";
+      position: absolute; left: 0; top: 0; bottom: 0;
+      width: var(--fill, 0%);
+      background: color-mix(in srgb, var(--zone-color) 12%, transparent);
+      transition: width .1s linear;
+      pointer-events: none;
+    }
+    .peek-row {
+      display: flex; align-items: flex-start; gap: 12px;
+      position: relative; z-index: 1;
+    }
+    .peek-icon {
+      width: 32px; height: 32px; flex-shrink: 0;
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--zone-color) 22%, transparent);
+      display: grid; place-items: center;
+      font-size: 0.62rem; font-weight: 700; color: var(--zone-color);
+    }
+    .peek-content { flex: 1; min-width: 0; }
+    .peek-content kbd {
+      font-size: 0.55rem; font-weight: 700; color: #64748b;
+      text-transform: uppercase;
+    }
+    .peek-content h3 {
+      font-size: 0.72rem; color: #e2e8f0; margin: 2px 0 4px; line-height: 1.3;
+    }
+    .peek-content p {
+      font-size: 0.64rem; color: #8b95a5; line-height: 1.45;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .peek-actions {
+      display: flex; flex-direction: column; gap: 4px; flex-shrink: 0;
+    }
+    .peek-actions button {
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.04);
+      color: #cbd5e1; cursor: pointer; font-size: 0.75rem;
+    }
+    .timer-track {
+      height: 2px; margin-top: 10px;
+      background: rgba(255,255,255,.08);
+      border-radius: 99px; overflow: hidden;
+      position: relative; z-index: 1;
+    }
+    .timer-track i {
+      display: block; height: 100%; width: 0;
+      background: linear-gradient(90deg, var(--zone-color), #02c8ff);
+      border-radius: 99px;
+    }
+    .timer-track i.run { animation: tick 5s linear infinite; }
+    @keyframes tick { to { width: 100%; } }
+    .zone-body { padding-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="mockup-shell">
+    <p class="back"><a href="pillar-context-iterations-gallery.html">← Peek & filmstrip iterations</a></p>
+    <p class="pitch"><strong>Peek D · Timer bar</strong> — Inline bar under the promise (not floating). Progress timer shows rotation; prev/next for manual control.</p>
+    <div class="controls"></div>
+    <div class="chrome">
+      <div class="topbar"></div>
+      <div class="actionbar"></div>
+      <div class="canvas-wrap" style="min-height:560px">
+        <div class="zone-panel" id="zone">
+          <header class="zone-header">
+            <div class="zone-header-top">
+              <img data-zone-icon src="" alt=""/>
+              <h2 data-zone-title></h2>
+            </div>
+            <div class="promise-strip"><span class="badge">Outcome</span><div class="text" data-zone-promise></div></div>
+            <div class="peek-bar" id="peekBar" style="--fill:33%">
+              <div class="peek-row">
+                <div class="peek-icon" id="num">1</div>
+                <div class="peek-content">
+                  <kbd id="label">Value prop 1 of 3</kbd>
+                  <h3 id="title"></h3>
+                  <p id="body"></p>
+                </div>
+                <div class="peek-actions">
+                  <button type="button" id="prev" aria-label="Previous">‹</button>
+                  <button type="button" id="next" aria-label="Next">›</button>
+                </div>
+              </div>
+              <div class="timer-track"><i class="run" id="timer"></i></div>
+            </div>
+          </header>
+          <div class="zone-body">
+            <div class="family-grid cols-4" data-zone-graph></div>
+            <div class="zone-stats" data-zone-stats></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="pillar-context-data.js"></script>
+  <script src="pillar-context-chrome.js"></script>
+  <script src="pillar-context-zone.js"></script>
+  <script>
+    let pillarId = "ai-dc";
+    let rot = mountPeekRotation(() => PILLAR_CTX[pillarId], (p, i) => show(p, i), 5000);
+
+    function restartTimer() {
+      const t = document.getElementById("timer");
+      t.classList.remove("run");
+      void t.offsetWidth;
+      t.classList.add("run");
+    }
+
+    function show(p, i) {
+      rot.setIndex(i);
+      const h = p.highlights[i];
+      const n = p.highlights.length;
+      document.getElementById("num").textContent = i + 1;
+      document.getElementById("label").textContent = `Value prop ${i + 1} of ${n}`;
+      document.getElementById("title").textContent = h.title;
+      document.getElementById("body").textContent = h.body;
+      document.getElementById("peekBar").style.setProperty("--fill", `${((i + 1) / n) * 100}%`);
+      restartTimer();
+    }
+
+    function render() {
+      renderZoneShell(document.getElementById("zone"), PILLAR_CTX[pillarId]);
+      rot.reset();
+      show(PILLAR_CTX[pillarId], 0);
+      rot.start();
+    }
+
+    document.getElementById("prev").onclick = () => {
+      const p = PILLAR_CTX[pillarId];
+      show(p, (rot.getIndex() - 1 + p.highlights.length) % p.highlights.length);
+      rot.start();
+    };
+    document.getElementById("next").onclick = () => {
+      const p = PILLAR_CTX[pillarId];
+      show(p, (rot.getIndex() + 1) % p.highlights.length);
+      rot.start();
+    };
+
+    initPillarMockup({ onPillar: id => { pillarId = id; render(); } });
+    render();
+  </script>
+</body>
+</html>

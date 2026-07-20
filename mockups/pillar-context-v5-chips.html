@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>V5 Accordion chips — pillar context</title>
+  <link rel="stylesheet" href="pillar-context-base.css"/>
+  <style>
+    .zone {
+      position: absolute;
+      left: 50%; top: 48%;
+      transform: translate(-50%, -50%);
+      width: min(900px, 94%);
+      border-radius: 10px;
+      border: 2px solid var(--zone-color);
+      background: rgba(1, 10, 24, 0.78);
+      padding: 0 0 20px;
+      box-shadow: 0 0 40px color-mix(in srgb, var(--zone-color) 18%, transparent);
+    }
+    .zone-head {
+      padding: 16px 20px 12px;
+      text-align: center;
+    }
+    .zone-head h2 {
+      font-size: 0.92rem;
+      color: var(--title-cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .zone-head h2 img { width: 24px; filter: brightness(0) invert(1); }
+
+    .outcome-bar {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      max-width: 640px;
+      margin: 0 auto 14px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--zone-color) 6%, rgba(0,0,0,.2));
+      border-left: 3px solid var(--zone-color);
+    }
+    .outcome-bar .lbl {
+      font-size: 0.58rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--zone-color);
+      white-space: nowrap;
+      padding-top: 2px;
+    }
+    .outcome-bar p {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      line-height: 1.4;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      padding: 0 16px 16px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .chip-btn {
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.03);
+      color: #cbd5e1;
+      font: inherit;
+      font-size: 0.66rem;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all .2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .chip-btn .n {
+      width: 18px; height: 18px;
+      border-radius: 5px;
+      background: color-mix(in srgb, var(--zone-color) 20%, transparent);
+      color: var(--zone-color);
+      font-size: 0.55rem;
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+    }
+    .chip-btn.on {
+      background: color-mix(in srgb, var(--zone-color) 18%, transparent);
+      border-color: color-mix(in srgb, var(--zone-color) 45%, transparent);
+      color: #fff;
+    }
+
+    .expand-panel {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease, opacity 0.25s;
+      opacity: 0;
+      margin: 0 20px;
+    }
+    .expand-panel.open {
+      max-height: 120px;
+      opacity: 1;
+      margin-bottom: 8px;
+    }
+    .expand-inner {
+      padding: 12px 16px;
+      border-radius: 8px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.06);
+    }
+    .expand-inner p {
+      font-size: 0.68rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .zone-graph {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      padding: 8px 20px 0;
+      border-top: 1px solid rgba(255,255,255,.05);
+      margin-top: 4px;
+      padding-top: 20px;
+    }
+    .zone-graph .fam {
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--zone-color) 28%, transparent);
+      border: 2px solid rgba(255,255,255,.2);
+      font-size: 0.54rem;
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: transform .15s;
+    }
+    .zone-graph .fam:hover { transform: scale(1.06); }
+
+    .scan-hint {
+      text-align: center;
+      font-size: 0.58rem;
+      color: var(--subtle);
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="mockup-shell">
+    <p class="back"><a href="pillar-context-gallery.html">← All versions</a></p>
+    <p class="pitch">All value-prop titles visible as chips — one expands inline. No overlays; everything scannable at a glance.</p>
+    <div class="controls"></div>
+    <div class="chrome">
+      <div class="topbar"></div>
+      <div class="actionbar"></div>
+      <div class="canvas-wrap" style="min-height:520px">
+        <div class="zone">
+          <header class="zone-head">
+            <h2><img id="icon" src="" alt=""/><span id="title"></span></h2>
+            <div class="outcome-bar">
+              <span class="lbl">Outcome</span>
+              <p id="promise"></p>
+            </div>
+          </header>
+          <div class="chips" id="chips"></div>
+          <div class="expand-panel" id="expand">
+            <div class="expand-inner"><p id="expandBody"></p></div>
+          </div>
+          <div class="zone-graph" id="graph"></div>
+          <p class="scan-hint">Click a chip to expand · click again to collapse</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="pillar-context-data.js"></script>
+  <script src="pillar-context-chrome.js"></script>
+  <script>
+    let pillarId = "ai-dc", openIdx = 0;
+
+    function render() {
+      const p = PILLAR_CTX[pillarId];
+      document.documentElement.style.setProperty("--zone-color", p.color);
+      document.getElementById("icon").src = p.icon;
+      document.getElementById("title").textContent = p.label;
+      document.getElementById("promise").textContent = p.promise + (p.scope ? ` — ${p.scope}` : "");
+      document.getElementById("graph").innerHTML = p.families.map(f =>
+        `<span class="fam" title="${f.label}">${f.abbr}</span>`).join("");
+
+      document.getElementById("chips").innerHTML = p.highlights.map((h, i) => `
+        <button type="button" class="chip-btn${i === openIdx ? " on" : ""}" data-i="${i}">
+          <span class="n">${i + 1}</span>${h.title}
+        </button>`).join("");
+
+      const panel = document.getElementById("expand");
+      if (openIdx >= 0) {
+        document.getElementById("expandBody").textContent = p.highlights[openIdx].body;
+        panel.classList.add("open");
+      } else {
+        panel.classList.remove("open");
+      }
+    }
+
+    document.getElementById("chips").addEventListener("click", e => {
+      const b = e.target.closest(".chip-btn");
+      if (!b) return;
+      const i = +b.dataset.i;
+      openIdx = openIdx === i ? -1 : i;
+      render();
+    });
+
+    initPillarMockup({ onPillar: id => { pillarId = id; openIdx = 0; render(); } });
+    render();
+  </script>
+</body>
+</html>

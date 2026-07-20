@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Peek & filmstrip — iterations</title>
+  <style>
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT"), url("../fonts/CiscoSansTT-Regular.woff2") format("woff2");
+      font-weight: 400; font-display: swap;
+    }
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT Bold"), url("../fonts/CiscoSansTT-Bold.woff2") format("woff2");
+      font-weight: 700; font-display: swap;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      font-family: "CiscoSansTT", system-ui, sans-serif;
+      background: #050c18;
+      color: #f4f7fb;
+      padding: 32px 20px 60px;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+    .back { margin-bottom: 16px; }
+    .back a { color: #02c8ff; font-size: 0.72rem; text-decoration: none; }
+    h1 {
+      font-size: 1.25rem;
+      background: linear-gradient(90deg, #7eeaff, #0a60ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 8px;
+    }
+    .lead { color: #8b95a5; font-size: 0.82rem; line-height: 1.55; margin-bottom: 28px; max-width: 62ch; }
+    h2.section {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #64748b;
+      margin: 28px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    h2.section:first-of-type { margin-top: 0; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+    }
+    a.card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      border-radius: 12px;
+      border: 1px solid rgba(2, 200, 255, 0.12);
+      background: rgba(4, 12, 26, 0.9);
+      padding: 16px 18px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    a.card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(2, 200, 255, 0.35);
+    }
+    a.card.featured { border-color: rgba(2, 200, 255, 0.35); background: rgba(2, 200, 255, 0.04); }
+    .tag {
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #02c8ff;
+      margin-bottom: 6px;
+    }
+    .tag.green { color: #2dce5c; }
+    a.card h3 { font-size: 0.92rem; margin-bottom: 6px; }
+    a.card p { font-size: 0.7rem; line-height: 1.5; color: #8b95a5; }
+    .note {
+      margin-top: 24px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px dashed rgba(255,255,255,.1);
+      font-size: 0.68rem;
+      color: #64748b;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p class="back"><a href="pillar-context-gallery.html">← All six original directions</a></p>
+    <h1>Peek card & filmstrip iterations</h1>
+    <p class="lead">You liked V1 (peek card) and V4 (filmstrip). Here are three refinements of each — same copy, different chrome and interaction.</p>
+
+    <h2 class="section">Peek card family</h2>
+    <div class="grid">
+      <a class="card featured" href="pillar-summary-rail-mockup.html">
+        <span class="tag">V1 · Original</span>
+        <h3>Peek card</h3>
+        <p>Top-right floating card · auto-rotate · expand / minimize tab · promise strip.</p>
+      </a>
+      <a class="card" href="pillar-context-peek-b-drawer.html">
+        <span class="tag">Peek B</span>
+        <h3>Slide drawer</h3>
+        <p>Peeks slide in from the right edge. Progress bar on rotation. Collapse to vertical tab.</p>
+      </a>
+      <a class="card" href="pillar-context-peek-c-pill.html">
+        <span class="tag">Peek C</span>
+        <h3>Bloom pill</h3>
+        <p>Bottom-left pulsing pill blooms into card. Trigger label shows active highlight title.</p>
+      </a>
+      <a class="card" href="pillar-context-peek-d-timer-bar.html">
+        <span class="tag">Peek D</span>
+        <h3>Timer bar</h3>
+        <p>Inline bar under promise — no overlay. Animated timer + prev/next. Always in layout flow.</p>
+      </a>
+    </div>
+
+    <h2 class="section">Filmstrip family</h2>
+    <div class="grid">
+      <a class="card featured" href="pillar-context-v4-filmstrip.html">
+        <span class="tag green">V4 · Original</span>
+        <h3>Auto filmstrip</h3>
+        <p>Scrolling cards at zone bottom · hover pauses · click lifts detail panel.</p>
+      </a>
+      <a class="card" href="pillar-context-filmstrip-b-dock.html">
+        <span class="tag green">Filmstrip B</span>
+        <h3>Hover dock</h3>
+        <p>Slim handle until hover or pin. Cards expand to show full body on reveal.</p>
+      </a>
+      <a class="card" href="pillar-context-filmstrip-c-carousel.html">
+        <span class="tag green">Filmstrip C</span>
+        <h3>Focus carousel</h3>
+        <p>Center card grows with full copy; neighbors stay compact. Auto-advances.</p>
+      </a>
+      <a class="card" href="pillar-context-filmstrip-d-ticker.html">
+        <span class="tag green">Filmstrip D</span>
+        <h3>Ticker + lift</h3>
+        <p>Ultra-thin marquee line · minimal footprint · click lifts detail above strip.</p>
+      </a>
+    </div>
+
+    <p class="note">Tip: Peek D + Filmstrip D pair well — inline peek up top, ticker at bottom, graph stays clean in the middle.</p>
+  </div>
+</body>
+</html>

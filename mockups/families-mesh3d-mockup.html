@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>CPN Families — mesh3d-style mockup</title>
+  <style>
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT"), local("CiscoSansTT"),
+           url("../fonts/CiscoSansTT-Regular.woff2") format("woff2");
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT Bold"), local("CiscoSansTT Bold"),
+           url("../fonts/CiscoSansTT-Bold.woff2") format("woff2");
+      font-weight: 700;
+      font-display: swap;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #080808;
+      --text: #f5f5f5;
+      --muted: #888;
+      --line: rgba(255, 255, 255, 0.08);
+      --accent: #02c8ff;
+      --blue: #0a60ff;
+      --green: #2dce5c;
+      --orange: #ff9000;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: "CiscoSansTT", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* mesh3d-style minimal chrome */
+    .site-chrome {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px;
+      pointer-events: none;
+    }
+    .site-chrome a, .site-chrome button { pointer-events: auto; }
+    .site-logo {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.5);
+      text-decoration: none;
+    }
+    .site-actions {
+      display: flex;
+      gap: 16px;
+      font-size: 0.68rem;
+      color: rgba(255, 255, 255, 0.4);
+    }
+    .site-actions button {
+      background: none; border: none; color: inherit;
+      font: inherit; cursor: pointer;
+    }
+    .site-actions button:hover { color: #fff; }
+
+    .progress {
+      position: fixed;
+      top: 0; left: 0;
+      height: 2px;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--blue));
+      z-index: 201;
+    }
+
+    /* Fixed WebGL-ish mesh backdrop */
+    #mesh {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .grain {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.04;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    /* Scroll sections */
+    main { position: relative; z-index: 2; }
+
+    .section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 100px 24px 80px;
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .section.snap { scroll-snap-align: start; }
+
+    /* Hero — mesh3d split headline */
+    .hero { min-height: 100vh; padding-top: 120px; }
+
+    .hero-eyebrow {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.35);
+      margin-bottom: 24px;
+    }
+
+    .hero-title {
+      font-size: clamp(3rem, 11vw, 7.5rem);
+      font-weight: 700;
+      line-height: 0.92;
+      letter-spacing: -0.04em;
+      max-width: 12ch;
+    }
+
+    .hero-title .dim {
+      color: rgba(255, 255, 255, 0.38);
+      display: block;
+    }
+
+    .hero-lede {
+      margin-top: 32px;
+      max-width: 42ch;
+      font-size: clamp(0.95rem, 2vw, 1.1rem);
+      line-height: 1.65;
+      color: var(--muted);
+    }
+
+    .hero-stats {
+      margin-top: 48px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 28px 40px;
+    }
+
+    .hero-stat .num {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+    .hero-stat .lbl {
+      margin-top: 4px;
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .scroll-invite {
+      position: absolute;
+      bottom: 40px;
+      left: 24px;
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.25);
+      animation: bob 2.5s ease-in-out infinite;
+    }
+    @keyframes bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(5px); }
+    }
+
+    /* Section headers */
+    .sec-head { margin-bottom: 36px; }
+
+    .sec-head .pillar-tag {
+      display: inline-block;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      margin-bottom: 14px;
+    }
+
+    .sec-head h2 {
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+    }
+
+    .sec-head p {
+      margin-top: 12px;
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: var(--muted);
+      max-width: 52ch;
+    }
+
+    /* Overview — 3 pillar decks in 3D */
+    .overview-stage {
+      perspective: 1100px;
+      height: min(420px, 50vh);
+      position: relative;
+      margin-top: 20px;
+    }
+
+    .overview-world {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+      transform: rotateX(14deg) rotateY(-8deg);
+    }
+
+    .deck {
+      position: absolute;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transform-style: preserve-3d;
+      overflow: hidden;
+    }
+
+    .deck-inner {
+      position: absolute; inset: 0;
+      opacity: 0.2;
+    }
+
+    .deck-label {
+      position: absolute;
+      bottom: 12px; left: 14px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      opacity: 0.7;
+    }
+
+    .deck-count {
+      position: absolute;
+      top: 12px; right: 14px;
+      font-size: 1.4rem;
+      font-weight: 700;
+      opacity: 0.5;
+    }
+
+    .deck-dots {
+      position: absolute;
+      inset: 28px 20px 36px;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+      align-content: start;
+    }
+
+    .deck-dot {
+      aspect-ratio: 1;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .deck-ai {
+      width: 38%; height: 46%;
+      left: 4%; top: 8%;
+      transform: translateZ(30px);
+    }
+    .deck-ai .deck-inner { background: linear-gradient(135deg, rgba(10,96,255,0.25), transparent); }
+    .deck-ai .deck-label { color: var(--blue); }
+
+    .deck-wp {
+      width: 42%; height: 48%;
+      right: 4%; top: 4%;
+      transform: translateZ(60px);
+    }
+    .deck-wp .deck-inner { background: linear-gradient(135deg, rgba(45,206,92,0.22), transparent); }
+    .deck-wp .deck-label { color: var(--green); }
+
+    .deck-res {
+      width: 72%; height: 38%;
+      left: 14%; bottom: 0;
+      transform: translateZ(90px);
+    }
+    .deck-res .deck-inner { background: linear-gradient(135deg, rgba(255,144,0,0.18), transparent); }
+    .deck-res .deck-label { color: var(--orange); }
+
+    .hub-line {
+      position: absolute;
+      left: 50%; top: 42%;
+      width: 2px; height: 80px;
+      background: linear-gradient(180deg, transparent, var(--accent), transparent);
+      transform: translateX(-50%) translateZ(100px);
+      opacity: 0.4;
+    }
+
+    /* Family gallery grid — mesh3d card wall */
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+      gap: 12px;
+    }
+
+    @media (min-width: 900px) {
+      .gallery { grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    }
+
+    .fam-card {
+      position: relative;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.03);
+      overflow: hidden;
+      cursor: pointer;
+      transform-style: preserve-3d;
+      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+                  border-color 0.25s, box-shadow 0.25s;
+    }
+
+    .fam-card:hover {
+      transform: translateY(-6px) translateZ(12px);
+      border-color: rgba(255, 255, 255, 0.18);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+    }
+
+    .fam-card.selected {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(2, 200, 255, 0.3), 0 24px 48px rgba(0, 0, 0, 0.5);
+    }
+
+    .fam-thumb {
+      aspect-ratio: 4/3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      position: relative;
+    }
+
+    .fam-thumb::after {
+      content: "";
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.55));
+    }
+
+    .fam-body { padding: 10px 11px 12px; }
+
+    .fam-cat {
+      font-size: 0.52rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.55;
+      margin-bottom: 3px;
+    }
+
+    .fam-name {
+      font-size: 0.72rem;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .fam-badge {
+      position: absolute;
+      top: 8px; right: 8px;
+      font-size: 0.52rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .more-card {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 140px;
+      border: 1px dashed rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    /* Detail strip */
+    .detail-strip {
+      margin-top: 24px;
+      padding: 16px 18px;
+      border-radius: 14px;
+      border: 1px solid rgba(2, 200, 255, 0.2);
+      background: rgba(2, 200, 255, 0.04);
+      font-size: 0.78rem;
+      line-height: 1.55;
+      color: rgba(255, 255, 255, 0.7);
+      min-height: 56px;
+    }
+    .detail-strip strong { color: #7eeaff; }
+
+    /* Connections section */
+    .link-viz {
+      position: relative;
+      height: min(380px, 45vh);
+      margin-top: 16px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.02);
+      overflow: hidden;
+    }
+
+    .link-viz svg { width: 100%; height: 100%; }
+
+    /* CPN mode badge */
+    .mode-badge {
+      position: fixed;
+      bottom: 18px;
+      right: 18px;
+      z-index: 200;
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(2, 200, 255, 0.25);
+      background: rgba(5, 12, 24, 0.9);
+      font-size: 0.62rem;
+      color: var(--muted);
+      line-height: 1.4;
+      max-width: 220px;
+    }
+    .mode-badge em {
+      display: block;
+      font-style: normal;
+      color: #7eeaff;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    /* Side section index */
+    .sec-index {
+      position: fixed;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 150;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sec-index a {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: transparent;
+      text-indent: -9999px;
+      overflow: hidden;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .sec-index a.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      transform: scale(1.35);
+    }
+
+    @media (max-width: 640px) {
+      .sec-index { display: none; }
+      .site-actions { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <canvas id="mesh" aria-hidden="true"></canvas>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="site-chrome">
+    <a class="site-logo" href="#">Cisco Portfolio Navigator</a>
+    <div class="site-actions">
+      <button type="button">Families view</button>
+      <button type="button">Share</button>
+    </div>
+  </header>
+
+  <nav class="sec-index" aria-label="Sections">
+    <a href="#hero" class="active">Hero</a>
+    <a href="#overview">Overview</a>
+    <a href="#workplaces">Workplaces</a>
+    <a href="#ai-dc">AI DC</a>
+    <a href="#resilience">Resilience</a>
+    <a href="#connections">Links</a>
+  </nav>
+
+  <div class="mode-badge">
+    <em>Concept mockup</em>
+    Same Families data &amp; pillars — mesh3d.gallery presentation format
+  </div>
+
+  <main>
+    <!-- §0 Hero -->
+    <section class="section hero snap" id="hero">
+      <div class="hero-eyebrow">Families · One Cisco pillars</div>
+      <h1 class="hero-title">
+        Product
+        <span class="dim">families</span>
+      </h1>
+      <p class="hero-lede">
+        The existing Families view — 58 product families across three strategic pillars,
+        integration links, and pillar focus — reimagined as an immersive scroll gallery.
+      </p>
+      <div class="hero-stats">
+        <div class="hero-stat"><div class="num">58</div><div class="lbl">Families</div></div>
+        <div class="hero-stat"><div class="num">3</div><div class="lbl">Pillars</div></div>
+        <div class="hero-stat"><div class="num">340+</div><div class="lbl">Products</div></div>
+      </div>
+      <div class="scroll-invite">Scroll ↓</div>
+    </section>
+
+    <!-- §1 Overview — three deck panels like Families SVG layout -->
+    <section class="section snap" id="overview">
+      <div class="sec-head">
+        <span class="pillar-tag" style="color:var(--accent)">Overview</span>
+        <h2>Three pillar decks</h2>
+        <p>Same spatial layout as Families today — AI-Ready DC and Workplaces up top, Digital Resilience across the bottom, hub connectivity at center.</p>
+      </div>
+      <div class="overview-stage">
+        <div class="overview-world">
+          <div class="hub-line"></div>
+          <div class="deck deck-ai">
+            <div class="deck-inner"></div>
+            <div class="deck-dots"></div>
+            <span class="deck-count">8</span>
+            <span class="deck-label">AI-Ready Data Centers</span>
+          </div>
+          <div class="deck deck-wp">
+            <div class="deck-inner"></div>
+            <div class="deck-dots"></div>
+            <span class="deck-count">24</span>
+            <span class="deck-label">Future-Proofed Workplaces</span>
+          </div>
+          <div class="deck deck-res">
+            <div class="deck-inner"></div>
+            <div class="deck-dots"></div>
+            <span class="deck-count">26</span>
+            <span class="deck-label">Digital Resilience</span>
+          </div>
+        </div>
+      </div>
+      <div class="detail-strip" id="overview-detail">
+        Scroll to explore each pillar as a mesh3d-style gallery wall — click any family card to preview (opens detail panel in production).
+      </div>
+    </section>
+
+    <!-- §2 Workplaces -->
+    <section class="section snap" id="workplaces">
+      <div class="sec-head">
+        <span class="pillar-tag" style="color:var(--green);border-color:rgba(45,206,92,0.3)">Pillar 01</span>
+        <h2>Future-Proofed Workplaces</h2>
+        <p>Modernize everywhere people and technology work — Webex, campus networking, SD-WAN, Meraki, and room devices.</p>
+      </div>
+      <div class="gallery" id="gallery-wp"></div>
+      <div class="detail-strip" id="detail-wp">Click a family card — same node as Families graph.</div>
+    </section>
+
+    <!-- §3 AI-Ready DC -->
+    <section class="section snap" id="ai-dc">
+      <div class="sec-head">
+        <span class="pillar-tag" style="color:var(--blue);border-color:rgba(10,96,255,0.3)">Pillar 02</span>
+        <h2>AI-Ready Data Centers</h2>
+        <p>Transform data centers to power AI workloads anywhere — Nexus, ACI, UCS, HyperFlex, Intersight.</p>
+      </div>
+      <div class="gallery" id="gallery-ai"></div>
+      <div class="detail-strip" id="detail-ai">8 families in this pillar zone.</div>
+    </section>
+
+    <!-- §4 Resilience -->
+    <section class="section snap" id="resilience">
+      <div class="sec-head">
+        <span class="pillar-tag" style="color:var(--orange);border-color:rgba(255,144,0,0.3)">Pillar 03</span>
+        <h2>Digital Resilience</h2>
+        <p>Securely up and running through any disruption — security, observability, and connectivity families.</p>
+      </div>
+      <div class="gallery" id="gallery-res"></div>
+      <div class="detail-strip" id="detail-res">26 families including Secure Access, XDR, Splunk, ThousandEyes, and more.</div>
+    </section>
+
+    <!-- §5 Connections -->
+    <section class="section snap" id="connections">
+      <div class="sec-head">
+        <span class="pillar-tag">Integrations</span>
+        <h2>How families connect</h2>
+        <p>Same LINKS model as Families view — direct integrations, adjacent ecosystem ties, and succession paths.</p>
+      </div>
+      <div class="link-viz">
+        <svg id="link-svg" viewBox="0 0 800 360" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+      <div class="detail-strip">
+        <strong>Catalyst Access</strong> → direct to Catalyst Core &amp; Center · adjacent to Meraki MX, SD-WAN, Webex ·
+        <strong>Secure Access</strong> bridges resilience ↔ workplaces. Production: scroll depth or click to follow links in 3D.
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      const CAT_ICON = { networking: "⬡", collaboration: "◉", security: "⛨", computing: "▣", observability: "◎" };
+      const CAT_COLOR = {
+        networking: "linear-gradient(135deg,#012636,#024a66)",
+        collaboration: "linear-gradient(135deg,#0c3a22,#1a6640)",
+        security: "linear-gradient(135deg,#4a2400,#7a3d00)",
+        computing: "linear-gradient(135deg,#082060,#0a3080)",
+        observability: "linear-gradient(135deg,#2a1840,#4a2870)"
+      };
+
+      const WORKPLACES = [
+        { id: "webex-app", name: "Webex Suite", cat: "collaboration", badge: "+12" },
+        { id: "room-systems", name: "Room Devices", cat: "collaboration" },
+        { id: "catalyst-access", name: "Catalyst Access", cat: "networking", badge: "+18" },
+        { id: "catalyst-core", name: "Catalyst Core", cat: "networking" },
+        { id: "catalyst-wireless", name: "Catalyst Wireless", cat: "networking" },
+        { id: "catalyst-center", name: "Catalyst Center", cat: "networking" },
+        { id: "meraki-mx", name: "Meraki MX", cat: "networking" },
+        { id: "meraki-switches", name: "Meraki Switches", cat: "networking" },
+        { id: "meraki-wireless", name: "Meraki Wireless", cat: "networking" },
+        { id: "sdwan", name: "Cisco SD-WAN", cat: "networking" },
+        { id: "secure-routers", name: "8000 Secure Routers", cat: "networking" },
+        { id: "cloud-control", name: "Cloud Control", cat: "networking" }
+      ];
+
+      const AI_DC = [
+        { id: "nexus", name: "Nexus Switches", cat: "computing", badge: "+14" },
+        { id: "aci", name: "Cisco ACI", cat: "computing" },
+        { id: "nexus-dashboard", name: "Nexus Dashboard", cat: "computing" },
+        { id: "nexus-one", name: "Nexus One", cat: "computing" },
+        { id: "silicon-one", name: "Silicon One", cat: "computing" },
+        { id: "ucs", name: "UCS Servers", cat: "computing" },
+        { id: "hyperflex", name: "HyperFlex", cat: "computing" },
+        { id: "intersight", name: "Intersight", cat: "computing" }
+      ];
+
+      const RESILIENCE = [
+        { id: "secure-access", name: "Secure Access", cat: "security", badge: "+22" },
+        { id: "duo", name: "Cisco Duo", cat: "security" },
+        { id: "umbrella", name: "Umbrella", cat: "security" },
+        { id: "ise", name: "Cisco ISE", cat: "security" },
+        { id: "xdr", name: "XDR / Talos", cat: "security" },
+        { id: "firewall", name: "Secure Firewall", cat: "security" },
+        { id: "splunk", name: "Splunk", cat: "observability" },
+        { id: "thousandeyes", name: "ThousandEyes", cat: "observability" },
+        { id: "ai-defense", name: "AI Defense", cat: "security" },
+        { id: "hypershield", name: "Hypershield", cat: "security" },
+        { id: "secure-workload", name: "Secure Workload", cat: "security" },
+        { id: "multicloud", name: "Multicloud Defense", cat: "security" }
+      ];
+
+      const LINKS = [
+        { s: "catalyst-access", t: "catalyst-core", type: "direct" },
+        { s: "catalyst-access", t: "catalyst-center", type: "direct" },
+        { s: "meraki-mx", t: "sdwan", type: "direct" },
+        { s: "catalyst-access", t: "meraki-mx", type: "adjacent" },
+        { s: "webex-app", t: "room-systems", type: "direct" },
+        { s: "secure-access", t: "catalyst-access", type: "direct" },
+        { s: "nexus", t: "aci", type: "direct" },
+        { s: "ucs", t: "intersight", type: "direct" },
+        { s: "secure-access", t: "umbrella", type: "adjacent" },
+        { s: "isr", t: "sdwan", type: "succession" }
+      ];
+
+      const LINK_CLR = { direct: "#00fff0", adjacent: "#ffb020", succession: "#c084fc" };
+
+      const NODE_POS = {
+        "catalyst-access": [180, 180], "catalyst-core": [280, 140], "catalyst-center": [220, 240],
+        "meraki-mx": [100, 200], "sdwan": [340, 200], "webex-app": [60, 80],
+        "room-systems": [160, 60], "secure-access": [200, 300],
+        "nexus": [520, 100], "aci": [620, 120], "ucs": [580, 200], "intersight": [680, 180],
+        "umbrella": [320, 300], "isr": [400, 260]
+      };
+
+      /* Populate deck dots */
+      document.querySelectorAll(".deck-dots").forEach((grid, i) => {
+        const counts = [8, 24, 26][i];
+        const show = Math.min(counts, 24);
+        for (let j = 0; j < show; j++) {
+          const d = document.createElement("div");
+          d.className = "deck-dot";
+          grid.appendChild(d);
+        }
+      });
+
+      function buildGallery(containerId, items, detailId, moreCount) {
+        const el = document.getElementById(containerId);
+        const detail = document.getElementById(detailId);
+        items.forEach(f => {
+          const card = document.createElement("article");
+          card.className = "fam-card";
+          card.dataset.id = f.id;
+          card.innerHTML = `
+            ${f.badge ? `<span class="fam-badge">${f.badge}</span>` : ""}
+            <div class="fam-thumb" style="background:${CAT_COLOR[f.cat] || CAT_COLOR.networking}">
+              ${CAT_ICON[f.cat] || "▪"}
+            </div>
+            <div class="fam-body">
+              <div class="fam-cat">${f.cat}</div>
+              <div class="fam-name">${f.name}</div>
+            </div>`;
+          card.addEventListener("click", () => {
+            el.querySelectorAll(".fam-card").forEach(c => c.classList.remove("selected"));
+            card.classList.add("selected");
+            detail.innerHTML = `<strong>${f.name}</strong> — click opens the same detail panel &amp; composition drill-down as Families view today.`;
+          });
+          el.appendChild(card);
+        });
+        if (moreCount > 0) {
+          const m = document.createElement("div");
+          m.className = "more-card";
+          m.textContent = `+${moreCount} more families`;
+          el.appendChild(m);
+        }
+      }
+
+      buildGallery("gallery-wp", WORKPLACES, "detail-wp", 12);
+      buildGallery("gallery-ai", AI_DC, "detail-ai", 0);
+      buildGallery("gallery-res", RESILIENCE, "detail-res", 14);
+
+      /* Link diagram */
+      const svg = document.getElementById("link-svg");
+      const drawn = new Set();
+      LINKS.forEach(l => {
+        const pa = NODE_POS[l.s] || NODE_POS[l.t];
+        const pb = NODE_POS[l.t] || NODE_POS[l.s];
+        if (!pa || !pb) return;
+        const key = [l.s, l.t].sort().join("-");
+        if (drawn.has(key)) return;
+        drawn.add(key);
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        const mx = (pa[0] + pb[0]) / 2, my = (pa[1] + pb[1]) / 2 - 20;
+        path.setAttribute("d", `M${pa[0]},${pa[1]} Q${mx},${my} ${pb[0]},${pb[1]}`);
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke", LINK_CLR[l.type] || "#666");
+        path.setAttribute("stroke-width", l.type === "direct" ? "2" : "1.4");
+        path.setAttribute("opacity", "0.65");
+        svg.appendChild(path);
+      });
+      Object.entries(NODE_POS).forEach(([id, [x, y]]) => {
+        const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        c.setAttribute("cx", x); c.setAttribute("cy", y); c.setAttribute("r", "6");
+        c.setAttribute("fill", "#0a1520"); c.setAttribute("stroke", "#02c8ff"); c.setAttribute("stroke-width", "1.5");
+        svg.appendChild(c);
+        const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        t.setAttribute("x", x); t.setAttribute("y", y + 16);
+        t.setAttribute("fill", "rgba(255,255,255,0.45)");
+        t.setAttribute("font-size", "8");
+        t.setAttribute("text-anchor", "middle");
+        t.textContent = id.replace(/-/g, " ").slice(0, 12);
+        svg.appendChild(t);
+      });
+
+      /* Mesh canvas */
+      const canvas = document.getElementById("mesh");
+      const ctx = canvas.getContext("2d");
+      let t = 0;
+
+      function resizeMesh() {
+        canvas.width = window.innerWidth * devicePixelRatio;
+        canvas.height = window.innerHeight * devicePixelRatio;
+        canvas.style.width = window.innerWidth + "px";
+        canvas.style.height = window.innerHeight + "px";
+        ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      }
+
+      function drawMesh() {
+        const w = window.innerWidth, h = window.innerHeight;
+        ctx.clearRect(0, 0, w, h);
+        const sp = 56;
+        const off = (t * 0.25) % sp;
+        ctx.strokeStyle = "rgba(255,255,255,0.04)";
+        ctx.lineWidth = 1;
+        for (let x = -off; x < w + sp; x += sp) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x + (x - w / 2) * 0.12, h);
+          ctx.stroke();
+        }
+        for (let y = -off; y < h + sp; y += sp) {
+          const wv = Math.sin(t * 0.006 + y * 0.015) * 10;
+          ctx.beginPath();
+          ctx.moveTo(0, y + wv);
+          ctx.lineTo(w, y - wv);
+          ctx.stroke();
+        }
+        t++;
+        requestAnimationFrame(drawMesh);
+      }
+
+      resizeMesh();
+      window.addEventListener("resize", resizeMesh);
+      drawMesh();
+
+      /* Scroll progress + section index */
+      const sections = [...document.querySelectorAll(".section.snap, .hero")];
+      const indexLinks = [...document.querySelectorAll(".sec-index a")];
+      const progress = document.getElementById("progress");
+
+      function onScroll() {
+        const scrollMax = document.documentElement.scrollHeight - window.innerHeight;
+        progress.style.width = (window.scrollY / Math.max(scrollMax, 1) * 100) + "%";
+
+        let active = 0;
+        sections.forEach((sec, i) => {
+          const rect = sec.getBoundingClientRect();
+          if (rect.top <= window.innerHeight * 0.45) active = i;
+        });
+        indexLinks.forEach((a, i) => a.classList.toggle("active", i === active));
+      }
+
+      window.addEventListener("scroll", onScroll, { passive: true });
+      onScroll();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>CPN — Scroll Depth Spatial Mockup</title>
+  <style>
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT"), local("CiscoSansTT"),
+           url("../fonts/CiscoSansTT-Regular.woff2") format("woff2");
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT Bold"), local("CiscoSansTT Bold"),
+           url("../fonts/CiscoSansTT-Bold.woff2") format("woff2");
+      font-weight: 700;
+      font-display: swap;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #050c18;
+      --text: #f4f7fb;
+      --muted: #8b95a5;
+      --accent: #02c8ff;
+      --blue: #0a60ff;
+      --direct: #00fff0;
+      --adjacent: #ffb020;
+      --succession: #c084fc;
+    }
+
+    body {
+      font-family: "CiscoSansTT", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    /* Outer page chrome */
+    .page-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 10px 16px;
+      background: rgba(5, 12, 24, 0.92);
+      border-bottom: 1px solid rgba(2, 200, 255, 0.15);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .page-header h1 {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #7eeaff;
+      margin-right: auto;
+    }
+    .page-header p {
+      font-size: 0.68rem;
+      color: var(--muted);
+      max-width: 48ch;
+      line-height: 1.4;
+    }
+
+    /* Scroll track — tall page, fixed viewport */
+    .scroll-track {
+      height: 500vh; /* 5 depth levels × 100vh */
+    }
+
+    .viewport {
+      position: fixed;
+      top: 52px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overflow: hidden;
+      background: #02060e;
+    }
+
+    /* Depth meter */
+    .depth-rail {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 30;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      width: 4px;
+      height: min(320px, 55vh);
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 999px;
+    }
+    .depth-fill {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: linear-gradient(180deg, var(--accent), var(--blue));
+      border-radius: 999px;
+      height: 0%;
+      transition: height 0.08s linear;
+    }
+    .depth-labels {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 30;
+      height: min(320px, 55vh);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding-left: 16px;
+      pointer-events: none;
+    }
+    .depth-labels span {
+      font-size: 0.58rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: rgba(255, 255, 255, 0.28);
+      transition: color 0.2s, transform 0.2s;
+      white-space: nowrap;
+    }
+    .depth-labels span.active {
+      color: var(--accent);
+      transform: translateX(4px);
+    }
+
+    .hud {
+      position: absolute;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      z-index: 30;
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(4, 12, 24, 0.88);
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.75);
+      text-align: center;
+      max-width: calc(100% - 120px);
+    }
+    .hud strong { color: #7eeaff; }
+
+    .scroll-cue {
+      position: absolute;
+      bottom: 56px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 25;
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.3);
+      animation: pulse 2s ease-in-out infinite;
+      pointer-events: none;
+      transition: opacity 0.4s;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; transform: translateX(-50%) translateY(0); }
+      50% { opacity: 0.7; transform: translateX(-50%) translateY(3px); }
+    }
+
+    .legend {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 30;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(4, 12, 24, 0.85);
+      font-size: 0.6rem;
+    }
+    .legend h4 {
+      font-size: 0.55rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: rgba(255, 255, 255, 0.4);
+      margin-bottom: 6px;
+    }
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 4px;
+      color: var(--muted);
+    }
+    .legend-line { width: 18px; height: 2px; border-radius: 999px; }
+
+    /* 3D stage */
+    .stage {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      perspective: 900px;
+      perspective-origin: 50% 48%;
+    }
+
+    .camera {
+      transform-style: preserve-3d;
+      transition: transform 0.06s linear;
+      position: relative;
+      width: 900px;
+      height: 560px;
+    }
+
+    .layer {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+      pointer-events: none;
+    }
+
+    /* ── Layer: Portfolio (z far) ── */
+    .layer-portfolio { transform: translateZ(-400px) scale(0.55); opacity: 1; }
+
+    .zone {
+      position: absolute;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      transform-style: preserve-3d;
+    }
+    .zone-label {
+      position: absolute;
+      top: -18px; left: 10px;
+      font-size: 0.52rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      opacity: 0.45;
+    }
+    .zone-inner {
+      position: absolute; inset: 0;
+      border-radius: inherit;
+      opacity: 0.25;
+    }
+
+    /* ── Cards (families & products) ── */
+    .card {
+      position: absolute;
+      width: 88px;
+      transform-style: preserve-3d;
+      transition: opacity 0.25s, filter 0.25s;
+    }
+
+    .card-face {
+      border-radius: 9px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: linear-gradient(155deg, rgba(255,255,255,0.09), rgba(255,255,255,0.02));
+      box-shadow: 0 14px 32px rgba(0, 0, 0, 0.4);
+      overflow: hidden;
+    }
+    .card-face .icon {
+      height: 48px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+    }
+    .card-face .name {
+      padding: 6px 7px 7px;
+      font-size: 0.58rem;
+      font-weight: 700;
+      line-height: 1.2;
+      text-align: center;
+    }
+    .card-depth {
+      position: absolute; inset: 3px;
+      border-radius: 7px;
+      background: rgba(0,0,0,0.35);
+      transform: translateZ(-5px);
+    }
+
+    .card.hero .card-face {
+      border-color: rgba(2, 200, 255, 0.5);
+      box-shadow: 0 0 28px rgba(2, 200, 255, 0.2), 0 16px 36px rgba(0,0,0,0.45);
+    }
+    .card.product { width: 64px; }
+    .card.product .card-face .icon { height: 34px; font-size: 0.85rem; }
+    .card.product .card-face .name { font-size: 0.5rem; padding: 4px 5px 5px; }
+
+    .card.dim { opacity: 0.15; filter: blur(1px); }
+    .card.mid { opacity: 0.45; }
+    .card.bright { opacity: 1; }
+
+    /* Link SVG overlay */
+    #links {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      pointer-events: none;
+    }
+
+    /* Level titles floating in scene */
+    .level-title {
+      position: absolute;
+      top: 18%;
+      left: 50%;
+      transform: translateX(-50%) translateZ(120px);
+      z-index: 25;
+      text-align: center;
+      pointer-events: none;
+      transition: opacity 0.35s;
+    }
+    .level-title .eyebrow {
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .level-title h2 {
+      font-size: clamp(1.2rem, 3vw, 1.8rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .level-title p {
+      margin-top: 6px;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    .notes-fixed {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 99;
+      padding: 8px 16px;
+      background: rgba(5, 12, 24, 0.95);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-align: center;
+    }
+    .notes-fixed em { color: #7eeaff; font-style: normal; }
+  </style>
+</head>
+<body>
+  <header class="page-header">
+    <h1>Spatial · Scroll depth mockup</h1>
+    <p>Scroll the page — camera dives through portfolio → family neighborhood → products → cross-family product links</p>
+  </header>
+
+  <div class="scroll-track" id="scroll-track"></div>
+
+  <div class="viewport" id="viewport">
+    <div class="depth-rail"><div class="depth-fill" id="depth-fill"></div></div>
+    <div class="depth-labels" id="depth-labels">
+      <span data-level="0" class="active">Portfolio</span>
+      <span data-level="1">Family cluster</span>
+      <span data-level="2">Family focus</span>
+      <span data-level="3">Products</span>
+      <span data-level="4">Cross-links</span>
+    </div>
+
+    <div class="legend">
+      <h4>At depth</h4>
+      <div class="legend-row"><span class="legend-line" style="background:var(--direct)"></span> Direct</div>
+      <div class="legend-row"><span class="legend-line" style="background:var(--adjacent)"></span> Adjacent</div>
+      <div class="legend-row"><span class="legend-line" style="background:var(--succession)"></span> Succession</div>
+    </div>
+
+    <div class="level-title" id="level-title">
+      <div class="eyebrow" id="lt-eyebrow">Depth 0</div>
+      <h2 id="lt-head">Portfolio overview</h2>
+      <p id="lt-sub">All families across pillar zones</p>
+    </div>
+
+    <svg id="links"></svg>
+
+    <div class="stage">
+      <div class="camera" id="camera">
+        <div class="layer layer-portfolio" id="layer-main"></div>
+      </div>
+    </div>
+
+    <div class="scroll-cue" id="scroll-cue">Scroll to dive</div>
+    <div class="hud" id="hud"><strong>Portfolio</strong> — scroll down to move deeper</div>
+  </div>
+
+  <div class="notes-fixed">
+    Mockup only · Hero path: <em>Catalyst Access</em> → campus switching products → integration with Meraki, SD-WAN, Webex, Secure Access
+  </div>
+
+  <script>
+    (function () {
+      /* ── Data ── */
+      const HERO = "catalyst-access";
+      const FAMILIES = [
+        { id: "catalyst-access", name: "Catalyst Access", icon: "⬡", cat: "net", x: 400, y: 280, z: 0, hero: true },
+        { id: "catalyst-core", name: "Catalyst Core", icon: "⬡", cat: "net", x: 520, y: 240, z: -20 },
+        { id: "catalyst-center", name: "Catalyst Center", icon: "◎", cat: "net", x: 440, y: 340, z: 10 },
+        { id: "catalyst-wireless", name: "Catalyst Wireless", icon: "📶", cat: "net", x: 300, y: 320, z: -10 },
+        { id: "meraki-mx", name: "Meraki MX", icon: "☁", cat: "net", x: 220, y: 260, z: -30 },
+        { id: "meraki-switches", name: "Meraki Switches", icon: "☁", cat: "net", x: 180, y: 340, z: -40 },
+        { id: "sdwan", name: "Cisco SD-WAN", icon: "↔", cat: "net", x: 580, y: 300, z: -25 },
+        { id: "secure-routers", name: "8000 Secure Routers", icon: "↔", cat: "net", x: 640, y: 360, z: -50 },
+        { id: "webex-app", name: "Webex Suite", icon: "◉", cat: "collab", x: 120, y: 140, z: -80 },
+        { id: "room-systems", name: "Room Devices", icon: "▭", cat: "collab", x: 220, y: 100, z: -90 },
+        { id: "secure-access", name: "Secure Access", icon: "⛨", cat: "sec", x: 400, y: 440, z: -60 },
+        { id: "umbrella", name: "Umbrella", icon: "☂", cat: "sec", x: 520, y: 460, z: -70 },
+        { id: "nexus", name: "Nexus / ACI", icon: "▣", cat: "dc", x: 680, y: 160, z: -100 },
+        { id: "ucs", name: "UCS", icon: "◫", cat: "dc", x: 760, y: 220, z: -110 },
+        { id: "isr-routers", name: "ISR Routers", icon: "🔀", cat: "net", x: 620, y: 400, z: -55 }
+      ];
+
+      const PRODUCTS = [
+        { id: "c9200", name: "Catalyst 9200", family: "catalyst-access", x: 320, y: 200, z: 80 },
+        { id: "c9300", name: "Catalyst 9300", family: "catalyst-access", x: 400, y: 180, z: 100 },
+        { id: "c9200l", name: "Catalyst 9200L", family: "catalyst-access", x: 480, y: 200, z: 90 },
+        { id: "c9300x", name: "Catalyst 9300X", family: "catalyst-access", x: 360, y: 260, z: 110 },
+        { id: "c9200cx", name: "Catalyst 9200CX", family: "catalyst-access", x: 440, y: 280, z: 95 },
+        { id: "c9300l", name: "Catalyst 9300L", family: "catalyst-access", x: 520, y: 260, z: 85 }
+      ];
+
+      const FAMILY_LINKS = [
+        { s: "catalyst-access", t: "catalyst-core", type: "direct" },
+        { s: "catalyst-access", t: "catalyst-center", type: "direct" },
+        { s: "catalyst-access", t: "catalyst-wireless", type: "adjacent" },
+        { s: "catalyst-access", t: "meraki-mx", type: "adjacent" },
+        { s: "catalyst-access", t: "sdwan", type: "adjacent" },
+        { s: "catalyst-access", t: "webex-app", type: "adjacent" },
+        { s: "catalyst-access", t: "secure-access", type: "direct" },
+        { s: "catalyst-core", t: "nexus", type: "adjacent" },
+        { s: "sdwan", t: "meraki-mx", type: "direct" },
+        { s: "sdwan", t: "secure-routers", type: "succession" },
+        { s: "isr-routers", t: "sdwan", type: "succession" },
+        { s: "secure-access", t: "umbrella", type: "direct" }
+      ];
+
+      const PRODUCT_LINKS = [
+        { s: "c9300", t: "catalyst-core", type: "direct", cross: true },
+        { s: "c9200", t: "meraki-switches", type: "adjacent", cross: true },
+        { s: "c9300x", t: "sdwan", type: "adjacent", cross: true },
+        { s: "c9200", t: "webex-app", type: "adjacent", cross: true },
+        { s: "c9300", t: "secure-access", type: "direct", cross: true },
+        { s: "c9200l", t: "room-systems", type: "adjacent", cross: true }
+      ];
+
+      const CAT_BG = {
+        net: "linear-gradient(135deg,#012636,#024a66)",
+        collab: "linear-gradient(135deg,#0c3a22,#1a6640)",
+        sec: "linear-gradient(135deg,#4a2400,#7a3d00)",
+        dc: "linear-gradient(135deg,#082060,#0a3080)"
+      };
+      const LINK_CLR = { direct: "#00fff0", adjacent: "#ffb020", succession: "#c084fc" };
+
+      const LEVELS = [
+        {
+          z: 0, scale: 1, rotX: 14,
+          title: "Portfolio overview",
+          eyebrow: "Depth 0 · Scroll down",
+          sub: "All families across pillar zones — you're above the map",
+          hud: "Portfolio — families grouped by strategic zone",
+          showProducts: false,
+          linkMode: "none",
+          heroOpacity: 1,
+          neighborIds: () => new Set()
+        },
+        {
+          z: 180, scale: 1.15, rotX: 10,
+          title: "Family cluster",
+          eyebrow: "Depth 1 · Approaching",
+          sub: "Camera moves toward Catalyst campus — connected families emerge",
+          hud: "Cluster — direct & adjacent families within link distance",
+          showProducts: false,
+          linkMode: "cluster",
+          heroOpacity: 1,
+          neighborIds: () => new Set(["catalyst-access","catalyst-core","catalyst-center","catalyst-wireless","meraki-mx","sdwan","secure-access","webex-app"])
+        },
+        {
+          z: 340, scale: 1.45, rotX: 6,
+          title: "Catalyst Access",
+          eyebrow: "Depth 2 · Family focus",
+          sub: "Integration beams to Meraki, SD-WAN, Center, Secure Access, Webex",
+          hud: "Family focus — LINKS lit · unrelated families fade",
+          showProducts: false,
+          linkMode: "family",
+          heroOpacity: 1,
+          neighborIds: () => new Set(FAMILY_LINKS.filter(l => l.s === HERO || l.t === HERO).flatMap(l => [l.s, l.t]))
+        },
+        {
+          z: 520, scale: 1.85, rotX: 2,
+          title: "Campus switching products",
+          eyebrow: "Depth 3 · Inside the family",
+          sub: "C9200 / C9300 platforms orbit the family core — composition view in 3D",
+          hud: "Products — 6 SKUs · scroll deeper for cross-family product links",
+          showProducts: true,
+          linkMode: "products",
+          heroOpacity: 0.35,
+          neighborIds: () => new Set([HERO])
+        },
+        {
+          z: 680, scale: 2.2, rotX: 0,
+          title: "Cross-portfolio connections",
+          eyebrow: "Depth 4 · Deepest",
+          sub: "Product ↔ family links — e.g. C9300 integrates with SD-WAN, Secure Access, Webex",
+          hud: "Cross-links — product nodes bridge to other families",
+          showProducts: true,
+          linkMode: "cross",
+          heroOpacity: 0.2,
+          neighborIds: () => new Set(FAMILY_LINKS.filter(l => l.s === HERO || l.t === HERO).flatMap(l => [l.s, l.t]))
+        }
+      ];
+
+      const layer = document.getElementById("layer-main");
+      const camera = document.getElementById("camera");
+      const linksSvg = document.getElementById("links");
+      const viewport = document.getElementById("viewport");
+      const depthFill = document.getElementById("depth-fill");
+      const depthLabels = document.querySelectorAll(".depth-labels span");
+      const hud = document.getElementById("hud");
+      const scrollCue = document.getElementById("scroll-cue");
+      const ltEyebrow = document.getElementById("lt-eyebrow");
+      const ltHead = document.getElementById("lt-head");
+      const ltSub = document.getElementById("lt-sub");
+
+      const cardEls = {};
+      const productEls = {};
+
+      /* Build zones */
+      const zones = [
+        { label: "Workplaces", x: 60, y: 60, w: 280, h: 160, bg: "rgba(45,206,92,0.08)" },
+        { label: "AI-Ready DC", x: 620, y: 80, w: 220, h: 180, bg: "rgba(10,96,255,0.08)" },
+        { label: "Resilience", x: 280, y: 400, w: 360, h: 120, bg: "rgba(255,144,0,0.07)" },
+        { label: "Networking", x: 160, y: 200, w: 520, h: 200, bg: "rgba(2,200,255,0.06)" }
+      ];
+      zones.forEach(z => {
+        const el = document.createElement("div");
+        el.className = "zone";
+        el.style.cssText = `left:${z.x}px;top:${z.y}px;width:${z.w}px;height:${z.h}px`;
+        el.innerHTML = `<span class="zone-label">${z.label}</span><div class="zone-inner" style="background:${z.bg}"></div>`;
+        layer.appendChild(el);
+      });
+
+      /* Build family cards */
+      FAMILIES.forEach(f => {
+        const el = document.createElement("div");
+        el.className = "card" + (f.hero ? " hero" : "");
+        el.dataset.id = f.id;
+        el.style.left = f.x + "px";
+        el.style.top = f.y + "px";
+        el.style.transform = `translate(-50%,-50%) translate3d(0,0,${f.z}px)`;
+        el.innerHTML = `<div class="card-depth"></div>
+          <div class="card-face">
+            <div class="icon" style="background:${CAT_BG[f.cat]}">${f.icon}</div>
+            <div class="name">${f.name}</div>
+          </div>`;
+        layer.appendChild(el);
+        cardEls[f.id] = { el, ...f };
+      });
+
+      /* Build product cards (hidden initially) */
+      PRODUCTS.forEach(p => {
+        const fam = cardEls[p.family];
+        const el = document.createElement("div");
+        el.className = "card product";
+        el.dataset.id = p.id;
+        el.style.left = p.x + "px";
+        el.style.top = p.y + "px";
+        el.style.transform = `translate(-50%,-50%) translate3d(0,0,${p.z}px)`;
+        el.style.opacity = "0";
+        el.innerHTML = `<div class="card-depth"></div>
+          <div class="card-face">
+            <div class="icon" style="background:${CAT_BG.net}">▪</div>
+            <div class="name">${p.name}</div>
+          </div>`;
+        layer.appendChild(el);
+        productEls[p.id] = { el, ...p };
+      });
+
+      /* Hero anchor for camera target */
+      const hero = cardEls[HERO];
+
+      function lerp(a, b, t) { return a + (b - a) * t; }
+      function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+      function getScrollProgress() {
+        const max = document.getElementById("scroll-track").offsetHeight - window.innerHeight;
+        return clamp(window.scrollY / Math.max(max, 1), 0, 1);
+      }
+
+      function levelAtProgress(p) {
+        const idx = Math.min(LEVELS.length - 1, Math.floor(p * LEVELS.length));
+        const local = (p * LEVELS.length) - idx;
+        return { idx, local, cur: LEVELS[idx], next: LEVELS[Math.min(idx + 1, LEVELS.length - 1)] };
+      }
+
+      function project(wx, wy, wz, camZ, rotX, scale) {
+        const radX = rotX * Math.PI / 180;
+        const cx = 450, cy = 280;
+        let x = (wx - cx) * scale;
+        let y = (wy - cy) * scale;
+        let z = wz - camZ;
+        const y2 = y * Math.cos(radX) - z * Math.sin(radX);
+        const z2 = y * Math.sin(radX) + z * Math.cos(radX);
+        const f = 700 / (700 + z2);
+        const vx = viewport.clientWidth / 2 + x * f;
+        const vy = viewport.clientHeight / 2 + y2 * f;
+        return { x: vx, y: vy, z: z2, scale: f };
+      }
+
+      function render() {
+        const p = getScrollProgress();
+        const { idx, local, cur, next } = levelAtProgress(p);
+
+        const camZ = lerp(cur.z, next.z, local);
+        const scale = lerp(cur.scale, next.scale, local);
+        const rotX = lerp(cur.rotX, next.rotX, local);
+        const linkMode = local > 0.5 ? next.linkMode : cur.linkMode;
+        const showProducts = local > 0.5 ? next.showProducts : cur.showProducts;
+        const neighborIds = (local > 0.5 ? next : cur).neighborIds();
+        const level = local > 0.5 ? next : cur;
+
+        /* Camera: translate toward hero family center */
+        const hx = hero.x, hy = hero.y;
+        const panX = lerp(0, -(hx - 450) * 0.85, clamp(p * 1.4, 0, 1));
+        const panY = lerp(0, -(hy - 280) * 0.85, clamp(p * 1.4, 0, 1));
+        camera.style.transform = `
+          translate3d(${panX}px, ${panY}px, ${camZ}px)
+          rotateX(${rotX}deg)
+          scale(${scale})
+        `;
+
+        /* Card visibility by depth */
+        const fadeStart = idx >= 1;
+        Object.values(cardEls).forEach(c => {
+          const isHero = c.id === HERO;
+          const inCluster = neighborIds.has(c.id);
+          let op = 1;
+          if (idx === 0) op = 1;
+          else if (idx === 1) op = inCluster ? 1 : 0.2;
+          else if (idx >= 2 && !showProducts) op = inCluster ? 1 : 0.08;
+          else if (showProducts) op = isHero ? level.heroOpacity : (inCluster ? 0.55 : 0.06);
+
+          c.el.style.opacity = op;
+          c.el.classList.toggle("bright", inCluster && idx >= 2);
+          c.el.classList.toggle("dim", op < 0.15);
+        });
+
+        /* Products fade in */
+        const prodOp = showProducts ? clamp((p - 0.55) / 0.2, 0, 1) : 0;
+        Object.values(productEls).forEach(pr => {
+          pr.el.style.opacity = prodOp;
+        });
+
+        /* Links */
+        drawLinks(camZ, rotX, scale, linkMode, neighborIds, prodOp);
+
+        /* UI chrome */
+        depthFill.style.height = (p * 100) + "%";
+        depthLabels.forEach((lbl, i) => lbl.classList.toggle("active", i === idx));
+        ltEyebrow.textContent = level.eyebrow;
+        ltHead.textContent = level.title;
+        ltSub.textContent = level.sub;
+        hud.innerHTML = "<strong>" + level.title + "</strong> — " + level.hud;
+        scrollCue.style.opacity = p > 0.92 ? "0" : String(1 - p * 3);
+        document.getElementById("level-title").style.opacity = idx === 0 ? "1" : String(Math.max(0, 0.85 - idx * 0.18));
+      }
+
+      function drawLinks(camZ, rotX, scale, mode, neighborIds, prodOp) {
+        const w = viewport.clientWidth, h = viewport.clientHeight;
+        linksSvg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+        linksSvg.innerHTML = "";
+
+        if (mode === "none") return;
+
+        function line(x1, y1, x2, y2, type, op) {
+          const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          const mx = (x1 + x2) / 2, my = (y1 + y2) / 2 - 24;
+          path.setAttribute("d", `M${x1},${y1} Q${mx},${my} ${x2},${y2}`);
+          path.setAttribute("fill", "none");
+          path.setAttribute("stroke", LINK_CLR[type] || "#666");
+          path.setAttribute("stroke-width", type === "direct" ? "2" : "1.4");
+          path.setAttribute("opacity", op);
+          linksSvg.appendChild(path);
+        }
+
+        if (mode === "cluster" || mode === "family" || mode === "cross") {
+          FAMILY_LINKS.forEach(l => {
+            const show = mode === "cluster"
+              ? (neighborIds.has(l.s) && neighborIds.has(l.t))
+              : (l.s === HERO || l.t === HERO);
+            if (!show) return;
+            const a = cardEls[l.s], b = cardEls[l.t];
+            if (!a || !b) return;
+            const pa = project(a.x, a.y, a.z, camZ, rotX, scale);
+            const pb = project(b.x, b.y, b.z, camZ, rotX, scale);
+            const op = mode === "family" ? 0.9 : mode === "cross" ? 0.35 : 0.55;
+            line(pa.x, pa.y, pb.x, pb.y, l.type, op);
+          });
+        }
+
+        if ((mode === "products" || mode === "cross") && prodOp > 0.1) {
+          PRODUCT_LINKS.forEach(l => {
+            const pr = productEls[l.s];
+            const target = l.cross ? cardEls[l.t] : productEls[l.t];
+            if (!pr || !target) return;
+            const tx = target.x ?? target.el?.offsetLeft;
+            const ty = target.y ?? target.el?.offsetTop;
+            const tz = target.z ?? 0;
+            const pa = project(pr.x, pr.y, pr.z, camZ, rotX, scale);
+            const pb = project(target.x, target.y, target.z, camZ, rotX, scale);
+            const show = mode === "cross" || !l.cross;
+            if (show) line(pa.x, pa.y, pb.x, pb.y, l.type, mode === "cross" ? 0.85 * prodOp : 0.5 * prodOp);
+          });
+        }
+
+        /* Product to hero family core at depth 3+ */
+        if (mode === "products" && prodOp > 0.3) {
+          const h = cardEls[HERO];
+          const hp = project(h.x, h.y, h.z, camZ, rotX, scale);
+          Object.values(productEls).forEach(pr => {
+            const pp = project(pr.x, pr.y, pr.z, camZ, rotX, scale);
+            line(pp.x, pp.y, hp.x, hp.y, "direct", 0.25 * prodOp);
+          });
+        }
+      }
+
+      window.addEventListener("scroll", render, { passive: true });
+      window.addEventListener("resize", render);
+      render();
+    })();
+  </script>
+</body>
+</html>

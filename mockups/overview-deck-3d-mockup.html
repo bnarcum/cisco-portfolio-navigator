@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Overview Deck — Flat vs 3D Mockup</title>
+  <style>
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT"), local("CiscoSansTT"),
+           url("../fonts/CiscoSansTT-Regular.woff2") format("woff2");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT Bold"), local("CiscoSansTT Bold"),
+           url("../fonts/CiscoSansTT-Bold.woff2") format("woff2");
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #07182d;
+      --panel: rgba(1, 10, 24, 0.68);
+      --panel-border: rgba(2, 200, 255, 0.55);
+      --text: #7eeaff;
+      --conn: #ffffff;
+      --ai: #e8f6ff;
+      --card-fill: rgba(2, 14, 32, 0.82);
+      --card-border: #02c8ff;
+      --resilience-grad: linear-gradient(90deg, #02c8ff 0%, #d946ef 50%, #ff9000 100%);
+    }
+
+    [data-theme="light"] {
+      --bg: #eef4fb;
+      --panel: rgba(255, 255, 255, 0.72);
+      --panel-border: rgba(0, 110, 143, 0.35);
+      --text: #07182d;
+      --conn: #07182d;
+      --ai: #475569;
+      --card-fill: rgba(255, 255, 255, 0.94);
+      --card-border: #006e8f;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: "CiscoSansTT", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(ellipse 70% 45% at 50% -5%, rgba(2, 200, 255, 0.12), transparent 55%),
+        radial-gradient(ellipse 50% 35% at 100% 100%, rgba(10, 96, 255, 0.08), transparent 50%),
+        linear-gradient(180deg, var(--bg) 0%, #0a2240 100%);
+      color: #fff;
+      padding: 28px 20px 40px;
+    }
+
+    [data-theme="light"] body {
+      background: linear-gradient(180deg, #eef4fb 0%, #dce8f5 100%);
+      color: #07182d;
+    }
+
+    header {
+      max-width: 1180px;
+      margin: 0 auto 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    header h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      margin-top: 6px;
+      font-size: 0.92rem;
+      color: #b4b9c0;
+      max-width: 52ch;
+      line-height: 1.45;
+    }
+
+    [data-theme="light"] header p { color: #525e6c; }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .controls button {
+      min-height: 40px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(2, 200, 255, 0.35);
+      background: rgba(2, 200, 255, 0.08);
+      color: #7ee8ff;
+      font: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    [data-theme="light"] .controls button {
+      color: #006e8f;
+      border-color: rgba(0, 110, 143, 0.28);
+      background: rgba(255, 255, 255, 0.85);
+    }
+
+    .controls button.active {
+      background: rgba(2, 200, 255, 0.22);
+      border-color: #02c8ff;
+      color: #fff;
+    }
+
+    [data-theme="light"] .controls button.active {
+      background: rgba(0, 110, 143, 0.12);
+      color: #07182d;
+    }
+
+    .compare {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    @media (max-width: 900px) {
+      .compare { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      border-radius: 16px;
+      border: 1px solid rgba(214, 214, 214, 0.12);
+      background: rgba(7, 24, 45, 0.55);
+      overflow: hidden;
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+    }
+
+    [data-theme="light"] .panel {
+      background: rgba(255, 255, 255, 0.72);
+      border-color: rgba(0, 110, 143, 0.14);
+      box-shadow: 0 14px 36px rgba(7, 24, 45, 0.08);
+    }
+
+    .panel-head {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(214, 214, 214, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .panel-head strong {
+      font-size: 0.82rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #02c8ff;
+    }
+
+    .panel-head span {
+      font-size: 0.78rem;
+      color: #b4b9c0;
+    }
+
+    [data-theme="light"] .panel-head span { color: #525e6c; }
+
+    .deck-wrap {
+      padding: 22px 18px 26px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .deck {
+      width: min(100%, 520px);
+      padding: 22px 18px 18px;
+      border-radius: 14px;
+      border: 1px solid var(--panel-border);
+      background: var(--panel);
+      position: relative;
+    }
+
+    .deck::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background:
+        linear-gradient(rgba(2, 200, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(2, 200, 255, 0.04) 1px, transparent 1px);
+      background-size: 28px 28px;
+      mask-image: radial-gradient(ellipse 90% 80% at 50% 40%, #000 20%, transparent 100%);
+      pointer-events: none;
+    }
+
+    .deck-inner { position: relative; z-index: 1; }
+
+    .row-top {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      min-height: 68px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 16px;
+      color: var(--text);
+      cursor: default;
+      position: relative;
+    }
+
+    .card img {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    .card strong {
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    /* ── Flat (current) ── */
+    .flat .card {
+      background: var(--card-fill);
+      border: 2px solid var(--card-border);
+      box-shadow: none;
+    }
+
+    .flat .card.wide {
+      border: 2.75px solid transparent;
+      background:
+        linear-gradient(var(--card-fill), var(--card-fill)) padding-box,
+        var(--resilience-grad) border-box;
+    }
+
+    /* ── 3D (proposed) ── */
+    .depth .card {
+      border: none;
+      transform: translateY(0);
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .depth .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: rgba(0, 0, 0, 0.42);
+      transform: translateY(5px);
+      filter: blur(0.2px);
+      z-index: -2;
+    }
+
+    [data-theme="light"] .depth .card::before {
+      background: rgba(7, 24, 45, 0.14);
+    }
+
+    .depth .card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background:
+        linear-gradient(180deg,
+          rgba(255, 255, 255, 0.14) 0%,
+          rgba(255, 255, 255, 0.03) 18%,
+          rgba(0, 0, 0, 0.08) 100%),
+        var(--card-fill);
+      border: 2px solid var(--card-border);
+      box-shadow:
+        0 10px 24px rgba(0, 0, 0, 0.34),
+        0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+        inset 0 1px 0 rgba(255, 255, 255, 0.18);
+      z-index: -1;
+    }
+
+    [data-theme="light"] .depth .card::after {
+      box-shadow:
+        0 12px 28px rgba(7, 24, 45, 0.12),
+        0 0 0 1px rgba(255, 255, 255, 0.85) inset,
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    }
+
+    .depth .card:hover {
+      transform: translateY(-3px);
+    }
+
+    .depth .card:hover::after {
+      box-shadow:
+        0 16px 34px rgba(2, 200, 255, 0.22),
+        0 10px 24px rgba(0, 0, 0, 0.34),
+        0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+        inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    }
+
+    .depth .card.wide::after {
+      border: 2.75px solid transparent;
+      background:
+        linear-gradient(180deg,
+          rgba(255, 255, 255, 0.12) 0%,
+          rgba(255, 255, 255, 0.02) 20%,
+          rgba(0, 0, 0, 0.1) 100%),
+        linear-gradient(var(--card-fill), var(--card-fill)) padding-box,
+        var(--resilience-grad) border-box;
+    }
+
+    .conn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin: 4px 0 18px;
+      color: var(--conn);
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .conn .line {
+      flex: 1;
+      height: 0;
+      border-top: 1.75px solid currentColor;
+      opacity: 0.62;
+      position: relative;
+    }
+
+    .conn .line.left::before,
+    .conn .line.right::after {
+      content: "";
+      position: absolute;
+      top: -4px;
+      border: 5px solid transparent;
+    }
+
+    .conn .line.left::before {
+      left: 0;
+      border-right-color: currentColor;
+    }
+
+    .conn .line.right::after {
+      right: 0;
+      border-left-color: currentColor;
+    }
+
+    .ai-foot {
+      margin-top: 18px;
+      text-align: center;
+      color: var(--ai);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .ai-foot span { opacity: 0.55; margin: 0 6px; }
+
+    .notes {
+      max-width: 1180px;
+      margin: 22px auto 0;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(2, 200, 255, 0.18);
+      background: rgba(2, 200, 255, 0.05);
+      font-size: 0.86rem;
+      line-height: 1.55;
+      color: #b4b9c0;
+    }
+
+    [data-theme="light"] .notes { color: #525e6c; background: rgba(255, 255, 255, 0.72); }
+
+    .notes strong { color: #7ee8ff; }
+    [data-theme="light"] .notes strong { color: #006e8f; }
+
+    .solo { display: none; }
+    body.view-solo-3d .compare .panel:first-child { display: none; }
+    body.view-solo-3d .compare { grid-template-columns: 1fr; max-width: 640px; }
+    body.view-solo-flat .compare .panel:last-child { display: none; }
+    body.view-solo-flat .compare { grid-template-columns: 1fr; max-width: 640px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Overview deck — flat vs 3D mockup</h1>
+      <p>Side-by-side preview for the One Cisco pillar cards. Hover the <strong>Proposed 3D</strong> cards to see lift + glow. This is a standalone mockup — not wired into the app yet.</p>
+    </div>
+    <div class="controls">
+      <button type="button" id="btn-both" class="active">Both</button>
+      <button type="button" id="btn-flat">Flat only</button>
+      <button type="button" id="btn-3d">3D only</button>
+      <button type="button" id="btn-theme">Light theme</button>
+    </div>
+  </header>
+
+  <div class="compare">
+    <section class="panel">
+      <div class="panel-head">
+        <strong>Current</strong>
+        <span>Flat fill + border</span>
+      </div>
+      <div class="deck-wrap">
+        <div class="deck flat">
+          <div class="deck-inner">
+            <div class="row-top">
+              <div class="card">
+                <img src="../assets/deck/slide12-ai-dc.svg" alt=""/>
+                <strong>AI-Ready Data Centers</strong>
+              </div>
+              <div class="card">
+                <img src="../assets/deck/slide12-workplaces.svg" alt=""/>
+                <strong>Future-Proofed Workplaces</strong>
+              </div>
+            </div>
+            <div class="conn">
+              <span class="line left"></span>
+              Secure global connectivity
+              <span class="line right"></span>
+            </div>
+            <div class="card wide">
+              <img src="../assets/deck/slide12-resilience.svg" alt=""/>
+              <strong>Digital Resilience</strong>
+            </div>
+            <div class="ai-foot"><span>&lt;&lt;&lt;</span> Accelerated by Cisco AI <span>&gt;&gt;&gt;</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <strong>Proposed 3D</strong>
+        <span>Slab shadow · face gradient · lift on hover</span>
+      </div>
+      <div class="deck-wrap">
+        <div class="deck depth">
+          <div class="deck-inner">
+            <div class="row-top">
+              <div class="card">
+                <img src="../assets/deck/slide12-ai-dc.svg" alt=""/>
+                <strong>AI-Ready Data Centers</strong>
+              </div>
+              <div class="card">
+                <img src="../assets/deck/slide12-workplaces.svg" alt=""/>
+                <strong>Future-Proofed Workplaces</strong>
+              </div>
+            </div>
+            <div class="conn">
+              <span class="line left"></span>
+              Secure global connectivity
+              <span class="line right"></span>
+            </div>
+            <div class="card wide">
+              <img src="../assets/deck/slide12-resilience.svg" alt=""/>
+              <strong>Digital Resilience</strong>
+            </div>
+            <div class="ai-foot"><span>&lt;&lt;&lt;</span> Accelerated by Cisco AI <span>&gt;&gt;&gt;</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="notes">
+    <strong>3D technique in this mockup:</strong> pseudo-element shadow slab (offset +5px), vertical face gradient with top highlight, layered box-shadow for depth, hover lift −3px with cyan glow. Same layout as <code>updateOverviewDeck()</code> in the portfolio navigator.
+  </div>
+
+  <script>
+    const root = document.documentElement;
+    const views = {
+      both: () => root.classList.remove("view-solo-flat", "view-solo-3d"),
+      flat: () => { root.classList.add("view-solo-flat"); root.classList.remove("view-solo-3d"); },
+      "3d": () => { root.classList.add("view-solo-3d"); root.classList.remove("view-solo-flat"); },
+    };
+    document.getElementById("btn-both").onclick = e => { views.both(); setActive(e.target); };
+    document.getElementById("btn-flat").onclick = e => { views.flat(); setActive(e.target); };
+    document.getElementById("btn-3d").onclick = e => { views["3d"](); setActive(e.target); };
+    document.getElementById("btn-theme").onclick = e => {
+      const light = root.getAttribute("data-theme") === "light";
+      root.setAttribute("data-theme", light ? "dark" : "light");
+      e.target.textContent = light ? "Light theme" : "Dark theme";
+    };
+    function setActive(btn) {
+      document.querySelectorAll(".controls button").forEach(b => {
+        if (b.id.startsWith("btn-") && b.id !== "btn-theme") b.classList.remove("active");
+      });
+      btn.classList.add("active");
+    }
+  </script>
+</body>
+</html>

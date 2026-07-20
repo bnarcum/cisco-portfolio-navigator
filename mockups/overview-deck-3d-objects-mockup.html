@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Overview Deck — 3D Card Objects</title>
+  <style>
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT"), local("CiscoSansTT"),
+           url("../fonts/CiscoSansTT-Regular.woff2") format("woff2");
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT Bold"), local("CiscoSansTT Bold"),
+           url("../fonts/CiscoSansTT-Bold.woff2") format("woff2");
+      font-weight: 700;
+      font-display: swap;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      font-family: "CiscoSansTT", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(ellipse 80% 55% at 50% -8%, rgba(2, 200, 255, 0.1), transparent 55%),
+        #07182d;
+      color: #fff;
+      padding: 32px 20px 48px;
+    }
+
+    .wrap {
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #7eeaff;
+      text-align: center;
+    }
+
+    .sub {
+      margin: 8px auto 28px;
+      max-width: 52ch;
+      text-align: center;
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: #b4b9c0;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+    }
+
+    @media (max-width: 860px) {
+      .row { grid-template-columns: 1fr; }
+    }
+
+    .col-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #02c8ff;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .col-label em {
+      display: block;
+      font-style: normal;
+      font-weight: 400;
+      letter-spacing: 0;
+      text-transform: none;
+      color: #64748b;
+      margin-top: 3px;
+      font-size: 0.78rem;
+    }
+
+    /* ── Deck container (same layout both sides) ── */
+    .deck {
+      padding: 22px 18px 18px;
+      border-radius: 14px;
+      border: 1px solid rgba(2, 200, 255, 0.2);
+      background: rgba(1, 10, 24, 0.65);
+      min-height: 320px;
+    }
+
+    .top-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .spine {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .spine .ln {
+      flex: 1;
+      border-top: 1.75px solid rgba(240, 251, 255, 0.55);
+      position: relative;
+    }
+
+    .spine .ln:first-child::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: -4px;
+      border: 5px solid transparent;
+      border-right-color: rgba(240, 251, 255, 0.75);
+    }
+
+    .spine .ln:last-child::after {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: -4px;
+      border: 5px solid transparent;
+      border-left-color: rgba(240, 251, 255, 0.75);
+    }
+
+    .ai {
+      margin-top: 16px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: #e8f6ff;
+      opacity: 0.9;
+    }
+
+    /* ═══ FLAT (current) ═══ */
+    .flat .card {
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      border: 2px solid #02c8ff;
+      background: rgba(2, 14, 32, 0.85);
+      font-size: 13px;
+      font-weight: 700;
+      color: #7eeaff;
+      line-height: 1.2;
+    }
+
+    .flat .card img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    .flat .card.wide {
+      border: 2.75px solid transparent;
+      background:
+        linear-gradient(rgba(2, 14, 32, 0.85), rgba(2, 14, 32, 0.85)) padding-box,
+        linear-gradient(90deg, #02c8ff, #d946ef, #ff9000) border-box;
+    }
+
+    /* ═══ 3D OBJECTS ═══ */
+    .objects {
+      perspective: 720px;
+    }
+
+    .objects-inner {
+      transform-style: preserve-3d;
+      transform: rotateX(9deg) rotateY(-14deg);
+    }
+
+    .box {
+      --depth: 18px;
+      position: relative;
+      height: 64px;
+      transform-style: preserve-3d;
+      transition: transform 0.28s ease;
+    }
+
+    .box:hover {
+      transform: translateZ(8px);
+    }
+
+    .box .face {
+      position: absolute;
+      backface-visibility: hidden;
+    }
+
+    .box .front {
+      inset: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 5px;
+      background: linear-gradient(165deg, rgba(16, 44, 76, 0.98) 0%, rgba(5, 20, 38, 0.98) 100%);
+      border: 2px solid rgba(2, 200, 255, 0.8);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.11);
+      transform: translateZ(calc(var(--depth) / 2));
+      font-size: 13px;
+      font-weight: 700;
+      color: #7eeaff;
+      line-height: 1.2;
+    }
+
+    .box .front img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    .box .top {
+      left: 0;
+      right: 0;
+      top: 0;
+      height: var(--depth);
+      border-radius: 4px 4px 0 0;
+      background: linear-gradient(180deg, rgba(2, 200, 255, 0.5), rgba(8, 55, 88, 0.95));
+      border: 1px solid rgba(2, 200, 255, 0.35);
+      transform-origin: bottom center;
+      transform: rotateX(90deg) translateZ(calc(var(--depth) / 2));
+    }
+
+    .box .right {
+      top: 0;
+      bottom: 0;
+      right: 0;
+      width: var(--depth);
+      border-radius: 0 4px 4px 0;
+      background: linear-gradient(90deg, rgba(6, 40, 68, 0.96), rgba(2, 12, 24, 0.98));
+      border: 1px solid rgba(2, 200, 255, 0.2);
+      transform-origin: left center;
+      transform: rotateY(90deg) translateZ(calc(var(--depth) / 2));
+    }
+
+    .box .back {
+      inset: 0;
+      border-radius: 5px;
+      background: rgba(2, 8, 18, 0.98);
+      transform: rotateY(180deg) translateZ(calc(var(--depth) / 2));
+    }
+
+    .box.wide {
+      --depth: 22px;
+    }
+
+    .box.wide .front {
+      border: 2.75px solid transparent;
+      background:
+        linear-gradient(165deg, rgba(16, 44, 76, 0.98), rgba(5, 20, 38, 0.98)) padding-box,
+        linear-gradient(90deg, #02c8ff, #d946ef, #ff9000) border-box;
+    }
+
+    .box.wide .top {
+      background: linear-gradient(180deg, rgba(255, 144, 0, 0.45), rgba(90, 28, 70, 0.92));
+    }
+
+    .box.wide .right {
+      background: linear-gradient(90deg, rgba(90, 35, 75, 0.95), rgba(30, 10, 28, 0.98));
+    }
+
+    .objects .spine,
+    .objects .ai {
+      transform: translateZ(24px);
+    }
+
+    .hint {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 0.82rem;
+      color: #64748b;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Flat cards → 3D objects</h1>
+    <p class="sub">Same layout. Right side: each pillar is a solid block with visible thickness — not a flat rectangle.</p>
+
+    <div class="row">
+      <div>
+        <div class="col-label">Today<em>flat panel</em></div>
+        <div class="deck flat">
+          <div class="top-row">
+            <div class="card">
+              <img src="../assets/deck/slide12-ai-dc.svg" alt=""/>
+              AI-Ready Data Centers
+            </div>
+            <div class="card">
+              <img src="../assets/deck/slide12-workplaces.svg" alt=""/>
+              Future-Proofed Workplaces
+            </div>
+          </div>
+          <div class="spine">
+            <span class="ln"></span>
+            Secure global connectivity
+            <span class="ln"></span>
+          </div>
+          <div class="card wide">
+            <img src="../assets/deck/slide12-resilience.svg" alt=""/>
+            Digital Resilience
+          </div>
+          <div class="ai">&lt;&lt;&lt; Accelerated by Cisco AI &gt;&gt;&gt;</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="col-label">Proposed<em>3D blocks — hover to lift</em></div>
+        <div class="deck objects">
+          <div class="objects-inner">
+            <div class="top-row">
+              <div class="box">
+                <div class="face front"><img src="../assets/deck/slide12-ai-dc.svg" alt=""/>AI-Ready Data Centers</div>
+                <div class="face top"></div>
+                <div class="face right"></div>
+                <div class="face back"></div>
+              </div>
+              <div class="box">
+                <div class="face front"><img src="../assets/deck/slide12-workplaces.svg" alt=""/>Future-Proofed Workplaces</div>
+                <div class="face top"></div>
+                <div class="face right"></div>
+                <div class="face back"></div>
+              </div>
+            </div>
+            <div class="spine">
+              <span class="ln"></span>
+              Secure global connectivity
+              <span class="ln"></span>
+            </div>
+            <div class="box wide">
+              <div class="face front"><img src="../assets/deck/slide12-resilience.svg" alt=""/>Digital Resilience</div>
+              <div class="face top"></div>
+              <div class="face right"></div>
+              <div class="face back"></div>
+            </div>
+            <div class="ai">&lt;&lt;&lt; Accelerated by Cisco AI &gt;&gt;&gt;</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="hint">Mockup only — not in the app yet.</p>
+  </div>
+</body>
+</html>

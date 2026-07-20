@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Peek B — slide drawer</title>
+  <link rel="stylesheet" href="pillar-context-base.css"/>
+  <link rel="stylesheet" href="pillar-context-zone.css"/>
+  <style>
+    .zone-body { padding-right: 0; }
+    .drawer-wrap {
+      position: absolute; top: 0; right: 0; bottom: 0;
+      display: flex; flex-direction: row-reverse;
+      pointer-events: none;
+    }
+    .drawer-wrap > * { pointer-events: auto; }
+    .drawer-tab {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      border: none; cursor: pointer;
+      font: inherit; font-size: 0.58rem; font-weight: 700;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      color: rgba(255,255,255,.75);
+      padding: 16px 8px;
+      background: rgba(6,14,28,.9);
+      border-left: 1px solid rgba(255,255,255,.1);
+      backdrop-filter: blur(8px);
+    }
+    .drawer {
+      width: 0; overflow: hidden;
+      background: rgba(4, 12, 26, 0.96);
+      border-left: 1px solid color-mix(in srgb, var(--zone-color) 30%, transparent);
+      backdrop-filter: blur(14px);
+      transition: width 0.32s cubic-bezier(.4,0,.2,1);
+      display: flex; flex-direction: column;
+    }
+    .drawer-wrap.open .drawer { width: 272px; }
+    .drawer-wrap.collapsed .drawer-tab { display: block; }
+    .drawer-wrap:not(.collapsed) .drawer-tab { display: none; }
+    .drawer-head {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 14px 8px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .drawer-head span { font-size: 0.62rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; }
+    .drawer-head button {
+      border: none; background: transparent; color: #8b95a5; cursor: pointer; font-size: 1rem; padding: 2px 6px;
+    }
+    .drawer-peek { padding: 14px; flex: 1; }
+    .drawer-peek .label { font-size: 0.58rem; color: var(--zone-color); font-weight: 700; margin-bottom: 6px; }
+    .drawer-peek h3 { font-size: 0.78rem; color: #e2e8f0; line-height: 1.35; margin-bottom: 8px; }
+    .drawer-peek p { font-size: 0.66rem; color: #8b95a5; line-height: 1.5; }
+    .progress { height: 3px; background: rgba(255,255,255,.08); margin: 0 14px 12px; border-radius: 99px; overflow: hidden; }
+    .progress i {
+      display: block; height: 100%; width: 0;
+      background: var(--zone-color);
+      border-radius: 99px;
+      animation: prog 4.5s linear infinite;
+    }
+    .drawer-wrap.paused .progress i { animation-play-state: paused; }
+    @keyframes prog { to { width: 100%; } }
+    .drawer-nav { display: flex; gap: 6px; padding: 0 14px 14px; }
+    .drawer-nav button {
+      flex: 1; border: 1px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.04); color: #cbd5e1;
+      font: inherit; font-size: 0.62rem; font-weight: 600;
+      padding: 7px; border-radius: 6px; cursor: pointer;
+    }
+    .drawer-wrap.open:not(.collapsed) .drawer-tab { width: 0; padding: 0; overflow: hidden; }
+  </style>
+</head>
+<body>
+  <div class="mockup-shell">
+    <p class="back"><a href="pillar-context-iterations-gallery.html">← Peek & filmstrip iterations</a></p>
+    <p class="pitch"><strong>Peek B · Slide drawer</strong> — Same peek rotation, but slides in from the right edge. Collapse to a vertical tab.</p>
+    <div class="controls"></div>
+    <div class="chrome">
+      <div class="topbar"></div>
+      <div class="actionbar"></div>
+      <div class="canvas-wrap" style="min-height:540px">
+        <div class="zone-panel" id="zone">
+          <header class="zone-header">
+            <div class="zone-header-top">
+              <img data-zone-icon src="" alt=""/>
+              <h2 data-zone-title></h2>
+            </div>
+            <div class="promise-strip"><span class="badge">Outcome</span><div class="text" data-zone-promise></div></div>
+          </header>
+          <div class="zone-body">
+            <div class="family-grid cols-4" data-zone-graph></div>
+            <div class="zone-stats" data-zone-stats></div>
+            <div class="drawer-wrap open" id="drawer">
+              <button type="button" class="drawer-tab" id="tab">Value props</button>
+              <aside class="drawer">
+                <div class="drawer-head">
+                  <span>Value props</span>
+                  <button type="button" id="collapse" title="Collapse">›</button>
+                </div>
+                <div class="drawer-peek">
+                  <div class="label" id="label">1 of 3</div>
+                  <h3 id="title"></h3>
+                  <p id="body"></p>
+                </div>
+                <div class="progress"><i id="prog"></i></div>
+                <div class="drawer-nav">
+                  <button type="button" id="prev">Previous</button>
+                  <button type="button" id="next">Next</button>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="pillar-context-data.js"></script>
+  <script src="pillar-context-chrome.js"></script>
+  <script src="pillar-context-zone.js"></script>
+  <script>
+    let pillarId = "ai-dc";
+    const drawer = document.getElementById("drawer");
+    let rot = mountPeekRotation(() => PILLAR_CTX[pillarId], (p, i) => show(p, i));
+
+    function show(p, i) {
+      rot.setIndex(i);
+      const h = p.highlights[i];
+      document.getElementById("label").textContent = `${i + 1} of ${p.highlights.length}`;
+      document.getElementById("title").textContent = h.title;
+      document.getElementById("body").textContent = h.body;
+      const prog = document.getElementById("prog");
+      prog.style.animation = "none";
+      void prog.offsetWidth;
+      prog.style.animation = "";
+    }
+
+    function render() {
+      const p = PILLAR_CTX[pillarId];
+      renderZoneShell(document.getElementById("zone"), p);
+      rot.reset();
+      show(p, 0);
+      rot.start();
+      drawer.classList.remove("paused");
+    }
+
+    document.getElementById("collapse").onclick = () => drawer.classList.add("collapsed");
+    document.getElementById("tab").onclick = () => drawer.classList.remove("collapsed");
+    document.getElementById("prev").onclick = () => {
+      const p = PILLAR_CTX[pillarId];
+      const i = (rot.getIndex() - 1 + p.highlights.length) % p.highlights.length;
+      show(p, i); drawer.classList.add("paused");
+    };
+    document.getElementById("next").onclick = () => {
+      const p = PILLAR_CTX[pillarId];
+      show(p, (rot.getIndex() + 1) % p.highlights.length);
+      drawer.classList.add("paused");
+    };
+
+    initPillarMockup({ onPillar: id => { pillarId = id; render(); } });
+    render();
+  </script>
+</body>
+</html>

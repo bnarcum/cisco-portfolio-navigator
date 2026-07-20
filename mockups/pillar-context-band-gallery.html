@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Pillar context — above / below the card</title>
+  <style>
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT"), url("../fonts/CiscoSansTT-Regular.woff2") format("woff2");
+      font-weight: 400; font-display: swap;
+    }
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT Bold"), url("../fonts/CiscoSansTT-Bold.woff2") format("woff2");
+      font-weight: 700; font-display: swap;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      font-family: "CiscoSansTT", system-ui, sans-serif;
+      background: #050c18; color: #f4f7fb;
+      padding: 32px 20px 60px;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+    .back { margin-bottom: 16px; }
+    .back a { color: #02c8ff; font-size: 0.72rem; text-decoration: none; }
+    h1 {
+      font-size: 1.25rem;
+      background: linear-gradient(90deg, #7eeaff, #0a60ff);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      margin-bottom: 8px;
+    }
+    .lead { color: #8b95a5; font-size: 0.82rem; line-height: 1.55; margin-bottom: 28px; max-width: 64ch; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+    a.card {
+      display: block; text-decoration: none; color: inherit;
+      border-radius: 12px; border: 1px solid rgba(2, 200, 255, 0.12);
+      background: rgba(4, 12, 26, 0.9); padding: 16px 18px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    a.card:hover { transform: translateY(-2px); border-color: rgba(2, 200, 255, 0.35); }
+    .tag { font-size: 0.58rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #02c8ff; margin-bottom: 6px; }
+    a.card h3 { font-size: 0.92rem; margin-bottom: 6px; }
+    a.card p { font-size: 0.7rem; line-height: 1.5; color: #8b95a5; }
+    .note {
+      margin-top: 24px; padding: 12px 14px; border-radius: 8px;
+      border: 1px dashed rgba(255,255,255,.1); font-size: 0.68rem; color: #64748b; line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p class="back"><a href="pillar-context-iterations-gallery.html">← Peek & filmstrip iterations</a></p>
+    <h1>Value props above / below the card</h1>
+    <p class="lead">New direction based on your feedback: the value props no longer float over the graph. They live inside the pillar card as a full-width band — either above or below the family graph — so nothing overlaps and the outcome line never gets clipped. Switch pillars with the toggle in each mockup.</p>
+
+    <div class="grid">
+      <a class="card" href="pillar-context-band-b-above.html">
+        <span class="tag">Band B · Above</span>
+        <h3>Ribbon above</h3>
+        <p>Value-prop cards ride under the outcome, above the graph. Top-down read: outcome → why → portfolio.</p>
+      </a>
+      <a class="card" href="pillar-context-band-a-below.html">
+        <span class="tag">Band A · Below</span>
+        <h3>Ribbon below</h3>
+        <p>Graph on top, value-prop cards docked in a full-width ribbon underneath. Portfolio leads, story supports.</p>
+      </a>
+      <a class="card" href="pillar-context-band-c-columns.html">
+        <span class="tag">Band C · Above</span>
+        <h3>Deck columns</h3>
+        <p>Evenly spaced columns with divider rules — closest to the source slide. Sits above the graph.</p>
+      </a>
+      <a class="card" href="pillar-context-band-d-strip.html">
+        <span class="tag">Band D · Above</span>
+        <h3>Chip strip</h3>
+        <p>Lightest touch — numbered chips; click one to reveal its detail inline. Minimal vertical space.</p>
+      </a>
+    </div>
+
+    <p class="note">All four adapt to 3 or 5 value props and to the wide Workplaces / Resilience family sets. Tell me which placement + density you prefer and I'll wire it into the app.</p>
+  </div>
+</body>
+</html>

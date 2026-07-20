@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>V2 Orbit ring — pillar context</title>
+  <link rel="stylesheet" href="pillar-context-base.css"/>
+  <style>
+    .scene { min-height: 520px; display: grid; place-items: center; padding: 40px 20px; }
+    .orbit-stage {
+      position: relative;
+      width: min(520px, 92vw);
+      height: min(520px, 92vw);
+    }
+    .orbit-ring {
+      position: absolute;
+      inset: 0;
+      animation: ringSpin 48s linear infinite;
+    }
+    .orbit-ring.paused { animation-play-state: paused; }
+    @keyframes ringSpin { to { transform: rotate(360deg); } }
+
+    .orbit-ring svg { width: 100%; height: 100%; }
+    .orbit-track {
+      fill: none;
+      stroke: color-mix(in srgb, var(--zone-color) 35%, transparent);
+      stroke-width: 1.5;
+      stroke-dasharray: 6 8;
+      opacity: 0.7;
+    }
+    .orbit-glow {
+      fill: none;
+      stroke: var(--zone-color);
+      stroke-width: 2;
+      opacity: 0.25;
+      filter: blur(4px);
+    }
+
+    .orbit-node {
+      position: absolute;
+      width: 36px; height: 36px;
+      margin: -18px 0 0 -18px;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      background: rgba(8, 16, 32, 0.92);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font: inherit;
+      font-size: 0.58rem;
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+      transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+      animation: nodeCounter 48s linear infinite;
+    }
+    .orbit-ring.paused .orbit-node { animation-play-state: paused; }
+    @keyframes nodeCounter { to { transform: rotate(-360deg); } }
+
+    .orbit-node.on {
+      border-color: var(--zone-color);
+      box-shadow: 0 0 24px color-mix(in srgb, var(--zone-color) 55%, transparent);
+      transform: scale(1.15);
+      z-index: 2;
+    }
+    .orbit-ring.paused .orbit-node.on { transform: scale(1.15); }
+
+    .zone-core {
+      position: absolute;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      width: min(340px, 68%);
+      border-radius: 12px;
+      border: 2px solid var(--zone-color);
+      background: rgba(1, 10, 24, 0.88);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 0 50px color-mix(in srgb, var(--zone-color) 25%, transparent);
+      padding: 14px 14px 16px;
+      z-index: 3;
+    }
+    .zone-core h2 {
+      text-align: center;
+      font-size: 0.82rem;
+      color: #7eeaff;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .zone-core h2 img { width: 22px; height: 22px; filter: brightness(0) invert(1); }
+    .promise {
+      text-align: center;
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: #dbeafe;
+      line-height: 1.4;
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+    .fam-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+    .fam {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--zone-color) 30%, transparent);
+      border: 1px solid rgba(255,255,255,.25);
+      font-size: 0.5rem;
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+    }
+
+    .callout {
+      position: absolute;
+      width: 200px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: rgba(6, 14, 28, 0.94);
+      border: 1px solid color-mix(in srgb, var(--zone-color) 40%, transparent);
+      box-shadow: 0 12px 40px rgba(0,0,0,.45);
+      pointer-events: none;
+      opacity: 0;
+      transform: scale(0.92);
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 5;
+    }
+    .callout.show { opacity: 1; transform: scale(1); }
+    .callout kbd {
+      font-size: 0.55rem;
+      font-weight: 700;
+      color: var(--zone-color);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .callout h3 {
+      font-size: 0.72rem;
+      color: #e2e8f0;
+      margin: 4px 0 6px;
+      line-height: 1.3;
+    }
+    .callout p { font-size: 0.62rem; color: #8b95a5; line-height: 1.45; }
+
+    .ctrl { text-align: center; margin-top: 8px; }
+    .ctrl button {
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color: #cbd5e1;
+      font: inherit;
+      font-size: 0.62rem;
+      padding: 6px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      margin: 0 4px;
+    }
+    .ctrl button.on { background: linear-gradient(90deg, #0a60ff, #02c8ff); color: #000; border: none; }
+  </style>
+</head>
+<body>
+  <div class="mockup-shell" data-version="V2 Orbit ring">
+    <p class="back"><a href="pillar-context-gallery.html">← All versions</a></p>
+    <p class="pitch">Highlights live on an orbital ring around the focused zone — spatial, graph-native, auto-cycles unless paused.</p>
+
+    <div class="controls"></div>
+    <div class="chrome">
+      <div class="topbar"></div>
+      <div class="actionbar"></div>
+      <div class="canvas-wrap scene">
+        <div class="orbit-stage" id="stage">
+          <div class="orbit-ring" id="ring">
+            <svg viewBox="0 0 200 200"><circle class="orbit-glow" cx="100" cy="100" r="92"/><circle class="orbit-track" cx="100" cy="100" r="92"/></svg>
+            <div id="nodes"></div>
+          </div>
+          <div class="callout" id="callout">
+            <kbd id="coLabel">1 / 3</kbd>
+            <h3 id="coTitle"></h3>
+            <p id="coBody"></p>
+          </div>
+          <div class="zone-core" id="core">
+            <h2><img id="icon" src="" alt=""/><span id="title"></span></h2>
+            <p class="promise" id="promise"></p>
+            <div class="fam-row" id="fams"></div>
+          </div>
+        </div>
+        <div class="ctrl">
+          <button type="button" id="btnAuto" class="on">Auto orbit</button>
+          <button type="button" id="btnPause">Pause & explore</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="pillar-context-data.js"></script>
+  <script src="pillar-context-chrome.js"></script>
+  <script>
+    let pillarId = "ai-dc", active = 0, auto = true, timer = null;
+    const stage = document.getElementById("stage");
+    const ring = document.getElementById("ring");
+    const nodesEl = document.getElementById("nodes");
+    const callout = document.getElementById("callout");
+
+    function placeNodes(p) {
+      const n = p.highlights.length;
+      const r = 46; // % of stage half
+      nodesEl.innerHTML = p.highlights.map((h, i) => {
+        const ang = (i / n) * Math.PI * 2 - Math.PI / 2;
+        const x = 50 + Math.cos(ang) * r;
+        const y = 50 + Math.sin(ang) * r;
+        return `<button type="button" class="orbit-node${i === active ? " on" : ""}" data-i="${i}" style="left:${x}%;top:${y}%">${i + 1}</button>`;
+      }).join("");
+    }
+
+    function positionCallout() {
+      const btn = nodesEl.querySelector(".orbit-node.on");
+      if (!btn) return;
+      const sr = stage.getBoundingClientRect();
+      const br = btn.getBoundingClientRect();
+      const cx = br.left + br.width / 2 - sr.left;
+      const cy = br.top + br.height / 2 - sr.top;
+      const w = stage.offsetWidth;
+      const left = cx > w / 2 ? cx - 210 : cx + 20;
+      const top = Math.max(8, Math.min(cy - 40, stage.offsetHeight - 100));
+      callout.style.left = left + "px";
+      callout.style.top = top + "px";
+    }
+
+    function showHighlight(p, i) {
+      active = i;
+      const h = p.highlights[i];
+      document.getElementById("coLabel").textContent = `${i + 1} / ${p.highlights.length}`;
+      document.getElementById("coTitle").textContent = h.title;
+      document.getElementById("coBody").textContent = h.body;
+      placeNodes(p);
+      callout.classList.add("show");
+      requestAnimationFrame(positionCallout);
+    }
+
+    function render() {
+      const p = PILLAR_CTX[pillarId];
+      document.documentElement.style.setProperty("--zone-color", p.color);
+      document.getElementById("icon").src = p.icon;
+      document.getElementById("title").textContent = p.label;
+      document.getElementById("promise").textContent = p.promise;
+      document.getElementById("fams").innerHTML = p.families.slice(0, 8).map(f =>
+        `<span class="fam" title="${f.label}">${f.abbr}</span>`).join("");
+      showHighlight(p, active % p.highlights.length);
+      ring.classList.toggle("paused", !auto);
+    }
+
+    function tick() {
+      if (!auto) return;
+      const p = PILLAR_CTX[pillarId];
+      active = (active + 1) % p.highlights.length;
+      showHighlight(p, active);
+    }
+
+    function setAuto(on) {
+      auto = on;
+      clearInterval(timer);
+      ring.classList.toggle("paused", !on);
+      document.getElementById("btnAuto").classList.toggle("on", on);
+      document.getElementById("btnPause").classList.toggle("on", !on);
+      if (on) timer = setInterval(tick, 3800);
+    }
+
+    nodesEl.addEventListener("click", e => {
+      const b = e.target.closest(".orbit-node");
+      if (!b) return;
+      setAuto(false);
+      showHighlight(PILLAR_CTX[pillarId], +b.dataset.i);
+    });
+
+    document.getElementById("btnAuto").onclick = () => setAuto(true);
+    document.getElementById("btnPause").onclick = () => setAuto(false);
+
+    window.addEventListener("resize", positionCallout);
+
+    initPillarMockup({ onPillar: id => { pillarId = id; active = 0; render(); } });
+    render();
+    setAuto(true);
+  </script>
+</body>
+</html>

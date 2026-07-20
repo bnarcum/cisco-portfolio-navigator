@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>CPN — Use Cases &amp; Solution Stacks Mockup (#1 + #3)</title>
+  <style>
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT"), local("CiscoSansTT"),
+           url("../fonts/CiscoSansTT-Regular.woff2") format("woff2");
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT Bold"), local("CiscoSansTT Bold"),
+           url("../fonts/CiscoSansTT-Bold.woff2") format("woff2");
+      font-weight: 700;
+      font-display: swap;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #050c18;
+      --surface: rgba(4, 12, 26, 0.92);
+      --surface2: rgba(8, 18, 36, 0.95);
+      --border: rgba(2, 200, 255, 0.18);
+      --text: #f4f7fb;
+      --muted: #8b95a5;
+      --accent: #02c8ff;
+      --blue: #0a60ff;
+      --green: #2dce5c;
+      --orange: #ff9000;
+      --pink: #ff007f;
+      --purple: #a78bfa;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: "CiscoSansTT", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(ellipse 80% 50% at 50% -5%, rgba(2, 200, 255, 0.07), transparent 55%), var(--bg);
+      color: var(--text);
+      padding: 16px 12px 48px;
+    }
+
+    .shell { max-width: 1280px; margin: 0 auto; }
+
+    .intro {
+      text-align: center;
+      margin-bottom: 14px;
+    }
+    .intro h1 { font-size: 1.05rem; font-weight: 700; color: #7eeaff; }
+    .intro p {
+      margin-top: 6px;
+      font-size: 0.78rem;
+      line-height: 1.55;
+      color: var(--muted);
+      max-width: 72ch;
+      margin-inline: auto;
+    }
+    .intro .tags { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+    .intro .tag {
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(2, 200, 255, 0.25);
+      color: #7eeaff;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .intro .tag.g { border-color: rgba(45, 206, 92, 0.35); color: #7dffb0; }
+
+    .chrome {
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      overflow: hidden;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+      position: relative;
+      min-height: 640px;
+    }
+
+    /* ── Fake CPN topbar ── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      flex-wrap: wrap;
+      background: rgba(2, 8, 18, 0.98);
+    }
+    .logo-dot {
+      width: 26px; height: 26px; border-radius: 7px;
+      background: linear-gradient(135deg, var(--accent), var(--blue));
+      flex-shrink: 0;
+    }
+    .topbar-title { font-size: 0.76rem; font-weight: 700; color: #7eeaff; }
+    .topbar-spacer { flex: 1; min-width: 8px; }
+
+    .tb-btn {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 7px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .tb-btn:hover { border-color: rgba(2, 200, 255, 0.35); color: var(--text); }
+
+    .tb-btn.solutions {
+      border-color: rgba(2, 200, 255, 0.45);
+      background: rgba(2, 200, 255, 0.12);
+      color: #fff;
+      position: relative;
+    }
+    .tb-btn.solutions::before {
+      content: "";
+      position: absolute;
+      inset: -3px;
+      border-radius: 10px;
+      border: 2px dashed rgba(45, 206, 92, 0.7);
+      pointer-events: none;
+      animation: pulse-ring 2s ease-in-out infinite;
+    }
+    @keyframes pulse-ring {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+    .vm-seg {
+      display: inline-flex; gap: 2px; padding: 3px;
+      border-radius: 999px;
+      background: rgba(5, 14, 28, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .vm-seg span {
+      font-size: 0.64rem; font-weight: 600;
+      padding: 5px 9px; border-radius: 999px;
+      color: var(--muted);
+    }
+    .vm-seg span.on {
+      background: linear-gradient(90deg, var(--blue), var(--accent));
+      color: #000;
+    }
+
+    /* ── Canvas placeholder ── */
+    .canvas {
+      position: relative;
+      height: 580px;
+      background:
+        radial-gradient(circle at 30% 40%, rgba(10, 96, 255, 0.08), transparent 45%),
+        radial-gradient(circle at 70% 60%, rgba(2, 200, 255, 0.06), transparent 40%),
+        repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,.025) 39px, rgba(255,255,255,.025) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,.025) 39px, rgba(255,255,255,.025) 40px);
+    }
+    .canvas-label {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.82rem;
+      color: rgba(139, 149, 165, 0.5);
+      pointer-events: none;
+    }
+    .refarch-badge {
+      position: absolute;
+      top: 14px; left: 50%; transform: translateX(-50%);
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: rgba(2, 200, 255, 0.12);
+      border: 1px solid rgba(2, 200, 255, 0.35);
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #7eeaff;
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .refarch-badge.show { opacity: 1; }
+
+    /* ── MOCKUP #1: Solutions modal ── */
+    .solutions-ov {
+      position: absolute;
+      inset: 0;
+      background: rgba(2, 6, 14, 0.72);
+      backdrop-filter: blur(4px);
+      z-index: 20;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px 16px;
+      overflow-y: auto;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .solutions-ov.open { opacity: 1; pointer-events: auto; }
+
+    .solutions-panel {
+      width: min(920px, 100%);
+      border-radius: 14px;
+      border: 2px dashed rgba(45, 206, 92, 0.55);
+      background: var(--surface2);
+      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.55);
+      overflow: hidden;
+    }
+
+    .sol-head {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .sol-head-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .sol-head-row h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      flex: 1;
+    }
+    .sol-sub {
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-top: 6px;
+      max-width: 58ch;
+    }
+    .sol-close {
+      border: none;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      font-size: 18px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .sol-close:hover { color: var(--text); background: rgba(255, 255, 255, 0.1); }
+
+    .sol-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      padding: 12px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      background: rgba(0, 0, 0, 0.15);
+    }
+    .sol-search {
+      flex: 1;
+      min-width: 180px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.25);
+      color: var(--text);
+      font: inherit;
+      font-size: 0.75rem;
+    }
+    .sol-search::placeholder { color: var(--muted); }
+    .sol-search:focus { outline: none; border-color: rgba(2, 200, 255, 0.45); }
+
+    .persona-chips { display: flex; gap: 5px; flex-wrap: wrap; }
+    .persona-chip {
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.66rem;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .persona-chip.on {
+      background: rgba(2, 200, 255, 0.18);
+      border-color: rgba(2, 200, 255, 0.5);
+      color: #fff;
+    }
+
+    .sol-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+      padding: 16px 20px 20px;
+      max-height: 420px;
+      overflow-y: auto;
+    }
+
+    .uc-card {
+      text-align: left;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 14px;
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.15s, background 0.15s;
+      font: inherit;
+      color: inherit;
+    }
+    .uc-card:hover {
+      border-color: rgba(2, 200, 255, 0.4);
+      background: rgba(2, 200, 255, 0.06);
+      transform: translateY(-1px);
+    }
+    .uc-card.selected {
+      border-color: rgba(2, 200, 255, 0.65);
+      box-shadow: 0 0 0 1px rgba(2, 200, 255, 0.2);
+    }
+    .uc-card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .uc-card h3 {
+      font-size: 0.88rem;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+    .uc-badge {
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    .uc-badge.stack { background: rgba(45, 206, 92, 0.15); color: #7dffb0; }
+    .uc-badge.filter { background: rgba(255, 144, 0, 0.12); color: #ffc266; }
+
+    .uc-outcome {
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--muted);
+      margin-bottom: 10px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .uc-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+    .uc-pillar {
+      font-size: 0.6rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+      border: 1px solid;
+    }
+    .uc-count {
+      font-size: 0.62rem;
+      color: var(--muted);
+      margin-left: auto;
+    }
+    .uc-cta {
+      display: block;
+      margin-top: 10px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    /* ── MOCKUP #3: Use case detail panel ── */
+    .detail-panel {
+      position: absolute;
+      top: 0; right: 0; bottom: 0;
+      width: min(400px, 92vw);
+      z-index: 30;
+      background: rgba(6, 14, 28, 0.98);
+      border-left: 2px dashed rgba(45, 206, 92, 0.55);
+      box-shadow: -16px 0 48px rgba(0, 0, 0, 0.45);
+      transform: translateX(100%);
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .detail-panel.open { transform: translateX(0); }
+
+    .dp-head {
+      padding: 16px 16px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      flex-shrink: 0;
+    }
+    .dp-head-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .dp-title { font-size: 1.05rem; font-weight: 700; line-height: 1.2; flex: 1; }
+    .dp-close {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .dp-outcome {
+      font-size: 0.78rem;
+      line-height: 1.5;
+      color: #b4b9c0;
+      margin-top: 8px;
+    }
+    .dp-narrative {
+      font-size: 0.72rem;
+      line-height: 1.55;
+      color: var(--muted);
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: rgba(2, 200, 255, 0.05);
+      border: 1px solid rgba(2, 200, 255, 0.12);
+    }
+
+    .dp-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px 20px;
+    }
+
+    .dp-sec-t {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    /* Solution stack with per-product roles */
+    .stack-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .stack-item {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      gap: 10px;
+      align-items: start;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      background: rgba(255, 255, 255, 0.02);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .stack-item:hover {
+      border-color: rgba(2, 200, 255, 0.35);
+      background: rgba(2, 200, 255, 0.05);
+    }
+    .stack-num {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: rgba(2, 200, 255, 0.12);
+      border: 1px solid rgba(2, 200, 255, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stack-name {
+      font-size: 0.8rem;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+    .stack-role {
+      font-size: 0.7rem;
+      line-height: 1.45;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+    .stack-layer {
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 3px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+      align-self: start;
+    }
+    .layer-identity { background: rgba(167, 139, 250, 0.15); color: #c4b5fd; }
+    .layer-access { background: rgba(2, 200, 255, 0.12); color: #7ee8ff; }
+    .layer-enforce { background: rgba(255, 0, 127, 0.1); color: #ffb3d9; }
+    .layer-collab { background: rgba(45, 206, 92, 0.12); color: #7dffb0; }
+    .layer-observe { background: rgba(255, 144, 0, 0.12); color: #ffc266; }
+    .layer-platform { background: rgba(10, 96, 255, 0.12); color: #93c5fd; }
+
+    .dp-related { margin-top: 18px; }
+    .prob-chip {
+      display: block;
+      width: 100%;
+      text-align: left;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      padding: 10px 12px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      font: inherit;
+      color: inherit;
+    }
+    .prob-chip:hover { border-color: rgba(45, 206, 92, 0.35); }
+    .prob-chip q {
+      display: block;
+      font-size: 0.72rem;
+      color: #b4b9c0;
+      font-style: italic;
+      margin-bottom: 4px;
+    }
+    .prob-chip span { font-size: 0.72rem; font-weight: 600; color: var(--green); }
+
+    .dp-bundle {
+      margin-top: 14px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px dashed rgba(255, 255, 255, 0.12);
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+    .dp-bundle strong { color: var(--text); }
+
+    .dp-foot {
+      padding: 12px 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+      background: rgba(0, 0, 0, 0.2);
+    }
+    .dp-btn {
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      font: inherit;
+      font-size: 0.74rem;
+      font-weight: 600;
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .dp-btn:hover { border-color: rgba(2, 200, 255, 0.4); }
+    .dp-btn.primary {
+      background: linear-gradient(90deg, var(--blue), var(--accent));
+      border: none;
+      color: #000;
+    }
+    .dp-btn.primary:hover { filter: brightness(1.08); }
+
+    .legend {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(0, 0, 0, 0.25);
+      font-size: 0.72rem;
+      line-height: 1.55;
+      color: var(--muted);
+    }
+    .legend h3 { font-size: 0.78rem; color: #7eeaff; margin-bottom: 8px; }
+    .legend ul { padding-left: 18px; }
+    .legend li { margin-bottom: 4px; }
+    .legend strong { color: var(--text); }
+
+    @media (max-width: 720px) {
+      .sol-grid { grid-template-columns: 1fr; max-height: none; }
+      .canvas { height: 520px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="intro">
+      <h1>Use Cases — Solutions Entry + Detail Panel</h1>
+      <p>
+        Interactive mockup for proposal <strong>#1</strong> (Solutions as a first-class entry point) and
+        <strong>#3</strong> (REF_ARCH extended with per-product roles in a detail panel).
+        Click <em>Solutions</em> in the topbar, pick a use case card, then explore the stack.
+      </p>
+      <div class="tags">
+        <span class="tag">Mockup #1 — Solutions modal</span>
+        <span class="tag g">Mockup #3 — Detail panel + roles</span>
+      </div>
+    </div>
+
+    <div class="chrome">
+      <div class="topbar">
+        <div class="logo-dot" aria-hidden="true"></div>
+        <span class="topbar-title">Portfolio Navigator</span>
+        <div class="vm-seg" aria-hidden="true">
+          <span>Overview</span>
+          <span class="on">Families</span>
+          <span>Composition</span>
+          <span>Spatial</span>
+        </div>
+        <div class="topbar-spacer"></div>
+        <button type="button" class="tb-btn">Guided Plan</button>
+        <button type="button" class="tb-btn solutions" id="open-solutions">◎ Solutions</button>
+        <button type="button" class="tb-btn">Planner</button>
+      </div>
+
+      <div class="canvas">
+        <div class="canvas-label">Existing graph canvas (unchanged)</div>
+        <div class="refarch-badge" id="refarch-badge"></div>
+
+        <!-- #1 Solutions overlay -->
+        <div class="solutions-ov" id="solutions-ov" role="dialog" aria-modal="true" aria-label="Solutions by use case">
+          <div class="solutions-panel">
+            <div class="sol-head">
+              <div class="sol-head-row">
+                <div>
+                  <h2>Solutions by use case</h2>
+                  <p class="sol-sub">Start from the customer outcome — see which families work together, what each one does, and jump to the graph or add a bundle to the plan.</p>
+                </div>
+                <button type="button" class="sol-close" id="close-solutions" aria-label="Close">×</button>
+              </div>
+            </div>
+            <div class="sol-toolbar">
+              <input type="search" class="sol-search" id="sol-search" placeholder="Search use cases… (e.g. zero trust, hybrid work)"/>
+              <div class="persona-chips" role="group" aria-label="Persona framing">
+                <button type="button" class="persona-chip on" data-persona="">All</button>
+                <button type="button" class="persona-chip" data-persona="netops">NetOps</button>
+                <button type="button" class="persona-chip" data-persona="cio">CIO</button>
+                <button type="button" class="persona-chip" data-persona="ciso">CISO</button>
+              </div>
+            </div>
+            <div class="sol-grid" id="sol-grid"></div>
+          </div>
+        </div>
+
+        <!-- #3 Detail panel -->
+        <aside class="detail-panel" id="detail-panel" aria-label="Use case detail">
+          <div class="dp-head">
+            <div class="dp-head-row">
+              <div class="dp-title" id="dp-title">—</div>
+              <button type="button" class="dp-close" id="close-detail" aria-label="Close detail">×</button>
+            </div>
+            <div class="dp-outcome" id="dp-outcome"></div>
+            <div class="dp-narrative" id="dp-narrative"></div>
+          </div>
+          <div class="dp-body">
+            <div class="dp-sec-t">Solution stack — role of each product</div>
+            <div class="stack-list" id="stack-list"></div>
+
+            <div class="dp-related">
+              <div class="dp-sec-t">Related business problems</div>
+              <div id="prob-list"></div>
+            </div>
+
+            <div class="dp-bundle" id="dp-bundle"></div>
+          </div>
+          <div class="dp-foot">
+            <button type="button" class="dp-btn primary" id="btn-graph">Show on graph →</button>
+            <button type="button" class="dp-btn" id="btn-stack">+ Add solution stack to plan</button>
+            <button type="button" class="dp-btn" id="btn-labs">View dCloud learning path</button>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <div class="legend">
+      <h3>What this mockup proposes</h3>
+      <ul>
+        <li><strong>#1 Entry point:</strong> New <em>Solutions</em> button (alongside Guided Plan) opens a searchable catalog of use cases — not buried in the toolbar dropdown.</li>
+        <li><strong>#3 Product roles:</strong> REF_ARCH gains a <code>roles[]</code> array per product (name + role + optional layer tag). Detail panel renders an ordered stack customers can scan in a briefing.</li>
+        <li><strong>Reuse:</strong> "Show on graph" → existing <code>applyRefArch()</code>; problems from <code>cpn-problems.js</code>; bundles from <code>BUNDLES</code>; learning paths from dCloud.</li>
+        <li><strong>Gap fill:</strong> Cards marked "Filter only" are use cases without REF_ARCH yet (Contact Center, Threat Detection, etc.) — still listed, but panel shows "coming soon" or problem-only view.</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    const USE_CASES = [
+      {
+        id: "zero-trust",
+        name: "Zero Trust Security",
+        outcome: "Verify every user and device before granting access — least privilege everywhere.",
+        pillars: [{ label: "Security", color: "#ff007f" }, { label: "Connect", color: "#02c8ff" }],
+        familyCount: 14,
+        hasStack: true,
+        bundle: "Zero Trust Foundation",
+        problems: [
+          { quote: "VPN is our security model but users still reach too much.", line: "Replace implicit trust with identity-first access." },
+          { quote: "We can't see device posture before allowing network access.", line: "Continuous verification of users and endpoints." }
+        ],
+        narrative: "Identity (Duo) + posture (ISE) + perimeter enforcement (Secure Firewall) + cloud-delivered access (Secure Access/Umbrella) + endpoint visibility (Secure Endpoint) + correlation (XDR), curated by Talos intel.",
+        stack: [
+          { name: "Cisco Duo", role: "Primary identity verification — MFA and adaptive policy at sign-in.", layer: "Identity", layerClass: "layer-identity" },
+          { name: "Cisco ISE", role: "Device posture and network admission control — who gets on which segment.", layer: "Posture", layerClass: "layer-access" },
+          { name: "Secure Firewall", role: "Perimeter and branch enforcement — inspect and block east-west and north-south.", layer: "Enforce", layerClass: "layer-enforce" },
+          { name: "Cisco Secure Access", role: "Cloud-delivered SSE — ZTNA and SWG without hair-pinning to DC.", layer: "Access", layerClass: "layer-access" },
+          { name: "Cisco Umbrella", role: "DNS-layer first hop — block malicious destinations before connection.", layer: "Access", layerClass: "layer-access" },
+          { name: "Secure Endpoint", role: "Endpoint telemetry and containment on managed devices.", layer: "Enforce", layerClass: "layer-enforce" },
+          { name: "Cisco XDR", role: "Cross-domain correlation and automated response.", layer: "Observe", layerClass: "layer-observe" },
+          { name: "Cisco Talos", role: "Threat intelligence feeding policies across the stack.", layer: "Intel", layerClass: "layer-platform" }
+        ]
+      },
+      {
+        id: "hybrid-work",
+        name: "Hybrid Work",
+        outcome: "Secure, consistent collaboration from office, home, and on the road.",
+        pillars: [{ label: "Workplace", color: "#2dce5c" }, { label: "Connect", color: "#02c8ff" }],
+        familyCount: 11,
+        hasStack: true,
+        bundle: "Hybrid Work Suite",
+        problems: [
+          { quote: "Webex quality varies by site and we can't prove where it breaks.", line: "End-to-end visibility for collaboration experience." },
+          { quote: "Remote workers still VPN into the DC for everyday apps.", line: "Direct secure access to SaaS without legacy VPN." }
+        ],
+        narrative: "Webex for messaging, meetings, and calling + RoomOS for rooms and desks + Duo and Secure Access for safe access from anywhere + ThousandEyes for collab quality assurance.",
+        stack: [
+          { name: "Webex App", role: "Unified hub — messaging, meetings, calling, and AI assistant.", layer: "Collab", layerClass: "layer-collab" },
+          { name: "Webex Calling", role: "Enterprise telephony in the cloud or hybrid — same dial plan everywhere.", layer: "Collab", layerClass: "layer-collab" },
+          { name: "Room Systems", role: "RoomOS devices for huddle, board, and executive rooms.", layer: "Collab", layerClass: "layer-collab" },
+          { name: "Vidcast", role: "Async video updates — reduce meeting load for distributed teams.", layer: "Collab", layerClass: "layer-collab" },
+          { name: "Cisco Duo", role: "Secure sign-in to Webex and corporate apps from any location.", layer: "Identity", layerClass: "layer-identity" },
+          { name: "Cisco Secure Access", role: "ZTNA for SaaS and private apps without full-tunnel VPN.", layer: "Access", layerClass: "layer-access" },
+          { name: "Cisco ThousandEyes", role: "Monitor Webex, ISP, and SaaS paths — prove where quality drops.", layer: "Observe", layerClass: "layer-observe" }
+        ]
+      },
+      {
+        id: "sdwan-sase",
+        name: "SD-WAN / SASE",
+        outcome: "Optimized branch connectivity with embedded security at the edge and in the cloud.",
+        pillars: [{ label: "Connect", color: "#02c8ff" }, { label: "Security", color: "#ff007f" }],
+        familyCount: 9,
+        hasStack: true,
+        bundle: "Cloud Branch (SASE)",
+        problems: [
+          { quote: "MPLS costs are crushing us but apps still feel slow at branches.", line: "Application-aware routing with integrated security." }
+        ],
+        narrative: "SD-WAN edge at branch → Secure Access for cloud and private access → Umbrella DNS security → Duo identity → ThousandEyes path visibility.",
+        stack: [
+          { name: "Cisco SD-WAN", role: "Application-aware routing across MPLS, broadband, and LTE.", layer: "Edge", layerClass: "layer-platform" },
+          { name: "Cisco Secure Access", role: "SSE for branch breakout — secure direct-to-cloud.", layer: "Access", layerClass: "layer-access" },
+          { name: "Cisco Umbrella", role: "DNS-layer protection at first request.", layer: "Access", layerClass: "layer-access" },
+          { name: "Cisco ThousandEyes", role: "Prove whether slowness is WAN, ISP, or SaaS.", layer: "Observe", layerClass: "layer-observe" }
+        ]
+      },
+      {
+        id: "ai-networking",
+        name: "AI Networking",
+        outcome: "AI-driven assurance and automation across campus and data center.",
+        pillars: [{ label: "Connect", color: "#02c8ff" }, { label: "Observe", color: "#ff9000" }],
+        familyCount: 8,
+        hasStack: true,
+        bundle: null,
+        problems: [],
+        narrative: "Catalyst Center assurance + Silicon One efficiency for AI workloads + ThousandEyes for end-to-end SaaS observability.",
+        stack: [
+          { name: "Catalyst Center", role: "Intent-based automation and AI-guided troubleshooting.", layer: "Platform", layerClass: "layer-platform" },
+          { name: "Silicon One", role: "High-performance, efficient switching for AI/ML traffic.", layer: "Fabric", layerClass: "layer-platform" },
+          { name: "Cisco ThousandEyes", role: "Digital experience monitoring beyond the network edge.", layer: "Observe", layerClass: "layer-observe" }
+        ]
+      },
+      {
+        id: "contact-center",
+        name: "Contact Center",
+        outcome: "Cloud-native omnichannel service with AI routing and secure agent access.",
+        pillars: [{ label: "Workplace", color: "#2dce5c" }],
+        familyCount: 5,
+        hasStack: false,
+        bundle: "Cloud Contact Center",
+        problems: [
+          { quote: "Our on-prem CC can't add digital channels fast enough.", line: "Migrate to cloud contact center with AI and WFM." }
+        ],
+        narrative: null,
+        stack: []
+      },
+      {
+        id: "threat-detection",
+        name: "Threat Detection & Response",
+        outcome: "Detect and respond across endpoint, network, cloud, and SIEM.",
+        pillars: [{ label: "Security", color: "#ff007f" }, { label: "Observe", color: "#ff9000" }],
+        familyCount: 10,
+        hasStack: false,
+        bundle: "Threat Defense Platform",
+        problems: [
+          { quote: "Alerts everywhere but no unified story from endpoint to SIEM.", line: "Integrated detection and automated response." }
+        ],
+        narrative: null,
+        stack: []
+      },
+      {
+        id: "dc-mod",
+        name: "Data Center Modernization",
+        outcome: "Policy-driven fabric, modern compute, and cloud-operated lifecycle.",
+        pillars: [{ label: "Connect", color: "#02c8ff" }, { label: "Compute", color: "#0a60ff" }],
+        familyCount: 7,
+        hasStack: true,
+        bundle: "Data Center Modernization",
+        problems: [],
+        narrative: "Nexus + ACI for networking, UCS / HyperFlex for compute, Intersight for ops, Splunk for ITOps.",
+        stack: [
+          { name: "Nexus 9000", role: "High-density leaf/spine for modern east-west traffic.", layer: "Fabric", layerClass: "layer-platform" },
+          { name: "Cisco ACI", role: "Intent-based policy across the data center.", layer: "Platform", layerClass: "layer-platform" },
+          { name: "Cisco UCS", role: "Compute for virtualized and bare-metal workloads.", layer: "Compute", layerClass: "layer-platform" },
+          { name: "Cisco Intersight", role: "Cloud-delivered lifecycle for compute and fabric.", layer: "Platform", layerClass: "layer-platform" }
+        ]
+      },
+      {
+        id: "cloud-migration",
+        name: "Cloud Migration",
+        outcome: "Secure, observable paths as workloads move to cloud and SaaS.",
+        pillars: [{ label: "Connect", color: "#02c8ff" }, { label: "Security", color: "#ff007f" }],
+        familyCount: 12,
+        hasStack: false,
+        bundle: null,
+        problems: [],
+        narrative: null,
+        stack: []
+      },
+      {
+        id: "digital-transform",
+        name: "Digital Transformation",
+        outcome: "Modern platforms for customer experience, automation, and agility.",
+        pillars: [{ label: "Workplace", color: "#2dce5c" }, { label: "Observe", color: "#ff9000" }],
+        familyCount: 9,
+        hasStack: false,
+        bundle: null,
+        problems: [],
+        narrative: null,
+        stack: []
+      },
+      {
+        id: "iot",
+        name: "IoT / Industrial",
+        outcome: "OT visibility, hardened connectivity, and zero-trust segmentation.",
+        pillars: [{ label: "Connect", color: "#02c8ff" }, { label: "Security", color: "#ff007f" }],
+        familyCount: 6,
+        hasStack: true,
+        bundle: "Industrial OT Security",
+        problems: [],
+        narrative: "Industrial Ethernet + Cyber Vision OT asset inventory + ISE micro-segmentation + Secure Firewall enforcement.",
+        stack: [
+          { name: "Industrial Ethernet", role: "Rugged switching for plant floor and field.", layer: "Edge", layerClass: "layer-platform" },
+          { name: "Cyber Vision", role: "Passive OT asset discovery and threat detection.", layer: "Observe", layerClass: "layer-observe" },
+          { name: "Cisco ISE", role: "Micro-segmentation between IT and OT zones.", layer: "Enforce", layerClass: "layer-enforce" }
+        ]
+      },
+      {
+        id: "net-auto",
+        name: "Network Automation",
+        outcome: "Intent-based operations across campus, WAN, DC, and compute.",
+        pillars: [{ label: "Connect", color: "#02c8ff" }],
+        familyCount: 5,
+        hasStack: true,
+        bundle: null,
+        problems: [],
+        narrative: "Catalyst Center (campus), SD-WAN (WAN), ACI (DC), Intersight (compute) — closed-loop assurance.",
+        stack: [
+          { name: "Catalyst Center", role: "Campus and branch automation and assurance.", layer: "Platform", layerClass: "layer-platform" },
+          { name: "Cisco ACI", role: "Data center policy automation.", layer: "Platform", layerClass: "layer-platform" },
+          { name: "Cisco Intersight", role: "Compute and cloud ops automation.", layer: "Platform", layerClass: "layer-platform" }
+        ]
+      }
+    ];
+
+    let activePersona = "";
+    let selectedId = null;
+
+    const ov = document.getElementById("solutions-ov");
+    const grid = document.getElementById("sol-grid");
+    const panel = document.getElementById("detail-panel");
+    const badge = document.getElementById("refarch-badge");
+
+    function renderCards(filter = "") {
+      const q = filter.trim().toLowerCase();
+      grid.innerHTML = "";
+      USE_CASES.filter(uc => {
+        if (!q) return true;
+        return uc.name.toLowerCase().includes(q) || uc.outcome.toLowerCase().includes(q);
+      }).forEach(uc => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "uc-card" + (selectedId === uc.id ? " selected" : "");
+        btn.dataset.id = uc.id;
+        const pillarHtml = uc.pillars.map(p =>
+          `<span class="uc-pillar" style="border-color:${p.color}55;color:${p.color}">${p.label}</span>`
+        ).join("");
+        btn.innerHTML = `
+          <div class="uc-card-top">
+            <h3>${uc.name}</h3>
+            <span class="uc-badge ${uc.hasStack ? "stack" : "filter"}">${uc.hasStack ? "Full stack" : "Filter only"}</span>
+          </div>
+          <p class="uc-outcome">${uc.outcome}</p>
+          <div class="uc-meta">${pillarHtml}<span class="uc-count">${uc.familyCount} families</span></div>
+          <span class="uc-cta">View solution →</span>`;
+        btn.addEventListener("click", () => openDetail(uc.id));
+        grid.appendChild(btn);
+      });
+    }
+
+    function openDetail(id) {
+      selectedId = id;
+      const uc = USE_CASES.find(u => u.id === id);
+      if (!uc) return;
+
+      renderCards(document.getElementById("sol-search").value);
+
+      document.getElementById("dp-title").textContent = uc.name;
+      document.getElementById("dp-outcome").textContent = uc.outcome;
+      document.getElementById("dp-narrative").textContent = uc.narrative || "Reference architecture narrative coming soon — use related problems and bundle below for now.";
+      document.getElementById("dp-narrative").style.opacity = uc.narrative ? "1" : "0.65";
+
+      const stackEl = document.getElementById("stack-list");
+      if (uc.stack.length) {
+        stackEl.innerHTML = uc.stack.map((item, i) => `
+          <div class="stack-item" title="Would jumpTo() this family on the graph">
+            <div class="stack-num">${i + 1}</div>
+            <div>
+              <div class="stack-name">${item.name}</div>
+              <div class="stack-role">${item.role}</div>
+            </div>
+            <span class="stack-layer ${item.layerClass}">${item.layer}</span>
+          </div>`).join("");
+      } else {
+        stackEl.innerHTML = `<p style="font-size:0.72rem;color:var(--muted);line-height:1.5;padding:8px 0">No REF_ARCH stack yet. Planner would show matching families from tags and the <strong>${uc.bundle || "related"}</strong> bundle.</p>`;
+      }
+
+      const probEl = document.getElementById("prob-list");
+      probEl.innerHTML = uc.problems.length
+        ? uc.problems.map(p => `<button type="button" class="prob-chip"><q>${p.quote}</q><span>${p.line}</span></button>`).join("")
+        : `<p style="font-size:0.72rem;color:var(--muted)">No curated problems linked yet.</p>`;
+
+      document.getElementById("dp-bundle").innerHTML = uc.bundle
+        ? `<strong>Recommended bundle:</strong> ${uc.bundle} — one-click add to account plan.`
+        : `<strong>Bundle:</strong> None mapped yet — stack built from family use-case tags.`;
+
+      panel.classList.add("open");
+      ov.classList.remove("open");
+    }
+
+    document.getElementById("open-solutions").addEventListener("click", () => {
+      ov.classList.add("open");
+      panel.classList.remove("open");
+      selectedId = null;
+      renderCards(document.getElementById("sol-search").value);
+    });
+    document.getElementById("close-solutions").addEventListener("click", () => ov.classList.remove("open"));
+    ov.addEventListener("click", e => { if (e.target === ov) ov.classList.remove("open"); });
+    document.getElementById("close-detail").addEventListener("click", () => {
+      panel.classList.remove("open");
+      badge.classList.remove("show");
+    });
+
+    document.getElementById("sol-search").addEventListener("input", e => renderCards(e.target.value));
+
+    document.querySelectorAll(".persona-chip").forEach(chip => {
+      chip.addEventListener("click", () => {
+        document.querySelectorAll(".persona-chip").forEach(c => c.classList.remove("on"));
+        chip.classList.add("on");
+        activePersona = chip.dataset.persona;
+        /* Mock: would reframe card outcomes via cpn-problems personaLine */
+      });
+    });
+
+    document.getElementById("btn-graph").addEventListener("click", () => {
+      const uc = USE_CASES.find(u => u.id === selectedId);
+      if (!uc) return;
+      badge.textContent = uc.hasStack
+        ? `${uc.name} reference architecture · click to clear`
+        : `${uc.name} · families highlighted (no REF_ARCH yet)`;
+      badge.classList.add("show");
+    });
+
+    document.getElementById("btn-stack").addEventListener("click", () => {
+      const uc = USE_CASES.find(u => u.id === selectedId);
+      alert(uc?.bundle ? `Would add bundle "${uc.bundle}" to Planner stack.` : "Would add tagged families to Planner stack.");
+    });
+
+    document.getElementById("btn-labs").addEventListener("click", () => {
+      alert("Would open existing learning path banner for this use case.");
+    });
+
+    renderCards();
+    /* Demo: open Solutions on load */
+    setTimeout(() => document.getElementById("open-solutions").click(), 400);
+  </script>
+</body>
+</html>

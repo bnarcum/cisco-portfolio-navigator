@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>V6 Beacon fan — pillar context</title>
+  <link rel="stylesheet" href="pillar-context-base.css"/>
+  <style>
+    .zone {
+      position: absolute;
+      left: 50%; top: 48%;
+      transform: translate(-50%, -50%);
+      width: min(860px, 94%);
+      min-height: 420px;
+      border-radius: 10px;
+      border: 2px solid var(--zone-color);
+      background: rgba(1, 10, 24, 0.72);
+      padding: 18px 20px 24px;
+    }
+    .zone-head {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .zone-head h2 {
+      font-size: 0.9rem;
+      color: var(--title-cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .zone-head h2 img { width: 22px; filter: brightness(0) invert(1); }
+    .zone-head .promise {
+      margin-top: 8px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #94a3b8;
+      max-width: 48ch;
+      margin-inline: auto;
+      line-height: 1.45;
+    }
+
+    .zone-graph {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      justify-content: center;
+      padding: 12px 0 40px;
+    }
+    .zone-graph .fam {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--zone-color) 30%, transparent);
+      border: 2px solid rgba(255,255,255,.22);
+      font-size: 0.54rem;
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+    }
+
+    .beacon-wrap {
+      position: absolute;
+      right: 22px;
+      bottom: 22px;
+      width: 56px;
+      height: 56px;
+      z-index: 10;
+    }
+    .beacon {
+      position: absolute;
+      right: 0; bottom: 0;
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--zone-color), #02c8ff);
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--zone-color) 50%, transparent);
+      animation: beaconPulse 2.5s ease infinite;
+      display: grid;
+      place-items: center;
+      color: #000;
+      font-size: 1.1rem;
+      font-weight: 700;
+      z-index: 2;
+      transition: transform .2s;
+    }
+    .beacon-wrap.open .beacon {
+      animation: none;
+      transform: rotate(45deg) scale(0.95);
+      background: rgba(255,255,255,.12);
+      color: #fff;
+      box-shadow: none;
+      border: 1px solid rgba(255,255,255,.2);
+    }
+    @keyframes beaconPulse {
+      0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--zone-color) 45%, transparent); }
+      50% { box-shadow: 0 0 0 14px transparent; }
+    }
+
+    .fan {
+      position: absolute;
+      right: 22px;
+      bottom: 22px;
+      width: 0; height: 0;
+      pointer-events: none;
+    }
+    .beacon-wrap.open .fan { pointer-events: auto; }
+
+    .fan-item {
+      position: absolute;
+      right: -20px;
+      bottom: -4px;
+      width: max-content;
+      max-width: 180px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(8, 16, 32, 0.94);
+      backdrop-filter: blur(10px);
+      font-size: 0.62rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      cursor: pointer;
+      opacity: 0;
+      transform: translate(0, 0) scale(0.6);
+      transition: transform 0.35s cubic-bezier(.34,1.4,.64,1), opacity 0.25s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .beacon-wrap.open .fan-item {
+      opacity: 1;
+      transform: translate(var(--fx), var(--fy)) scale(1);
+    }
+    .fan-item:hover, .fan-item.sel {
+      border-color: var(--zone-color);
+      background: color-mix(in srgb, var(--zone-color) 15%, rgba(8,16,32,.94));
+    }
+
+    .detail-pop {
+      position: absolute;
+      right: 90px;
+      bottom: 90px;
+      width: 260px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: rgba(6, 14, 28, 0.96);
+      border: 1px solid color-mix(in srgb, var(--zone-color) 40%, transparent);
+      box-shadow: 0 16px 50px rgba(0,0,0,.45);
+      opacity: 0;
+      transform: translateY(8px) scale(0.96);
+      transition: opacity .25s, transform .25s;
+      pointer-events: none;
+      z-index: 11;
+    }
+    .detail-pop.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+    .detail-pop kbd {
+      font-size: 0.55rem;
+      font-weight: 700;
+      color: var(--zone-color);
+      text-transform: uppercase;
+    }
+    .detail-pop h3 { font-size: 0.76rem; color: #e2e8f0; margin: 4px 0 8px; line-height: 1.3; }
+    .detail-pop p { font-size: 0.65rem; color: var(--muted); line-height: 1.45; }
+
+    .beacon-hint {
+      position: absolute;
+      right: 74px;
+      bottom: 34px;
+      font-size: 0.58rem;
+      color: var(--subtle);
+      white-space: nowrap;
+      opacity: 1;
+      transition: opacity .2s;
+    }
+    .beacon-wrap.open + .beacon-hint,
+    .beacon-wrap.open ~ .beacon-hint { opacity: 0; }
+  </style>
+</head>
+<body>
+  <div class="mockup-shell">
+    <p class="back"><a href="pillar-context-gallery.html">← All versions</a></p>
+    <p class="pitch">Zero chrome until engaged — pulsing beacon opens a radial fan. Pick a value prop; detail appears beside the fan.</p>
+    <div class="controls"></div>
+    <div class="chrome">
+      <div class="topbar"></div>
+      <div class="actionbar"></div>
+      <div class="canvas-wrap" style="min-height:520px">
+        <div class="zone" id="zone">
+          <header class="zone-head">
+            <h2><img id="icon" src="" alt=""/><span id="title"></span></h2>
+            <p class="promise" id="promise"></p>
+          </header>
+          <div class="zone-graph" id="graph"></div>
+
+          <div class="beacon-wrap" id="beaconWrap">
+            <div class="fan" id="fan"></div>
+            <button type="button" class="beacon" id="beacon" aria-label="Show value props">+</button>
+          </div>
+          <span class="beacon-hint">Why this pillar?</span>
+
+          <div class="detail-pop" id="detail">
+            <kbd id="detKbd"></kbd>
+            <h3 id="detTitle"></h3>
+            <p id="detBody"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="pillar-context-data.js"></script>
+  <script src="pillar-context-chrome.js"></script>
+  <script>
+    let pillarId = "ai-dc", fanOpen = false, sel = -1;
+
+    function fanPositions(n) {
+      const positions = [];
+      const start = 200, end = 340;
+      for (let i = 0; i < n; i++) {
+        const t = n === 1 ? 0.5 : i / (n - 1);
+        const deg = start + (end - start) * t;
+        const rad = deg * Math.PI / 180;
+        const dist = 100 + (i % 2) * 12;
+        positions.push({
+          fx: Math.cos(rad) * -dist + "px",
+          fy: Math.sin(rad) * -dist + "px"
+        });
+      }
+      return positions;
+    }
+
+    function render() {
+      const p = PILLAR_CTX[pillarId];
+      document.documentElement.style.setProperty("--zone-color", p.color);
+      document.getElementById("icon").src = p.icon;
+      document.getElementById("title").textContent = p.label;
+      document.getElementById("promise").textContent = p.promise;
+      document.getElementById("graph").innerHTML = p.families.map(f =>
+        `<span class="fam" title="${f.label}">${f.abbr}</span>`).join("");
+
+      const pos = fanPositions(p.highlights.length);
+      document.getElementById("fan").innerHTML = p.highlights.map((h, i) => `
+        <button type="button" class="fan-item${sel === i ? " sel" : ""}" data-i="${i}"
+          style="--fx:${pos[i].fx};--fy:${pos[i].fy};transition-delay:${i * 40}ms">${h.title}</button>`).join("");
+
+      fanOpen = false;
+      sel = -1;
+      document.getElementById("beaconWrap").classList.remove("open");
+      document.getElementById("detail").classList.remove("show");
+    }
+
+    document.getElementById("beacon").onclick = () => {
+      fanOpen = !fanOpen;
+      document.getElementById("beaconWrap").classList.toggle("open", fanOpen);
+      if (!fanOpen) {
+        document.getElementById("detail").classList.remove("show");
+        sel = -1;
+        document.querySelectorAll(".fan-item").forEach(el => el.classList.remove("sel"));
+      }
+    };
+
+    document.getElementById("fan").addEventListener("click", e => {
+      const b = e.target.closest(".fan-item");
+      if (!b) return;
+      sel = +b.dataset.i;
+      const p = PILLAR_CTX[pillarId];
+      const h = p.highlights[sel];
+      document.querySelectorAll(".fan-item").forEach(el => el.classList.toggle("sel", +el.dataset.i === sel));
+      document.getElementById("detKbd").textContent = `Value prop ${sel + 1}`;
+      document.getElementById("detTitle").textContent = h.title;
+      document.getElementById("detBody").textContent = h.body;
+      document.getElementById("detail").classList.add("show");
+    });
+
+    document.getElementById("zone").addEventListener("click", e => {
+      if (e.target.closest(".beacon-wrap") || e.target.closest(".detail-pop") || e.target.closest(".fan-item")) return;
+      if (fanOpen) {
+        fanOpen = false;
+        document.getElementById("beaconWrap").classList.remove("open");
+        document.getElementById("detail").classList.remove("show");
+      }
+    });
+
+    initPillarMockup({ onPillar: id => { pillarId = id; render(); } });
+    render();
+  </script>
+</body>
+</html>

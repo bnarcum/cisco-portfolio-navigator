@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Band D — chip strip</title>
+  <link rel="stylesheet" href="pillar-context-base.css"/>
+  <link rel="stylesheet" href="pillar-context-band.css"/>
+  <style>
+    .vp-strip {
+      flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      background: color-mix(in srgb, var(--zone-color) 5%, rgba(0,0,0,.18));
+      padding: 10px 16px;
+    }
+    .vp-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+    .vp-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 11px; border-radius: 999px; cursor: pointer;
+      font-size: 0.62rem; font-weight: 600; color: #cbd5e1;
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1);
+      transition: all .15s;
+    }
+    .vp-chip .n {
+      width: 15px; height: 15px; border-radius: 4px; display: grid; place-items: center;
+      font-size: 0.5rem; font-weight: 700; color: var(--zone-color);
+      background: color-mix(in srgb, var(--zone-color) 16%, transparent);
+    }
+    .vp-chip:hover { border-color: var(--zone-color); color: #fff; }
+    .vp-chip.active {
+      color: #fff; border-color: var(--zone-color);
+      background: color-mix(in srgb, var(--zone-color) 18%, transparent);
+    }
+    .vp-detail {
+      max-width: 640px; margin: 10px auto 0; text-align: center;
+      font-size: 0.66rem; line-height: 1.5; color: #dbeafe;
+      min-height: 1.4em;
+    }
+    .vp-detail strong { color: var(--zone-color); }
+  </style>
+</head>
+<body>
+  <div class="mockup-shell">
+    <p class="back"><a href="pillar-context-band-gallery.html">← Above/below mockups</a></p>
+    <p class="pitch"><strong>Band D · Chip strip</strong> — Minimal: value props collapse to numbered chips above the graph. Click one to reveal its detail inline. Lightest footprint.</p>
+    <div class="controls"></div>
+    <div class="chrome">
+      <div class="topbar"></div>
+      <div class="actionbar"></div>
+      <div class="canvas-wrap" style="min-height:580px">
+        <div class="zone-panel band" id="zone">
+          <header class="band-header">
+            <div class="band-header-top"><img data-zone-icon src="" alt=""/><h2 data-zone-title></h2></div>
+            <div class="band-outcome"><span class="lbl">Outcome</span><p data-zone-promise></p></div>
+          </header>
+          <div class="vp-strip">
+            <div class="vp-chips" data-vp-chips></div>
+            <div class="vp-detail" data-vp-detail></div>
+          </div>
+          <div class="band-graph" data-band-graph></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="pillar-context-data.js"></script>
+  <script src="pillar-context-chrome.js"></script>
+  <script src="pillar-context-band-render.js"></script>
+  <script>
+    let pillarId = "ai-dc", active = 0;
+    function render(){
+      const root = document.getElementById("zone");
+      const p = PILLAR_CTX[pillarId];
+      renderBandHeader(root, p);
+      renderBandGraph(root, p);
+      const chips = root.querySelector("[data-vp-chips]");
+      const detail = root.querySelector("[data-vp-detail]");
+      chips.innerHTML = p.highlights.map((h, i) =>
+        `<button class="vp-chip${i === active ? " active" : ""}" data-i="${i}"><span class="n">${i + 1}</span>${bandEsc(h.title)}</button>`).join("");
+      const show = i => {
+        active = i;
+        chips.querySelectorAll(".vp-chip").forEach((c, ci) => c.classList.toggle("active", ci === i));
+        detail.innerHTML = `<strong>${bandEsc(p.highlights[i].title)}.</strong> ${bandEsc(p.highlights[i].body)}`;
+      };
+      chips.querySelectorAll(".vp-chip").forEach(c => c.addEventListener("click", () => show(+c.dataset.i)));
+      show(Math.min(active, p.highlights.length - 1));
+    }
+    initPillarMockup({ onPillar: id => { pillarId = id; active = 0; render(); } });
+    render();
+  </script>
+</body>
+</html>

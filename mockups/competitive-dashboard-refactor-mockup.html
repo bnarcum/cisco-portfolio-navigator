@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>CPN — Competitive + Dashboard Refactor Mockup</title>
+  <style>
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT"), local("CiscoSansTT"),
+           url("../fonts/CiscoSansTT-Regular.woff2") format("woff2");
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT Bold"), local("CiscoSansTT Bold"),
+           url("../fonts/CiscoSansTT-Bold.woff2") format("woff2");
+      font-weight: 700;
+      font-display: swap;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #060b14;
+      --surface-0: #0a101c;
+      --surface-1: #0f1726;
+      --surface-2: #141e30;
+      --surface-3: #1a2740;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(2, 200, 255, 0.22);
+      --text: #f0f4f8;
+      --muted: #8b95a5;
+      --subtle: #5c6573;
+      --accent: #02c8ff;
+      --blue: #0a60ff;
+      --green: #2dce5c;
+      --orange: #ff9000;
+      --pink: #ff007f;
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-pill: 999px;
+
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 20px;
+      --space-6: 24px;
+
+      --header-h: 56px;
+      --rail-w: 272px;
+      --planner-w: 380px;
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: "CiscoSansTT", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    /* ── Page intro (outside app frame) ── */
+    .page-intro {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: var(--space-5) var(--space-4) var(--space-3);
+      text-align: center;
+    }
+    .page-intro h1 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+    }
+    .page-intro p {
+      margin-top: var(--space-2);
+      font-size: 0.78rem;
+      color: var(--muted);
+      max-width: 62ch;
+      margin-inline: auto;
+      line-height: 1.55;
+    }
+    .page-intro .chips {
+      display: flex;
+      gap: var(--space-2);
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: var(--space-3);
+    }
+    .page-intro .chip {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: var(--space-1) var(--space-3);
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border-strong);
+      color: #7eeaff;
+    }
+    .page-intro .chip.alt {
+      border-color: rgba(45, 206, 92, 0.35);
+      color: #7dffb0;
+    }
+
+    /* ── App shell ── */
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 100px);
+      min-height: 680px;
+      max-width: 1440px;
+      margin: 0 auto var(--space-5);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      background: var(--surface-0);
+    }
+
+    /* ── Header ── */
+    .header {
+      height: var(--header-h);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: 0 var(--space-4);
+      background: var(--surface-1);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      flex-shrink: 0;
+    }
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, var(--accent), var(--blue));
+    }
+    .brand-text { display: flex; flex-direction: column; line-height: 1.15; }
+    .brand-title { font-size: 0.82rem; font-weight: 700; color: var(--text); }
+    .brand-sub { font-size: 0.68rem; color: var(--muted); font-weight: 600; }
+
+    .search-wrap {
+      flex: 1;
+      max-width: 480px;
+      position: relative;
+    }
+    .search-wrap svg {
+      position: absolute;
+      left: var(--space-3);
+      top: 50%;
+      transform: translateY(-50%);
+      width: 14px;
+      height: 14px;
+      color: var(--subtle);
+      pointer-events: none;
+    }
+    .search-input {
+      width: 100%;
+      height: 36px;
+      padding: 0 var(--space-3) 0 36px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      font: inherit;
+      font-size: 0.8125rem;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .search-input:focus {
+      outline: none;
+      border-color: var(--border-strong);
+      box-shadow: 0 0 0 3px rgba(2, 200, 255, 0.12);
+    }
+    .search-input::placeholder { color: var(--subtle); }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-left: auto;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 36px;
+      padding: 0 var(--space-3);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      font: inherit;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    .btn:hover { background: var(--surface-3); border-color: rgba(255,255,255,0.14); }
+    .btn.ghost { background: transparent; color: var(--muted); }
+    .btn.primary {
+      background: linear-gradient(90deg, var(--blue), var(--accent));
+      border: none;
+      color: #000;
+    }
+    .btn.primary:hover { filter: brightness(1.06); }
+    .btn.icon-only { width: 36px; padding: 0; justify-content: center; }
+
+    /* ── Body: rail + main + planner ── */
+    .body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* ── Left filter rail ── */
+    .filter-rail {
+      width: var(--rail-w);
+      flex-shrink: 0;
+      background: var(--surface-1);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .rail-head {
+      padding: var(--space-4);
+      border-bottom: 1px solid var(--border);
+    }
+    .rail-head h2 {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--subtle);
+    }
+    .rail-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-3);
+    }
+
+    .filter-group {
+      margin-bottom: var(--space-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface-0);
+      overflow: hidden;
+    }
+    .filter-group summary {
+      list-style: none;
+      cursor: pointer;
+      padding: var(--space-3) var(--space-4);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+    .filter-group summary::-webkit-details-marker { display: none; }
+    .filter-group summary::after {
+      content: "▾";
+      font-size: 0.65rem;
+      color: var(--subtle);
+      transition: transform 0.15s;
+    }
+    .filter-group[open] summary::after { transform: rotate(180deg); }
+    .filter-group-body {
+      padding: 0 var(--space-3) var(--space-3);
+      border-top: 1px solid var(--border);
+    }
+
+    .vm-tabs {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+      padding-top: var(--space-2);
+    }
+    .vm-tab {
+      text-align: left;
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-sm);
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .vm-tab:hover { background: var(--surface-2); color: var(--text); }
+    .vm-tab.on {
+      background: rgba(2, 200, 255, 0.12);
+      color: var(--accent);
+      box-shadow: inset 0 0 0 1px rgba(2, 200, 255, 0.25);
+    }
+
+    .cat-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-1);
+      padding-top: var(--space-2);
+    }
+    .cat-pill {
+      padding: var(--space-1) var(--space-2);
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .cat-pill.on {
+      border-color: rgba(2, 200, 255, 0.4);
+      background: rgba(2, 200, 255, 0.1);
+      color: var(--accent);
+    }
+
+    .select-field {
+      width: 100%;
+      margin-top: var(--space-2);
+      height: 34px;
+      padding: 0 var(--space-3);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      font: inherit;
+      font-size: 0.75rem;
+    }
+
+    /* Competitive section — key mockup feature */
+    .comp-search {
+      width: 100%;
+      height: 34px;
+      margin-top: var(--space-2);
+      padding: 0 var(--space-3);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      font: inherit;
+      font-size: 0.75rem;
+    }
+    .comp-hint {
+      font-size: 0.68rem;
+      color: var(--subtle);
+      margin-top: var(--space-2);
+      line-height: 1.45;
+    }
+    .comp-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-1);
+      margin-top: var(--space-2);
+      max-height: 140px;
+      overflow-y: auto;
+    }
+    .comp-chip {
+      padding: var(--space-1) var(--space-2);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .comp-chip:hover { border-color: rgba(255, 144, 0, 0.35); color: var(--text); }
+    .comp-chip.sel {
+      border-color: rgba(255, 144, 0, 0.5);
+      background: rgba(255, 144, 0, 0.12);
+      color: #ffc266;
+    }
+    .comp-chip.legacy {
+      border-style: dashed;
+    }
+    .comp-chip.legacy.sel {
+      border-color: rgba(2, 200, 255, 0.45);
+      background: rgba(2, 200, 255, 0.1);
+      color: var(--accent);
+    }
+
+    .rail-foot {
+      padding: var(--space-3) var(--space-4);
+      border-top: 1px solid var(--border);
+      font-size: 0.65rem;
+      color: var(--subtle);
+    }
+
+    /* ── Main canvas ── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      position: relative;
+    }
+    .canvas-toolbar {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-2) var(--space-4);
+      background: rgba(6, 11, 20, 0.6);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .canvas-toolbar .crumb {
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+    .canvas-toolbar .crumb b { color: var(--accent); font-weight: 700; }
+    .canvas-toolbar .spacer { flex: 1; }
+    .status-pill {
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: var(--space-1) var(--space-3);
+      border-radius: var(--radius-pill);
+      background: rgba(45, 206, 92, 0.12);
+      border: 1px solid rgba(45, 206, 92, 0.3);
+      color: #7dffb0;
+    }
+
+    .canvas {
+      flex: 1;
+      position: relative;
+      background:
+        radial-gradient(circle at 25% 35%, rgba(10, 96, 255, 0.07), transparent 50%),
+        radial-gradient(circle at 75% 65%, rgba(2, 200, 255, 0.05), transparent 45%),
+        var(--surface-0);
+    }
+    .canvas-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+    .canvas-hint {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--subtle);
+      font-size: 0.78rem;
+      pointer-events: none;
+    }
+
+    /* Family context bar (bottom) */
+    .context-bar {
+      position: absolute;
+      bottom: var(--space-4);
+      left: var(--space-4);
+      right: var(--space-4);
+      max-width: 520px;
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 38, 0.92);
+      backdrop-filter: blur(12px);
+      box-shadow: var(--shadow);
+    }
+    .context-bar h3 {
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin-bottom: var(--space-1);
+    }
+    .context-bar p {
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: var(--space-3);
+    }
+    .eval-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      align-items: center;
+    }
+    .eval-label {
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--subtle);
+    }
+    .eval-tag {
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: var(--space-1) var(--space-2);
+      border-radius: var(--radius-sm);
+      background: rgba(255, 144, 0, 0.1);
+      border: 1px solid rgba(255, 144, 0, 0.25);
+      color: #ffc266;
+      cursor: pointer;
+    }
+    .eval-tag:hover { background: rgba(255, 144, 0, 0.18); }
+
+    /* ── Planner panel ── */
+    .planner {
+      width: var(--planner-w);
+      flex-shrink: 0;
+      background: var(--surface-1);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .planner-head {
+      padding: var(--space-4);
+      border-bottom: 1px solid var(--border);
+    }
+    .planner-head h2 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .planner-head p {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: var(--space-1);
+    }
+    .planner-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-4);
+    }
+
+    .planner-section {
+      margin-bottom: var(--space-4);
+    }
+    .planner-section-title {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--subtle);
+      margin-bottom: var(--space-2);
+    }
+
+    .stack-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-1);
+    }
+    .stack-chip {
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: var(--space-1) var(--space-2);
+      border-radius: var(--radius-sm);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .planner-tabs {
+      display: flex;
+      gap: var(--space-1);
+      margin-bottom: var(--space-3);
+      padding: var(--space-1);
+      background: var(--surface-0);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+    .planner-tab {
+      flex: 1;
+      padding: var(--space-2);
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.68rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .planner-tab.on {
+      background: var(--surface-3);
+      color: var(--text);
+    }
+
+    .upgrade-card {
+      padding: var(--space-3);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: var(--surface-0);
+      margin-bottom: var(--space-2);
+    }
+    .upgrade-card.competitive {
+      border-left: 3px solid var(--orange);
+    }
+    .upgrade-from {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #ffc266;
+    }
+    .upgrade-arrow {
+      color: var(--subtle);
+      margin: 0 var(--space-1);
+      font-size: 0.7rem;
+    }
+    .upgrade-to {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .upgrade-reason {
+      font-size: 0.7rem;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-top: var(--space-2);
+    }
+    .upgrade-meta {
+      font-size: 0.62rem;
+      color: var(--subtle);
+      margin-top: var(--space-2);
+      font-weight: 600;
+    }
+    .upgrade-actions {
+      display: flex;
+      gap: var(--space-2);
+      margin-top: var(--space-3);
+    }
+    .upgrade-actions .btn {
+      height: 32px;
+      font-size: 0.68rem;
+      padding: 0 var(--space-3);
+    }
+
+    .planner-foot {
+      padding: var(--space-4);
+      border-top: 1px solid var(--border);
+    }
+    .planner-foot .btn { width: 100%; justify-content: center; height: 40px; }
+
+    .empty-state {
+      padding: var(--space-5);
+      text-align: center;
+      border-radius: var(--radius-md);
+      border: 1px dashed var(--border);
+      color: var(--subtle);
+      font-size: 0.72rem;
+      line-height: 1.5;
+    }
+
+    /* Layout toggle demo */
+    .layout-toggle {
+      display: flex;
+      gap: var(--space-1);
+      margin-top: var(--space-3);
+      justify-content: center;
+    }
+    .layout-toggle button {
+      font-size: 0.68rem;
+      padding: var(--space-1) var(--space-3);
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border);
+      background: var(--surface-1);
+      color: var(--muted);
+      cursor: pointer;
+      font: inherit;
+      font-weight: 600;
+    }
+    .layout-toggle button.on {
+      border-color: var(--border-strong);
+      color: var(--accent);
+      background: rgba(2, 200, 255, 0.08);
+    }
+
+    /* Compact toolbar mode */
+    .app.compact .filter-rail { display: none; }
+    .app.compact .compact-toolbar {
+      display: flex;
+    }
+    .compact-toolbar {
+      display: none;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-4);
+      background: var(--surface-1);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .compact-toolbar .filter-dropdown {
+      position: relative;
+    }
+    .compact-toolbar .filter-dropdown summary {
+      list-style: none;
+      height: 34px;
+      padding: 0 var(--space-3);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+    }
+    .compact-toolbar .filter-dropdown summary::-webkit-details-marker { display: none; }
+    .compact-toolbar .filter-dropdown[open] summary {
+      border-color: var(--border-strong);
+    }
+    .compact-toolbar .dropdown-panel {
+      position: absolute;
+      top: calc(100% + var(--space-1));
+      left: 0;
+      min-width: 220px;
+      padding: var(--space-3);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      box-shadow: var(--shadow);
+      z-index: 20;
+    }
+
+    @media (max-width: 1100px) {
+      .filter-rail { width: 240px; }
+      .planner { width: 320px; }
+    }
+    @media (max-width: 900px) {
+      .app { height: auto; min-height: 600px; }
+      .body { flex-direction: column; }
+      .filter-rail { width: 100%; max-height: 200px; border-right: none; border-bottom: 1px solid var(--border); }
+      .planner { width: 100%; max-height: 360px; border-left: none; border-top: 1px solid var(--border); }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-intro">
+    <h1>Competitive intel + dashboard refactor mockup</h1>
+    <p>
+      Unified filter rail (or compact toolbar), competitive/incumbent selection wired to Upgrades,
+      and family context bar — enterprise SaaS spacing with consistent <code>8 / 12 / 16px</code> radii.
+    </p>
+    <div class="chips">
+      <span class="chip">Filter rail layout</span>
+      <span class="chip alt">Competitive displacement</span>
+      <span class="chip">Toggle compact toolbar below</span>
+    </div>
+    <div class="layout-toggle">
+      <button type="button" class="on" id="mode-rail">Sidebar filters</button>
+      <button type="button" id="mode-compact">Compact toolbar</button>
+    </div>
+  </div>
+
+  <div class="app" id="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"></div>
+        <div class="brand-text">
+          <span class="brand-title">Cisco Portfolio</span>
+          <span class="brand-sub">Navigator</span>
+        </div>
+      </div>
+      <div class="search-wrap">
+        <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M10.5 10.5L13.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <input type="search" class="search-input" id="global-search" placeholder="Search products, competitors, use cases…" autocomplete="off"/>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="btn ghost">Guided Plan</button>
+        <button type="button" class="btn">dCloud</button>
+        <button type="button" class="btn">Ask AI</button>
+        <button type="button" class="btn primary" id="planner-toggle">Account Planner</button>
+        <button type="button" class="btn icon-only ghost" title="More">⋯</button>
+      </div>
+    </header>
+
+    <!-- Compact toolbar (alternate layout) -->
+    <div class="compact-toolbar">
+      <details class="filter-dropdown">
+        <summary>View · Families</summary>
+        <div class="dropdown-panel">
+          <div class="vm-tabs">
+            <button type="button" class="vm-tab">Overview</button>
+            <button type="button" class="vm-tab on">Families</button>
+            <button type="button" class="vm-tab">Composition</button>
+            <button type="button" class="vm-tab">Spatial</button>
+          </div>
+        </div>
+      </details>
+      <details class="filter-dropdown">
+        <summary>Category · All</summary>
+        <div class="dropdown-panel">
+          <div class="cat-pills">
+            <span class="cat-pill on">All</span>
+            <span class="cat-pill">Network</span>
+            <span class="cat-pill">Security</span>
+            <span class="cat-pill">Collab</span>
+          </div>
+        </div>
+      </details>
+      <details class="filter-dropdown">
+        <summary>Use case · Any</summary>
+        <div class="dropdown-panel">
+          <select class="select-field"><option>All use cases</option><option>Zero Trust</option><option>SD-WAN / SASE</option></select>
+        </div>
+      </details>
+      <details class="filter-dropdown">
+        <summary>Competitive · <span id="compact-comp-count">0</span> selected</summary>
+        <div class="dropdown-panel" style="min-width:260px">
+          <input type="search" class="comp-search" id="comp-search-compact" placeholder="Fortinet, Zscaler…"/>
+          <div class="comp-grid" id="comp-grid-compact"></div>
+        </div>
+      </details>
+      <button type="button" class="btn ghost" style="margin-left:auto;height:34px">Reset filters</button>
+    </div>
+
+    <div class="body">
+      <!-- Left filter rail -->
+      <aside class="filter-rail">
+        <div class="rail-head">
+          <h2>Explore &amp; filter</h2>
+        </div>
+        <div class="rail-scroll">
+          <details class="filter-group" open>
+            <summary>View</summary>
+            <div class="filter-group-body">
+              <div class="vm-tabs">
+                <button type="button" class="vm-tab">Overview</button>
+                <button type="button" class="vm-tab on">Families</button>
+                <button type="button" class="vm-tab">Composition</button>
+                <button type="button" class="vm-tab">All products</button>
+                <button type="button" class="vm-tab">Spatial</button>
+              </div>
+            </div>
+          </details>
+
+          <details class="filter-group" open>
+            <summary>Portfolio area</summary>
+            <div class="filter-group-body">
+              <div class="cat-pills">
+                <span class="cat-pill on">All</span>
+                <span class="cat-pill">Networking</span>
+                <span class="cat-pill">Security</span>
+                <span class="cat-pill">Collaboration</span>
+                <span class="cat-pill">Computing</span>
+                <span class="cat-pill">Observability</span>
+              </div>
+            </div>
+          </details>
+
+          <details class="filter-group">
+            <summary>Use case</summary>
+            <div class="filter-group-body">
+              <select class="select-field">
+                <option>All use cases</option>
+                <option>Zero Trust Security</option>
+                <option>SD-WAN / SASE</option>
+                <option>Hybrid Work</option>
+                <option>Threat Detection &amp; Response</option>
+              </select>
+            </div>
+          </details>
+
+          <details class="filter-group">
+            <summary>Industry</summary>
+            <div class="filter-group-body">
+              <select class="select-field">
+                <option>All industries</option>
+                <option>Healthcare</option>
+                <option>Financial services</option>
+                <option>Manufacturing</option>
+              </select>
+            </div>
+          </details>
+
+          <details class="filter-group" open>
+            <summary>Incumbent &amp; competitive tech</summary>
+            <div class="filter-group-body">
+              <p class="comp-hint">What's installed today — Cisco legacy or third-party. Drives Upgrades and displacement narratives.</p>
+              <input type="search" class="comp-search" id="comp-search" placeholder="Search Fortinet, Zscaler, Zoom…"/>
+              <div class="comp-grid" id="comp-grid"></div>
+            </div>
+          </details>
+
+          <details class="filter-group">
+            <summary>Cisco legacy refresh</summary>
+            <div class="filter-group-body">
+              <div class="comp-grid" id="legacy-grid"></div>
+            </div>
+          </details>
+        </div>
+        <div class="rail-foot">Uses existing <code>COMPETITOR_LEGACY</code> data · sourced positioning only</div>
+      </aside>
+
+      <!-- Main -->
+      <main class="main">
+        <div class="canvas-toolbar">
+          <span class="crumb">Families · <b>Secure Firewall</b> selected</span>
+          <span class="status-pill" id="filter-status">No competitive filters</span>
+          <span class="spacer"></span>
+          <button type="button" class="btn ghost" style="height:32px;font-size:0.68rem">Reset view</button>
+        </div>
+        <div class="canvas">
+          <div class="canvas-grid" aria-hidden="true"></div>
+          <div class="canvas-hint">Graph canvas (unchanged)</div>
+
+          <div class="context-bar">
+            <h3>Secure Firewall (Branch)</h3>
+            <p>NGFW with FTD — Snort IPS, AMP, URL filtering, and encrypted traffic analytics for branch and edge.</p>
+            <div class="eval-row">
+              <span class="eval-label">Often evaluated against</span>
+              <span class="eval-tag" data-comp="l-fortinet-fg">Fortinet FortiGate</span>
+              <span class="eval-tag" data-comp="l-paloalto-ngfw">Palo Alto NGFW</span>
+              <span class="eval-tag" data-comp="l-checkpoint">Check Point</span>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Planner -->
+      <aside class="planner" id="planner">
+        <div class="planner-head">
+          <h2>Account Planner</h2>
+          <p>Acme Corp · analyze stack, gaps, and displacement paths</p>
+        </div>
+        <div class="planner-scroll">
+          <div class="planner-section">
+            <div class="planner-section-title">Their products</div>
+            <div class="stack-chips">
+              <span class="stack-chip">Cisco SD-WAN</span>
+              <span class="stack-chip">Catalyst Center</span>
+              <span class="stack-chip">+ Add</span>
+            </div>
+          </div>
+
+          <div class="planner-section">
+            <div class="planner-tabs">
+              <button type="button" class="planner-tab">Suggestions</button>
+              <button type="button" class="planner-tab on">Upgrades</button>
+              <button type="button" class="planner-tab">Outcomes</button>
+              <button type="button" class="planner-tab">Coverage</button>
+            </div>
+            <div id="upgrades-list">
+              <div class="empty-state" id="upgrades-empty">
+                Select incumbent or competitive tech in the filter rail — or click tags on the family card below.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="planner-foot">
+          <button type="button" class="btn primary">Analyze account →</button>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const COMPETITORS = [
+      { id: "l-fortinet-fg", name: "Fortinet FortiGate", replaces: ["Secure Firewall", "Secure Access"], reason: "Secure Firewall + Secure Access provide equivalent UTM and SASE with native ISE/Catalyst integration and Talos intelligence — without FortiOS lock-in." },
+      { id: "l-paloalto-ngfw", name: "Palo Alto NGFW", replaces: ["Secure Firewall", "Hypershield"], reason: "Secure Firewall + Hypershield delivers comparable NGFW with deeper Talos threat intel, native XDR integration, and unified identity/network policy." },
+      { id: "l-zscaler", name: "Zscaler SSE", replaces: ["Secure Access", "Umbrella"], reason: "Cisco Secure Access consolidates ZTNA, SWG, CASB, and DNS security with native Duo/ISE and ThousandEyes observability." },
+      { id: "l-aruba-cx", name: "Aruba CX (HPE)", replaces: ["Catalyst Access", "Catalyst Core"], reason: "Catalyst 9000 with Catalyst Center delivers EVPN/VXLAN with TrustSec and AI assurance." },
+      { id: "l-mist", name: "Juniper Mist", replaces: ["Catalyst Wireless", "Meraki Wireless"], reason: "Catalyst or Meraki wireless with Catalyst Center AI assurance and broader fabric integration." },
+      { id: "l-crowdstrike", name: "CrowdStrike Falcon", replaces: ["Secure Endpoint", "XDR"], reason: "Secure Endpoint + XDR correlate across network, email, and identity with Talos-curated intel." },
+      { id: "l-okta", name: "Okta", replaces: ["Cisco Duo"], reason: "Duo delivers MFA and risk-based access with native ISE, Secure Access, and Webex integration." },
+      { id: "l-zoom", name: "Zoom", replaces: ["Webex App", "Room Systems"], reason: "Webex Suite with AI Codec, Control Hub governance, and full Cisco security stack integration." },
+      { id: "l-velocloud", name: "VMware VeloCloud", replaces: ["Cisco SD-WAN", "Meraki MX"], reason: "Cisco SD-WAN or Meraki MX with deeper Umbrella, ThousandEyes, and Secure Access alignment." },
+    ];
+
+    const LEGACY = [
+      { id: "l-anyconnect", name: "AnyConnect VPN", legacy: true, replaces: ["Secure Access"], reason: "Secure Access replaces full-tunnel VPN with ZTNA, DNS security, and cloud firewall." },
+      { id: "l-asa-legacy", name: "Cisco ASA (classic)", legacy: true, replaces: ["Secure Firewall"], reason: "Secure Firewall with FTD adds Snort IPS, AMP, and encrypted traffic analytics." },
+      { id: "l-jabber", name: "Cisco Jabber", legacy: true, replaces: ["Webex App"], reason: "Webex App is the modern unified client for messaging, meetings, and calling." },
+    ];
+
+    const selected = new Set();
+
+    function renderChip(el, items, gridId) {
+      const grid = document.getElementById(gridId);
+      if (!grid) return;
+      grid.innerHTML = items.map(c => `
+        <button type="button" class="comp-chip${c.legacy ? " legacy" : ""}${selected.has(c.id) ? " sel" : ""}" data-id="${c.id}">
+          ${c.name}
+        </button>`).join("");
+      grid.querySelectorAll(".comp-chip").forEach(btn => {
+        btn.addEventListener("click", () => toggleComp(btn.dataset.id));
+      });
+    }
+
+    function toggleComp(id) {
+      if (selected.has(id)) selected.delete(id);
+      else selected.add(id);
+      syncUI();
+    }
+
+    function syncUI() {
+      renderChip(null, COMPETITORS, "comp-grid");
+      renderChip(null, COMPETITORS, "comp-grid-compact");
+      renderChip(null, LEGACY, "legacy-grid");
+
+      document.querySelectorAll(".comp-chip").forEach(btn => {
+        btn.classList.toggle("sel", selected.has(btn.dataset.id));
+      });
+
+      const n = selected.size;
+      document.getElementById("compact-comp-count").textContent = n;
+      document.getElementById("filter-status").textContent =
+        n ? `${n} incumbent${n !== 1 ? "s" : ""} selected` : "No competitive filters";
+
+      const list = document.getElementById("upgrades-list");
+      const empty = document.getElementById("upgrades-empty");
+      if (!n) {
+        list.innerHTML = "";
+        list.appendChild(empty);
+        empty.style.display = "block";
+        return;
+      }
+
+      const cards = [];
+      [...selected].forEach(sid => {
+        const item = [...COMPETITORS, ...LEGACY].find(x => x.id === sid);
+        if (!item) return;
+        cards.push(`
+          <div class="upgrade-card ${item.legacy ? "" : "competitive"}">
+            <div>
+              <span class="upgrade-from">${item.name}</span>
+              <span class="upgrade-arrow">→</span>
+              <span class="upgrade-to">${item.replaces.join(", ")}</span>
+            </div>
+            <div class="upgrade-reason">${item.reason}</div>
+            <div class="upgrade-meta">${item.legacy ? "Legacy refresh" : "Competitive displacement"} · curated positioning</div>
+            <div class="upgrade-actions">
+              <button type="button" class="btn primary" style="flex:1">+ Add Cisco stack</button>
+              <button type="button" class="btn ghost">Show on graph</button>
+            </div>
+          </div>`);
+      });
+      list.innerHTML = cards.join("");
+    }
+
+    function filterChips(q, gridId) {
+      const ql = q.trim().toLowerCase();
+      const items = gridId.includes("legacy") ? LEGACY : COMPETITORS;
+      const filtered = ql ? items.filter(c => c.name.toLowerCase().includes(ql)) : items;
+      renderChip(null, filtered, gridId);
+    }
+
+    document.getElementById("comp-search")?.addEventListener("input", e => filterChips(e.target.value, "comp-grid"));
+    document.getElementById("comp-search-compact")?.addEventListener("input", e => filterChips(e.target.value, "comp-grid-compact"));
+
+    document.querySelectorAll(".eval-tag").forEach(tag => {
+      tag.addEventListener("click", () => toggleComp(tag.dataset.comp));
+    });
+
+    document.querySelectorAll(".vm-tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        tab.closest(".vm-tabs")?.querySelectorAll(".vm-tab").forEach(t => t.classList.remove("on"));
+        tab.classList.add("on");
+      });
+    });
+
+    document.querySelectorAll(".cat-pill").forEach(pill => {
+      pill.addEventListener("click", () => {
+        pill.closest(".cat-pills")?.querySelectorAll(".cat-pill").forEach(p => p.classList.remove("on"));
+        pill.classList.add("on");
+      });
+    });
+
+    document.getElementById("mode-rail").addEventListener("click", () => {
+      document.getElementById("app").classList.remove("compact");
+      document.getElementById("mode-rail").classList.add("on");
+      document.getElementById("mode-compact").classList.remove("on");
+    });
+    document.getElementById("mode-compact").addEventListener("click", () => {
+      document.getElementById("app").classList.add("compact");
+      document.getElementById("mode-compact").classList.add("on");
+      document.getElementById("mode-rail").classList.remove("on");
+    });
+
+    document.getElementById("global-search").addEventListener("keydown", e => {
+      if (e.key === "Enter" && /fortinet|zscaler|palo/i.test(e.target.value)) {
+        toggleComp(e.target.value.toLowerCase().includes("fortinet") ? "l-fortinet-fg" : "l-zscaler");
+      }
+    });
+
+    syncUI();
+  </script>
+</body>
+</html>

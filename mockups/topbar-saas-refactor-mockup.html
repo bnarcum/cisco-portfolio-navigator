@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>CPN — Top Bar Refactor Mockup v2</title>
+  <style>
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT"), local("CiscoSansTT"),
+           url("../fonts/CiscoSansTT-Regular.woff2") format("woff2");
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT Bold"), local("CiscoSansTT Bold"),
+           url("../fonts/CiscoSansTT-Bold.woff2") format("woff2");
+      font-weight: 700;
+      font-display: swap;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #050a12;
+      --canvas: #071018;
+      --chrome: rgba(10, 16, 28, 0.94);
+      --chrome2: rgba(8, 14, 24, 0.88);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.14);
+      --text: #eef4fa;
+      --muted: #8b96a8;
+      --subtle: #5a6578;
+      --accent: #02c8ff;
+      --blue: #0a60ff;
+      --net: #02c8ff;
+      --sec: #ff007f;
+      --col: #2dce5c;
+      --com: #3070e5;
+      --obs: #ff9000;
+      --font: "CiscoSansTT", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    [data-theme="light"] {
+      --bg: #eef2f8;
+      --canvas: #e4eaf2;
+      --chrome: rgba(255, 255, 255, 0.96);
+      --chrome2: rgba(248, 250, 252, 0.98);
+      --border: rgba(7, 24, 45, 0.1);
+      --border-strong: rgba(7, 24, 45, 0.16);
+      --text: #07182d;
+      --muted: #525e6c;
+      --subtle: #94a3b8;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .page-head {
+      text-align: center;
+      padding: 24px 20px 12px;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+    .page-head h1 { font-size: 1rem; font-weight: 700; color: var(--accent); letter-spacing: -0.02em; }
+    .page-head p { margin-top: 8px; font-size: 0.8rem; color: var(--muted); line-height: 1.55; }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 16px 20px;
+    }
+    .controls button {
+      font: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--chrome);
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .controls button.on {
+      background: rgba(2, 200, 255, 0.1);
+      border-color: rgba(2, 200, 255, 0.3);
+      color: var(--text);
+    }
+
+    .demo-grid {
+      display: grid;
+      gap: 24px;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 20px 40px;
+    }
+    @media (min-width: 1100px) {
+      .demo-grid.compare { grid-template-columns: 1fr 1fr; }
+    }
+
+    .demo-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
+    }
+    .demo-label {
+      padding: 9px 14px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--subtle);
+      background: var(--chrome2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .demo-label .tag {
+      font-size: 9px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      letter-spacing: 0.04em;
+      text-transform: none;
+    }
+    .tag.rec { background: rgba(2, 200, 255, 0.12); color: var(--accent); }
+    .tag.cur { background: rgba(255, 255, 255, 0.06); color: var(--muted); }
+
+    .demo-canvas {
+      position: relative;
+      height: 400px;
+      background: var(--canvas);
+    }
+    .demo-canvas::after {
+      content: "Graph canvas";
+      position: absolute;
+      inset: 88px 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--subtle);
+      font-size: 12px;
+      pointer-events: none;
+    }
+
+    /* shared chrome block */
+    .chrome {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 2;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── ROW 1: logo + search (same placement both variants) ── */
+    .row-search {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 14px;
+      background: var(--chrome);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+      border: none;
+      background: none;
+      color: inherit;
+      cursor: pointer;
+      font-family: inherit;
+      text-align: left;
+      padding: 0;
+    }
+    .logo-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(145deg, rgba(2, 200, 255, 0.15), rgba(48, 112, 229, 0.1));
+      border: 1px solid rgba(2, 200, 255, 0.2);
+      display: grid;
+      place-items: center;
+    }
+    .logo-mark svg { width: 22px; height: 22px; }
+    .logo-title { font-size: 14px; font-weight: 700; line-height: 1.1; }
+    .logo-rule {
+      display: block;
+      height: 1px;
+      width: 100%;
+      max-width: 140px;
+      margin: 3px 0;
+      background: linear-gradient(90deg, rgba(2, 200, 255, 0.6), rgba(255, 144, 0, 0.4), transparent);
+    }
+    .logo-sub { font-size: 11px; color: var(--muted); letter-spacing: 0.05em; }
+
+    .dv { width: 1px; height: 28px; background: var(--border); flex-shrink: 0; }
+
+    .sw {
+      position: relative;
+      flex: 1 1 480px;
+      min-width: 200px;
+    }
+    .sw .si {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 14px;
+      height: 14px;
+      color: var(--subtle);
+      pointer-events: none;
+    }
+    .sw input {
+      width: 100%;
+      font: inherit;
+      font-size: 13px;
+      padding: 9px 14px 9px 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.25);
+      color: var(--text);
+      outline: none;
+    }
+    [data-theme="light"] .sw input { background: rgba(7, 24, 45, 0.04); }
+    .sw input::placeholder { color: var(--subtle); }
+
+    /* current search — busier */
+    .current .sw input {
+      background: rgba(13, 40, 71, 0.55);
+    }
+
+    /* proposed search — refined, same spot */
+    .proposed .sw input {
+      border-color: var(--border-strong);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .proposed .sw input:focus {
+      border-color: rgba(2, 200, 255, 0.45);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 0 0 3px rgba(2, 200, 255, 0.08);
+    }
+
+    /* ── ROW 2: views + actions ── */
+    .row-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 6px 14px;
+      background: var(--chrome2);
+      border-bottom: 1px solid var(--border);
+    }
+    .row-actions-end {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    /* CURRENT view + buttons */
+    .current-vm {
+      display: inline-flex;
+      gap: 2px;
+      padding: 2px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.2);
+    }
+    .current-vm button {
+      font: inherit;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 5px 9px;
+      border: none;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .current-vm button.on {
+      background: linear-gradient(135deg, #3070e5, #1abbe9, #fd017f);
+      color: #fff;
+    }
+    .current-vm button.off { opacity: 0.4; }
+
+    .current .row-actions-end button {
+      font: inherit;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .current .cta-studio {
+      background: linear-gradient(135deg, rgba(48, 112, 229, 0.5), rgba(26, 187, 233, 0.35));
+      border-color: rgba(2, 200, 255, 0.35);
+      color: var(--text);
+    }
+    .current .cta-ai {
+      background: linear-gradient(135deg, rgba(253, 1, 127, 0.25), rgba(48, 112, 229, 0.3));
+      border-color: rgba(253, 1, 127, 0.35);
+    }
+    .current .cta-dcloud { border-color: rgba(2, 200, 255, 0.4); color: var(--accent); }
+
+    /* PROPOSED view tabs — underline style */
+    .pro-vm {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-shrink: 0;
+    }
+    .pro-vm button {
+      font: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 8px 11px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      position: relative;
+      white-space: nowrap;
+      transition: color 0.12s;
+    }
+    .pro-vm button:hover:not(:disabled) { color: var(--text); }
+    .pro-vm button:disabled { opacity: 0.35; cursor: not-allowed; }
+    .pro-vm button.on {
+      color: var(--text);
+    }
+    .pro-vm button.on::after {
+      content: "";
+      position: absolute;
+      left: 11px;
+      right: 11px;
+      bottom: 2px;
+      height: 2px;
+      border-radius: 2px;
+      background: var(--accent);
+      box-shadow: 0 0 8px rgba(2, 200, 255, 0.45);
+    }
+
+    .pro-sep {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+      margin: 0 4px;
+      flex-shrink: 0;
+    }
+
+    /* PROPOSED action buttons — all visible, tiered */
+    .proposed .row-actions-end button {
+      font: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 7px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.12s;
+    }
+    .proposed .btn-ghost {
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+    }
+    .proposed .btn-ghost:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+    }
+    .proposed .btn-outline {
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--muted);
+    }
+    .proposed .btn-outline:hover {
+      border-color: var(--border-strong);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+    }
+    .proposed .btn-outline svg { width: 13px; height: 13px; opacity: 0.85; }
+    .proposed .btn-plan {
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--muted);
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .proposed .btn-planner {
+      border: none;
+      background: var(--blue);
+      color: #fff;
+      padding: 7px 12px;
+      box-shadow: 0 2px 10px rgba(10, 96, 255, 0.25);
+    }
+    .proposed .btn-planner:hover { filter: brightness(1.08); }
+    .proposed .btn-planner svg { width: 13px; height: 13px; }
+
+    /* ── ROW 3: filters ── */
+    .row-filters {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 6px 14px;
+      background: var(--chrome2);
+    }
+
+    .current-pill {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+    }
+    .current-pill.net { background: var(--net); color: #001a24; }
+    .current-pill.sec { background: var(--sec); color: #fff; }
+    .current-pill.col { background: var(--col); color: #042f1e; }
+    .current-pill.com { background: var(--com); color: #fff; }
+    .current-pill.obs { background: var(--obs); color: #2a1600; }
+
+    .current-select {
+      margin-left: auto;
+      font: inherit;
+      font-size: 11px;
+      padding: 5px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.2);
+      color: var(--text);
+    }
+
+    .pro-cat {
+      font: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 11px 5px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      transition: all 0.12s;
+    }
+    .pro-cat::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .pro-cat.net::before { background: var(--net); }
+    .pro-cat.sec::before { background: var(--sec); }
+    .pro-cat.col::before { background: var(--col); }
+    .pro-cat.com::before { background: var(--com); }
+    .pro-cat.obs::before { background: var(--obs); }
+    .pro-cat.on {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--border-strong);
+      color: var(--text);
+    }
+    .pro-cat.off { opacity: 0.4; }
+
+    .pro-filter-end {
+      margin-left: auto;
+      display: flex;
+      gap: 6px;
+    }
+    .pro-select {
+      font: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 26px 5px 9px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.15);
+      color: var(--muted);
+      appearance: none;
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238b96a8' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+    }
+    [data-theme="light"] .pro-select { background-color: rgba(7, 24, 45, 0.03); }
+
+    .notes {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 20px 48px;
+    }
+    .notes h2 { font-size: 0.85rem; margin-bottom: 10px; }
+    .notes ul {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 10px;
+    }
+    .notes li {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.55;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--chrome2);
+    }
+    .notes li strong { color: var(--accent); display: block; margin-bottom: 4px; font-size: 11px; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body data-theme="dark">
+
+<header class="page-head">
+  <h1>Top bar — v2</h1>
+  <p>Same layout: logo + search on row 1, views + every action on row 2, filters on row 3. Refinement is typography, hierarchy, and quieter colors — not moving or hiding anything.</p>
+</header>
+
+<div class="controls">
+  <button type="button" id="btn-compare" class="on">Compare</button>
+  <button type="button" id="btn-proposed">Proposed only</button>
+  <button type="button" id="btn-theme">Light theme</button>
+</div>
+
+<div class="demo-grid compare" id="demo-grid">
+
+  <!-- CURRENT -->
+  <section class="demo-card" id="card-current">
+    <div class="demo-label">
+      <span>Current</span>
+      <span class="tag cur">Gradients compete · loud pills</span>
+    </div>
+    <div class="demo-canvas">
+      <div class="chrome current">
+        <div class="row-search">
+          <button type="button" class="logo">
+            <div class="logo-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" stroke="#02c8ff" stroke-width="1.5"/></svg></div>
+            <span>
+              <span class="logo-title">Cisco Portfolio</span>
+              <span class="logo-rule"></span>
+              <span class="logo-sub">Navigator</span>
+            </span>
+          </button>
+          <div class="dv"></div>
+          <div class="sw">
+            <svg class="si" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L13.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <input type="text" placeholder="Search products, models, use cases…" readonly/>
+          </div>
+        </div>
+        <div class="row-actions">
+          <div class="current-vm">
+            <button type="button">Overview</button>
+            <button type="button" class="on">Families</button>
+            <button type="button" class="off" disabled>Composition</button>
+            <button type="button">All</button>
+            <button type="button">Spatial</button>
+          </div>
+          <div class="row-actions-end">
+            <button type="button">Reset</button>
+            <button type="button">☀ Light</button>
+            <button type="button" class="cta-studio">▦ Design Studio</button>
+            <button type="button" class="cta-dcloud">☁ dCloud Labs</button>
+            <button type="button">◎ Guided Plan</button>
+            <button type="button" class="cta-ai">✦ Ask AI</button>
+            <button type="button">Untitled plan</button>
+            <button type="button">▣ Account Planner</button>
+          </div>
+        </div>
+        <div class="row-filters">
+          <button type="button" class="current-pill net">Networking</button>
+          <button type="button" class="current-pill sec">Security</button>
+          <button type="button" class="current-pill col">Collaboration</button>
+          <button type="button" class="current-pill com">Computing</button>
+          <button type="button" class="current-pill obs">Observability</button>
+          <select class="current-select"><option>All Use Cases</option></select>
+          <select class="current-select"><option>All Industries</option></select>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROPOSED -->
+  <section class="demo-card" id="card-proposed">
+    <div class="demo-label">
+      <span>Proposed</span>
+      <span class="tag rec">Same slots · calmer chrome</span>
+    </div>
+    <div class="demo-canvas">
+      <div class="chrome proposed">
+        <!-- Row 1: search stays here -->
+        <div class="row-search">
+          <button type="button" class="logo">
+            <div class="logo-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" stroke="#02c8ff" stroke-width="1.5"/></svg></div>
+            <span>
+              <span class="logo-title">Cisco Portfolio</span>
+              <span class="logo-rule"></span>
+              <span class="logo-sub">Navigator</span>
+            </span>
+          </button>
+          <div class="dv"></div>
+          <div class="sw">
+            <svg class="si" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L13.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <input type="text" placeholder="Search products, models, use cases…" readonly/>
+          </div>
+        </div>
+
+        <!-- Row 2: all actions visible -->
+        <div class="row-actions">
+          <nav class="pro-vm" aria-label="View mode">
+            <button type="button">Overview</button>
+            <button type="button" class="on">Families</button>
+            <button type="button" disabled>Composition</button>
+            <button type="button">All</button>
+            <button type="button">Spatial</button>
+          </nav>
+          <div class="pro-sep"></div>
+          <div class="row-actions-end">
+            <button type="button" class="btn-ghost">Reset</button>
+            <button type="button" class="btn-ghost">☀ Light</button>
+            <button type="button" class="btn-outline">
+              <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="5" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.3"/></svg>
+              Design Studio
+            </button>
+            <button type="button" class="btn-outline">
+              <svg viewBox="0 0 16 16" fill="none"><path d="M12 10c1.1 0 2-.9 2-2.1-.1-1-.9-1.8-1.9-2 .2-2-1.7-3.6-3.9-3.6-1.5 0-2.8.7-3.7 1.7-.8-1-2-1.6-3.4-1.6-2.6 0-4.7 1.8-4.7 4.2 0 .3 0 .5.1.8-1.2.4-2 1.5-2 2.8 0 1.7 1.4 3 3.1 3h9.5c1.9 0 3.4-1.5 3.4-3.3S13.9 10 12 10z" fill="currentColor"/></svg>
+              dCloud Labs
+            </button>
+            <button type="button" class="btn-outline">
+              <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v3.2l2 1.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+              Guided Plan
+            </button>
+            <button type="button" class="btn-outline">
+              <svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5l.7 2.4 2.4.7-2.4.7L8 7.7l-.7-2.4-2.4-.7 2.4-.7L8 1.5z" fill="currentColor"/></svg>
+              Ask AI
+            </button>
+            <button type="button" class="btn-plan">Untitled plan</button>
+            <button type="button" class="btn-planner">
+              <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" fill="currentColor"/><rect x="9" y="2" width="5" height="5" rx="1" fill="currentColor" opacity=".65"/><rect x="2" y="9" width="5" height="5" rx="1" fill="currentColor" opacity=".65"/><rect x="9" y="9" width="5" height="5" rx="1" fill="currentColor"/></svg>
+              Account Planner
+            </button>
+          </div>
+        </div>
+
+        <!-- Row 3: filters -->
+        <div class="row-filters">
+          <button type="button" class="pro-cat net on">Networking</button>
+          <button type="button" class="pro-cat sec on">Security</button>
+          <button type="button" class="pro-cat col on">Collaboration</button>
+          <button type="button" class="pro-cat com on">Computing</button>
+          <button type="button" class="pro-cat obs on">Observability</button>
+          <div class="pro-filter-end">
+            <select class="pro-select"><option>All use cases</option></select>
+            <select class="pro-select"><option>All industries</option></select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<section class="notes">
+  <h2>What changed (without moving search or hiding buttons)</h2>
+  <ul>
+    <li><strong>View tabs</strong>Underline active state replaces the rainbow gradient pill — reads like SaaS nav, not a promo banner.</li>
+    <li><strong>Action hierarchy</strong>Reset/Light are ghost. Studio, dCloud, Guided, Ask AI share one outline style — all still one click. Only Account Planner gets solid fill.</li>
+    <li><strong>Category filters</strong>Color moves to a small dot on neutral chips instead of full saturated pills.</li>
+    <li><strong>Search row</strong>Same logo | divider | search flex layout. Input gets a cleaner border and focus ring only.</li>
+    <li><strong>Unified chrome</strong>Two background tones (search row slightly elevated) tie the three rows into one glass block.</li>
+  </ul>
+</section>
+
+<script>
+  const grid = document.getElementById("demo-grid");
+  const cardCurrent = document.getElementById("card-current");
+  document.getElementById("btn-compare").addEventListener("click", function () {
+    this.classList.add("on");
+    document.getElementById("btn-proposed").classList.remove("on");
+    grid.classList.add("compare");
+    cardCurrent.classList.remove("hidden");
+  });
+  document.getElementById("btn-proposed").addEventListener("click", function () {
+    this.classList.add("on");
+    document.getElementById("btn-compare").classList.remove("on");
+    grid.classList.remove("compare");
+    cardCurrent.classList.add("hidden");
+  });
+  document.getElementById("btn-theme").addEventListener("click", function () {
+    const dark = document.body.dataset.theme === "dark";
+    document.body.dataset.theme = dark ? "light" : "dark";
+    this.textContent = dark ? "Dark theme" : "Light theme";
+  });
+  document.querySelectorAll(".pro-cat").forEach(function (btn) {
+    btn.addEventListener("click", function () { btn.classList.toggle("off"); });
+  });
+</script>
+</body>
+</html>

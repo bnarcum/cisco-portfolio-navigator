@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>CPN — Side Panel Refactor Mockup</title>
+  <style>
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT"), local("CiscoSansTT"),
+           url("../fonts/CiscoSansTT-Regular.woff2") format("woff2");
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT Bold"), local("CiscoSansTT Bold"),
+           url("../fonts/CiscoSansTT-Bold.woff2") format("woff2");
+      font-weight: 700;
+      font-display: swap;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #060b14;
+      --canvas: #0a101c;
+      --panel: #0f1726;
+      --panel-elevated: #141e30;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-subtle: rgba(255, 255, 255, 0.05);
+      --text: #f0f4f8;
+      --muted: #8b95a5;
+      --subtle: #5c6573;
+      --accent: #02c8ff;
+      --blue: #0a60ff;
+      --green: #2dce5c;
+      --collab: #2dce5c;
+      --orange: #ff9000;
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 20px;
+      --space-6: 24px;
+
+      --panel-w: 400px;
+      --float-inset: 16px;
+      --topbar-h: 48px;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: "CiscoSansTT", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .page-intro {
+      text-align: center;
+      padding: var(--space-5) var(--space-4) var(--space-3);
+      max-width: 640px;
+      margin: 0 auto;
+    }
+    .page-intro h1 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+    }
+    .page-intro p {
+      margin-top: var(--space-2);
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .demo-frame {
+      position: relative;
+      height: calc(100vh - 88px);
+      min-height: 720px;
+      max-width: 1200px;
+      margin: 0 auto var(--space-5);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Fake top bar */
+    .demo-topbar {
+      height: var(--topbar-h);
+      background: rgba(15, 23, 38, 0.92);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 var(--space-4);
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    /* Full-width canvas */
+    .canvas-placeholder {
+      position: absolute;
+      inset: var(--topbar-h) 0 0 0;
+      background: var(--canvas);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--subtle);
+      font-size: 0.8rem;
+    }
+    .canvas-placeholder::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .canvas-placeholder::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(6, 11, 20, 0.35);
+      pointer-events: none;
+    }
+
+    /* ── Floating card panel ── */
+    .panel {
+      position: absolute;
+      top: calc(var(--topbar-h) + var(--float-inset));
+      right: var(--float-inset);
+      width: var(--panel-w);
+      max-height: calc(100% - var(--topbar-h) - var(--float-inset) * 2);
+      background: rgba(15, 23, 38, 0.96);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 2;
+    }
+    .panel::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 2px;
+      border-radius: var(--radius-md) 0 0 var(--radius-md);
+      background: linear-gradient(180deg, var(--accent), rgba(10, 96, 255, 0.35));
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    /* Header (fixed within card when body scrolls) */
+    .panel-header {
+      flex-shrink: 0;
+      padding: var(--space-4) var(--space-4) 0;
+      background: inherit;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .panel-header-top {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      margin-bottom: var(--space-3);
+    }
+    .panel-close {
+      margin-left: auto;
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--panel-elevated);
+      color: var(--muted);
+      font-size: 18px;
+      cursor: pointer;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .panel-close:hover { color: var(--text); border-color: rgba(2, 200, 255, 0.35); }
+
+    .panel-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+    .panel-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-2);
+      margin-top: var(--space-2);
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+    .meta-dot {
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: var(--subtle);
+    }
+    .meta-badge {
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-size: 0.62rem;
+      padding: 2px 8px;
+      border-radius: var(--radius-pill, 999px);
+    }
+    .meta-badge.cat {
+      background: rgba(45, 206, 92, 0.2);
+      color: #7dffb0;
+    }
+    .meta-badge.pillar {
+      background: rgba(45, 206, 92, 0.08);
+      border: 1px solid rgba(45, 206, 92, 0.35);
+      color: #9ae6b0;
+      text-transform: none;
+      font-size: 0.68rem;
+      letter-spacing: 0;
+    }
+
+    .panel-desc {
+      font-size: 0.8125rem;
+      color: var(--muted);
+      line-height: 1.55;
+      margin-bottom: var(--space-3);
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .panel-desc.expanded { -webkit-line-clamp: unset; }
+    .read-more {
+      border: none;
+      background: none;
+      color: var(--accent);
+      font: inherit;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0;
+      margin-bottom: var(--space-3);
+    }
+
+    .stats-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+      padding: var(--space-3) 0;
+      margin-bottom: var(--space-2);
+      border-top: 1px solid var(--border-subtle);
+      font-size: 0.72rem;
+      color: var(--subtle);
+    }
+    .stats-row b { color: var(--text); font-weight: 700; }
+
+    .header-actions {
+      display: flex;
+      gap: var(--space-2);
+      margin-bottom: var(--space-3);
+    }
+    .btn {
+      flex: 1;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      font: inherit;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .btn-primary {
+      background: linear-gradient(90deg, var(--blue), var(--accent));
+      border: none;
+      color: #000;
+    }
+    .btn-primary:hover { filter: brightness(1.06); }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-secondary:hover { border-color: rgba(2, 200, 255, 0.35); }
+
+    /* Tabs */
+    .panel-tabs {
+      display: flex;
+      gap: 2px;
+      padding: var(--space-1);
+      background: var(--panel-elevated);
+      border-radius: var(--radius-sm);
+      margin-bottom: 0;
+    }
+    .panel-tab {
+      flex: 1;
+      padding: var(--space-2) var(--space-1);
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.68rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .panel-tab.on {
+      background: var(--panel);
+      color: var(--text);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Body: shrinks to content; scrolls only when card hits max-height */
+    .panel-body {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      padding: var(--space-4);
+    }
+    .tab-pane { display: none; }
+    .tab-pane.on { display: block; }
+
+    .sec-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--subtle);
+      margin-bottom: var(--space-3);
+    }
+
+    /* Ghost pills (use cases, industries) */
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-bottom: var(--space-6);
+    }
+    .pill {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: var(--space-1) var(--space-3);
+      border-radius: var(--radius-pill, 999px);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--muted);
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .pill:hover { background: rgba(2, 200, 255, 0.1); color: var(--accent); }
+
+    /* Outcome teaser */
+    .outcome-teaser {
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-md);
+      background: rgba(2, 200, 255, 0.06);
+      border: 1px solid rgba(2, 200, 255, 0.12);
+      margin-bottom: var(--space-6);
+      cursor: pointer;
+    }
+    .outcome-teaser:hover { border-color: rgba(2, 200, 255, 0.25); }
+    .outcome-teaser-label {
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--subtle);
+      margin-bottom: var(--space-1);
+    }
+    .outcome-teaser-text {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      line-height: 1.45;
+      color: #b4e8ff;
+    }
+    .outcome-teaser-link {
+      font-size: 0.68rem;
+      color: var(--accent);
+      margin-top: var(--space-2);
+      font-weight: 600;
+    }
+
+    /* Competitive row */
+    .comp-row {
+      margin-bottom: var(--space-6);
+    }
+    .comp-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-top: var(--space-2);
+    }
+    .comp-tag {
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: var(--space-1) var(--space-2);
+      border-radius: var(--radius-sm);
+      background: rgba(255, 144, 0, 0.08);
+      color: #ffc266;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* Divider list (products) */
+    .divider-list { list-style: none; }
+    .divider-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) 0;
+      border-bottom: 1px solid var(--border-subtle);
+      cursor: pointer;
+      transition: background 0.12s;
+      margin: 0 calc(-1 * var(--space-2));
+      padding-left: var(--space-2);
+      padding-right: var(--space-2);
+      border-radius: var(--radius-sm);
+    }
+    .divider-item:hover { background: rgba(255, 255, 255, 0.03); }
+    .divider-item:last-child { border-bottom: none; }
+    .item-name {
+      flex: 1;
+      font-size: 0.8125rem;
+      font-weight: 600;
+    }
+    .item-chevron {
+      color: var(--subtle);
+      font-size: 0.9rem;
+    }
+
+    /* Collapsible legacy */
+    .collapse-trigger {
+      width: 100%;
+      text-align: left;
+      padding: var(--space-3) 0;
+      border: none;
+      background: none;
+      color: var(--orange);
+      font: inherit;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    .collapse-trigger::before {
+      content: "▸";
+      font-size: 0.65rem;
+      transition: transform 0.15s;
+    }
+    .collapse-trigger.open::before { transform: rotate(90deg); }
+    .collapse-body {
+      display: none;
+      padding-bottom: var(--space-3);
+    }
+    .collapse-body.open { display: block; }
+    .legacy-item {
+      font-size: 0.75rem;
+      color: var(--muted);
+      padding: var(--space-2) 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    /* Connections — avatar strip + compact list */
+    .conn-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-bottom: var(--space-4);
+    }
+    .conn-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      background: var(--panel-elevated);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.55rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .conn-more {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      background: rgba(2, 200, 255, 0.1);
+      border: 1px dashed rgba(2, 200, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .conn-compact { list-style: none; }
+    .conn-row {
+      display: grid;
+      grid-template-columns: 8px 1fr;
+      gap: var(--space-3);
+      padding: var(--space-3) 0;
+      border-bottom: 1px solid var(--border-subtle);
+      cursor: pointer;
+      align-items: start;
+    }
+    .conn-row:hover { background: rgba(255, 255, 255, 0.02); margin: 0 -8px; padding-left: 8px; padding-right: 8px; border-radius: var(--radius-sm); }
+    .conn-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-top: 5px;
+    }
+    .conn-name { font-size: 0.8125rem; font-weight: 600; }
+    .conn-sub { font-size: 0.7rem; color: var(--subtle); margin-top: 2px; }
+
+    .expand-link {
+      display: block;
+      width: 100%;
+      margin-top: var(--space-3);
+      padding: var(--space-3);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--accent);
+      font: inherit;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+    }
+    .expand-link:hover { background: rgba(2, 200, 255, 0.06); border-color: rgba(2, 200, 255, 0.3); }
+
+    /* Resources */
+    .resource-list { list-style: none; }
+    .resource-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-3) 0;
+      border-bottom: 1px solid var(--border-subtle);
+      text-decoration: none;
+      color: var(--text);
+      font-size: 0.8125rem;
+      font-weight: 500;
+    }
+    .resource-item:hover { color: var(--accent); }
+    .resource-item span { font-size: 0.68rem; color: var(--subtle); }
+
+    /* Footer in document flow — sits right under content, no dead zone */
+    .panel-footer {
+      flex-shrink: 0;
+      padding: var(--space-3) var(--space-4);
+      background: rgba(15, 23, 38, 0.6);
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: var(--space-2);
+      align-items: center;
+    }
+    .panel-footer .btn { flex: 1; height: 40px; }
+    .footer-icon {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .footer-icon:hover { border-color: rgba(2, 200, 255, 0.35); color: var(--text); }
+
+    .compare-note {
+      max-width: 640px;
+      margin: 0 auto var(--space-5);
+      padding: 0 var(--space-4);
+      font-size: 0.72rem;
+      color: var(--subtle);
+      line-height: 1.55;
+    }
+    .compare-note strong { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="page-intro">
+    <h1>Side panel refactor mockup</h1>
+    <p>Floating card panel — shrinks to content, scrolls only when tall. Tabbed sections, de-boxed lists. Try Overview vs Products tabs.</p>
+  </div>
+
+  <div class="demo-frame">
+    <div class="demo-topbar">Cisco Portfolio Navigator</div>
+    <div class="canvas-placeholder">Graph canvas (full width behind panel)</div>
+
+    <aside class="panel" aria-label="Family detail panel">
+      <header class="panel-header">
+        <div class="panel-header-top">
+          <div>
+            <h2 class="panel-title">Webex Calling</h2>
+            <div class="panel-meta">
+              <span class="meta-badge cat">Collaboration</span>
+              <span class="meta-badge pillar">Workplaces</span>
+            </div>
+          </div>
+          <button type="button" class="panel-close" aria-label="Close">×</button>
+        </div>
+
+        <p class="panel-desc" id="desc">
+          Cloud and hybrid calling with multi-tenant options, PSTN connectivity, and Webex Calling Dedicated Instance for regulated customers. Integrates with Webex App, IP phones, and RoomOS devices.
+        </p>
+        <button type="button" class="read-more" id="read-more" hidden>Read more</button>
+
+        <div class="stats-row">
+          <span><b>5</b> products</span>
+          <span><b>3</b> use cases</span>
+          <span><b>7</b> direct links</span>
+        </div>
+
+        <div class="header-actions">
+          <button type="button" class="btn btn-primary">+ Add to plan</button>
+          <button type="button" class="btn btn-secondary">Explore →</button>
+        </div>
+
+        <nav class="panel-tabs" role="tablist">
+          <button type="button" class="panel-tab on" data-tab="overview" role="tab" aria-selected="true">Overview</button>
+          <button type="button" class="panel-tab" data-tab="products" role="tab">Products</button>
+          <button type="button" class="panel-tab" data-tab="connections" role="tab">Connections</button>
+          <button type="button" class="panel-tab" data-tab="resources" role="tab">Resources</button>
+        </nav>
+      </header>
+
+      <div class="panel-body">
+        <!-- Overview -->
+        <div class="tab-pane on" id="tab-overview" role="tabpanel">
+          <div class="outcome-teaser">
+            <div class="outcome-teaser-label">Problem this solves</div>
+            <div class="outcome-teaser-text">Enterprise telephony in the cloud or hybrid — same dial plan everywhere, without multi-vendor UC sprawl.</div>
+            <div class="outcome-teaser-link">View full outcome framing →</div>
+          </div>
+
+          <div class="sec-label">Use cases</div>
+          <div class="pill-row">
+            <button type="button" class="pill">Hybrid Work</button>
+            <button type="button" class="pill">Digital Transformation</button>
+            <button type="button" class="pill">Contact Center</button>
+          </div>
+
+          <div class="sec-label">Industries</div>
+          <div class="pill-row">
+            <button type="button" class="pill">Healthcare</button>
+            <button type="button" class="pill">Financial Services</button>
+            <button type="button" class="pill">Education</button>
+            <button type="button" class="pill">Retail</button>
+            <button type="button" class="pill">Government</button>
+          </div>
+
+          <div class="comp-row">
+            <div class="sec-label">Often evaluated against</div>
+            <div class="comp-tags">
+              <button type="button" class="comp-tag">RingCentral</button>
+              <button type="button" class="comp-tag">Microsoft Teams Phone</button>
+              <button type="button" class="comp-tag">8×8</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Products -->
+        <div class="tab-pane" id="tab-products" role="tabpanel">
+          <div class="sec-label">Current products (5)</div>
+          <ul class="divider-list">
+            <li class="divider-item"><span class="item-name">Webex Calling Professional</span><span class="item-chevron">›</span></li>
+            <li class="divider-item"><span class="item-name">Webex Calling Standard</span><span class="item-chevron">›</span></li>
+            <li class="divider-item"><span class="item-name">Webex Calling Dedicated Instance</span><span class="item-chevron">›</span></li>
+            <li class="divider-item"><span class="item-name">Webex Calling with Local Gateway</span><span class="item-chevron">›</span></li>
+            <li class="divider-item"><span class="item-name">Webex Calling for BroadWorks</span><span class="item-chevron">›</span></li>
+          </ul>
+
+          <button type="button" class="collapse-trigger" id="legacy-toggle">End of life products (0)</button>
+          <div class="collapse-body" id="legacy-body">
+            <div class="legacy-item">No EOL products in this family.</div>
+          </div>
+        </div>
+
+        <!-- Connections -->
+        <div class="tab-pane" id="tab-connections" role="tabpanel">
+          <div class="sec-label">Direct integrations (7)</div>
+          <div class="conn-strip" aria-hidden="true">
+            <div class="conn-avatar" title="Webex App">Wx</div>
+            <div class="conn-avatar" title="IP Phones">IP</div>
+            <div class="conn-avatar" title="Room Systems">Rm</div>
+            <div class="conn-more">+4</div>
+          </div>
+
+          <ul class="conn-compact">
+            <li class="conn-row">
+              <span class="conn-dot" style="background:#2dce5c"></span>
+              <div><div class="conn-name">Webex App</div><div class="conn-sub">Direct integration · Integrated suite</div></div>
+            </li>
+            <li class="conn-row">
+              <span class="conn-dot" style="background:#2dce5c"></span>
+              <div><div class="conn-name">Cisco IP Phones</div><div class="conn-sub">Direct integration · Certified endpoints</div></div>
+            </li>
+            <li class="conn-row">
+              <span class="conn-dot" style="background:#2dce5c"></span>
+              <div><div class="conn-name">Room Systems</div><div class="conn-sub">Direct integration · RoomOS calling</div></div>
+            </li>
+          </ul>
+
+          <button type="button" class="expand-link" id="conn-expand">Show all 7 direct · +15 extended at 2 hops</button>
+          <div id="conn-extended" style="display:none;margin-top:var(--space-4)">
+            <div class="sec-label">Extended — 2 hops (sample)</div>
+            <ul class="conn-compact">
+              <li class="conn-row">
+                <span class="conn-dot" style="background:#ff9000"></span>
+                <div><div class="conn-name">ThousandEyes</div><div class="conn-sub">2 hops · Collab quality assurance</div></div>
+              </li>
+              <li class="conn-row">
+                <span class="conn-dot" style="background:#ff9000"></span>
+                <div><div class="conn-name">Cisco Duo</div><div class="conn-sub">2 hops · Secure sign-in</div></div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Resources -->
+        <div class="tab-pane" id="tab-resources" role="tabpanel">
+          <ul class="resource-list">
+            <a class="resource-item" href="#">Product page <span>cisco.com ↗</span></a>
+            <a class="resource-item" href="#">Documentation <span>docs ↗</span></a>
+            <a class="resource-item" href="#">Webex Calling dCloud lab <span>Launch ↗</span></a>
+            <a class="resource-item" href="#">Learning path · Hybrid Work <span>3 labs ↗</span></a>
+          </ul>
+        </div>
+      </div>
+
+      <footer class="panel-footer">
+        <button type="button" class="btn btn-primary">+ Add to plan</button>
+        <button type="button" class="footer-icon" title="Compare">⇆</button>
+      </footer>
+    </aside>
+  </div>
+
+  <p class="compare-note">
+    <strong>Floating card:</strong> inset 16px from top/right · height fits content (no bottom dead zone) ·
+    grows until max-height then body scrolls · canvas stays visible underneath with light dim.
+  </p>
+
+  <script>
+    document.querySelectorAll(".panel-tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".panel-tab").forEach(t => {
+          t.classList.remove("on");
+          t.setAttribute("aria-selected", "false");
+        });
+        document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("on"));
+        tab.classList.add("on");
+        tab.setAttribute("aria-selected", "true");
+        document.getElementById("tab-" + tab.dataset.tab)?.classList.add("on");
+      });
+    });
+
+    document.getElementById("legacy-toggle")?.addEventListener("click", function () {
+      this.classList.toggle("open");
+      document.getElementById("legacy-body")?.classList.toggle("open");
+    });
+
+    document.getElementById("conn-expand")?.addEventListener("click", function () {
+      const ext = document.getElementById("conn-extended");
+      if (ext.style.display === "none") {
+        ext.style.display = "block";
+        this.textContent = "Show direct connections only";
+      } else {
+        ext.style.display = "none";
+        this.textContent = "Show all 7 direct · +15 extended at 2 hops";
+      }
+    });
+  </script>
+</body>
+</html>

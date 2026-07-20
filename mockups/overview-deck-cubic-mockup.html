@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Overview Deck — Cubic Depth Mockup</title>
+  <style>
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT"), local("CiscoSansTT"),
+           url("../fonts/CiscoSansTT-Regular.woff2") format("woff2");
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT Bold"), local("CiscoSansTT Bold"),
+           url("../fonts/CiscoSansTT-Bold.woff2") format("woff2");
+      font-weight: 700;
+      font-display: swap;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      font-family: "CiscoSansTT", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #07182d;
+      color: #fff;
+      padding: 28px 20px 40px;
+    }
+
+    header {
+      max-width: 960px;
+      margin: 0 auto 22px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #7eeaff;
+    }
+
+    header p {
+      margin-top: 8px;
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: #b4b9c0;
+      max-width: 58ch;
+      margin-inline: auto;
+    }
+
+    .compare {
+      max-width: 960px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 820px) {
+      .compare { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      border-radius: 14px;
+      border: 1px solid rgba(214, 214, 214, 0.1);
+      background: rgba(1, 10, 24, 0.55);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(214, 214, 214, 0.08);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: #02c8ff;
+    }
+
+    .panel-head span {
+      display: block;
+      margin-top: 3px;
+      font-weight: 400;
+      letter-spacing: 0;
+      text-transform: none;
+      color: #94a3b8;
+      font-size: 0.78rem;
+    }
+
+    .canvas {
+      padding: 28px 16px 32px;
+      min-height: 380px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(ellipse 70% 50% at 50% 30%, rgba(2, 200, 255, 0.06), transparent 60%);
+    }
+
+    /* ── Shared deck frame ── */
+    .deck {
+      width: 100%;
+      max-width: 420px;
+      padding: 20px 16px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(2, 200, 255, 0.22);
+      background: rgba(1, 10, 24, 0.68);
+    }
+
+    .row2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .conn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      justify-content: center;
+    }
+
+    .conn .ln {
+      flex: 1;
+      height: 0;
+      border-top: 1.5px solid rgba(240, 251, 255, 0.6);
+    }
+
+    .foot {
+      margin-top: 14px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: #e8f6ff;
+      opacity: 0.85;
+    }
+
+    /* ══════════════════════════════════════
+       FLAT — current (X × Y panel only)
+       ══════════════════════════════════════ */
+    .flat-card {
+      min-height: 56px;
+      border-radius: 5px;
+      border: 2px solid #02c8ff;
+      background: rgba(2, 14, 32, 0.88);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #7eeaff;
+      line-height: 1.15;
+    }
+
+    .flat-card img { width: 26px; height: 26px; object-fit: contain; flex-shrink: 0; }
+
+    .flat-card.wide {
+      border: 2px solid transparent;
+      background:
+        linear-gradient(rgba(2, 14, 32, 0.88), rgba(2, 14, 32, 0.88)) padding-box,
+        linear-gradient(90deg, #02c8ff, #d946ef, #ff9000) border-box;
+    }
+
+    .axis-flat {
+      margin-top: 18px;
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      font-size: 10px;
+      color: #64748b;
+    }
+
+    .axis-flat .ax {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .axis-flat .line {
+      width: 28px;
+      height: 2px;
+      background: currentColor;
+    }
+
+    .axis-flat .line.y {
+      width: 2px;
+      height: 22px;
+    }
+
+    .axis-flat .z-missing {
+      opacity: 0.35;
+      text-decoration: line-through;
+    }
+
+    /* ══════════════════════════════════════
+       CUBIC — X × Y × Z box (three faces)
+       ══════════════════════════════════════ */
+    .cubic-stage {
+      perspective: 900px;
+      perspective-origin: 50% 40%;
+    }
+
+    .cubic-deck-inner {
+      transform-style: preserve-3d;
+      /* Just enough rotation to reveal Z — not a tilted table */
+      transform: rotateX(14deg) rotateY(-22deg);
+    }
+
+    .cube-wrap {
+      transform-style: preserve-3d;
+    }
+
+    .cube {
+      --w: 100%;
+      --h: 56px;
+      --d: 22px;
+      position: relative;
+      height: var(--h);
+      transform-style: preserve-3d;
+      cursor: default;
+      transition: transform 0.25s ease;
+    }
+
+    .cube:hover {
+      transform: translateZ(6px);
+    }
+
+    .cube .f {
+      position: absolute;
+      backface-visibility: hidden;
+    }
+
+    /* Front face — primary content (X × Y) */
+    .cube .front {
+      inset: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 4px;
+      background: linear-gradient(160deg, rgba(14, 42, 72, 0.98), rgba(4, 18, 36, 0.98));
+      border: 2px solid rgba(2, 200, 255, 0.85);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      transform: translateZ(calc(var(--d) / 2));
+      font-size: 10px;
+      font-weight: 700;
+      color: #7eeaff;
+      line-height: 1.15;
+    }
+
+    .cube .front img {
+      width: 26px;
+      height: 26px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    /* Back face */
+    .cube .back {
+      inset: 0;
+      border-radius: 4px;
+      background: rgba(2, 10, 22, 0.98);
+      border: 1px solid rgba(2, 200, 255, 0.2);
+      transform: rotateY(180deg) translateZ(calc(var(--d) / 2));
+    }
+
+    /* Top face — shows Z depth along Y */
+    .cube .top {
+      left: 0;
+      right: 0;
+      top: 0;
+      height: var(--d);
+      background: linear-gradient(180deg, rgba(2, 200, 255, 0.55), rgba(1, 50, 80, 0.92));
+      border: 1px solid rgba(2, 200, 255, 0.5);
+      transform-origin: bottom center;
+      transform: rotateX(90deg) translateZ(calc(var(--d) / 2));
+      border-radius: 3px 3px 0 0;
+    }
+
+    /* Bottom face */
+    .cube .bottom {
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: var(--d);
+      background: rgba(0, 8, 18, 0.98);
+      transform-origin: top center;
+      transform: rotateX(-90deg) translateZ(calc(var(--d) / 2));
+    }
+
+    /* Right face — shows Z depth along X */
+    .cube .right {
+      top: 0;
+      bottom: 0;
+      right: 0;
+      width: var(--d);
+      background: linear-gradient(90deg, rgba(1, 45, 75, 0.95), rgba(0, 12, 24, 0.98));
+      border: 1px solid rgba(2, 200, 255, 0.25);
+      transform-origin: left center;
+      transform: rotateY(90deg) translateZ(calc(var(--d) / 2));
+    }
+
+    /* Left face */
+    .cube .left {
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: var(--d);
+      background: rgba(0, 16, 30, 0.98);
+      transform-origin: right center;
+      transform: rotateY(-90deg) translateZ(calc(var(--d) / 2));
+    }
+
+    .cube.wide { --d: 26px; --h: 56px; }
+
+    .cube.wide .front {
+      border: 2.5px solid transparent;
+      background:
+        linear-gradient(160deg, rgba(14, 42, 72, 0.98), rgba(4, 18, 36, 0.98)) padding-box,
+        linear-gradient(90deg, #02c8ff, #d946ef, #ff9000) border-box;
+    }
+
+    .cube.wide .top {
+      background: linear-gradient(180deg, rgba(255, 144, 0, 0.5), rgba(120, 30, 90, 0.9));
+    }
+
+    .cube.wide .right {
+      background: linear-gradient(90deg, rgba(100, 30, 80, 0.95), rgba(40, 10, 30, 0.98));
+    }
+
+    .row2 .cube-wrap:nth-child(1) .cube { --d: 20px; }
+    .row2 .cube-wrap:nth-child(2) .cube { --d: 20px; }
+
+    /* Axis legend — X Y Z visible */
+    .axis-3d {
+      margin-top: 28px;
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      transform: rotateX(14deg) rotateY(-22deg);
+      transform-style: preserve-3d;
+    }
+
+    .axis-3d .leg {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .axis-3d .shaft {
+      position: relative;
+      transform-style: preserve-3d;
+    }
+
+    .axis-3d .x-shaft {
+      width: 36px;
+      height: 3px;
+      background: #ff6b6b;
+      box-shadow: 0 0 8px rgba(255, 107, 107, 0.5);
+    }
+
+    .axis-3d .x-shaft::after {
+      content: "";
+      position: absolute;
+      right: -2px;
+      top: -3px;
+      border: 4px solid transparent;
+      border-left-color: #ff6b6b;
+    }
+
+    .axis-3d .y-shaft {
+      width: 3px;
+      height: 28px;
+      background: #51cf66;
+      box-shadow: 0 0 8px rgba(81, 207, 102, 0.5);
+    }
+
+    .axis-3d .y-shaft::after {
+      content: "";
+      position: absolute;
+      top: -2px;
+      left: -3px;
+      border: 4px solid transparent;
+      border-bottom-color: #51cf66;
+    }
+
+    .axis-3d .z-shaft {
+      width: 28px;
+      height: 3px;
+      background: #74c0fc;
+      transform: rotateY(-90deg) translateZ(0);
+      transform-origin: left center;
+      box-shadow: 0 0 8px rgba(116, 192, 252, 0.5);
+    }
+
+    .axis-3d .z-shaft::after {
+      content: "";
+      position: absolute;
+      right: -2px;
+      top: -3px;
+      border: 4px solid transparent;
+      border-left-color: #74c0fc;
+    }
+
+    .axis-3d .leg.x { color: #ff8787; }
+    .axis-3d .leg.y { color: #69db7c; }
+    .axis-3d .leg.z { color: #74c0fc; }
+
+    .note {
+      max-width: 960px;
+      margin: 20px auto 0;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(2, 200, 255, 0.15);
+      background: rgba(2, 200, 255, 0.04);
+      font-size: 0.82rem;
+      line-height: 1.55;
+      color: #94a3b8;
+    }
+
+    .note strong { color: #7eeaff; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Cubic cards — X × Y × Z (not a flat panel)</h1>
+    <p>Left: today’s flat rectangle (width × height only). Right: same layout as a <strong>box</strong> with visible front, top, and right faces — depth is a real third dimension.</p>
+  </header>
+
+  <div class="compare">
+    <section class="panel">
+      <div class="panel-head">
+        Flat panel
+        <span>2D — X and Y only (no thickness)</span>
+      </div>
+      <div class="canvas">
+        <div class="deck">
+          <div class="row2">
+            <div class="flat-card">
+              <img src="../assets/deck/slide12-ai-dc.svg" alt=""/>
+              AI-Ready Data Centers
+            </div>
+            <div class="flat-card">
+              <img src="../assets/deck/slide12-workplaces.svg" alt=""/>
+              Future-Proofed Workplaces
+            </div>
+          </div>
+          <div class="conn"><span class="ln"></span>Secure global connectivity<span class="ln"></span></div>
+          <div class="flat-card wide">
+            <img src="../assets/deck/slide12-resilience.svg" alt=""/>
+            Digital Resilience
+          </div>
+          <div class="foot">&lt;&lt;&lt; Accelerated by Cisco AI &gt;&gt;&gt;</div>
+          <div class="axis-flat">
+            <div class="ax"><span class="line"></span> X width</div>
+            <div class="ax"><span class="line y"></span> Y height</div>
+            <div class="ax z-missing"><span class="line"></span> Z depth</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        Cubic object
+        <span>3D — front (X×Y) + top + right reveal Z thickness</span>
+      </div>
+      <div class="canvas">
+        <div class="cubic-stage">
+          <div class="cubic-deck-inner">
+            <div class="deck">
+              <div class="row2">
+                <div class="cube-wrap">
+                  <div class="cube">
+                    <div class="f front"><img src="../assets/deck/slide12-ai-dc.svg" alt=""/>AI-Ready Data Centers</div>
+                    <div class="f back"></div>
+                    <div class="f top"></div>
+                    <div class="f bottom"></div>
+                    <div class="f right"></div>
+                    <div class="f left"></div>
+                  </div>
+                </div>
+                <div class="cube-wrap">
+                  <div class="cube">
+                    <div class="f front"><img src="../assets/deck/slide12-workplaces.svg" alt=""/>Future-Proofed Workplaces</div>
+                    <div class="f back"></div>
+                    <div class="f top"></div>
+                    <div class="f bottom"></div>
+                    <div class="f right"></div>
+                    <div class="f left"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="conn"><span class="ln"></span>Secure global connectivity<span class="ln"></span></div>
+              <div class="cube-wrap">
+                <div class="cube wide">
+                  <div class="f front"><img src="../assets/deck/slide12-resilience.svg" alt=""/>Digital Resilience</div>
+                  <div class="f back"></div>
+                  <div class="f top"></div>
+                  <div class="f bottom"></div>
+                  <div class="f right"></div>
+                  <div class="f left"></div>
+                </div>
+              </div>
+              <div class="foot">&lt;&lt;&lt; Accelerated by Cisco AI &gt;&gt;&gt;</div>
+            </div>
+            <div class="axis-3d">
+              <div class="leg x"><div class="shaft x-shaft"></div>X</div>
+              <div class="leg y"><div class="shaft y-shaft"></div>Y</div>
+              <div class="leg z"><div class="shaft z-shaft"></div>Z</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <p class="note">
+    <strong>Right panel:</strong> each pillar is a box with six faces — you see <strong>front</strong> (label), <strong>top</strong> (cyan edge = depth into screen), and <strong>right</strong> (side thickness). Small 3D rotation only exposes Z; the deck itself stays upright. Hover a cube to nudge it forward on Z.
+  </p>
+</body>
+</html>

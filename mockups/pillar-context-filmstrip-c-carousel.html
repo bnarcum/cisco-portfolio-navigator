@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Filmstrip C — focus carousel</title>
+  <link rel="stylesheet" href="pillar-context-base.css"/>
+  <link rel="stylesheet" href="pillar-context-zone.css"/>
+  <style>
+    .zone-panel { padding-bottom: 0; }
+    .zone-body { padding-bottom: 130px; }
+    .carousel-wrap {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      padding: 12px 0 16px;
+      background: linear-gradient(0deg, rgba(1,8,20,.97) 55%, transparent);
+    }
+    .carousel-label {
+      text-align: center;
+      font-size: 0.55rem; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: #64748b; margin-bottom: 10px;
+    }
+    .carousel {
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; padding: 0 24px;
+      perspective: 800px;
+    }
+    .car-card {
+      flex: 0 0 160px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      cursor: pointer;
+      transition: flex .35s cubic-bezier(.4,0,.2,1), transform .35s, opacity .35s, border-color .25s;
+      opacity: 0.55;
+      transform: scale(0.92);
+    }
+    .car-card.focus {
+      flex: 0 0 240px;
+      opacity: 1;
+      transform: scale(1);
+      border-color: color-mix(in srgb, var(--zone-color) 55%, transparent);
+      background: color-mix(in srgb, var(--zone-color) 8%, rgba(255,255,255,.04));
+      box-shadow: 0 8px 32px rgba(0,0,0,.35);
+    }
+    .car-card h4 { font-size: 0.68rem; color: #e2e8f0; margin-bottom: 4px; line-height: 1.25; }
+    .car-card p {
+      font-size: 0.6rem; color: #8b95a5; line-height: 1.4;
+      max-height: 0; overflow: hidden; opacity: 0;
+      transition: max-height .3s, opacity .25s;
+    }
+    .car-card.focus p { max-height: 60px; opacity: 1; margin-top: 4px; }
+    .car-nav {
+      display: flex; justify-content: center; gap: 8px; margin-top: 10px;
+    }
+    .car-nav button {
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color: #cbd5e1; font: inherit; font-size: 0.62rem; font-weight: 600;
+      padding: 5px 12px; border-radius: 999px; cursor: pointer;
+    }
+    .car-dots { display: flex; gap: 5px; align-items: center; }
+    .car-dots i {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(255,255,255,.2); cursor: pointer;
+    }
+    .car-dots i.on { background: var(--zone-color); }
+  </style>
+</head>
+<body>
+  <div class="mockup-shell">
+    <p class="back"><a href="pillar-context-iterations-gallery.html">← Peek & filmstrip iterations</a></p>
+    <p class="pitch"><strong>Filmstrip C · Focus carousel</strong> — Center card enlarges with full body; side cards show titles only. Auto-advances.</p>
+    <div class="controls"></div>
+    <div class="chrome">
+      <div class="topbar"></div>
+      <div class="actionbar"></div>
+      <div class="canvas-wrap" style="min-height:540px">
+        <div class="zone-panel" id="zone">
+          <header class="zone-header">
+            <div class="zone-header-top">
+              <img data-zone-icon src="" alt=""/>
+              <h2 data-zone-title></h2>
+            </div>
+            <div class="promise-strip"><span class="badge">Outcome</span><div class="text" data-zone-promise></div></div>
+          </header>
+          <div class="zone-body">
+            <div class="family-grid cols-4" data-zone-graph></div>
+            <div class="zone-stats" data-zone-stats></div>
+            <div class="carousel-wrap">
+              <div class="carousel-label">Value props</div>
+              <div class="carousel" id="carousel"></div>
+              <div class="car-nav">
+                <button type="button" id="prev">‹ Prev</button>
+                <div class="car-dots" id="dots"></div>
+                <button type="button" id="next">Next ›</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="pillar-context-data.js"></script>
+  <script src="pillar-context-chrome.js"></script>
+  <script src="pillar-context-zone.js"></script>
+  <script>
+    let pillarId = "ai-dc", focus = 0, timer = null;
+
+    function renderCarousel() {
+      const p = PILLAR_CTX[pillarId];
+      const n = p.highlights.length;
+      const indices = [];
+      for (let o = -1; o <= 1; o++) {
+        const i = (focus + o + n) % n;
+        if (n === 1 || o === 0 || n === 2) indices.push(i);
+        else if (n > 2) indices.push(i);
+      }
+      const uniq = [...new Set(indices)].sort((a,b) => {
+        const da = Math.abs(((a - focus + n) % n));
+        const db = Math.abs(((b - focus + n) % n));
+        return da - db;
+      });
+
+      document.getElementById("carousel").innerHTML = p.highlights.map((h, i) => {
+        const show = uniq.includes(i);
+        if (!show && n > 3) return "";
+        return `<article class="car-card${i === focus ? " focus" : ""}" data-i="${i}">
+          <h4>${h.title}</h4>
+          <p>${h.body}</p>
+        </article>`;
+      }).join("");
+
+      document.getElementById("dots").innerHTML = p.highlights.map((_, i) =>
+        `<i class="${i === focus ? "on" : ""}" data-i="${i}"></i>`).join("");
+    }
+
+    function go(dir) {
+      const p = PILLAR_CTX[pillarId];
+      focus = (focus + dir + p.highlights.length) % p.highlights.length;
+      renderCarousel();
+    }
+
+    function render() {
+      renderZoneShell(document.getElementById("zone"), PILLAR_CTX[pillarId]);
+      focus = 0;
+      renderCarousel();
+      clearInterval(timer);
+      timer = setInterval(() => go(1), 4500);
+    }
+
+    document.getElementById("prev").onclick = () => { go(-1); clearInterval(timer); };
+    document.getElementById("next").onclick = () => { go(1); clearInterval(timer); };
+    document.getElementById("carousel").onclick = e => {
+      const c = e.target.closest(".car-card");
+      if (!c) return;
+      focus = +c.dataset.i;
+      renderCarousel();
+      clearInterval(timer);
+    };
+    document.getElementById("dots").onclick = e => {
+      if (e.target.tagName !== "I") return;
+      focus = +e.target.dataset.i;
+      renderCarousel();
+      clearInterval(timer);
+    };
+
+    initPillarMockup({ onPillar: id => { pillarId = id; render(); } });
+    render();
+  </script>
+</body>
+</html>

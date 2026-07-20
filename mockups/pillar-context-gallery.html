@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Pillar context — pick a version</title>
+  <style>
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT"), url("../fonts/CiscoSansTT-Regular.woff2") format("woff2");
+      font-weight: 400; font-display: swap;
+    }
+    @font-face {
+      font-family: "CiscoSansTT";
+      src: local("Cisco Sans TT Bold"), url("../fonts/CiscoSansTT-Bold.woff2") format("woff2");
+      font-weight: 700; font-display: swap;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      font-family: "CiscoSansTT", system-ui, sans-serif;
+      background: #050c18;
+      color: #f4f7fb;
+      padding: 32px 20px 60px;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+    h1 {
+      font-size: 1.35rem;
+      background: linear-gradient(90deg, #7eeaff, #0a60ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 8px;
+    }
+    .lead {
+      color: #8b95a5;
+      font-size: 0.85rem;
+      line-height: 1.55;
+      max-width: 62ch;
+      margin-bottom: 28px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+    a.card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      border-radius: 14px;
+      border: 1px solid rgba(2, 200, 255, 0.15);
+      background: rgba(4, 12, 26, 0.9);
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+    a.card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(2, 200, 255, 0.4);
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+    }
+    .thumb {
+      height: 140px;
+      position: relative;
+      overflow: hidden;
+    }
+    .thumb::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 40%, rgba(5, 12, 24, 0.95));
+    }
+    .body { padding: 14px 16px 18px; }
+    .tag {
+      display: inline-block;
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #02c8ff;
+      margin-bottom: 6px;
+    }
+    .body h2 { font-size: 0.95rem; margin-bottom: 6px; }
+    .body p { font-size: 0.72rem; line-height: 1.5; color: #8b95a5; }
+    .rec {
+      margin-top: 10px;
+      font-size: 0.62rem;
+      color: #64748b;
+    }
+    .rec strong { color: #94a3b8; }
+
+    /* mini previews */
+    .t-v1 { background: radial-gradient(circle at 70% 30%, rgba(10,96,255,.25), transparent 50%), #07182d; }
+    .t-v1::before {
+      content: ""; position: absolute; right: 16px; top: 24px;
+      width: 72px; height: 88px; border-radius: 8px;
+      background: rgba(6,14,28,.85); border: 1px solid rgba(255,255,255,.12);
+    }
+    .t-v2 { background: #07182d; }
+    .t-v2::before {
+      content: ""; position: absolute; left: 50%; top: 50%;
+      width: 100px; height: 100px; transform: translate(-50%,-50%);
+      border: 2px dashed rgba(2,200,255,.35); border-radius: 50%;
+      animation: spin 12s linear infinite;
+    }
+    @keyframes spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
+    .t-v3 { background: linear-gradient(135deg, #07182d, #0a1628); }
+    .t-v3::before, .t-v3::after {
+      content: ""; position: absolute; right: 24px; bottom: 20px;
+      width: 80px; height: 52px; border-radius: 8px;
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+    }
+    .t-v3::after { right: 32px; bottom: 28px; opacity: .5; transform: scale(.92); }
+    .t-v4 { background: #07182d; }
+    .t-v4::before {
+      content: ""; position: absolute; left: 12px; right: 12px; bottom: 24px; height: 36px;
+      background: linear-gradient(90deg, rgba(10,96,255,.3), rgba(2,200,255,.2), rgba(255,144,0,.2));
+      border-radius: 6px;
+    }
+    .t-v5 { background: #07182d; }
+    .t-v5::before {
+      content: ""; position: absolute; left: 16px; right: 16px; top: 48px; height: 28px;
+      background: repeating-linear-gradient(90deg, rgba(45,206,92,.25) 0 60px, rgba(45,206,92,.08) 60px 64px);
+      border-radius: 999px;
+    }
+    .t-v6 { background: radial-gradient(circle at 85% 85%, rgba(255,144,0,.2), transparent 45%), #07182d; }
+    .t-v6::before {
+      content: ""; position: absolute; right: 28px; bottom: 28px;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: #02c8ff; box-shadow: 0 0 20px #02c8ff;
+      animation: pulse 2s ease infinite;
+    }
+    @keyframes pulse { 50% { transform: scale(1.15); opacity: .7; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Pillar context — six directions</h1>
+    <p class="lead">
+      Same goal across all: surface One Cisco outcome messaging without blocking the family graph.
+      Open any mockup, switch pillars, interact. Pick your favorite and we'll wire it into Families.
+    </p>
+    <p style="margin-bottom:20px"><a href="pillar-context-iterations-gallery.html" style="color:#02c8ff;font-size:.82rem;font-weight:600;text-decoration:none">→ Peek card & filmstrip iterations (6 more)</a></p>
+    <div class="grid">
+      <a class="card" href="pillar-summary-rail-mockup.html">
+        <div class="thumb t-v1"></div>
+        <div class="body">
+          <span class="tag">V1 · Your pick so far</span>
+          <h2>Peek card</h2>
+          <p>Promise strip + floating card. Auto-rotates one value prop; expand, minimize to tab.</p>
+          <p class="rec"><strong>Best for:</strong> Balanced default — proactive but dismissible.</p>
+        </div>
+      </a>
+      <a class="card" href="pillar-context-v2-orbit.html">
+        <div class="thumb t-v2"></div>
+        <div class="body">
+          <span class="tag">V2 · Spatial</span>
+          <h2>Orbit ring</h2>
+          <p>Highlights orbit the zone as luminous nodes. Callout follows the active beacon.</p>
+          <p class="rec"><strong>Best for:</strong> Graph-native feel; feels like part of the canvas.</p>
+        </div>
+      </a>
+      <a class="card" href="pillar-context-v3-stack.html">
+        <div class="thumb t-v3"></div>
+        <div class="body">
+          <span class="tag">V3 · Tactile</span>
+          <h2>Card stack</h2>
+          <p>Swipeable deck in the corner — flip through value props with 3D depth.</p>
+          <p class="rec"><strong>Best for:</strong> Exploratory users who want to “browse” messaging.</p>
+        </div>
+      </a>
+      <a class="card" href="pillar-context-v4-filmstrip.html">
+        <div class="thumb t-v4"></div>
+        <div class="body">
+          <span class="tag">V4 · Ambient</span>
+          <h2>Filmstrip</h2>
+          <p>Low strip at zone bottom auto-scrolls highlights. Hover pauses; click lifts detail.</p>
+          <p class="rec"><strong>Best for:</strong> Always visible, zero overlay on the graph.</p>
+        </div>
+      </a>
+      <a class="card" href="pillar-context-v5-chips.html">
+        <div class="thumb t-v5"></div>
+        <div class="body">
+          <span class="tag">V5 · Scannable</span>
+          <h2>Accordion chips</h2>
+          <p>All titles visible as chips under the promise. One expands inline — no floating UI.</p>
+          <p class="rec"><strong>Best for:</strong> Power users who want everything one click away.</p>
+        </div>
+      </a>
+      <a class="card" href="pillar-context-v6-beacon.html">
+        <div class="thumb t-v6"></div>
+        <div class="body">
+          <span class="tag">V6 · Minimal</span>
+          <h2>Beacon fan</h2>
+          <p>Single pulsing dot until engaged — opens a radial fan of value props.</p>
+          <p class="rec"><strong>Best for:</strong> Maximum graph real estate; context on demand.</p>
+        </div>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

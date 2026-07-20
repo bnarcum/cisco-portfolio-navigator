@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Filmstrip D — ticker + lift</title>
+  <link rel="stylesheet" href="pillar-context-base.css"/>
+  <link rel="stylesheet" href="pillar-context-zone.css"/>
+  <style>
+    .zone-body { padding-bottom: 48px; }
+    .ticker-wrap {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      border-top: 1px solid rgba(255,255,255,.06);
+      background: rgba(2, 8, 18, 0.94);
+      backdrop-filter: blur(10px);
+      overflow: hidden;
+      mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    }
+    .ticker-label {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      z-index: 2;
+      font-size: 0.55rem; font-weight: 700;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      color: var(--zone-color);
+      background: rgba(2,8,18,.95);
+      padding: 4px 8px 4px 0;
+    }
+    .ticker {
+      display: flex; width: max-content;
+      animation: scroll 35s linear infinite;
+      padding: 10px 0 10px 100px;
+    }
+    .ticker-wrap:hover .ticker { animation-play-state: paused; }
+    @keyframes scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .tick-item {
+      flex-shrink: 0;
+      padding: 0 28px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      cursor: pointer;
+      white-space: nowrap;
+      border-right: 1px solid rgba(255,255,255,.06);
+      transition: color .2s;
+    }
+    .tick-item:hover { color: var(--zone-color); }
+    .tick-item em {
+      font-style: normal; font-weight: 400; color: #64748b;
+      margin-left: 8px;
+    }
+
+    .lift {
+      position: absolute;
+      left: 50%; bottom: 52px;
+      transform: translateX(-50%) translateY(8px);
+      width: min(380px, 90%);
+      padding: 16px 18px;
+      border-radius: 12px;
+      background: rgba(6, 14, 28, 0.97);
+      border: 1px solid color-mix(in srgb, var(--zone-color) 45%, transparent);
+      box-shadow: 0 -12px 48px rgba(0,0,0,.5);
+      opacity: 0; pointer-events: none;
+      transition: opacity .28s, transform .28s;
+      z-index: 4;
+    }
+    .lift.show {
+      opacity: 1; transform: translateX(-50%) translateY(0);
+      pointer-events: auto;
+    }
+    .lift button.close {
+      position: absolute; top: 8px; right: 10px;
+      border: none; background: transparent; color: #64748b;
+      font-size: 1.1rem; cursor: pointer;
+    }
+    .lift kbd {
+      font-size: 0.55rem; font-weight: 700; color: var(--zone-color);
+      text-transform: uppercase;
+    }
+    .lift h3 { font-size: 0.82rem; color: #e2e8f0; margin: 6px 0 10px; line-height: 1.3; }
+    .lift p { font-size: 0.7rem; color: #8b95a5; line-height: 1.55; }
+  </style>
+</head>
+<body>
+  <div class="mockup-shell">
+    <p class="back"><a href="pillar-context-iterations-gallery.html">← Peek & filmstrip iterations</a></p>
+    <p class="pitch"><strong>Filmstrip D · Ticker</strong> — Single-line marquee at the zone floor. Minimal height; click any item to lift full detail above.</p>
+    <div class="controls"></div>
+    <div class="chrome">
+      <div class="topbar"></div>
+      <div class="actionbar"></div>
+      <div class="canvas-wrap" style="min-height:540px">
+        <div class="zone-panel" id="zone">
+          <header class="zone-header">
+            <div class="zone-header-top">
+              <img data-zone-icon src="" alt=""/>
+              <h2 data-zone-title></h2>
+            </div>
+            <div class="promise-strip"><span class="badge">Outcome</span><div class="text" data-zone-promise></div></div>
+          </header>
+          <div class="zone-body">
+            <div class="family-grid cols-4" data-zone-graph></div>
+            <div class="zone-stats" data-zone-stats></div>
+            <div class="lift" id="lift">
+              <button type="button" class="close" id="closeLift">×</button>
+              <kbd id="liftKbd"></kbd>
+              <h3 id="liftTitle"></h3>
+              <p id="liftBody"></p>
+            </div>
+            <div class="ticker-wrap">
+              <span class="ticker-label">Props</span>
+              <div class="ticker" id="ticker"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="pillar-context-data.js"></script>
+  <script src="pillar-context-chrome.js"></script>
+  <script src="pillar-context-zone.js"></script>
+  <script>
+    let pillarId = "ai-dc";
+    const lift = document.getElementById("lift");
+
+    function render() {
+      const p = PILLAR_CTX[pillarId];
+      renderZoneShell(document.getElementById("zone"), p);
+      const items = [...p.highlights, ...p.highlights];
+      document.getElementById("ticker").innerHTML = items.map((h, i) => {
+        const idx = i % p.highlights.length;
+        return `<span class="tick-item" data-i="${idx}">${h.title}<em>· ${h.body.slice(0, 48)}…</em></span>`;
+      }).join("");
+      lift.classList.remove("show");
+    }
+
+    document.getElementById("ticker").onclick = e => {
+      const t = e.target.closest(".tick-item");
+      if (!t) return;
+      const p = PILLAR_CTX[pillarId];
+      const h = p.highlights[+t.dataset.i];
+      document.getElementById("liftKbd").textContent = `Value prop ${+t.dataset.i + 1}`;
+      document.getElementById("liftTitle").textContent = h.title;
+      document.getElementById("liftBody").textContent = h.body;
+      lift.classList.add("show");
+      document.querySelector(".ticker").style.animationPlayState = "paused";
+    };
+
+    document.getElementById("closeLift").onclick = () => {
+      lift.classList.remove("show");
+      document.querySelector(".ticker").style.animationPlayState = "";
+    };
+
+    initPillarMockup({ onPillar: id => { pillarId = id; render(); } });
+    render();
+  </script>
+</body>
+</html>

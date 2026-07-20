@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Peek C — bloom pill</title>
+  <link rel="stylesheet" href="pillar-context-base.css"/>
+  <link rel="stylesheet" href="pillar-context-zone.css"/>
+  <style>
+    .pill-wrap {
+      position: absolute; left: 16px; bottom: 16px;
+      z-index: 5;
+    }
+    .pill-trigger {
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid color-mix(in srgb, var(--zone-color) 40%, transparent);
+      background: rgba(6, 14, 28, 0.92);
+      backdrop-filter: blur(12px);
+      color: #e2e8f0;
+      font: inherit; font-size: 0.64rem; font-weight: 600;
+      padding: 8px 14px 8px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 8px 28px rgba(0,0,0,.35);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .pill-trigger:hover { transform: translateY(-2px); }
+    .pill-trigger .pulse {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--zone-color);
+      box-shadow: 0 0 12px var(--zone-color);
+      animation: pulse 2s ease infinite;
+    }
+    @keyframes pulse { 50% { opacity: .5; transform: scale(.85); } }
+    .pill-wrap.open .pill-trigger { opacity: 0; pointer-events: none; transform: scale(.9); }
+
+    .bloom-card {
+      position: absolute; left: 0; bottom: 0;
+      width: 280px;
+      border-radius: 14px;
+      background: rgba(6, 14, 28, 0.94);
+      border: 1px solid rgba(255,255,255,.12);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 20px 50px rgba(0,0,0,.45);
+      opacity: 0; transform: scale(0.88) translateY(8px);
+      transform-origin: left bottom;
+      pointer-events: none;
+      transition: opacity .28s, transform .28s cubic-bezier(.34,1.2,.64,1);
+    }
+    .pill-wrap.open .bloom-card {
+      opacity: 1; transform: scale(1) translateY(0);
+      pointer-events: auto;
+    }
+    .bloom-head {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 12px 6px;
+    }
+    .bloom-head kbd {
+      font-size: 0.55rem; font-weight: 700; color: var(--zone-color);
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .bloom-head button {
+      border: none; background: transparent; color: #64748b;
+      font-size: 1.1rem; cursor: pointer; line-height: 1;
+    }
+    .bloom-body { padding: 4px 14px 12px; min-height: 88px; }
+    .bloom-body h3 {
+      font-size: 0.76rem; color: #e2e8f0; line-height: 1.35;
+      margin-bottom: 6px;
+      transition: opacity .25s;
+    }
+    .bloom-body p { font-size: 0.65rem; color: #8b95a5; line-height: 1.45; transition: opacity .25s; }
+    .bloom-body.fade h3, .bloom-body.fade p { opacity: 0; }
+    .bloom-dots {
+      display: flex; gap: 5px; padding: 0 14px 12px;
+    }
+    .bloom-dots i {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(255,255,255,.15); cursor: pointer;
+      transition: background .2s, transform .2s;
+    }
+    .bloom-dots i.on { background: var(--zone-color); transform: scale(1.25); }
+    .bloom-foot {
+      padding: 8px 12px 12px;
+      border-top: 1px solid rgba(255,255,255,.06);
+    }
+    .bloom-foot button {
+      width: 100%; border: none;
+      background: color-mix(in srgb, var(--zone-color) 20%, transparent);
+      color: #fff; font: inherit; font-size: 0.62rem; font-weight: 600;
+      padding: 8px; border-radius: 8px; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="mockup-shell">
+    <p class="back"><a href="pillar-context-iterations-gallery.html">← Peek & filmstrip iterations</a></p>
+    <p class="pitch"><strong>Peek C · Bloom pill</strong> — Tiny pulsing pill bottom-left blooms into the card. Stays out of the graph’s main sight line.</p>
+    <div class="controls"></div>
+    <div class="chrome">
+      <div class="topbar"></div>
+      <div class="actionbar"></div>
+      <div class="canvas-wrap" style="min-height:540px">
+        <div class="zone-panel" id="zone">
+          <header class="zone-header">
+            <div class="zone-header-top">
+              <img data-zone-icon src="" alt=""/>
+              <h2 data-zone-title></h2>
+            </div>
+            <div class="promise-strip"><span class="badge">Outcome</span><div class="text" data-zone-promise></div></div>
+          </header>
+          <div class="zone-body">
+            <div class="family-grid cols-4" data-zone-graph></div>
+            <div class="zone-stats" data-zone-stats></div>
+            <div class="pill-wrap" id="pill">
+              <button type="button" class="pill-trigger" id="trigger">
+                <span class="pulse"></span>
+                <span id="triggerLabel">Why this pillar?</span>
+              </button>
+              <div class="bloom-card">
+                <div class="bloom-head">
+                  <kbd id="label">1 / 3</kbd>
+                  <button type="button" id="close">×</button>
+                </div>
+                <div class="bloom-body" id="bloomBody">
+                  <h3 id="title"></h3>
+                  <p id="body"></p>
+                </div>
+                <div class="bloom-dots" id="dots"></div>
+                <div class="bloom-foot">
+                  <button type="button" id="expand">See all value props</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="pillar-context-data.js"></script>
+  <script src="pillar-context-chrome.js"></script>
+  <script src="pillar-context-zone.js"></script>
+  <script>
+    let pillarId = "ai-dc", expanded = false;
+    const pill = document.getElementById("pill");
+    const bloomBody = document.getElementById("bloomBody");
+    let rot = mountPeekRotation(() => pill.classList.contains("open") ? PILLAR_CTX[pillarId] : null, (p, i) => show(p, i));
+
+    function show(p, i, animate = true) {
+      rot.setIndex(i);
+      const h = p.highlights[i];
+      const go = () => {
+        document.getElementById("label").textContent = expanded
+          ? `All ${p.highlights.length} value props`
+          : `${i + 1} / ${p.highlights.length}`;
+        document.getElementById("title").textContent = h.title;
+        document.getElementById("body").textContent = h.body;
+        document.getElementById("triggerLabel").textContent = h.title;
+        document.getElementById("dots").innerHTML = p.highlights.map((_, j) =>
+          `<i class="${j === i ? "on" : ""}" data-i="${j}"></i>`).join("");
+        bloomBody.classList.remove("fade");
+      };
+      if (animate) {
+        bloomBody.classList.add("fade");
+        setTimeout(go, 180);
+      } else go();
+    }
+
+    function render() {
+      const p = PILLAR_CTX[pillarId];
+      renderZoneShell(document.getElementById("zone"), p);
+      rot.reset();
+      show(p, 0, false);
+      rot.stop();
+    }
+
+    document.getElementById("trigger").onclick = () => {
+      pill.classList.add("open");
+      rot.start();
+    };
+    document.getElementById("close").onclick = () => {
+      pill.classList.remove("open");
+      expanded = false;
+      rot.stop();
+      render();
+    };
+    document.getElementById("dots").onclick = e => {
+      if (e.target.tagName !== "I") return;
+      show(PILLAR_CTX[pillarId], +e.target.dataset.i);
+      rot.stop();
+    };
+    document.getElementById("expand").onclick = () => {
+      expanded = !expanded;
+      const p = PILLAR_CTX[pillarId];
+      if (expanded) {
+        document.getElementById("title").textContent = "All value props";
+        document.getElementById("body").innerHTML = p.highlights.map(h =>
+          `<strong style="color:#e2e8f0;display:block;margin:6px 0 2px">${h.title}</strong>${h.body}`).join("<br/>");
+        document.getElementById("expand").textContent = "Show rotating peek";
+      } else {
+        show(p, rot.getIndex(), false);
+        document.getElementById("expand").textContent = "See all value props";
+        rot.start();
+      }
+    };
+
+    initPillarMockup({ onPillar: id => { pillarId = id; pill.classList.remove("open"); expanded = false; render(); } });
+    render();
+  </script>
+</body>
+</html>

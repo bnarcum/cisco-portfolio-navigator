@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Filmstrip B — hover dock</title>
+  <link rel="stylesheet" href="pillar-context-base.css"/>
+  <link rel="stylesheet" href="pillar-context-zone.css"/>
+  <style>
+    .zone-panel { display: flex; flex-direction: column; padding-bottom: 0; }
+    .zone-body { flex: 1; padding-bottom: 56px; }
+    .dock {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(0deg, rgba(1,8,20,.98) 70%, transparent);
+      transition: padding .3s ease;
+    }
+    .dock-handle {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 8px 16px 6px;
+      font-size: 0.58rem; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: #64748b;
+      cursor: default;
+    }
+    .dock-handle .chev {
+      width: 28px; height: 4px; border-radius: 99px;
+      background: rgba(255,255,255,.15);
+    }
+    .dock:hover, .dock.expanded { padding-bottom: 4px; }
+    .dock-strip {
+      display: flex; gap: 8px;
+      padding: 0 16px 12px;
+      overflow-x: auto;
+      max-height: 44px;
+      opacity: 0.85;
+      transition: max-height .35s ease, opacity .25s;
+      scrollbar-width: none;
+    }
+    .dock-strip::-webkit-scrollbar { display: none; }
+    .dock:hover .dock-strip, .dock.expanded .dock-strip {
+      max-height: 120px;
+      opacity: 1;
+    }
+    .dock-card {
+      flex: 0 0 180px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      cursor: pointer;
+      transition: border-color .2s, transform .2s;
+    }
+    .dock:hover .dock-card, .dock.expanded .dock-card { flex: 0 0 200px; }
+    .dock-card:hover, .dock-card.on {
+      border-color: color-mix(in srgb, var(--zone-color) 50%, transparent);
+      transform: translateY(-2px);
+    }
+    .dock-card h4 { font-size: 0.66rem; color: #e2e8f0; margin-bottom: 3px; line-height: 1.25; }
+    .dock-card p {
+      font-size: 0.58rem; color: #8b95a5; line-height: 1.35;
+      max-height: 0; overflow: hidden; opacity: 0;
+      transition: max-height .3s, opacity .25s;
+    }
+    .dock:hover .dock-card p, .dock.expanded .dock-card p {
+      max-height: 48px; opacity: 1; margin-top: 2px;
+    }
+    .dock-pin {
+      position: absolute; right: 12px; top: 6px;
+      border: none; background: transparent;
+      color: #64748b; font-size: 0.62rem; cursor: pointer;
+    }
+    .dock.expanded .dock-pin { color: #02c8ff; }
+  </style>
+</head>
+<body>
+  <div class="mockup-shell">
+    <p class="back"><a href="pillar-context-iterations-gallery.html">← Peek & filmstrip iterations</a></p>
+    <p class="pitch"><strong>Filmstrip B · Hover dock</strong> — Collapsed to a slim handle; hover or pin to expand cards with full copy.</p>
+    <div class="controls"></div>
+    <div class="chrome">
+      <div class="topbar"></div>
+      <div class="actionbar"></div>
+      <div class="canvas-wrap" style="min-height:540px">
+        <div class="zone-panel" id="zone">
+          <header class="zone-header">
+            <div class="zone-header-top">
+              <img data-zone-icon src="" alt=""/>
+              <h2 data-zone-title></h2>
+            </div>
+            <div class="promise-strip"><span class="badge">Outcome</span><div class="text" data-zone-promise></div></div>
+          </header>
+          <div class="zone-body">
+            <div class="family-grid cols-4" data-zone-graph></div>
+            <div class="zone-stats" data-zone-stats></div>
+            <div class="dock" id="dock">
+              <button type="button" class="dock-pin" id="pin">Pin open</button>
+              <div class="dock-handle"><span class="chev"></span> Value props · hover to expand</div>
+              <div class="dock-strip" id="strip"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="pillar-context-data.js"></script>
+  <script src="pillar-context-chrome.js"></script>
+  <script src="pillar-context-zone.js"></script>
+  <script>
+    let pillarId = "ai-dc";
+    const dock = document.getElementById("dock");
+
+    function render() {
+      const p = PILLAR_CTX[pillarId];
+      renderZoneShell(document.getElementById("zone"), p);
+      document.getElementById("strip").innerHTML = p.highlights.map((h, i) => `
+        <article class="dock-card" data-i="${i}">
+          <h4>${h.title}</h4>
+          <p>${h.body}</p>
+        </article>`).join("");
+    }
+
+    document.getElementById("pin").onclick = () => {
+      dock.classList.toggle("expanded");
+      document.getElementById("pin").textContent = dock.classList.contains("expanded") ? "Unpin" : "Pin open";
+    };
+
+    initPillarMockup({ onPillar: id => { pillarId = id; render(); } });
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>V3 Card stack — pillar context</title>
+  <link rel="stylesheet" href="pillar-context-base.css"/>
+  <style>
+    .layout {
+      position: relative;
+      min-height: 500px;
+      padding: 24px 20px 100px;
+    }
+    .hero-promise {
+      text-align: center;
+      max-width: 42ch;
+      margin: 0 auto 20px;
+    }
+    .hero-promise h2 {
+      font-size: 0.88rem;
+      color: var(--title-cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .hero-promise h2 img { width: 24px; filter: brightness(0) invert(1); }
+    .hero-promise p {
+      font-size: 0.78rem;
+      font-weight: 600;
+      line-height: 1.45;
+      background: linear-gradient(90deg, #e2e8f0, color-mix(in srgb, var(--zone-color) 60%, #fff));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .graph-area {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .graph-area .fam {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--zone-color) 28%, rgba(255,255,255,.06));
+      border: 2px solid rgba(255,255,255,.2);
+      display: grid;
+      place-items: center;
+      font-size: 0.55rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s;
+    }
+    .graph-area .fam:hover { transform: scale(1.08); box-shadow: 0 0 20px color-mix(in srgb, var(--zone-color) 40%, transparent); }
+
+    .stack-wrap {
+      position: absolute;
+      right: 20px;
+      bottom: 24px;
+      width: 240px;
+      height: 200px;
+      perspective: 900px;
+    }
+    .stack {
+      position: relative;
+      width: 100%;
+      height: 160px;
+      transform-style: preserve-3d;
+    }
+    .stack-card {
+      position: absolute;
+      inset: 0;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: rgba(8, 16, 32, 0.92);
+      border: 1px solid rgba(255,255,255,.12);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 16px 48px rgba(0,0,0,.4);
+      transition: transform 0.45s cubic-bezier(.34,1.2,.64,1), opacity 0.35s;
+      cursor: grab;
+      user-select: none;
+    }
+    .stack-card:active { cursor: grabbing; }
+    .stack-card .glyph {
+      font-size: 1.1rem;
+      color: var(--zone-color);
+      margin-bottom: 6px;
+    }
+    .stack-card h3 {
+      font-size: 0.75rem;
+      color: #e2e8f0;
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
+    .stack-card p {
+      font-size: 0.64rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .stack-card .idx {
+      position: absolute;
+      top: 10px; right: 12px;
+      font-size: 0.55rem;
+      font-weight: 700;
+      color: var(--subtle);
+    }
+
+    .stack-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+      gap: 8px;
+    }
+    .stack-nav button {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.15);
+      background: rgba(255,255,255,.05);
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .stack-nav button:hover { background: color-mix(in srgb, var(--zone-color) 25%, transparent); border-color: var(--zone-color); }
+    .stack-nav span { font-size: 0.62rem; color: var(--subtle); flex: 1; text-align: center; }
+    .hint-swipe {
+      font-size: 0.58rem;
+      color: var(--subtle);
+      text-align: center;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="mockup-shell">
+    <p class="back"><a href="pillar-context-gallery.html">← All versions</a></p>
+    <p class="pitch">Tactile card deck — drag or use arrows to flip through value props. Stacks visually behind the active card.</p>
+    <div class="controls"></div>
+    <div class="chrome">
+      <div class="topbar"></div>
+      <div class="actionbar"></div>
+      <div class="canvas-wrap layout">
+        <div class="hero-promise">
+          <h2><img id="icon" src="" alt=""/><span id="title"></span></h2>
+          <p id="promise"></p>
+        </div>
+        <div class="graph-area" id="graph"></div>
+        <div class="stack-wrap">
+          <div class="stack" id="stack"></div>
+          <div class="stack-nav">
+            <button type="button" id="prev" aria-label="Previous">‹</button>
+            <span id="counter">1 / 3</span>
+            <button type="button" id="next" aria-label="Next">›</button>
+          </div>
+          <p class="hint-swipe">Swipe card or use arrows</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="pillar-context-data.js"></script>
+  <script src="pillar-context-chrome.js"></script>
+  <script>
+    let pillarId = "ai-dc", idx = 0, dragX = 0;
+    const stack = document.getElementById("stack");
+
+    function cardTransform(i, total) {
+      const rel = (i - idx + total) % total;
+      if (rel === 0) return "translateZ(40px) scale(1)";
+      if (rel === 1) return "translateX(14px) translateY(8px) translateZ(-20px) scale(0.94) rotate(3deg)";
+      if (rel === total - 1) return "translateX(-14px) translateY(8px) translateZ(-20px) scale(0.94) rotate(-3deg)";
+      return "translateY(16px) translateZ(-60px) scale(0.88)";
+    }
+
+    function renderStack(p) {
+      const n = p.highlights.length;
+      stack.innerHTML = p.highlights.map((h, i) => `
+        <article class="stack-card" data-i="${i}" style="transform:${cardTransform(i,n)};opacity:${i===idx?1:0.85};z-index:${i===idx?10:5-i}">
+          <span class="idx">${i+1}/${n}</span>
+          <div class="glyph">${h.icon||"◆"}</div>
+          <h3>${h.title}</h3>
+          <p>${h.body}</p>
+        </article>`).join("");
+      document.getElementById("counter").textContent = `${idx + 1} / ${n}`;
+      bindDrag(p);
+    }
+
+    function go(dir, p) {
+      const n = p.highlights.length;
+      idx = (idx + dir + n) % n;
+      renderStack(p);
+    }
+
+    function bindDrag(p) {
+      const top = stack.querySelector(`[data-i="${idx}"]`);
+      if (!top) return;
+      let startX = 0, active = false;
+      top.onpointerdown = e => { active = true; startX = e.clientX; top.setPointerCapture(e.pointerId); };
+      top.onpointermove = e => {
+        if (!active) return;
+        dragX = e.clientX - startX;
+        top.style.transform = `translateX(${dragX}px) translateZ(40px) rotate(${dragX * 0.04}deg) scale(1)`;
+      };
+      top.onpointerup = e => {
+        if (!active) return;
+        active = false;
+        if (Math.abs(dragX) > 50) go(dragX > 0 ? -1 : 1, p);
+        else renderStack(p);
+        dragX = 0;
+      };
+    }
+
+    function render() {
+      const p = PILLAR_CTX[pillarId];
+      document.documentElement.style.setProperty("--zone-color", p.color);
+      document.getElementById("icon").src = p.icon;
+      document.getElementById("title").textContent = p.label;
+      document.getElementById("promise").textContent = p.promise;
+      document.getElementById("graph").innerHTML = p.families.map(f =>
+        `<span class="fam" title="${f.label}">${f.abbr}</span>`).join("");
+      idx = Math.min(idx, p.highlights.length - 1);
+      renderStack(p);
+    }
+
+    document.getElementById("prev").onclick = () => go(-1, PILLAR_CTX[pillarId]);
+    document.getElementById("next").onclick = () => go(1, PILLAR_CTX[pillarId]);
+
+    initPillarMockup({ onPillar: id => { pillarId = id; idx = 0; render(); } });
+    render();
+  </script>
+</body>
+</html>

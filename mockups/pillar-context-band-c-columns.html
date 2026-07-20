@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Band C — deck columns</title>
+  <link rel="stylesheet" href="pillar-context-base.css"/>
+  <link rel="stylesheet" href="pillar-context-band.css"/>
+  <style>
+    .vp-deck {
+      flex-shrink: 0;
+      display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
+      padding: 14px 20px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      background: color-mix(in srgb, var(--zone-color) 5%, rgba(0,0,0,.18));
+    }
+    .vp-deck.wrap { grid-auto-flow: row; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px 0; }
+    .vp-col { padding: 0 16px; position: relative; }
+    .vp-col + .vp-col::before {
+      content: ""; position: absolute; left: 0; top: 2px; bottom: 2px;
+      width: 1px; background: linear-gradient(180deg, var(--zone-color), transparent);
+    }
+    .vp-col .rule {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+    }
+    .vp-col .rule .n {
+      font-size: 0.62rem; font-weight: 700; color: var(--zone-color);
+      font-variant-numeric: tabular-nums;
+    }
+    .vp-col .rule .line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--zone-color), transparent); }
+    .vp-col h4 { font-size: 0.68rem; font-weight: 700; color: #e8eef7; line-height: 1.25; margin-bottom: 4px; }
+    .vp-col p { font-size: 0.6rem; line-height: 1.45; color: #8b95a5; }
+  </style>
+</head>
+<body>
+  <div class="mockup-shell">
+    <p class="back"><a href="pillar-context-band-gallery.html">← Above/below mockups</a></p>
+    <p class="pitch"><strong>Band C · Deck columns</strong> — Value props as evenly spaced columns with divider rules, mirroring the source slide. Sits above the graph.</p>
+    <div class="controls"></div>
+    <div class="chrome">
+      <div class="topbar"></div>
+      <div class="actionbar"></div>
+      <div class="canvas-wrap" style="min-height:580px">
+        <div class="zone-panel band" id="zone">
+          <header class="band-header">
+            <div class="band-header-top"><img data-zone-icon src="" alt=""/><h2 data-zone-title></h2></div>
+            <div class="band-outcome"><span class="lbl">Outcome</span><p data-zone-promise></p></div>
+          </header>
+          <div class="vp-deck" data-vp-deck></div>
+          <div class="band-graph" data-band-graph></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="pillar-context-data.js"></script>
+  <script src="pillar-context-chrome.js"></script>
+  <script src="pillar-context-band-render.js"></script>
+  <script>
+    let pillarId = "ai-dc";
+    function render(){
+      const root = document.getElementById("zone");
+      const p = PILLAR_CTX[pillarId];
+      renderBandHeader(root, p);
+      renderBandGraph(root, p);
+      const deck = root.querySelector("[data-vp-deck]");
+      deck.classList.toggle("wrap", p.highlights.length > 4);
+      deck.innerHTML = p.highlights.map((h, i) => `
+        <div class="vp-col">
+          <div class="rule"><span class="n">0${i + 1}</span><span class="line"></span></div>
+          <h4>${bandEsc(h.title)}</h4>
+          <p>${bandEsc(h.body)}</p>
+        </div>`).join("");
+    }
+    initPillarMockup({ onPillar: id => { pillarId = id; render(); } });
+    render();
+  </script>
+</body>
+</html>
