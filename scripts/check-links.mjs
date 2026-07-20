@@ -49,6 +49,7 @@ const SOFT_404 =
 const SOURCES = [
   "cisco-portfolio-navigator.html",
   "design-studio-templates.js",
+  "design-studio-intent.js",
 ];
 
 // Non-documentation hosts that legitimately appear in code (LLM endpoints,

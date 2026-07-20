@@ -79,6 +79,22 @@ try {
     errors.push("Learn & Try dCloud section missing on ISE panel")
   );
 
+  // Families graph click (nodes lack _kind:"family") must still inject dCloud on Resources tab.
+  await page.evaluate(() => document.getElementById("pcl")?.click());
+  await page.waitForTimeout(200);
+  await page.evaluate(() => document.querySelector('[data-vm="families"]')?.click());
+  await page.waitForTimeout(800);
+  await page.evaluate(() => {
+    const g = [...document.querySelectorAll("g.nd")].find(el => el.__data__?.id === "room-systems");
+    if (!g) throw new Error("room-systems node missing in families graph");
+    g.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+  });
+  await page.waitForTimeout(900);
+  await page.evaluate(() => window.switchPanelTab?.("resources"));
+  await page.waitForTimeout(300);
+  const familiesDcloud = await page.evaluate(() => !!document.querySelector("#pbody .p-dcloud"));
+  if (!familiesDcloud) errors.push("Learn & Try dCloud section missing after families graph click (room-systems)");
+
   const hasObjectives = await page.evaluate(() =>
     !!document.querySelector("#pbody .p-dcloud-objectives")
   );

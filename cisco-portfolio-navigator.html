@@ -9,7 +9,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.17";
+  window.__CPN_BUILD="3.5.18";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -6975,7 +6975,9 @@ function rebindGraph(opts){
               clearTimeout(nodeClickTimer);
               nodeClickTimer = setTimeout(() => {
                 nodeClickTimer = null;
-                if (d._kind === "family") openFamilyProductDrawer(d.id);
+                const isFamilyNode = d._kind === "family" ||
+                  (nodeById[d.id] && d._kind !== "product" && d._kind !== "pillar" && d._kind !== "category");
+                if (isFamilyNode) openFamilyProductDrawer(d.id);
                 else selectNode(d);
               }, 220);
             }
@@ -7403,6 +7405,16 @@ function panelPane(tab){
 }
 function panelResourcesHost(){
   return panelPane("resources")?.querySelector(".p-resources-extra") || panelPane("resources") || document.getElementById("pbody");
+}
+
+function syncDetailPanelEnhance(d){
+  if (!d || d._kind === "pillar" || d._kind === "category") return;
+  const pb = document.getElementById("pbody");
+  if (!pb) return;
+  pb.dataset.lastId = d.id;
+  pb.dataset.lastKind = (d._kind === "product" || prodById[d.id]) ? "product" : "node";
+  if (typeof enhanceDetailPanel === "function") enhanceDetailPanel();
+  else window.__cpnV2?.phases?.enhanceDetailPanel?.();
 }
 
 function openPanel(){
@@ -9449,6 +9461,7 @@ function selectNode(d, opts = {}) {
   applyConnectionHighlight(d, connectionHighlightDepth);
   if (usePillarLayout()) applyPillarNodeVisualState(d);
   showDetailPanel(d);
+  syncDetailPanelEnhance(d);
   window.__cpnOutcomeCard?.hide?.();
   if (viewMode === "spatial"){
     focusSpatialNode(d.id, 700);
@@ -9587,9 +9600,7 @@ function openFamilyProductDrawer(familyId){
   else if (usePillarLayout()) applyPillarLabelStyles(d);
   else applyConnectionHighlight(d, connectionHighlightDepth);
   showDetailPanel(d);
-  const pb = document.getElementById("pbody");
-  if (pb){ pb.dataset.lastId = d.id; pb.dataset.lastKind = "node"; }
-  window.__cpnV2?.phases?.enhanceDetailPanel?.();
+  syncDetailPanelEnhance(d);
 }
 
 function showDetailPanel(d) {

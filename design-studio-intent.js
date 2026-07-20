@@ -8,15 +8,15 @@
   const PILLARS = {
     "ai-dc": {
       label: "AI-Ready Data Centers",
-      url: "https://www.cisco.com/c/en/us/solutions/data-center-virtualization/artificial-intelligence-machine-learning/index.html"
+      url: "https://www.cisco.com/site/us/en/solutions/artificial-intelligence/index.html"
     },
     workplaces: {
       label: "Future-Proofed Workplaces",
-      url: "https://www.cisco.com/c/en/us/solutions/collaboration/workplace-transformation/hybrid-work-design-guides.html"
+      url: "https://www.cisco.com/site/us/en/about/why-cisco/future-proofed-workplaces/index.html"
     },
     resilience: {
       label: "Digital Resilience",
-      url: "https://www.cisco.com/c/en/us/solutions/collateral/enterprise/design-zone-zero-trust.html"
+      url: "https://www.cisco.com/site/us/en/about/why-cisco/digital-resilience/index.html"
     }
   };
 
@@ -27,7 +27,7 @@
 
   const DEFAULT_CT = {
     label: "Cisco hybrid work design guides",
-    url: "https://www.cisco.com/c/en/us/solutions/collaboration/workplace-transformation/hybrid-work-design-guides.html"
+    url: "https://www.cisco.com/site/us/en/solutions/hybrid-work/workplace/index.html"
   };
 
   /** Per-template scoring: keywords (+pts), pillar boost */

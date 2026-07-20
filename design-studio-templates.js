@@ -666,7 +666,7 @@
       name: "Divisible All-Hands",
       category: "Large",
       ct: "Cisco hybrid work — divisible spaces",
-      ctUrl: "https://www.cisco.com/c/en/us/solutions/collaboration/workplace-transformation/hybrid-work-design-guides.html",
+      ctUrl: "https://www.cisco.com/site/us/en/solutions/hybrid-work/workplace/index.html",
       w: 720, h: 540,
       zones: { display: { x: 80, y: 28, w: 560, h: 128 }, table: { x: 48, y: 180, w: 620, h: 228 }, rack: { x: 32, y: 440, w: 200, h: 104 } },
       items: [
