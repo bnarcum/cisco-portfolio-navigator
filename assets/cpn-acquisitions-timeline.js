@@ -835,19 +835,50 @@
     scan._acqHideTimer = setTimeout(() => scan.classList.remove("show"), 420);
   }
 
+  function splitWordmarkLines(text, maxLines = 3, maxLineLen = 14) {
+    const clean = text.replace(/\([^)]*\)/g, "").trim();
+    const words = clean.split(/\s+/).filter(Boolean);
+    if (!words.length) return [""];
+    const lines = [];
+    let line = "";
+    for (const word of words) {
+      const candidate = line ? `${line} ${word}` : word;
+      if (candidate.length <= maxLineLen || !line) {
+        line = candidate;
+        continue;
+      }
+      lines.push(line);
+      line = word;
+      if (lines.length >= maxLines) break;
+    }
+    if (lines.length < maxLines && line) lines.push(line);
+    else if (line && lines.length) {
+      const tail = `${lines[lines.length - 1]} ${line}`.trim();
+      lines[lines.length - 1] = tail.length > maxLineLen + 6
+        ? `${tail.slice(0, maxLineLen - 1)}…`
+        : tail;
+    }
+    return lines.length ? lines : [clean.slice(0, maxLineLen)];
+  }
+
   function updateFocusIdentity(a) {
     const logo = $("#acq-focus-logo");
     const wordmark = $("#acq-focus-wordmark");
     if (!logo || !wordmark) return;
-    const verified = a.visualIdentity?.kind === "verified-logo";
-    logo.hidden = !verified;
-    wordmark.hidden = verified;
-    if (verified) {
+    const vi = a.visualIdentity || {};
+    const useLogo = vi.kind === "verified-logo" || (vi.kind === "name-tile" && vi.path);
+    logo.hidden = !useLogo;
+    wordmark.hidden = useLogo;
+    logo.classList.toggle("name-tile", vi.kind === "name-tile");
+    if (useLogo) {
       setLogoImg(logo, a);
+      logo.alt = a.company;
       wordmark.textContent = "";
     } else {
       logo.removeAttribute("src");
-      wordmark.textContent = a.company;
+      logo.alt = "";
+      logo.classList.remove("name-tile");
+      wordmark.textContent = splitWordmarkLines(a.company).join("\n");
       wordmark.style.setProperty("--acq-era-color", eraColorFor(a.era));
     }
   }

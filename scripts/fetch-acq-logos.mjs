@@ -16,17 +16,51 @@ const manifestPath = path.join(logoDir, "manifest.json");
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+/** Pack company name into short lines at word boundaries (never mid-word). */
+function splitWordmarkLines(text, maxLines = 3, maxLineLen = 14) {
+  const clean = text.replace(/\([^)]*\)/g, "").trim();
+  const words = clean.split(/\s+/).filter(Boolean);
+  if (!words.length) return [""];
+  const lines = [];
+  let line = "";
+  for (const word of words) {
+    const candidate = line ? `${line} ${word}` : word;
+    if (candidate.length <= maxLineLen || !line) {
+      line = candidate;
+      continue;
+    }
+    lines.push(line);
+    line = word;
+    if (lines.length >= maxLines) break;
+  }
+  if (lines.length < maxLines && line) lines.push(line);
+  else if (line && lines.length) {
+    const tail = `${lines[lines.length - 1]} ${line}`.trim();
+    lines[lines.length - 1] = tail.length > maxLineLen + 6
+      ? `${tail.slice(0, maxLineLen - 1)}…`
+      : tail;
+  }
+  return lines.length ? lines : [clean.slice(0, maxLineLen)];
+}
+
+function wordmarkFontSize(lines) {
+  const longest = Math.max(...lines.map(ln => ln.length));
+  if (lines.length >= 3) return 9;
+  if (lines.length === 2) return longest > 13 ? 10 : 11;
+  return longest > 16 ? 10 : longest > 12 ? 11 : 13;
+}
+
 function wordmarkSvg(company, id) {
   const hash = [...id].reduce((a, c) => a + c.charCodeAt(0), 0);
   const hues = [210, 195, 175, 160, 145, 220, 200, 185];
   const hue = hues[hash % hues.length];
-  const words = company.replace(/\([^)]*\)/g, "").trim();
-  const lines = words.length > 22
-    ? [words.slice(0, Math.ceil(words.length / 2)), words.slice(Math.ceil(words.length / 2))]
-    : [words];
-  const fontSize = lines.length > 1 ? 11 : words.length > 16 ? 10 : 13;
+  const lines = splitWordmarkLines(company);
+  const fontSize = wordmarkFontSize(lines);
+  const lineHeight = fontSize + 2;
+  const blockHeight = lines.length * lineHeight - 2;
+  const startY = 64 - blockHeight / 2 + fontSize * 0.35;
   const tspans = lines.map((ln, i) =>
-    `<tspan x="64" dy="${i === 0 ? 0 : fontSize + 2}">${escapeXml(ln.slice(0, 28))}</tspan>`
+    `<tspan x="64" dy="${i === 0 ? 0 : lineHeight}">${escapeXml(ln)}</tspan>`
   ).join("");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
@@ -36,7 +70,7 @@ function wordmarkSvg(company, id) {
   </linearGradient></defs>
   <rect width="128" height="128" rx="16" fill="url(#g)"/>
   <rect x="8" y="8" width="112" height="112" rx="12" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1"/>
-  <text text-anchor="middle" fill="#eef6fc" font-family="system-ui,-apple-system,sans-serif" font-weight="700" font-size="${fontSize}" x="64" y="${lines.length > 1 ? 48 : 68}">${tspans}</text>
+  <text text-anchor="middle" dominant-baseline="middle" fill="#eef6fc" font-family="system-ui,-apple-system,sans-serif" font-weight="700" font-size="${fontSize}" x="64" y="${startY}">${tspans}</text>
 </svg>`;
 }
 
@@ -44,10 +78,16 @@ function escapeXml(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
 }
 
+function writeNameTile(acq) {
+  const svgPath = path.join(logoDir, `${acq.id}.svg`);
+  fs.writeFileSync(svgPath, wordmarkSvg(acq.company, acq.id));
+  return svgPath;
+}
+
 function ensureNameTile(acq) {
   const svgPath = path.join(logoDir, `${acq.id}.svg`);
   if (fs.existsSync(svgPath)) return false;
-  fs.writeFileSync(svgPath, wordmarkSvg(acq.company, acq.id));
+  writeNameTile(acq);
   return true;
 }
 
@@ -157,6 +197,16 @@ async function main() {
       }
     }
     console.log(`Generated ${generated} missing name tiles`);
+    return;
+  }
+  if (process.argv.includes("--refresh-name-tiles")) {
+    let refreshed = 0;
+    for (const acq of data.acquisitions) {
+      if (acq.visualIdentity?.kind !== "name-tile") continue;
+      writeNameTile(acq);
+      refreshed++;
+    }
+    console.log(`Refreshed ${refreshed} name-tile SVGs`);
     return;
   }
   const manifest = {};

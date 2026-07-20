@@ -388,6 +388,13 @@ body.acq-open #pillar-legend {
   display: none;
 }
 
+#acq-focus-logo.name-tile {
+  padding: 0;
+  border: none;
+  background: transparent;
+  object-fit: cover;
+}
+
 #acq-focus-wordmark {
   width: 72px;
   min-height: 72px;
@@ -395,14 +402,16 @@ body.acq-open #pillar-legend {
   border: 1px solid color-mix(in srgb, var(--acq-era-color, #02c8ff) 45%, var(--border));
   background: color-mix(in srgb, var(--acq-era-color, #02c8ff) 12%, var(--surface2));
   color: var(--text);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
-  line-height: 1.15;
+  line-height: 1.2;
   padding: 8px 6px;
   display: grid;
   place-items: center;
   text-align: center;
-  word-break: break-word;
+  white-space: pre-line;
+  word-break: normal;
+  overflow-wrap: normal;
 }
 
 #acq-focus-wordmark[hidden] {
