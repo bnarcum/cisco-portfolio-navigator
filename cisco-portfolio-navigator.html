@@ -9,7 +9,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.25";
+  window.__CPN_BUILD="3.5.26";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -7771,7 +7771,9 @@ function spatialResolveName(id){
 function clearSpatialLabelCache(){
   spatialState.labelCache.clear();
   spatialState.tileLoadGen += 1;
-  spatialState.tileCache.forEach(t => t.material?.map?.dispose?.());
+  spatialState.tileCache.forEach(t => {
+    t.map?.dispose?.();
+  });
   spatialState.tileCache.clear();
 }
 
@@ -8142,17 +8144,6 @@ function spatialLabelOffsetY(node, radius, profile){
   return tileSize * 0.54 + gap + textH * 0.22;
 }
 
-function spatialSymbolInner(iconKey){
-  const sym = document.getElementById("icon-" + iconKey) || document.getElementById("icon-product");
-  if (!sym) return "";
-  const html = sym.innerHTML?.trim?.() || "";
-  if (html) return html;
-  // Chrome often returns empty innerHTML for SVG <symbol>; serialize cloned children instead.
-  const wrap = document.createElementNS("http://www.w3.org/2000/svg", "g");
-  sym.childNodes.forEach(child => wrap.appendChild(child.cloneNode(true)));
-  return wrap.innerHTML;
-}
-
 /** Force Cisco symbol paths to white (currentColor is black in isolated SVG tiles). */
 function spatialWhitenSymbolMarkup(fragment){
   return String(fragment || "")
@@ -8166,7 +8157,7 @@ function spatialWhitenSymbolMarkup(fragment){
 function spatialSymbolMarkup(iconKeyVal, profile){
   const inner = spatialWhitenSymbolMarkup(spatialSymbolInner(iconKeyVal));
   if (!inner) return "";
-  const scale = profile?.mode === "constellation" ? 1.78 : profile?.mode === "hub" ? 1.68 : 1.58;
+  const scale = spatialIconScale(profile);
   return `<g transform="translate(128 128) scale(${scale}) translate(-40 -40)">${inner}</g>`;
 }
 
@@ -8189,7 +8180,7 @@ function spatialTileCacheKey(node){
   return [
     node.id,
     photoUrl ? "matrix:" + photoUrl : "icon:" + spatialIconKeyForNode(node),
-    "tile-v12",
+    "tile-v14",
     profile.mode,
     accent.core,
     selected?.id === node.id ? "sel" : "",
@@ -8197,10 +8188,107 @@ function spatialTileCacheKey(node){
   ].join("|");
 }
 
-function buildSpatialIconOnlySvg(iconKey, profile){
-  const inner = spatialSymbolMarkup(iconKey, profile);
-  if (!inner) return "";
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">${inner}</svg>`;
+function spatialSymbolInner(iconKey){
+  const sym = document.getElementById("icon-" + iconKey) || document.getElementById("icon-product");
+  if (!sym) return "";
+  const html = sym.innerHTML?.trim?.() || "";
+  if (html) return html;
+  const ser = typeof XMLSerializer !== "undefined" ? new XMLSerializer() : null;
+  if (!ser) return "";
+  const parts = [];
+  sym.childNodes.forEach(child => {
+    if (child.nodeType === 1) parts.push(ser.serializeToString(child));
+    else if (child.nodeType === 3 && child.textContent?.trim()) parts.push(child.textContent.trim());
+  });
+  return parts.join("");
+}
+
+function spatialIconScale(profile){
+  return profile?.mode === "constellation" ? 1.78 : profile?.mode === "hub" ? 1.68 : 1.58;
+}
+
+function buildSpatialIconRasterSvg(iconKey, profile){
+  const sym = document.getElementById("icon-" + iconKey) || document.getElementById("icon-product");
+  if (!sym) return "";
+  const scale = spatialIconScale(profile);
+  const localId = "spatial-icon-src";
+  const inner = spatialWhitenSymbolMarkup(spatialSymbolInner(iconKey));
+  if (inner){
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+      <g transform="translate(128 128) scale(${scale}) translate(-40 -40)" fill="#ffffff" stroke="#020608" stroke-width="2.35" stroke-linejoin="round" stroke-linecap="round" paint-order="stroke fill">${inner}</g>
+    </svg>`;
+  }
+  const symDef = sym.outerHTML
+    .replace(/\sid="[^"]+"/, ` id="${localId}"`)
+    .replace(/\bfill="currentColor"/gi, 'fill="#ffffff"')
+    .replace(/\bstroke="currentColor"/gi, 'stroke="#ffffff"');
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="256" height="256" viewBox="0 0 256 256">
+    <defs>${symDef}</defs>
+    <g transform="translate(128 128) scale(${scale}) translate(-40 -40)">
+      <use href="#${localId}" xlink:href="#${localId}" fill="#ffffff" stroke="#020608" stroke-width="2.35" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+  </svg>`;
+}
+
+function spatialCanvasHasIconInk(ctx){
+  const data = ctx.getImageData(112, 112, 32, 32).data;
+  for (let i = 0; i < data.length; i += 4){
+    if (data[i + 3] < 160) continue;
+    if (data[i] > 200 && data[i + 1] > 200 && data[i + 2] > 200) return true;
+  }
+  return false;
+}
+
+function drawSvgImageOntoCanvas(targetCanvas, img){
+  targetCanvas.getContext("2d").drawImage(img, 0, 0, 256, 256);
+  return true;
+}
+
+function rasterizeSvgViaDataUri(svg){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("svg-data-uri"));
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  });
+}
+
+function rasterizeSvgViaBlob(svg){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("svg-blob"));
+    };
+    img.src = url;
+  });
+}
+
+function rasterizeSvgViaBitmap(svg){
+  if (typeof createImageBitmap !== "function") return Promise.reject(new Error("no-bitmap"));
+  const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
+  return createImageBitmap(blob, { resizeWidth: 256, resizeHeight: 256 });
+}
+
+function rasterizeSvgOntoCanvas(targetCanvas, svg){
+  const tryDraw = draw => draw.then(source => {
+    drawSvgImageOntoCanvas(targetCanvas, source);
+    source.close?.();
+  });
+  return tryDraw(rasterizeSvgViaBlob(svg))
+    .catch(() => tryDraw(rasterizeSvgViaDataUri(svg)))
+    .catch(() => tryDraw(rasterizeSvgViaBitmap(svg)));
+}
+
+function paintSpatialIconOntoCanvas(canvas, iconKey, profile){
+  const svg = buildSpatialIconRasterSvg(iconKey, profile);
+  if (!svg) return Promise.resolve(false);
+  return rasterizeSvgOntoCanvas(canvas, svg).then(() => true).catch(() => false);
 }
 
 function paintSpatialTileDisc(ctx, node){
@@ -8249,57 +8337,26 @@ function paintSpatialTileCanvas(node){
   return canvas;
 }
 
-function rasterizeSvgOntoCanvas(targetCanvas, svg){
-  const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
-  const drawBitmap = bitmap => {
-    const ctx = targetCanvas.getContext("2d");
-    ctx.drawImage(bitmap, 0, 0, 256, 256);
-    bitmap.close?.();
-  };
-  if (typeof createImageBitmap === "function"){
-    return createImageBitmap(blob, { resizeWidth: 256, resizeHeight: 256 })
-      .then(drawBitmap);
-  }
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(blob);
-    img.onload = () => {
-      try {
-        drawBitmap(img);
-        resolve();
-      } finally {
-        URL.revokeObjectURL(url);
-      }
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("svg-raster"));
-    };
-    img.src = url;
-  });
-}
-
 function finishSpatialTileLoad(key, gen, source){
   const entry = spatialState.tileCache.get(key);
   if (!entry || entry.gen !== gen || !source) return;
   entry.source = source;
   entry.ready = true;
+  if (entry.map) entry.map.needsUpdate = true;
   if (spatialState.active) refreshSpatialNodeVisuals();
 }
 
 function preloadSpatialIconTile(node, key, gen){
   spatialState.tileCache.set(key, { ready: false, gen });
   const canvas = paintSpatialTileCanvas(node);
-  finishSpatialTileLoad(key, gen, canvas);
   const profile = spatialNodeVisualProfile(node);
-  const iconSvg = buildSpatialIconOnlySvg(spatialIconKeyForNode(node), profile);
-  if (!iconSvg) return;
-  rasterizeSvgOntoCanvas(canvas, iconSvg)
-    .then(() => {
+  const iconKey = spatialIconKeyForNode(node);
+  paintSpatialIconOntoCanvas(canvas, iconKey, profile)
+    .catch(() => false)
+    .finally(() => {
       if (spatialState.tileCache.get(key)?.gen !== gen) return;
       finishSpatialTileLoad(key, gen, canvas);
-    })
-    .catch(() => { /* disc already visible */ });
+    });
 }
 
 function preloadSpatialPhotoTile(node, key, gen, photoUrl){
@@ -8382,7 +8439,10 @@ function ensureSpatialTileOnGroup(group, node, radius, profile){
     fresh.position.copy(tile.position);
     tile.parent.add(fresh);
     tile.parent.remove(tile);
-    tile.material?.map?.dispose?.();
+    if (tile.material){
+      tile.material.map = null;
+      tile.material.dispose();
+    }
   } else {
     fresh.position.y = 0;
     group.add(fresh);
@@ -9545,10 +9605,11 @@ window.__cpnSpatialCameraStats = () => {
   };
 };
 window.__cpnSpatialTileStats = () => {
-  let ready = 0, matrix = 0, pending = 0;
+  let ready = 0, matrix = 0, pending = 0, withIcon = 0;
   spatialState.tileCache.forEach((entry, key) => {
     if (entry.ready) ready++;
     else pending++;
+    if (entry.hasIcon) withIcon++;
     if (key.includes("matrix:")) matrix++;
   });
   const g = spatialState.graph;
@@ -9561,7 +9622,7 @@ window.__cpnSpatialTileStats = () => {
     o.traverse(c => { if (c.userData?.role === "tile") hasTile = true; });
     if (hasTile) withTile++;
   });
-  return { cacheReady: ready, cachePending: pending, cacheMatrix: matrix, groups, withTile };
+  return { cacheReady: ready, cachePending: pending, cacheMatrix: matrix, cacheWithIcon: withIcon, groups, withTile };
 };
 window.__cpnMatrixOverlayOpen = () => matrixOverlayState.open;
 window.__cpnMatrixDeviceUrl = (id, view) => matrixDeviceUrl(id, view);

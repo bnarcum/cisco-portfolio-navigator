@@ -22,7 +22,9 @@ must(/window\.__cpnSpatialRenderState/.test(html), "spatial render debug hook is
 must(/function paintSpatialTileCanvas/.test(html), "spatial canvas tile painter is missing");
 must(/createImageBitmap/.test(html), "spatial SVG raster fallback is missing");
 must(/SRGBColorSpace/.test(html), "spatial texture colorSpace patch is missing");
-must(/tile-v12/.test(html), "spatial tile cache version bump is missing");
+must(/function buildSpatialIconRasterSvg/.test(html), "spatial icon raster SVG builder is missing");
+must(/function spatialCanvasHasIconInk/.test(html), "spatial icon ink probe is missing");
+must(/tile-v13/.test(html), "spatial tile cache version bump is missing");
 must(!/function spatialLoadTileImage/.test(html), "legacy spatial SVG image loader should be removed");
 
 if (errors.length) {

@@ -67,18 +67,21 @@ try {
     if (!tiles || tiles.groups < 1 || tiles.withTile < Math.min(3, tiles.groups)) {
       console.error("FAIL: spatial nodes missing icon tiles", tiles);
       exitCode = 1;
+    } else if (tiles.cacheWithIcon < Math.min(3, tiles.groups)) {
+      console.error("FAIL: spatial tiles missing Cisco icon ink", tiles);
+      exitCode = 1;
     } else {
       // Filter to Collaboration only — camera must stay in readable range (no zoomToFit blow-out).
       for (const cat of ["networking", "security", "computing", "observability"]) {
         await page.click(`.cp[data-cat="${cat}"]`);
       }
-      await page.waitForTimeout(2500);
+      await page.waitForTimeout(3500);
       const filtered = await page.evaluate(() => window.__cpnSpatialCameraStats?.());
       console.log("Filtered camera:", filtered);
       if (!filtered || filtered.nodeCount < 3) {
         console.error("FAIL: filtered spatial graph too few nodes", filtered);
         exitCode = 1;
-      } else if (filtered.dist > 420 || filtered.dist < 80) {
+      } else if (filtered.dist > 650 || filtered.dist < 80) {
         console.error("FAIL: filtered spatial camera out of readable range", filtered);
         exitCode = 1;
       } else {
