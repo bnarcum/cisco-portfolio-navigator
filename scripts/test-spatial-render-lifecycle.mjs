@@ -19,10 +19,11 @@ must(/visibilitychange/.test(html) && /bindSpatialRenderLifecycle/.test(html), "
 must(/pauseAnimation/.test(html), "spatial must call graph.pauseAnimation");
 must(/resumeAnimation/.test(html), "spatial must call graph.resumeAnimation");
 must(/window\.__cpnSpatialRenderState/.test(html), "spatial render debug hook is missing");
-must(/function spatialLoadTileImage/.test(html), "spatial tile blob loader is missing");
-must(/depthTest:\s*false/.test(html), "spatial tile sprites must disable depthTest");
-must(/tile-v11/.test(html), "spatial tile cache version bump is missing");
-must(/cloneNode\(true\)/.test(html), "spatial symbol clone fallback is missing");
+must(/function paintSpatialTileCanvas/.test(html), "spatial canvas tile painter is missing");
+must(/createImageBitmap/.test(html), "spatial SVG raster fallback is missing");
+must(/SRGBColorSpace/.test(html), "spatial texture colorSpace patch is missing");
+must(/tile-v12/.test(html), "spatial tile cache version bump is missing");
+must(!/function spatialLoadTileImage/.test(html), "legacy spatial SVG image loader should be removed");
 
 if (errors.length) {
   console.error("FAIL test-spatial-render-lifecycle\n" + errors.map(e => `  - ${e}`).join("\n"));

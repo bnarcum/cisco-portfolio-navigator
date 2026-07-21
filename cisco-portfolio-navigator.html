@@ -9,7 +9,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.24";
+  window.__CPN_BUILD="3.5.25";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -7853,18 +7853,31 @@ function ensureSpatialNodeRenderer(attempt){
 function mergeSpatialThreeExtras(THREE){
   const extras = window.__cpnThreeExtras;
   if (!extras || !THREE) return THREE;
+  const patchMissing = key => { if (extras[key] && !THREE[key]) THREE[key] = extras[key]; };
+  // Sprites/textures always come from the standalone module (bundled graph lacks them).
   if (extras.Sprite) THREE.Sprite = extras.Sprite;
   if (extras.SpriteMaterial) THREE.SpriteMaterial = extras.SpriteMaterial;
   if (extras.CanvasTexture) THREE.CanvasTexture = extras.CanvasTexture;
-  if (extras.Group) THREE.Group = extras.Group;
-  if (extras.Mesh) THREE.Mesh = extras.Mesh;
-  if (extras.MeshBasicMaterial) THREE.MeshBasicMaterial = extras.MeshBasicMaterial;
-  if (extras.MeshLambertMaterial) THREE.MeshLambertMaterial = extras.MeshLambertMaterial;
-  if (extras.SphereGeometry) THREE.SphereGeometry = extras.SphereGeometry;
-  if (extras.RingGeometry) THREE.RingGeometry = extras.RingGeometry;
-  if (extras.PlaneGeometry) THREE.PlaneGeometry = extras.PlaneGeometry;
-  if (extras.AmbientLight) THREE.AmbientLight = extras.AmbientLight;
-  if (extras.DirectionalLight) THREE.DirectionalLight = extras.DirectionalLight;
+  if (extras.SRGBColorSpace) THREE.SRGBColorSpace = extras.SRGBColorSpace;
+  if (extras.LinearFilter) THREE.LinearFilter = extras.LinearFilter;
+  // Never replace bundled scene graph constructors when captured from ForceGraph3D.
+  if (THREE.__bundled){
+    patchMissing("SphereGeometry");
+    patchMissing("RingGeometry");
+    patchMissing("PlaneGeometry");
+    patchMissing("AmbientLight");
+    patchMissing("DirectionalLight");
+    return THREE;
+  }
+  patchMissing("Group");
+  patchMissing("Mesh");
+  patchMissing("MeshBasicMaterial");
+  patchMissing("MeshLambertMaterial");
+  patchMissing("SphereGeometry");
+  patchMissing("RingGeometry");
+  patchMissing("PlaneGeometry");
+  patchMissing("AmbientLight");
+  patchMissing("DirectionalLight");
   return THREE;
 }
 
@@ -7893,8 +7906,9 @@ function spatialMakeTexture(source){
   const THREE = ensureSpatialTHREE();
   if (!THREE?.CanvasTexture || !source) return null;
   const tex = new THREE.CanvasTexture(source);
-  tex.minFilter = THREE.LinearFilter;
-  tex.magFilter = THREE.LinearFilter;
+  if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+  tex.minFilter = THREE.LinearFilter ?? 1006;
+  tex.magFilter = THREE.LinearFilter ?? 1006;
   tex.generateMipmaps = false;
   tex.needsUpdate = true;
   return tex;
@@ -8175,7 +8189,7 @@ function spatialTileCacheKey(node){
   return [
     node.id,
     photoUrl ? "matrix:" + photoUrl : "icon:" + spatialIconKeyForNode(node),
-    "tile-v11",
+    "tile-v12",
     profile.mode,
     accent.core,
     selected?.id === node.id ? "sel" : "",
@@ -8183,102 +8197,139 @@ function spatialTileCacheKey(node){
   ].join("|");
 }
 
-function buildSpatialTileSvg(node, opts = {}){
-  const profile = spatialNodeVisualProfile(node);
-  const iconKey = spatialIconKeyForNode(node);
+function buildSpatialIconOnlySvg(iconKey, profile){
+  const inner = spatialSymbolMarkup(iconKey, profile);
+  if (!inner) return "";
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">${inner}</svg>`;
+}
+
+function paintSpatialTileDisc(ctx, node){
   const palette = spatialCategoryPalette(node);
   const fill = palette.base;
   const glow = palette.glow;
   const deep = palette.deep || palette.emissive;
-  const inner = spatialSymbolMarkup(iconKey, profile);
   const isSel = selected?.id === node.id;
   const isStk = stack.has(node.id);
   const rim = isSel ? "#66e0ff" : (isStk ? "#ffd700" : glow);
   const rimW = isSel ? 5.5 : (isStk ? 4.5 : 3.75);
-  if (opts.simple){
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-    <circle cx="128" cy="128" r="120" fill="${glow}" fill-opacity="0.24"/>
-    <circle cx="128" cy="128" r="98" fill="${fill}" stroke="${rim}" stroke-width="${rimW}" stroke-opacity="${isSel || isStk ? 1 : 0.9}"/>
-    <circle cx="128" cy="128" r="64" fill="${deep}" stroke="rgba(255,255,255,0.28)" stroke-width="1.5"/>
-    <g fill="#ffffff" stroke="#020608" stroke-width="2.35" stroke-opacity="0.92" stroke-linejoin="round" stroke-linecap="round">${inner}</g>
-  </svg>`;
-  }
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-    <defs>
-      <radialGradient id="aura" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="${glow}" stop-opacity="0.48"/>
-        <stop offset="70%" stop-color="${glow}" stop-opacity="0.1"/>
-        <stop offset="100%" stop-color="${glow}" stop-opacity="0"/>
-      </radialGradient>
-      <radialGradient id="orb" cx="36%" cy="30%" r="72%">
-        <stop offset="0%" stop-color="${glow}" stop-opacity="1"/>
-        <stop offset="42%" stop-color="${fill}" stop-opacity="1"/>
-        <stop offset="100%" stop-color="${deep}" stop-opacity="1"/>
-      </radialGradient>
-      <filter id="halo" x="-40%" y="-40%" width="180%" height="180%">
-        <feGaussianBlur stdDeviation="8" result="b"/>
-        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>
-      <filter id="iconPop" x="-60%" y="-60%" width="220%" height="220%">
-        <feDropShadow dx="0" dy="2" stdDeviation="2.4" flood-color="#000000" flood-opacity="0.78"/>
-      </filter>
-    </defs>
-    <circle cx="128" cy="128" r="120" fill="url(#aura)" filter="url(#halo)"/>
-    <circle cx="128" cy="128" r="98" fill="url(#orb)" stroke="${rim}" stroke-width="${rimW}" stroke-opacity="${isSel || isStk ? 1 : 0.9}"/>
-    <circle cx="128" cy="128" r="64" fill="${deep}" stroke="rgba(255,255,255,0.28)" stroke-width="1.5"/>
-    <g fill="#ffffff" stroke="#020608" stroke-width="2.35" stroke-opacity="0.92" stroke-linejoin="round" stroke-linecap="round" paint-order="stroke fill" filter="url(#iconPop)">${inner}</g>
-  </svg>`;
+  ctx.clearRect(0, 0, 256, 256);
+  const aura = ctx.createRadialGradient(128, 128, 18, 128, 128, 120);
+  aura.addColorStop(0, spatialHexToRgba(glow, 0.48));
+  aura.addColorStop(0.7, spatialHexToRgba(glow, 0.1));
+  aura.addColorStop(1, spatialHexToRgba(glow, 0));
+  ctx.fillStyle = aura;
+  ctx.beginPath();
+  ctx.arc(128, 128, 120, 0, Math.PI * 2);
+  ctx.fill();
+  const orb = ctx.createRadialGradient(92, 78, 8, 128, 128, 98);
+  orb.addColorStop(0, glow);
+  orb.addColorStop(0.42, fill);
+  orb.addColorStop(1, deep);
+  ctx.fillStyle = orb;
+  ctx.beginPath();
+  ctx.arc(128, 128, 98, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = rim;
+  ctx.lineWidth = rimW;
+  ctx.stroke();
+  ctx.fillStyle = deep;
+  ctx.beginPath();
+  ctx.arc(128, 128, 64, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,0.28)";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
 }
 
-function finishSpatialTileLoad(key, gen, img){
+function paintSpatialTileCanvas(node){
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 256;
+  paintSpatialTileDisc(canvas.getContext("2d"), node);
+  return canvas;
+}
+
+function rasterizeSvgOntoCanvas(targetCanvas, svg){
+  const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
+  const drawBitmap = bitmap => {
+    const ctx = targetCanvas.getContext("2d");
+    ctx.drawImage(bitmap, 0, 0, 256, 256);
+    bitmap.close?.();
+  };
+  if (typeof createImageBitmap === "function"){
+    return createImageBitmap(blob, { resizeWidth: 256, resizeHeight: 256 })
+      .then(drawBitmap);
+  }
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(blob);
+    img.onload = () => {
+      try {
+        drawBitmap(img);
+        resolve();
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("svg-raster"));
+    };
+    img.src = url;
+  });
+}
+
+function finishSpatialTileLoad(key, gen, source){
   const entry = spatialState.tileCache.get(key);
-  if (!entry || entry.gen !== gen) return;
-  entry.image = img;
+  if (!entry || entry.gen !== gen || !source) return;
+  entry.source = source;
   entry.ready = true;
   if (spatialState.active) refreshSpatialNodeVisuals();
 }
 
-function spatialTileImageReady(img){
-  return !!(img && (img.naturalWidth > 0 || img.width > 0));
+function preloadSpatialIconTile(node, key, gen){
+  spatialState.tileCache.set(key, { ready: false, gen });
+  const canvas = paintSpatialTileCanvas(node);
+  finishSpatialTileLoad(key, gen, canvas);
+  const profile = spatialNodeVisualProfile(node);
+  const iconSvg = buildSpatialIconOnlySvg(spatialIconKeyForNode(node), profile);
+  if (!iconSvg) return;
+  rasterizeSvgOntoCanvas(canvas, iconSvg)
+    .then(() => {
+      if (spatialState.tileCache.get(key)?.gen !== gen) return;
+      finishSpatialTileLoad(key, gen, canvas);
+    })
+    .catch(() => { /* disc already visible */ });
 }
 
-function spatialLoadTileImage(svg, onLoad, onError){
+function preloadSpatialPhotoTile(node, key, gen, photoUrl){
+  spatialState.tileCache.set(key, { ready: false, gen });
   const img = new Image();
-  let blobUrl = null;
-  const finish = () => {
-    if (blobUrl){
-      try { URL.revokeObjectURL(blobUrl); } catch (_) { /* ignore */ }
-      blobUrl = null;
-    }
-    if (spatialTileImageReady(img)) onLoad(img);
-    else onError?.();
+  img.crossOrigin = "anonymous";
+  img.onload = () => {
+    if (spatialState.tileCache.get(key)?.gen !== gen) return;
+    const canvas = paintSpatialTileCanvas(node);
+    const ctx = canvas.getContext("2d");
+    const w = img.naturalWidth || img.width || 256;
+    const h = img.naturalHeight || img.height || 256;
+    const scale = Math.max(180 / w, 180 / h);
+    const dw = w * scale;
+    const dh = h * scale;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(128, 128, 90, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.drawImage(img, (256 - dw) / 2, (256 - dh) / 2, dw, dh);
+    ctx.restore();
+    ctx.strokeStyle = "rgba(255,255,255,0.35)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(128, 128, 90, 0, Math.PI * 2);
+    ctx.stroke();
+    finishSpatialTileLoad(key, gen, canvas);
   };
-  img.onload = finish;
-  img.onerror = () => {
-    if (blobUrl){
-      try { URL.revokeObjectURL(blobUrl); } catch (_) { /* ignore */ }
-      blobUrl = null;
-      img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
-      return;
-    }
-    onError?.();
-  };
-  try {
-    blobUrl = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
-    img.src = blobUrl;
-  } catch (_) {
-    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
-  }
-}
-
-function preloadSpatialIconTile(node, key, gen, simple){
-  spatialState.tileCache.set(key, { ready: false, gen, simple: !!simple });
-  const svg = buildSpatialTileSvg(node, { simple: !!simple });
-  spatialLoadTileImage(
-    svg,
-    img => finishSpatialTileLoad(key, gen, img),
-    () => { if (!simple) preloadSpatialIconTile(node, key, gen, true); }
-  );
+  img.onerror = () => preloadSpatialIconTile(node, key, gen);
+  img.src = photoUrl;
 }
 
 function preloadSpatialTiles(nodes){
@@ -8289,16 +8340,8 @@ function preloadSpatialTiles(nodes){
     if (existing?.ready) return;
     if (existing && !existing.ready) return;
     const photoUrl = spatialProductPhotoUrl(n);
-    if (photoUrl){
-      spatialState.tileCache.set(key, { ready: false, gen });
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => finishSpatialTileLoad(key, gen, img);
-      img.onerror = () => preloadSpatialIconTile(n, key, gen);
-      img.src = photoUrl;
-    } else {
-      preloadSpatialIconTile(n, key, gen);
-    }
+    if (photoUrl) preloadSpatialPhotoTile(n, key, gen, photoUrl);
+    else preloadSpatialIconTile(n, key, gen);
   });
 }
 
@@ -8307,8 +8350,8 @@ function getSpatialTileSprite(node, radius, profile){
   if (!THREE?.Sprite || !THREE?.SpriteMaterial || !THREE?.CanvasTexture) return null;
   const key = spatialTileCacheKey(node);
   const entry = spatialState.tileCache.get(key);
-  if (!entry?.ready || !entry.image) return null;
-  const map = spatialMakeTexture(entry.image);
+  if (!entry?.ready || !entry.source) return null;
+  const map = spatialMakeTexture(entry.source);
   if (!map) return null;
   const mat = new THREE.SpriteMaterial({
     map,
@@ -8770,9 +8813,9 @@ function loadSpriteTextLib(){
     const s = document.createElement("script");
     s.type = "module";
     s.textContent = `import SpriteText from "./vendor/three-spritetext.mjs";
-import { CanvasTexture, Sprite, SpriteMaterial, Group, Mesh, MeshBasicMaterial, MeshLambertMaterial, SphereGeometry, RingGeometry, PlaneGeometry, AmbientLight, DirectionalLight } from "./vendor/three.module.min.js";
+import { CanvasTexture, Sprite, SpriteMaterial, SRGBColorSpace, LinearFilter, Group, Mesh, MeshBasicMaterial, MeshLambertMaterial, SphereGeometry, RingGeometry, PlaneGeometry, AmbientLight, DirectionalLight } from "./vendor/three.module.min.js";
 window.SpriteText = SpriteText.default || SpriteText;
-window.__cpnThreeExtras = { CanvasTexture, Sprite, SpriteMaterial, Group, Mesh, MeshBasicMaterial, MeshLambertMaterial, SphereGeometry, RingGeometry, PlaneGeometry, AmbientLight, DirectionalLight };
+window.__cpnThreeExtras = { CanvasTexture, Sprite, SpriteMaterial, SRGBColorSpace, LinearFilter, Group, Mesh, MeshBasicMaterial, MeshLambertMaterial, SphereGeometry, RingGeometry, PlaneGeometry, AmbientLight, DirectionalLight };
 window.dispatchEvent(new Event("spatial-spritetext-ready"));`;
     s.onerror = () => {
       window.removeEventListener("spatial-spritetext-ready", onReady);
