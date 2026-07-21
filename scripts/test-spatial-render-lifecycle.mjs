@@ -23,8 +23,9 @@ must(/function paintSpatialTileCanvas/.test(html), "spatial canvas tile painter 
 must(/createImageBitmap/.test(html), "spatial SVG raster fallback is missing");
 must(/SRGBColorSpace/.test(html), "spatial texture colorSpace patch is missing");
 must(/function buildSpatialIconRasterSvg/.test(html), "spatial icon raster SVG builder is missing");
-must(/function spatialCanvasHasIconInk/.test(html), "spatial icon ink probe is missing");
-must(/tile-v13/.test(html), "spatial tile cache version bump is missing");
+must(/entry\.map/.test(html), "spatial tile texture cache is missing");
+must(/entry\.map\.needsUpdate = true/.test(html), "spatial tile texture refresh is missing");
+must(/tile-v14/.test(html), "spatial tile cache version bump is missing");
 must(!/function spatialLoadTileImage/.test(html), "legacy spatial SVG image loader should be removed");
 
 if (errors.length) {

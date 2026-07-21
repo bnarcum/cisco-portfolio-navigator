@@ -8408,10 +8408,11 @@ function getSpatialTileSprite(node, radius, profile){
   const key = spatialTileCacheKey(node);
   const entry = spatialState.tileCache.get(key);
   if (!entry?.ready || !entry.source) return null;
-  const map = spatialMakeTexture(entry.source);
-  if (!map) return null;
+  if (!entry.map) entry.map = spatialMakeTexture(entry.source);
+  else entry.map.needsUpdate = true;
+  if (!entry.map) return null;
   const mat = new THREE.SpriteMaterial({
-    map,
+    map: entry.map,
     transparent: true,
     depthWrite: false,
     depthTest: false,
