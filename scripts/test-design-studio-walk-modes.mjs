@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Design Studio walk — single Lab/cinema experience. */
+/** Design Studio walk — single Solution Walk experience. */
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -21,17 +21,17 @@ must(!/design-studio-walk-quest/.test(lazy), "Cable Quest should not be lazy-loa
 must(!/__DS_WALK_QUEST/.test(walk), "Walk should not reference Cable Quest");
 must(/function pickHeroChamber/.test(walk), "pickHeroChamber is missing");
 must(/function playEntryReveal/.test(walk), "playEntryReveal is missing");
-must(/function revealWalkChrome/.test(walk), "revealWalkChrome is missing");
-must(/ds-walk-cinema/.test(walk), "cinema mode class must be applied on open");
+must(/function finishIntroReveal/.test(walk), "finishIntroReveal is missing");
+must(!/ds-walk-cinema/.test(walk), "cinema dim mode should not be used");
+must(!/ds-entering-walk/.test(walk), "diagram dim should not be used");
 must(/await loadDevicePods/.test(walk), "device pods must load before reveal");
 must(/style\.features\.manualMove/.test(walk), "manual movement must be gated by style features");
 must(/style\.features\.avatar/.test(walk), "avatar must be gated by style features");
 must(/if \(style\.features\.avatar\) state\.thirdPerson = true;/.test(walk), "Avatar walk must restore third-person visibility");
 must(/PROX_LABEL_NEAR/.test(walk), "proximity label distance is missing");
 
-must(/ds-walk-cinema/.test(css), "Cinema CSS is missing");
-must(/ds-walk-lab/.test(css), "Lab CSS class is missing");
-must(/ds-entering-walk/.test(css), "diagram transition CSS is missing");
+must(!/ds-walk-cinema/.test(css), "cinema dim CSS should be removed");
+must(!/ds-entering-walk/.test(css), "diagram dim CSS should be removed");
 must(/function usesGlassHud/.test(walk), "Glass HUD helper is missing");
 must(/return hudHtmlGlass/.test(walk), "Walk HUD must use glass layout");
 must(!/data-action="walk-style"/.test(walk), "walk style HUD toggle should be removed");

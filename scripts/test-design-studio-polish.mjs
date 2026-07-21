@@ -18,7 +18,7 @@ try {
   await page.goto("http://127.0.0.1:8765/cisco-portfolio-navigator.html", { waitUntil: "load", timeout: 60000 });
   await page.waitForFunction(() => window.__cpnV2?.APP_VERSION, { timeout: 60000 });
   const version = await page.evaluate(() => window.__cpnV2.APP_VERSION);
-  if (version !== "3.5.24") errors.push(`version ${version} != 3.5.24`);
+  if (version !== "3.5.25") errors.push(`version ${version} != 3.5.25`);
 
   await page.click("#design-studio-btn");
   await page.waitForSelector("#design-studio.open", { timeout: 30000 });
@@ -140,13 +140,17 @@ try {
     return {
       pods: st.pods || 0,
       open: window.__DS_WALK?.isOpen?.(),
-      cinema: overlay?.classList.contains("ds-walk-cinema"),
-      loading: overlay?.classList.contains("ds-walk-loading")
+      intro: window.__DS_WALK?.debugStats?.()?.mode === "walk"
     };
   });
   if (!walk.open) errors.push("walk did not open");
   if (walk.pods < 3) errors.push(`walk expected >=3 device pods, got ${walk.pods}`);
-  if (walk.loading) errors.push("walk still in loading state after reveal");
+  const dim = await page.evaluate(() => ({
+    wrapOpacity: getComputedStyle(document.getElementById("ds-canvas-wrap") || document.body).opacity,
+    cinema: document.getElementById("ds-walk-overlay")?.classList.contains("ds-walk-cinema")
+  }));
+  if (dim.cinema) errors.push("walk overlay still in cinema dim mode");
+  if (parseFloat(dim.wrapOpacity) < 0.95) errors.push(`canvas wrap still dimmed (opacity ${dim.wrapOpacity})`);
   await page.screenshot({ path: path.join(out, "polish-walk.png") });
 
   // Wayfinding: the "Where to?" picker should list destinations; choosing one

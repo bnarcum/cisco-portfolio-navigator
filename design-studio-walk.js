@@ -89,8 +89,8 @@
     packetsEnabled: true, packetSpeedIdx: 1,
     walkStyle: "lab",
     linksExpanded: false,
-    cinemaMode: false, introActive: false, chromeRevealed: false,
-    chromeRevealTimer: null, entryHero: null
+    introActive: false,
+    entryHero: null
   };
 
   function savedWalkStyle() {
@@ -190,25 +190,6 @@
     if (state.viewmodel) state.viewmodel.visible = false;
   }
 
-  function revealWalkChrome() {
-    if (state.chromeRevealed) return;
-    state.chromeRevealed = true;
-    state.cinemaMode = false;
-    if (state.chromeRevealTimer) {
-      clearTimeout(state.chromeRevealTimer);
-      state.chromeRevealTimer = null;
-    }
-    state.overlay?.classList.remove("ds-walk-cinema");
-    const ctx = document.getElementById("ds-walk-context");
-    if (ctx) ctx.textContent = "WASD move · E inspect · Esc exit";
-    setStatus("");
-  }
-
-  function maybeRevealChrome() {
-    if (!state.cinemaMode || state.chromeRevealed) return;
-    revealWalkChrome();
-  }
-
   function finishIntroReveal(skipFly) {
     if (skipFly && state.fly?.intro) {
       const f = state.fly;
@@ -220,13 +201,7 @@
     }
     state.introActive = false;
     const prompt = document.getElementById("ds-walk-prompt");
-    if (prompt) {
-      prompt.hidden = false;
-      prompt.textContent = "Walk around";
-    }
-    if (!state.chromeRevealTimer && !state.chromeRevealed) {
-      state.chromeRevealTimer = setTimeout(() => revealWalkChrome(), 4000);
-    }
+    if (prompt) prompt.hidden = true;
   }
 
   function playEntryReveal(pose) {
@@ -266,11 +241,6 @@
     };
     state.yaw = pose.yaw;
     state.pitch = (pose.pitch ?? -0.06) + 0.1;
-    const prompt = document.getElementById("ds-walk-prompt");
-    if (prompt) {
-      prompt.hidden = false;
-      prompt.textContent = "Walk around";
-    }
     window.__DS_WALK_AUDIO?.sfx?.enter?.();
   }
 
@@ -2392,10 +2362,7 @@
     state.nearChamber = ch;
     const prompt = document.getElementById("ds-walk-prompt");
     if (prompt) {
-      if (state.cinemaMode && !state.chromeRevealed) {
-        prompt.hidden = false;
-        prompt.textContent = "Walk around";
-      } else if (ch) {
+      if (ch) {
         const p = chamberWorldPos(ch);
         const near = Math.hypot(p.x - state.pos.x, p.z - state.pos.z) < 9;
         prompt.hidden = !near;
@@ -3110,7 +3077,7 @@
     state.overlay?.querySelectorAll("[data-move]").forEach(btn => {
       const key = map[btn.dataset.move];
       if (!key) return;
-      const down = e => { e.preventDefault(); if (state.introActive) finishIntroReveal(true); maybeRevealChrome(); cancelMotion(); state.keys[key] = true; };
+      const down = e => { e.preventDefault(); if (state.introActive) finishIntroReveal(true); cancelMotion(); state.keys[key] = true; };
       const up = () => { state.keys[key] = false; };
       btn.addEventListener("pointerdown", down);
       btn.addEventListener("pointerup", up);
@@ -3196,7 +3163,6 @@
         if (MOVE_KEYS.has(e.key)) {
           if (!style.features.manualMove) return;
           if (state.introActive) finishIntroReveal(true);
-          maybeRevealChrome();
           cancelMotion();
         }
         if (e.key === "Escape") {
@@ -3250,13 +3216,11 @@
     const onMove = e => {
       if (state.pointerLocked) {
         onLook(e.movementX, e.movementY);
-        maybeRevealChrome();
         return;
       }
       if (!state.lookDrag) return;
       onLook(e.clientX - state.lookLast.x, e.clientY - state.lookLast.y);
       state.lookLast = { x: e.clientX, y: e.clientY };
-      maybeRevealChrome();
     };
     const onUp = e => {
       if (e.button === 0 && downPos) {
@@ -3351,17 +3315,6 @@
     state.graph = null;
   }
 
-  function resetCinemaState() {
-    state.cinemaMode = false;
-    state.introActive = false;
-    state.chromeRevealed = false;
-    state.entryHero = null;
-    if (state.chromeRevealTimer) {
-      clearTimeout(state.chromeRevealTimer);
-      state.chromeRevealTimer = null;
-    }
-  }
-
   async function open(studio) {
     if (!studio || (studio.tab !== "room" && studio.tab !== "network")) {
       studio?.toast?.("Open Network or Room tab first");
@@ -3374,15 +3327,13 @@
     }
 
     if (state.mode) close(true);
-    resetCinemaState();
+    state.introActive = false;
+    state.entryHero = null;
     state.studio = studio;
     state.mode = "walk";
     state.walkStyle = "lab";
     setWalkStyle("lab");
     const style = activeWalkStyle();
-
-    const canvasWrap = document.getElementById("ds-canvas-wrap");
-    canvasWrap?.classList.add("ds-entering-walk");
 
     let overlay = document.getElementById("ds-walk-overlay");
     const wrap = document.getElementById("ds-canvas-wrap");
@@ -3396,9 +3347,7 @@
     overlay.hidden = false;
     overlay.removeAttribute("hidden");
     overlay.setAttribute("aria-hidden", "false");
-    overlay.className = `ds-walk-overlay ${style.className} ds-walk-cinema ds-walk-loading`;
-    state.cinemaMode = true;
-    state.chromeRevealed = false;
+    overlay.className = `ds-walk-overlay ${style.className}`;
     overlay.innerHTML = `${hudHtml(studio.tab)}
       <div class="ds-walk-stage">
         <div class="ds-walk-vignette" aria-hidden="true"></div>
@@ -3437,16 +3386,11 @@
       initFieldSystems(graph);
       bindRenderLifecycle();
       resumeRenderLoop();
-      state.overlay?.classList.remove("ds-walk-loading");
-      state.overlay?.classList.remove("ds-walk-fade-out");
-      state.overlay?.classList.add("ds-walk-reveal");
-      requestAnimationFrame(() => state.overlay?.classList.remove("ds-walk-reveal"));
       studio.roomView = "walk";
       window.__DS_PREMIUM?.renderCanvasViewToggle?.(studio);
       window.__DS_WALK_AUDIO?.start?.();
     } catch (err) {
       console.error("[DS Walk]", err);
-      canvasWrap?.classList.remove("ds-entering-walk");
       showWalkError(err?.message === "three-load" ? "3D library failed to load — hard-refresh" : `Walkthrough failed: ${err.message}`);
       studio.toast?.("Walkthrough failed — see overlay message");
     }
@@ -3506,9 +3450,7 @@
     }
     window.__DS_FIELD_PANEL?.close?.();
     window.__DS_WALK_AUDIO?.stop?.();
-    resetCinemaState();
-    const canvasWrap = document.getElementById("ds-canvas-wrap");
-    canvasWrap?.classList.remove("ds-entering-walk");
+    state.introActive = false;
     state.mode = null;
     if (!silent) state.studio = null;
   }
