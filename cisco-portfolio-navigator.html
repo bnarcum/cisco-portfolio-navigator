@@ -9,7 +9,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.22";
+  window.__CPN_BUILD="3.5.23";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -7735,7 +7735,34 @@ function buildCompositionView(familyId){
 // ══════════════════════════════════════
 const SPATIAL_LIB = "vendor/3d-force-graph.min.js";
 const SPATIAL_LINK_PRESET_KEY = "cpn-spatial-link-preset-v2";
-const spatialState = { graph: null, active: false, libPromise: null, spritePromise: null, resizeObs: null, labelCache: new Map(), tileCache: new Map(), tileLoadGen: 0, focusFamily: null, lastNodeClick: null, hoveredId: null, lightsAdded: false, threeCaptured: false, nodeRendererReady: false, meshTemplate: null, filterBoost: 1, filterActive: false, lastStats: null, linkPreset: "curved", styleBarReady: false, decorAdded: false, decorGroup: null, boundaryRings: [] };
+const spatialState = { graph: null, active: false, renderPaused: false, libPromise: null, spritePromise: null, resizeObs: null, labelCache: new Map(), tileCache: new Map(), tileLoadGen: 0, focusFamily: null, lastNodeClick: null, hoveredId: null, lightsAdded: false, threeCaptured: false, nodeRendererReady: false, meshTemplate: null, filterBoost: 1, filterActive: false, lastStats: null, linkPreset: "curved", styleBarReady: false, decorAdded: false, decorGroup: null, boundaryRings: [] };
+
+function shouldRenderSpatial(){
+  return !!(spatialState.active && spatialState.graph && !document.hidden);
+}
+
+function pauseSpatialRender(){
+  if (spatialState.renderPaused) return;
+  try { spatialState.graph?.pauseAnimation?.(); } catch (_) { /* ignore */ }
+  spatialState.renderPaused = true;
+}
+
+function resumeSpatialRender(){
+  if (!shouldRenderSpatial()) return;
+  try { spatialState.graph?.resumeAnimation?.(); } catch (_) { /* ignore */ }
+  spatialState.renderPaused = false;
+}
+
+function syncSpatialRender(){
+  if (shouldRenderSpatial()) resumeSpatialRender();
+  else pauseSpatialRender();
+}
+
+function bindSpatialRenderLifecycle(){
+  if (spatialState._onVis) return;
+  spatialState._onVis = () => syncSpatialRender();
+  document.addEventListener("visibilitychange", spatialState._onVis);
+}
 
 function spatialResolveName(id){
   return nodeById[id]?.name || prodById[id]?.name || id;
@@ -8956,6 +8983,7 @@ function initSpatialGraph(){
     });
     spatialState.resizeObs.observe(document.getElementById("gw"));
   }
+  bindSpatialRenderLifecycle();
 }
 
 function refreshSpatialGraph(){
@@ -9044,6 +9072,7 @@ function enterSpatialView(){
       configureSpatialBackground();
       const dims = getSpatialDims();
       if (spatialState.graph) spatialState.graph.width(dims.w).height(dims.h);
+      syncSpatialRender();
     })
     .catch(err => {
       const reason = err && err.message;
@@ -9065,6 +9094,7 @@ function enterSpatialView(){
 function exitSpatialView(){
   spatialState.active = false;
   spatialState.focusFamily = null;
+  pauseSpatialRender();
   document.body.classList.remove("spatial-open");
   svgEl.style.display = "block";
   const wrap = document.getElementById("spatial-wrap");
@@ -9398,6 +9428,11 @@ window.__cpnTestZoomK = (k) => {
 };
 window.getSpatialFocus = () => spatialState.focusFamily;
 window.__cpnSpatialGraph = () => spatialState.graph;
+window.__cpnSpatialRenderState = () => ({
+  active: spatialState.active,
+  paused: spatialState.renderPaused,
+  shouldRender: shouldRenderSpatial()
+});
 window.__cpnSpatialCameraStats = () => {
   const g = spatialState.graph;
   if (!g) return null;
