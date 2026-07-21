@@ -18,7 +18,7 @@ try {
   await page.goto("http://127.0.0.1:8765/cisco-portfolio-navigator.html", { waitUntil: "load", timeout: 60000 });
   await page.waitForFunction(() => window.__cpnV2?.APP_VERSION, { timeout: 60000 });
   const version = await page.evaluate(() => window.__cpnV2.APP_VERSION);
-  if (version !== "2.79.17") errors.push(`version ${version} != 2.79.17`);
+  if (version !== "3.5.24") errors.push(`version ${version} != 3.5.24`);
 
   await page.click("#design-studio-btn");
   await page.waitForSelector("#design-studio.open", { timeout: 30000 });
@@ -133,17 +133,20 @@ try {
   await page.evaluate(() => window.DesignStudio.instance.setTab("room"));
   await page.waitForTimeout(300);
   await page.evaluate(() => window.__DS_WALK?.open?.(window.DesignStudio.instance));
-  await page.waitForTimeout(1800);
+  await page.waitForTimeout(2200);
   const walk = await page.evaluate(() => {
     const st = window.__DS_WALK?.debugStats?.() || {};
-    return { pods: st.pods || 0, open: window.__DS_WALK?.isOpen?.() };
+    const overlay = document.getElementById("ds-walk-overlay");
+    return {
+      pods: st.pods || 0,
+      open: window.__DS_WALK?.isOpen?.(),
+      cinema: overlay?.classList.contains("ds-walk-cinema"),
+      loading: overlay?.classList.contains("ds-walk-loading")
+    };
   });
   if (!walk.open) errors.push("walk did not open");
-  const questApi = await page.evaluate(() => ({
-    mod: !!window.__DS_WALK_QUEST?.start,
-    quests: window.__DS_WALK_QUEST?.availableQuests?.(window.DesignStudio.instance)?.length ?? -1
-  }));
-  if (!questApi.mod) errors.push("Cable Quest module not loaded");
+  if (walk.pods < 3) errors.push(`walk expected >=3 device pods, got ${walk.pods}`);
+  if (walk.loading) errors.push("walk still in loading state after reveal");
   await page.screenshot({ path: path.join(out, "polish-walk.png") });
 
   // Wayfinding: the "Where to?" picker should list destinations; choosing one

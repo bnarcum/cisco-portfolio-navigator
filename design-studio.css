@@ -1174,6 +1174,35 @@
 #ds-walk-overlay.ds-walk-lab #ds-walk-canvas{filter:contrast(1.05) saturate(1.08)}
 #ds-walk-overlay.ds-walk-explore #ds-walk-canvas{filter:contrast(1.06) saturate(1.1)}
 
+/* Cinema entry — hide chrome until the world reveals */
+#ds-walk-overlay.ds-walk-cinema .ds-walk-hud-glass .ds-walk-hud-row2,
+#ds-walk-overlay.ds-walk-cinema .ds-walk-hud-glass .ds-walk-context,
+#ds-walk-overlay.ds-walk-cinema .ds-walk-hud-glass .ds-walk-title,
+#ds-walk-overlay.ds-walk-cinema .ds-walk-devices,
+#ds-walk-overlay.ds-walk-cinema .ds-walk-minimap,
+#ds-walk-overlay.ds-walk-cinema .ds-walk-dpad,
+#ds-walk-overlay.ds-walk-cinema .ds-walk-compass,
+#ds-walk-overlay.ds-walk-cinema .ds-walk-link-chips,
+#ds-walk-overlay.ds-walk-cinema .ds-walk-layer-filters,
+#ds-walk-overlay.ds-walk-cinema .ds-walk-legend,
+#ds-walk-overlay.ds-walk-cinema .ds-walk-wayfind,
+#ds-walk-overlay.ds-walk-cinema .ds-walk-outcomes{
+  opacity:0;visibility:hidden;pointer-events:none;transition:opacity .45s ease,visibility .45s ease}
+#ds-walk-overlay.ds-walk-cinema .ds-walk-hud-glass .ds-walk-close{
+  opacity:1;visibility:visible;pointer-events:auto}
+#ds-walk-overlay.ds-walk-cinema.ds-walk-loading .ds-walk-stage{background:#020608}
+#ds-walk-overlay.ds-walk-cinema.ds-walk-loading #ds-walk-canvas{opacity:0}
+#ds-walk-overlay.ds-walk-cinema:not(.ds-walk-loading) #ds-walk-canvas{
+  opacity:1;transition:opacity .55s ease}
+#ds-walk-overlay.ds-walk-reveal #ds-walk-canvas{animation:dsWalkReveal .65s ease-out}
+@keyframes dsWalkReveal{from{opacity:0;transform:scale(1.02)}to{opacity:1;transform:scale(1)}}
+#ds-walk-overlay.ds-walk-cinema .ds-walk-prompt{
+  display:block!important;bottom:18%;left:50%;transform:translateX(-50%);
+  font-size:13px;font-weight:700;letter-spacing:.06em;color:#fff;
+  text-shadow:0 2px 12px rgba(0,0,0,.65);pointer-events:none}
+#ds-canvas-wrap.ds-entering-walk{opacity:.35;transition:opacity .45s ease}
+#ds-canvas-wrap.ds-entering-walk #ds-svg{transition:transform .5s ease;transform:scale(1.03)}
+
 #ds-walk-overlay.ds-walk-epic{background:#000}
 #ds-walk-overlay.ds-walk-epic .ds-walk-hud{
   position:absolute;top:10px;left:10px;right:auto;z-index:8;width:min(560px,calc(100% - 20px));
