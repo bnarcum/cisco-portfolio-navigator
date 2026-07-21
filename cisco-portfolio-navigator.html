@@ -9,7 +9,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.23";
+  window.__CPN_BUILD="3.5.24";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -8129,8 +8129,14 @@ function spatialLabelOffsetY(node, radius, profile){
 }
 
 function spatialSymbolInner(iconKey){
-  const sym = document.getElementById("icon-" + iconKey);
-  return sym ? sym.innerHTML : document.getElementById("icon-product")?.innerHTML || "";
+  const sym = document.getElementById("icon-" + iconKey) || document.getElementById("icon-product");
+  if (!sym) return "";
+  const html = sym.innerHTML?.trim?.() || "";
+  if (html) return html;
+  // Chrome often returns empty innerHTML for SVG <symbol>; serialize cloned children instead.
+  const wrap = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  sym.childNodes.forEach(child => wrap.appendChild(child.cloneNode(true)));
+  return wrap.innerHTML;
 }
 
 /** Force Cisco symbol paths to white (currentColor is black in isolated SVG tiles). */
@@ -8169,7 +8175,7 @@ function spatialTileCacheKey(node){
   return [
     node.id,
     photoUrl ? "matrix:" + photoUrl : "icon:" + spatialIconKeyForNode(node),
-    "tile-v10",
+    "tile-v11",
     profile.mode,
     accent.core,
     selected?.id === node.id ? "sel" : "",
@@ -8177,7 +8183,7 @@ function spatialTileCacheKey(node){
   ].join("|");
 }
 
-function buildSpatialTileSvg(node){
+function buildSpatialTileSvg(node, opts = {}){
   const profile = spatialNodeVisualProfile(node);
   const iconKey = spatialIconKeyForNode(node);
   const palette = spatialCategoryPalette(node);
@@ -8189,6 +8195,14 @@ function buildSpatialTileSvg(node){
   const isStk = stack.has(node.id);
   const rim = isSel ? "#66e0ff" : (isStk ? "#ffd700" : glow);
   const rimW = isSel ? 5.5 : (isStk ? 4.5 : 3.75);
+  if (opts.simple){
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+    <circle cx="128" cy="128" r="120" fill="${glow}" fill-opacity="0.24"/>
+    <circle cx="128" cy="128" r="98" fill="${fill}" stroke="${rim}" stroke-width="${rimW}" stroke-opacity="${isSel || isStk ? 1 : 0.9}"/>
+    <circle cx="128" cy="128" r="64" fill="${deep}" stroke="rgba(255,255,255,0.28)" stroke-width="1.5"/>
+    <g fill="#ffffff" stroke="#020608" stroke-width="2.35" stroke-opacity="0.92" stroke-linejoin="round" stroke-linecap="round">${inner}</g>
+  </svg>`;
+  }
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
     <defs>
       <radialGradient id="aura" cx="50%" cy="50%" r="50%">
@@ -8224,12 +8238,47 @@ function finishSpatialTileLoad(key, gen, img){
   if (spatialState.active) refreshSpatialNodeVisuals();
 }
 
-function preloadSpatialIconTile(node, key, gen){
-  spatialState.tileCache.set(key, { ready: false, gen });
-  const svg = buildSpatialTileSvg(node);
+function spatialTileImageReady(img){
+  return !!(img && (img.naturalWidth > 0 || img.width > 0));
+}
+
+function spatialLoadTileImage(svg, onLoad, onError){
   const img = new Image();
-  img.onload = () => finishSpatialTileLoad(key, gen, img);
-  img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  let blobUrl = null;
+  const finish = () => {
+    if (blobUrl){
+      try { URL.revokeObjectURL(blobUrl); } catch (_) { /* ignore */ }
+      blobUrl = null;
+    }
+    if (spatialTileImageReady(img)) onLoad(img);
+    else onError?.();
+  };
+  img.onload = finish;
+  img.onerror = () => {
+    if (blobUrl){
+      try { URL.revokeObjectURL(blobUrl); } catch (_) { /* ignore */ }
+      blobUrl = null;
+      img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+      return;
+    }
+    onError?.();
+  };
+  try {
+    blobUrl = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
+    img.src = blobUrl;
+  } catch (_) {
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  }
+}
+
+function preloadSpatialIconTile(node, key, gen, simple){
+  spatialState.tileCache.set(key, { ready: false, gen, simple: !!simple });
+  const svg = buildSpatialTileSvg(node, { simple: !!simple });
+  spatialLoadTileImage(
+    svg,
+    img => finishSpatialTileLoad(key, gen, img),
+    () => { if (!simple) preloadSpatialIconTile(node, key, gen, true); }
+  );
 }
 
 function preloadSpatialTiles(nodes){
@@ -8265,6 +8314,7 @@ function getSpatialTileSprite(node, radius, profile){
     map,
     transparent: true,
     depthWrite: false,
+    depthTest: false,
     opacity: 1
   });
   const sprite = new THREE.Sprite(mat);
