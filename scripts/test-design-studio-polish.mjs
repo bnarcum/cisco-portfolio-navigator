@@ -18,7 +18,7 @@ try {
   await page.goto("http://127.0.0.1:8765/cisco-portfolio-navigator.html", { waitUntil: "load", timeout: 60000 });
   await page.waitForFunction(() => window.__cpnV2?.APP_VERSION, { timeout: 60000 });
   const version = await page.evaluate(() => window.__cpnV2.APP_VERSION);
-  if (version !== "3.5.25") errors.push(`version ${version} != 3.5.25`);
+  if (version !== "2.79.17") errors.push(`version ${version} != 2.79.17`);
 
   await page.click("#design-studio-btn");
   await page.waitForSelector("#design-studio.open", { timeout: 30000 });
@@ -133,24 +133,17 @@ try {
   await page.evaluate(() => window.DesignStudio.instance.setTab("room"));
   await page.waitForTimeout(300);
   await page.evaluate(() => window.__DS_WALK?.open?.(window.DesignStudio.instance));
-  await page.waitForTimeout(2200);
+  await page.waitForTimeout(1800);
   const walk = await page.evaluate(() => {
     const st = window.__DS_WALK?.debugStats?.() || {};
-    const overlay = document.getElementById("ds-walk-overlay");
-    return {
-      pods: st.pods || 0,
-      open: window.__DS_WALK?.isOpen?.(),
-      intro: window.__DS_WALK?.debugStats?.()?.mode === "walk"
-    };
+    return { pods: st.pods || 0, open: window.__DS_WALK?.isOpen?.() };
   });
   if (!walk.open) errors.push("walk did not open");
-  if (walk.pods < 3) errors.push(`walk expected >=3 device pods, got ${walk.pods}`);
-  const dim = await page.evaluate(() => ({
-    wrapOpacity: getComputedStyle(document.getElementById("ds-canvas-wrap") || document.body).opacity,
-    cinema: document.getElementById("ds-walk-overlay")?.classList.contains("ds-walk-cinema")
+  const questApi = await page.evaluate(() => ({
+    mod: !!window.__DS_WALK_QUEST?.start,
+    quests: window.__DS_WALK_QUEST?.availableQuests?.(window.DesignStudio.instance)?.length ?? -1
   }));
-  if (dim.cinema) errors.push("walk overlay still in cinema dim mode");
-  if (parseFloat(dim.wrapOpacity) < 0.95) errors.push(`canvas wrap still dimmed (opacity ${dim.wrapOpacity})`);
+  if (!questApi.mod) errors.push("Cable Quest module not loaded");
   await page.screenshot({ path: path.join(out, "polish-walk.png") });
 
   // Wayfinding: the "Where to?" picker should list destinations; choosing one

@@ -55,6 +55,7 @@
     "design-studio-field-panel.js",
     "design-studio-walk-audio.js",
     "design-studio-walk-models.js",
+    "design-studio-walk-quest.js",
     "design-studio-walk.js",
     "design-studio.js"
   ];

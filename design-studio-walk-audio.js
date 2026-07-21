@@ -68,11 +68,6 @@
     playTone(80 + Math.random() * 20, 0.06, "sine", 0.025);
   }
 
-  function sfxEnter() {
-    playTone(196, 0.22, "sine", 0.1, 392);
-    setTimeout(() => playTone(293.66, 0.35, "triangle", 0.08, 440), 90);
-  }
-
   function toggleMute() {
     muted = !muted;
     return muted;
@@ -105,7 +100,7 @@
     isRunning,
     sfx: {
       inspect: sfxInspect, waypoint: sfxWaypoint, routeStart: sfxRouteStart,
-      footstep: sfxFootstep, enter: sfxEnter, questSuccess: sfxQuestSuccess, questFail: sfxQuestFail
+      footstep: sfxFootstep, questSuccess: sfxQuestSuccess, questFail: sfxQuestFail
     }
   };
 })();

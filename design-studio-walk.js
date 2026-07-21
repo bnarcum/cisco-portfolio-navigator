@@ -44,16 +44,21 @@
   const WALK_PACKETS_KEY = "cpn-ds-walk-packets";
   const WALK_STYLE_KEY = "cpn-ds-walk-style";
   const WALK_STYLES = {
-    lab: {
-      label: "Walk",
-      title: "Solution Walk",
+    explore: {
+      label: "Explore",
+      title: "Solution Explore",
       hint: "WASD move · drag look · E inspect · Esc exit",
+      className: "ds-walk-explore",
+      features: { manualMove: true, quest: false, avatar: true, voxel: false, dpad: true, pointerLock: true, viewmodel: true }
+    },
+    lab: {
+      label: "Lab",
+      title: "Explorer Lab",
+      hint: "WASD move · drag look · Esc exit",
       className: "ds-walk-lab",
-      features: { manualMove: true, avatar: true, voxel: true, dpad: true, pointerLock: true, viewmodel: true }
+      features: { manualMove: true, quest: true, avatar: true, voxel: true, dpad: true, pointerLock: true, viewmodel: true }
     }
   };
-  const PROX_LABEL_NEAR = 6.5;
-  const PROX_LABEL_FAR = 8.5;
   const PACKET_SPEEDS = [
     { mult: 0.5, label: "Slow" },
     { mult: 1, label: "Normal" },
@@ -87,16 +92,14 @@
     topology: null, easyNav: true, route: null, environmentTags: {},
     semanticFrame: null, layerFilter: "all",
     packetsEnabled: true, packetSpeedIdx: 1,
+    quest: null,
     walkStyle: "lab",
-    linksExpanded: false,
-    introActive: false,
-    entryHero: null
+    linksExpanded: false
   };
 
   function savedWalkStyle() {
     try {
       const saved = localStorage.getItem(WALK_STYLE_KEY);
-      if (saved === "explore") return "lab";
       if (WALK_STYLES[saved]) return saved;
     } catch (e) { /* ignore */ }
     return "lab";
@@ -119,129 +122,8 @@
   }
 
   function usesGlassHud() {
-    return true;
-  }
-
-  function pickHeroChamber(graph) {
-    const chambers = graph?.chambers || [];
-    if (!chambers.length) return null;
-    const score = ch => {
-      const s = `${ch.stencilId || ""} ${ch.label || ""}`.toLowerCase();
-      const zone = (ch.zone || "").toLowerCase();
-      if (/board|display/i.test(s) || zone === "display") return 100;
-      if (/room-bar|room kit|codec|bar pro|kit eq/i.test(s)) return 92;
-      if (/quad|camera|cam/i.test(s) && zone !== "ceiling") return 86;
-      if (/touch/i.test(s)) return 82;
-      if (/internet|mpls|wan|cloud|dia|sdwan/i.test(s) || zone === "wan") return 96;
-      if (/fpr|firewall|ftd/i.test(s) || zone === "security") return 90;
-      if (/9500|9400|n9k|core|spine/i.test(s) || zone === "core") return 88;
-      if (/9200|9300|access|ap\b|mr57/i.test(s) || zone === "access") return 70;
-      return 10;
-    };
-    return chambers.slice().sort((a, b) => score(b) - score(a))[0];
-  }
-
-  function pickEntryPose(graph, hero) {
-    const bounds = state.bounds;
-    const frame = graph?.semanticFrame || {};
-    hero = hero || pickHeroChamber(graph);
-    if (graph?.kind === "room" && bounds) {
-      const cx = Number.isFinite(frame.tableCx) ? frame.tableCx : (bounds.minX + bounds.maxX) / 2;
-      const frontZ = Number.isFinite(frame.frontZ) ? frame.frontZ : bounds.minZ;
-      const backZ = bounds.maxZ - 2.2;
-      const cz = Number.isFinite(frame.tableCz)
-        ? Math.max(frame.tableCz, backZ - 1.2)
-        : backZ;
-      let px = cx;
-      let pz = cz;
-      if (state.topology?.isWalkable) {
-        const snap = snapToWalkable(px, pz);
-        px = snap.x;
-        pz = snap.z;
-      }
-      const safe = resolveCollision(px, pz);
-      const lookX = hero?.pos?.x ?? cx;
-      const lookZ = frontZ + 0.6;
-      const yaw = Math.atan2(lookX - safe.x, lookZ - safe.z);
-      return { pos: { x: safe.x, y: EYE_HEIGHT, z: safe.z }, yaw, pitch: -0.05, hero };
-    }
-    const hp = hero?.pos || { x: 0, z: 0 };
-    let px = hp.x;
-    let pz = hp.z + 4.5;
-    if (state.topology?.isWalkable) {
-      const snap = snapToWalkable(px, pz);
-      px = snap.x;
-      pz = snap.z;
-    }
-    const safe = resolveCollision(px, pz);
-    const yaw = Math.atan2(hp.x - safe.x, hp.z - safe.z);
-    return { pos: { x: safe.x, y: EYE_HEIGHT, z: safe.z }, yaw, pitch: -0.06, hero };
-  }
-
-  function applyEntryPose(pose) {
-    if (!pose) return;
-    state.pos = { x: pose.pos.x, y: EYE_HEIGHT, z: pose.pos.z };
-    state.yaw = pose.yaw;
-    state.pitch = pose.pitch ?? -0.06;
-    state.facing = pose.yaw;
-    state.vel = { x: 0, y: 0, z: 0 };
-    state.thirdPerson = true;
-    if (state.avatar) state.avatar.visible = true;
-    if (state.viewmodel) state.viewmodel.visible = false;
-  }
-
-  function finishIntroReveal(skipFly) {
-    if (skipFly && state.fly?.intro) {
-      const f = state.fly;
-      state.pos = { x: f.to.x, y: EYE_HEIGHT, z: f.to.z };
-      state.yaw = f.yawTo;
-      state.pitch = f.pitchTo ?? -0.06;
-      state.facing = state.yaw;
-      state.fly = null;
-    }
-    state.introActive = false;
-    const prompt = document.getElementById("ds-walk-prompt");
-    if (prompt) prompt.hidden = true;
-  }
-
-  function playEntryReveal(pose) {
-    if (!pose) {
-      finishIntroReveal(false);
-      return;
-    }
-    state.introActive = true;
-    applyEntryPose(pose);
-    const backDist = 2.6;
-    const fx = Math.sin(pose.yaw);
-    const fz = Math.cos(pose.yaw);
-    const from = {
-      x: pose.pos.x - fx * backDist,
-      y: EYE_HEIGHT,
-      z: pose.pos.z - fz * backDist
-    };
-    if (state.topology?.isWalkable) {
-      const snap = snapToWalkable(from.x, from.z);
-      from.x = snap.x;
-      from.z = snap.z;
-    }
-    const safeFrom = resolveCollision(from.x, from.z);
-    from.x = safeFrom.x;
-    from.z = safeFrom.z;
-    state.pos = { ...from };
-    state.fly = {
-      intro: true,
-      from,
-      to: { x: pose.pos.x, y: EYE_HEIGHT, z: pose.pos.z },
-      yawFrom: pose.yaw,
-      yawTo: pose.yaw,
-      pitchFrom: (pose.pitch ?? -0.06) + 0.1,
-      pitchTo: pose.pitch ?? -0.06,
-      dur: 1.1,
-      t: 0
-    };
-    state.yaw = pose.yaw;
-    state.pitch = (pose.pitch ?? -0.06) + 0.1;
-    window.__DS_WALK_AUDIO?.sfx?.enter?.();
+    const key = currentWalkStyle();
+    return key === "lab" || key === "explore";
   }
 
   function esc(s) {
@@ -1177,13 +1059,6 @@
     }
     if (/auditorium|training/i.test(template)) addSeatRows(THREE, scene, bounds, /auditorium/i.test(template) ? 5 : 3);
     else addConferenceFurniture(THREE, scene, bounds, graph);
-    const roomW = Math.max(bounds.maxX - bounds.minX + 8, 16);
-    const roomD = Math.max(bounds.maxZ - bounds.minZ + 8, 16);
-    const sideH = 3.25;
-    box(THREE, scene, "room-side-wall", [0.2, sideH, roomD], [bounds.minX - 4, sideH / 2, cx], wallMat);
-    box(THREE, scene, "room-side-wall", [0.2, sideH, roomD], [bounds.maxX + 4, sideH / 2, cx], wallMat);
-    const backZ = bounds.maxZ + 3.2;
-    box(THREE, scene, "room-back-wall", [roomW, sideH, 0.2], [cx, sideH / 2, backZ], wallMat);
     if (/openDesk|desk/i.test(template)) {
       const dividerMat = new THREE.MeshStandardMaterial({ color: 0x51616e, roughness: 0.8, transparent: true, opacity: 0.75 });
       for (let z = bounds.minZ + 3; z < bounds.maxZ - 2; z += 4) {
@@ -1442,21 +1317,27 @@
     graph.corridors.forEach(cor => scene.add(makeCableRun(THREE, cor)));
     populateLegend(graph);
 
+    const spawn = graph.chambers.find(c => /switch|9200|9300/i.test(c.label)) || graph.chambers[0];
     state.chambers = graph.chambers;
-    const hero = pickHeroChamber(graph);
-    state.entryHero = hero;
-    const pose = pickEntryPose(graph, hero);
-    applyEntryPose(pose);
-    state.navIndex = hero ? Math.max(0, graph.chambers.indexOf(hero)) : 0;
+    teleportToChamber(spawn, true);
+    state.navIndex = graph.chambers.indexOf(spawn);
     document.getElementById("ds-walk-minimap")?.removeAttribute("hidden");
     buildDeviceNav(graph.chambers);
-    if (hero) buildConnectedNav(hero);
+    buildConnectedNav(spawn);
     resizeRenderer();
 
     applySceneShadows();
-    await loadDevicePods(THREE, graph, 1);
-    applySceneShadows();
-    playEntryReveal(pose);
+    setStatus("Loading devices…");
+    loadDevicePods(THREE, graph, 1).then(() => {
+      applySceneShadows();
+      if (window.__cpnAutoOutcomes && !state.outcomes && graph.kind === "room" && !insightsUserDismissed()) {
+        window.__cpnAutoOutcomes = false;
+        toggleOutcomes();
+      }
+      if (state.mode) setStatus("Follow a connected link below, or use ‹ Prev / Next › to tour devices");
+      showWalkOnboardHint();
+      window.__DS_WALK_QUEST?.syncQuestButton?.(studio);
+    });
   }
 
   function resizeRenderer() {
@@ -2227,12 +2108,8 @@
     while (dy > Math.PI) dy -= Math.PI * 2;
     while (dy < -Math.PI) dy += Math.PI * 2;
     state.yaw = f.yawFrom + dy * e;
-    if (f.pitchFrom !== undefined && f.pitchTo !== undefined) {
-      state.pitch = f.pitchFrom + (f.pitchTo - f.pitchFrom) * e;
-    }
     if (f.t >= 1) {
-      if (f.intro) finishIntroReveal(false);
-      else if (f.chamber) {
+      if (f.chamber) {
         highlightNavChip(f.chamber.id);
         setStatus(`At ${f.chamber.label}${f.chamber.pid ? " · " + f.chamber.pid : ""}`);
       }
@@ -2243,7 +2120,6 @@
 
   function updatePlayer(dt) {
     if (updateFly(dt)) { applyCamera(); return; }
-    if (state.introActive) { applyCamera(); return; }
     const style = activeWalkStyle();
 
     {
@@ -2350,7 +2226,10 @@
   }
 
   function interactNearby() {
-    if (state.introActive) return;
+    if (window.__DS_WALK_QUEST?.isActive?.()) {
+      const port = window.__DS_WALK_QUEST.reticlePick?.();
+      if (port && window.__DS_WALK_QUEST.handlePick?.(port)) return;
+    }
     const ch = state.reticleChamber;
     if (!ch) return;
     openFieldPanel(ch);
@@ -2362,7 +2241,9 @@
     state.nearChamber = ch;
     const prompt = document.getElementById("ds-walk-prompt");
     if (prompt) {
-      if (ch) {
+      if (window.__DS_WALK_QUEST?.isActive?.()) {
+        /* quest module updates prompt */
+      } else if (ch) {
         const p = chamberWorldPos(ch);
         const near = Math.hypot(p.x - state.pos.x, p.z - state.pos.z) < 9;
         prompt.hidden = !near;
@@ -2384,16 +2265,12 @@
       const p = chamberWorldPos(pch);
       const dist = Math.hypot(p.x - state.pos.x, p.z - state.pos.z);
       const focused = ch?.id === pch.id;
-      const nearby = dist < PROX_LABEL_NEAR;
-      const showLabel = focused || nearby;
+      const showLabel = focused;
       if (pod.userData.labelSprite) {
         pod.userData.labelSprite.visible = showLabel;
-        let op = 0.5;
-        if (focused) op = 1;
-        else if (nearby) op = Math.min(0.92, 0.4 + (PROX_LABEL_NEAR - dist) / PROX_LABEL_NEAR * 0.5);
-        pod.userData.labelSprite.material.opacity = op;
+        pod.userData.labelSprite.material.opacity = focused ? 1 : 0.65;
       }
-      if (pod.userData.zoneBadge) pod.userData.zoneBadge.visible = focused || (nearby && dist < 4.5);
+      if (pod.userData.zoneBadge) pod.userData.zoneBadge.visible = focused;
       if (pod.userData.glowLight) pod.userData.glowLight.intensity = focused ? 0.28 : 0.04;
       if (pod.userData.ring) {
         pod.userData.ring.material.opacity = focused ? 0.32 : 0.06;
@@ -2671,54 +2548,8 @@
     pts.rotation.y += dt * 0.015;
   }
 
-  function shouldRenderWalk() {
-    if (!state.mode || !state.renderer || !state.scene || !state.camera) return false;
-    if (document.hidden) return false;
-    const ds = document.getElementById("design-studio");
-    if (ds && !ds.classList.contains("open")) return false;
-    return true;
-  }
-
-  function pauseRenderLoop() {
-    if (state.animId) {
-      cancelAnimationFrame(state.animId);
-      state.animId = 0;
-    }
-    state.lastFrame = 0;
-    try {
-      if (document.pointerLockElement && state.overlay?.contains(document.pointerLockElement)) {
-        document.exitPointerLock();
-      }
-    } catch (_) { /* ignore */ }
-  }
-
-  function resumeRenderLoop() {
-    if (!state.mode || state.animId) return;
-    state.animId = requestAnimationFrame(loop);
-  }
-
-  function syncRenderLoop() {
-    if (shouldRenderWalk()) resumeRenderLoop();
-    else pauseRenderLoop();
-  }
-
-  function bindRenderLifecycle() {
-    unbindRenderLifecycle();
-    state._onVis = () => syncRenderLoop();
-    document.addEventListener("visibilitychange", state._onVis);
-  }
-
-  function unbindRenderLifecycle() {
-    if (!state._onVis) return;
-    document.removeEventListener("visibilitychange", state._onVis);
-    state._onVis = null;
-  }
-
   function loop(now) {
-    state.animId = 0;
     if (!state.renderer || !state.scene || !state.camera) return;
-    if (!shouldRenderWalk()) return;
-
     const t = (now || performance.now()) / 1000;
     const dt = Math.min(0.05, state.lastFrame ? t - state.lastFrame : 0.016);
     state.lastFrame = t;
@@ -2726,6 +2557,7 @@
     updatePlayer(dt);
     animateCables(state.clock);
     animateRoleEffects(state.clock);
+    window.__DS_WALK_QUEST?.tick?.(state.clock);
     animateDust(dt);
     updateReticleFocus();
     if (state.route) { animateRoute(state.clock); updateWayfind(); }
@@ -3029,9 +2861,13 @@
     const outcomesBtn = tab === "room"
       ? `<button type="button" class="ds-walk-btn ds-walk-btn-ghost ds-walk-btn-spaces" data-action="outcomes" title="Simulated occupancy, location &amp; IoT overlay">Insights</button>`
       : "";
+    const styleBtns = Object.entries(WALK_STYLES).map(([key, cfg]) =>
+      `<button type="button" class="ds-walk-style${key === currentWalkStyle() ? " active" : ""}" data-action="walk-style" data-style="${key}" title="${esc(cfg.hint)}">${esc(cfg.label.toUpperCase())}</button>`
+    ).join("");
     return `<div class="ds-walk-hud ds-walk-hud-glass">
       <div class="ds-walk-hud-row1">
         <strong class="ds-walk-title">${esc(style.title)}</strong>
+        <div class="ds-walk-style-switch" aria-label="Walkthrough mode">${styleBtns}</div>
         <button type="button" class="ds-walk-close" title="Exit walkthrough" aria-label="Close">✕</button>
       </div>
       <p class="ds-walk-context" id="ds-walk-context">WASD · Esc exit</p>
@@ -3047,11 +2883,18 @@
       </div>
       ${layerFilterHtml(tab)}
       <div class="ds-walk-outcomes" id="ds-walk-outcomes" hidden></div>
+      <div class="ds-walk-quest" id="ds-walk-quest" hidden>
+        <div class="ds-walk-quest-head">
+          <strong id="ds-walk-quest-title">Cable Quest</strong>
+          <button type="button" class="ds-walk-quest-x" data-action="cable-quest-cancel" title="Cancel quest">✕</button>
+        </div>
+        <p id="ds-walk-quest-step" class="ds-walk-quest-step"></p>
+      </div>
       <div class="ds-walk-wayfind" id="ds-walk-wayfind" hidden></div>
       <div class="ds-walk-links ds-walk-link-chips" id="ds-walk-links" hidden></div>
       <div class="ds-walk-legend" id="ds-walk-legend" hidden></div>
       <div class="ds-walk-focus" id="ds-walk-focus" hidden></div>
-      <div class="ds-walk-status" id="ds-walk-status"></div>
+      <div class="ds-walk-status" id="ds-walk-status">Loading…</div>
     </div>`;
   }
 
@@ -3077,7 +2920,7 @@
     state.overlay?.querySelectorAll("[data-move]").forEach(btn => {
       const key = map[btn.dataset.move];
       if (!key) return;
-      const down = e => { e.preventDefault(); if (state.introActive) finishIntroReveal(true); cancelMotion(); state.keys[key] = true; };
+      const down = e => { e.preventDefault(); cancelMotion(); state.keys[key] = true; };
       const up = () => { state.keys[key] = false; };
       btn.addEventListener("pointerdown", down);
       btn.addEventListener("pointerup", up);
@@ -3102,12 +2945,33 @@
         state.linksExpanded = true;
         buildConnectedNav(state.chambers[state.navIndex], true);
       }
+      else if (a === "walk-style") {
+        e.preventDefault();
+        e.stopPropagation();
+        const key = btn.dataset.style;
+        if (!WALK_STYLES[key] || key === currentWalkStyle()) return;
+        const studio = state.studio;
+        setWalkStyle(key);
+        close(true);
+        open(studio);
+      }
       else if (a === "wayfind-open") openWayfindMenu();
       else if (a === "wayfind-close") closeWayfindMenu();
       else if (a === "wayfind-stop") { clearWayfinding(); setStatus("Wayfinding stopped"); }
       else if (a === "prev-dev") cycleDevice(-1);
       else if (a === "next-dev") cycleDevice(1);
       else if (a === "inspect") interactNearby();
+      else if (a === "cable-quest") {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!activeWalkStyle().features.quest) return;
+        window.__DS_WALK_QUEST?.start?.(state.studio);
+      }
+      else if (a === "cable-quest-cancel") {
+        e.preventDefault();
+        e.stopPropagation();
+        window.__DS_WALK_QUEST?.end?.(false);
+      }
       else if (a === "fp-close") window.__DS_FIELD_PANEL?.close?.();
       else if (a === "fp-fly") {
         const id = document.getElementById("ds-field-panel")?.dataset?.chamberId;
@@ -3162,12 +3026,15 @@
       if (e.type === "keydown") {
         if (MOVE_KEYS.has(e.key)) {
           if (!style.features.manualMove) return;
-          if (state.introActive) finishIntroReveal(true);
           cancelMotion();
         }
         if (e.key === "Escape") {
           e.preventDefault();
           e.stopPropagation();
+          if (window.__DS_WALK_QUEST?.isActive?.()) {
+            window.__DS_WALK_QUEST.end(false);
+            return;
+          }
           const panel = document.getElementById("ds-field-panel");
           if (panel && !panel.hidden) {
             window.__DS_FIELD_PANEL?.close?.();
@@ -3226,8 +3093,12 @@
       if (e.button === 0 && downPos) {
         const moved = Math.hypot(e.clientX - downPos.x, e.clientY - downPos.y);
         if (moved < 6) {
+          if (window.__DS_WALK_QUEST?.isActive?.()) {
+            const port = window.__DS_WALK_QUEST.pickAt?.(e.clientX, e.clientY, canvas);
+            if (port && window.__DS_WALK_QUEST.handlePick?.(port)) return;
+          }
           const ch = pickDeviceAt(e.clientX, e.clientY, canvas) || state.reticleChamber;
-          if (ch) openFieldPanel(ch);
+          if (ch && !window.__DS_WALK_QUEST?.isActive?.()) openFieldPanel(ch);
           else if (state.overlay?.classList.contains("ds-field-panel-open"))
             window.__DS_FIELD_PANEL?.close?.();
         }
@@ -3313,6 +3184,7 @@
     state.camera = null;
     state.topology = null;
     state.graph = null;
+    window.__DS_WALK_QUEST?.end?.(false);
   }
 
   async function open(studio) {
@@ -3327,12 +3199,9 @@
     }
 
     if (state.mode) close(true);
-    state.introActive = false;
-    state.entryHero = null;
     state.studio = studio;
     state.mode = "walk";
-    state.walkStyle = "lab";
-    setWalkStyle("lab");
+    state.walkStyle = savedWalkStyle();
     const style = activeWalkStyle();
 
     let overlay = document.getElementById("ds-walk-overlay");
@@ -3378,17 +3247,21 @@
 
     const canvas = overlay.querySelector("#ds-walk-canvas");
     bindInput(canvas);
-    setStatus("");
+    setStatus("Loading walkthrough…");
+    await waitForCanvasSize(canvas);
 
     try {
-      await waitForCanvasSize(canvas);
+      state.overlay?.classList.add("ds-walk-loading");
       await initCorridor(studio, canvas, graph);
       initFieldSystems(graph);
-      bindRenderLifecycle();
-      resumeRenderLoop();
+      loop();
+      state.overlay?.classList.remove("ds-walk-loading");
+      state.overlay?.classList.remove("ds-walk-fade-out");
+      state.overlay?.classList.add("ds-walk-fade-in");
+      requestAnimationFrame(() => state.overlay?.classList.remove("ds-walk-fade-in"));
       studio.roomView = "walk";
       window.__DS_PREMIUM?.renderCanvasViewToggle?.(studio);
-      window.__DS_WALK_AUDIO?.start?.();
+      setStatus("Pick a device below or tap a connected link to walk your diagram");
     } catch (err) {
       console.error("[DS Walk]", err);
       showWalkError(err?.message === "three-load" ? "3D library failed to load — hard-refresh" : `Walkthrough failed: ${err.message}`);
@@ -3410,7 +3283,8 @@
     const canvas = state.overlay?.querySelector("#ds-walk-canvas");
     if (!canvas) return;
     window.__DS_FIELD_PANEL?.close?.();
-    pauseRenderLoop();
+    cancelAnimationFrame(state.animId);
+    state.animId = 0;
     disposeScene();
     state.studio = studio;
     state.mode = "walk";
@@ -3422,7 +3296,7 @@
       syncOutcomesHud();
       syncPacketsHud();
       setStatus(`Switched to ${graph.kind} layout`);
-      syncRenderLoop();
+      loop();
     } catch (err) {
       console.error("[DS Walk rebuild]", err);
       showWalkError(`Rebuild failed: ${err.message}`);
@@ -3430,8 +3304,8 @@
   }
 
   function close(silent) {
-    unbindRenderLifecycle();
-    pauseRenderLoop();
+    cancelAnimationFrame(state.animId);
+    state.animId = 0;
     state._inputCleanup?.();
     if (state._resize) window.removeEventListener("resize", state._resize);
     disposeScene();
@@ -3449,8 +3323,8 @@
       state.studio.scheduleFitView?.();
     }
     window.__DS_FIELD_PANEL?.close?.();
+    window.__DS_WALK_QUEST?.end?.(false);
     window.__DS_WALK_AUDIO?.stop?.();
-    state.introActive = false;
     state.mode = null;
     if (!silent) state.studio = null;
   }
@@ -3475,6 +3349,18 @@
       }))
     };
   }
+
+  window.__DS_WALK_QUEST?.register?.({
+    getState: () => state,
+    THREE: () => state.THREE,
+    makeCableRun,
+    podLift,
+    MEDIA_COLORS,
+    setStatus,
+    teleportToChamber,
+    applyPacketVisibility,
+    buildConnectedNav
+  });
 
   window.__DS_WALK = {
     open, close, rebuild, toggle: s => state.mode ? close(true) : open(s),

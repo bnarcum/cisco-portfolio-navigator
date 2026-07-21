@@ -1170,7 +1170,7 @@
 #ds-walk-overlay.ds-walk-lab .ds-walk-vignette,
 #ds-walk-overlay.ds-walk-explore .ds-walk-vignette{
   position:absolute;inset:0;z-index:2;pointer-events:none;
-  background:radial-gradient(ellipse at center,transparent 52%,rgba(0,0,0,.32) 100%)}
+  background:radial-gradient(ellipse at center,transparent 44%,rgba(0,0,0,.55) 100%)}
 #ds-walk-overlay.ds-walk-lab #ds-walk-canvas{filter:contrast(1.05) saturate(1.08)}
 #ds-walk-overlay.ds-walk-explore #ds-walk-canvas{filter:contrast(1.06) saturate(1.1)}
 
