@@ -1023,6 +1023,21 @@
     }
   }
 
+  function addConferenceChair(THREE, scene, x, z, cx, cz, mat) {
+    const g = new THREE.Group();
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.1, 0.55), mat);
+    seat.castShadow = true;
+    seat.receiveShadow = true;
+    const back = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.48, 0.08), mat);
+    back.position.set(0, 0.3, -0.31);
+    back.castShadow = true;
+    back.receiveShadow = true;
+    g.add(seat, back);
+    g.position.set(x, 0.42, z);
+    g.rotation.y = Math.atan2(cx - x, cz - z);
+    return addTagged(scene, g, "room-chair");
+  }
+
   function addConferenceFurniture(THREE, scene, bounds, graph) {
     const wood = new THREE.MeshStandardMaterial({ color: 0x4a3c30, roughness: 0.62, metalness: 0.08 });
     const chairMat = new THREE.MeshStandardMaterial({ color: 0x2a3238, roughness: 0.7, metalness: 0.2 });
@@ -1037,11 +1052,11 @@
     const td = frame.tableLength ?? frame.tableDepth ?? 5.5;
     box(THREE, scene, "room-table", [tw, 0.12, td], [cx, 0.38, cz], wood);
     const seats = Math.max(4, Math.min(16, Math.round(td / 1.2) * 2));
+    const seatDist = tw / 2 + 0.55;
     for (let i = 0; i < seats / 2; i++) {
       const z = cz - td / 2 + 0.75 + i * ((td - 1.5) / Math.max(1, seats / 2 - 1));
       [-1, 1].forEach(side => {
-        box(THREE, scene, "room-chair", [0.55, 0.1, 0.55], [cx + side * (tw / 2 + 0.55), 0.42, z], chairMat);
-        box(THREE, scene, "room-chair", [0.55, 0.48, 0.08], [cx + side * (tw / 2 + 0.86), 0.72, z], chairMat);
+        addConferenceChair(THREE, scene, cx + side * seatDist, z, cx, cz, chairMat);
       });
     }
   }
