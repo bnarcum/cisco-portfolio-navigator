@@ -742,6 +742,9 @@
     const onTable = kind === "room" && (
       ch.zone === "table" || ch.zone === "desk" || ch.mount === "table" || ch.mount === "desk"
     );
+    const onWall = kind === "room" && (
+      (ch.mount || "").startsWith("wall-") || ch.mount === "shelf"
+    );
 
     let photoTex = await loadTexture(THREE, ch.photoUrl);
     if (!photoTex) photoTex = makeFallbackIconTexture(THREE, ch.label, theme);
@@ -792,6 +795,7 @@
     );
     shadow.rotation.x = -Math.PI / 2;
     shadow.position.y = onTable ? lift + 0.02 : 0.02;
+    shadow.visible = !onWall;
     g.add(shadow);
 
     const hitbox = new THREE.Mesh(

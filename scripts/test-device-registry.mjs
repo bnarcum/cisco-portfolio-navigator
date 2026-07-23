@@ -87,17 +87,20 @@ const placementErrors = await page.evaluate(() => {
       pos: { x: (i % 5) * 3, y: 3, z: Math.floor(i / 5) * 3 }
     }));
     const nodes = chambers.map(c => ({ id: c.id, stencilId: c.stencilId, label: c.label }));
-    LAY.applySemanticPlacement(chambers, nodes, "room", { items: boardTpl.items });
+    const frame = LAY.applySemanticPlacement(chambers, nodes, "room", { items: boardTpl.items });
     const cam = chambers.find(c => c.label === "Primary Cam");
     const aux = chambers.find(c => c.label === "Aux Display");
+    const wallFace = LAY.wallFaceZ?.(frame) ?? (frame.frontZ - 0.26);
     if (cam && aux) {
       if (Math.abs(aux.pos.x - cam.pos.x) > 0.12)
         errs.push(`boardroom: Aux Display x=${aux.pos.x.toFixed(2)} should align with Primary Cam x=${cam.pos.x.toFixed(2)}`);
-      if (Math.abs(aux.pos.z - cam.pos.z) > 0.12)
+      if (Math.abs(aux.pos.z - cam.pos.z) > 0.05)
         errs.push(`boardroom: Aux Display z=${aux.pos.z.toFixed(2)} should share wall plane with Primary Cam z=${cam.pos.z.toFixed(2)}`);
+      if (Math.abs(cam.pos.z - (wallFace + 0.05)) > 0.08)
+        errs.push(`boardroom: Primary Cam z=${cam.pos.z.toFixed(2)} should sit on wall face ~${(wallFace + 0.05).toFixed(2)}`);
       if (aux.pos.y >= cam.pos.y - 0.15)
         errs.push(`boardroom: Aux Display y=${aux.pos.y.toFixed(2)} should sit below Primary Cam y=${cam.pos.y.toFixed(2)}`);
-      if (Math.abs((aux.faceYaw ?? 0) - Math.PI) > 0.05)
+      if (Math.abs(aux.faceYaw ?? 0) > 0.05)
         errs.push(`boardroom: Aux Display should face into the room (faceYaw=${aux.faceYaw})`);
     }
   }

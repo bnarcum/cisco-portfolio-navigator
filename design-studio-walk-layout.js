@@ -113,8 +113,26 @@
     return frame.frontZ - 0.26;
   }
 
-  // Room occupies +Z from the display wall; mounted gear faces back toward the room (-Z).
-  const WALL_INTO_ROOM_YAW = Math.PI;
+  function wallMountInset(mount) {
+    if (mount === "wall-camera") return 0.05;
+    if (mount === "wall-panel" || mount === "shelf") return 0.04;
+    return 0.03;
+  }
+
+  function isWallGear(ch) {
+    const m = ch?.mount || "";
+    return m.startsWith("wall-") || m === "shelf";
+  }
+
+  function pinWallMounts(chambers, frame) {
+    if (!frame || !chambers?.length) return;
+    const faceZ = wallFaceZ(frame);
+    chambers.forEach(ch => {
+      if (!isWallGear(ch)) return;
+      ch.pos.z = faceZ + wallMountInset(ch.mount);
+      ch.faceYaw = 0;
+    });
+  }
 
   function buildNetworkFrame(chambers) {
     const isDc = chambers.some(c => /n9k|spine|leaf|apic|ucs|aci/i.test(`${c.stencilId} ${c.label}`));
@@ -241,8 +259,6 @@
       if (!shouldStackAuxUnderCamera(ch)) return;
       ch.pos.x = camX;
       ch.pos.y = auxY;
-      ch.pos.z = Number.isFinite(camCh?.pos?.z) ? camCh.pos.z : wallFaceZ(frame) + 0.04;
-      ch.faceYaw = WALL_INTO_ROOM_YAW;
     });
   }
 
@@ -286,7 +302,7 @@
 
       switch (mount) {
         case "wall-display": {
-          ch.pos.z = wallFaceZ(frame) + 0.04;
+          ch.pos.z = wallFaceZ(frame) + wallMountInset("wall-display");
           const confidence = /confidence/i.test(ch.label || "");
           const aux = (/aux|secondary|content display|people display/i.test(ch.label || "")
             || (/display-86|86/i.test(ch.stencilId || "") && !/primary|main|board|front|confidence/i.test(ch.label || "")))
@@ -303,26 +319,26 @@
             ch.pos.y = Math.max(wallBot, Math.min(wallTop - panelH, wallBot + ry * travel));
             ch.pos.x = frame.tableCx + (rx - 0.5) * spread;
           }
-          ch.faceYaw = WALL_INTO_ROOM_YAW;
+          ch.faceYaw = 0;
           break;
         }
         case "wall-camera":
-          ch.pos.z = wallFaceZ(frame) + 0.06;
+          ch.pos.z = wallFaceZ(frame) + wallMountInset("wall-camera");
           ch.pos.y = 2.65;
           ch.pos.x = frame.tableCx + (rx - 0.5) * 3;
-          ch.faceYaw = WALL_INTO_ROOM_YAW;
+          ch.faceYaw = 0;
           break;
         case "wall-panel":
-          ch.pos.z = wallFaceZ(frame) + 0.05;
+          ch.pos.z = wallFaceZ(frame) + wallMountInset("wall-panel");
           ch.pos.y = 1.38;
           ch.pos.x = frame.tableCx + (rx - 0.5) * 3;
-          ch.faceYaw = WALL_INTO_ROOM_YAW;
+          ch.faceYaw = 0;
           break;
         case "shelf":
-          ch.pos.z = wallFaceZ(frame) + 0.05;
+          ch.pos.z = wallFaceZ(frame) + wallMountInset("shelf");
           ch.pos.y = 1.32;
           ch.pos.x = frame.tableCx + (rx - 0.5) * 2;
-          ch.faceYaw = WALL_INTO_ROOM_YAW;
+          ch.faceYaw = 0;
           break;
         case "ceiling":
           ch.pos.y = 2.85;
@@ -365,6 +381,7 @@
     constrainedRelax(chambers, "room");
     anchorAuxDisplaysUnderCamera(chambers, frame, camItem);
     clampToRoomFrame(chambers, frame);
+    pinWallMounts(chambers, frame);
     return frame;
   }
 
@@ -416,6 +433,9 @@
       const mounts = new Set([a.mount, b.mount]);
       const floorLike = m => m === "table" || m === "desk" || m === "floor-table";
       if (mounts.has("ceiling") && [...mounts].some(floorLike)) return true;
+      if (isWallGear(a) && isWallGear(b)) return true;
+      if (isWallGear(a) && floorLike(b.mount)) return true;
+      if (isWallGear(b) && floorLike(a.mount)) return true;
       return false;
     };
     const list = chambers.filter(c => c.pos && Number.isFinite(c.pos.x));
@@ -713,7 +733,7 @@
     diagramToWorld, layerAisles, roomZones, nodeCenter,
     buildWalkTopology, distToSegment,
     applySemanticPlacement, buildRoomFrame, buildNetworkFrame,
-    resolveRoomPlacement, clampToRoomFrame,
+    resolveRoomPlacement, clampToRoomFrame, wallFaceZ, pinWallMounts,
     deviceKind, roomMount, placementWhy, NET_LAYER_Z, NET_LAYER_ORDER
   };
 })();

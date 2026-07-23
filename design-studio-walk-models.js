@@ -986,6 +986,15 @@
         if (!wrap.userData.photoMesh && obj.userData?.isPhotoFace) wrap.userData.photoMesh = obj;
       });
     }
+
+    const wallMounted = kind === "room" && (
+      (ch?.mount || "").startsWith("wall-") || ch?.mount === "shelf"
+    );
+    if (wallMounted) {
+      const box = new T.Box3().setFromObject(model);
+      if (Number.isFinite(box.min.z)) wrap.position.z = -box.min.z + 0.01;
+    }
+
     return wrap;
   }
 
