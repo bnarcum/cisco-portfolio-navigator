@@ -108,6 +108,14 @@
     return { frontZ, tableCx, tableCz, tableSpread, tableDepth, tableWidth, tableLength, credenzaZ, hasDisplay: display.length > 0 };
   }
 
+  /** Room-side face of the front wall slab (matches addRoomVenue wall mesh). */
+  function wallFaceZ(frame) {
+    return frame.frontZ - 0.26;
+  }
+
+  // Room occupies +Z from the display wall; mounted gear faces back toward the room (-Z).
+  const WALL_INTO_ROOM_YAW = Math.PI;
+
   function buildNetworkFrame(chambers) {
     const isDc = chambers.some(c => /n9k|spine|leaf|apic|ucs|aci/i.test(`${c.stencilId} ${c.label}`));
     const demarcZ = NET_LAYER_Z.wan;
@@ -233,6 +241,8 @@
       if (!shouldStackAuxUnderCamera(ch)) return;
       ch.pos.x = camX;
       ch.pos.y = auxY;
+      ch.pos.z = Number.isFinite(camCh?.pos?.z) ? camCh.pos.z : wallFaceZ(frame) + 0.04;
+      ch.faceYaw = WALL_INTO_ROOM_YAW;
     });
   }
 
@@ -276,7 +286,7 @@
 
       switch (mount) {
         case "wall-display": {
-          ch.pos.z = frame.frontZ + 0.12;
+          ch.pos.z = wallFaceZ(frame) + 0.04;
           const confidence = /confidence/i.test(ch.label || "");
           const aux = (/aux|secondary|content display|people display/i.test(ch.label || "")
             || (/display-86|86/i.test(ch.stencilId || "") && !/primary|main|board|front|confidence/i.test(ch.label || "")))
@@ -293,26 +303,26 @@
             ch.pos.y = Math.max(wallBot, Math.min(wallTop - panelH, wallBot + ry * travel));
             ch.pos.x = frame.tableCx + (rx - 0.5) * spread;
           }
-          ch.faceYaw = 0;
+          ch.faceYaw = WALL_INTO_ROOM_YAW;
           break;
         }
         case "wall-camera":
-          ch.pos.z = frame.frontZ + 0.18;
+          ch.pos.z = wallFaceZ(frame) + 0.06;
           ch.pos.y = 2.65;
           ch.pos.x = frame.tableCx + (rx - 0.5) * 3;
-          ch.faceYaw = 0;
+          ch.faceYaw = WALL_INTO_ROOM_YAW;
           break;
         case "wall-panel":
-          ch.pos.z = frame.frontZ + 0.22;
+          ch.pos.z = wallFaceZ(frame) + 0.05;
           ch.pos.y = 1.38;
           ch.pos.x = frame.tableCx + (rx - 0.5) * 3;
-          ch.faceYaw = 0;
+          ch.faceYaw = WALL_INTO_ROOM_YAW;
           break;
         case "shelf":
-          ch.pos.z = frame.frontZ + 0.18;
+          ch.pos.z = wallFaceZ(frame) + 0.05;
           ch.pos.y = 1.32;
           ch.pos.x = frame.tableCx + (rx - 0.5) * 2;
-          ch.faceYaw = 0;
+          ch.faceYaw = WALL_INTO_ROOM_YAW;
           break;
         case "ceiling":
           ch.pos.y = 2.85;

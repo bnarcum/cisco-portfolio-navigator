@@ -93,8 +93,12 @@ const placementErrors = await page.evaluate(() => {
     if (cam && aux) {
       if (Math.abs(aux.pos.x - cam.pos.x) > 0.12)
         errs.push(`boardroom: Aux Display x=${aux.pos.x.toFixed(2)} should align with Primary Cam x=${cam.pos.x.toFixed(2)}`);
+      if (Math.abs(aux.pos.z - cam.pos.z) > 0.12)
+        errs.push(`boardroom: Aux Display z=${aux.pos.z.toFixed(2)} should share wall plane with Primary Cam z=${cam.pos.z.toFixed(2)}`);
       if (aux.pos.y >= cam.pos.y - 0.15)
         errs.push(`boardroom: Aux Display y=${aux.pos.y.toFixed(2)} should sit below Primary Cam y=${cam.pos.y.toFixed(2)}`);
+      if (Math.abs((aux.faceYaw ?? 0) - Math.PI) > 0.05)
+        errs.push(`boardroom: Aux Display should face into the room (faceYaw=${aux.faceYaw})`);
     }
   }
 
