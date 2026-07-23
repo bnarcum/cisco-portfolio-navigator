@@ -49,7 +49,7 @@
   const TEACH = {
     switch: "PoE switches budget 30W per port — plan headroom for codecs and phones.",
     codec: "Room codecs terminate AV and control on the LAN — keep on dedicated VLAN.",
-    camera: "Quad cams need HDMI/USB uplink to the codec — check cable length limits.",
+    camera: "Quad cams need PoE+ Ethernet to the switch plus HDMI to the codec — check cable length limits.",
     mic: "Ceiling mics use PoE or USB — verify switch port PoE budget.",
     display: "Displays receive HDMI from the codec — 4K needs certified HDMI length.",
     touch: "Touch panels are control endpoints — PoE keeps install simple.",

@@ -137,6 +137,10 @@
       { id: "HDMI2", x: 0.7, y: 1, side: "bottom", type: "hdmi" }
     ],
     "cam-hdmi": [{ id: "HDMI", x: 0.5, y: 1, side: "bottom", type: "hdmi" }],
+    "cam-quad": [
+      { id: "HDMI", x: 0.35, y: 1, side: "bottom", type: "hdmi" },
+      { id: "ETH", x: 0.65, y: 1, side: "bottom", type: "copper", poe: true }
+    ],
     "mic-poe": [{ id: "ETH", x: 0.5, y: 1, side: "bottom", type: "copper", poe: true }],
     "touch-lan": [{ id: "LAN", x: 0.5, y: 1, side: "bottom", type: "copper", poe: true }],
     "phone-lan": [{ id: "LAN", x: 0.5, y: 1, side: "bottom", type: "copper", poe: true }],
@@ -212,7 +216,7 @@
     "desk-mini": { label: "Desk Mini", pid: "CS-DESKMINI-K9", shape: "codec", ports: "codec-av", w: 64, h: 44, poeW: 25, mount: "desk", role: "codec", model3d: "display", aliases: ["desk mini"] },
     "desk-phone": { label: "Desk Phone 9841", pid: "CP-9841-K9", shape: "phone", ports: "phone-lan", w: 52, h: 40, poeW: 8, mount: "desk", role: "phone", model3d: "generic", aliases: ["desk phone", "ip phone", "9841"] },
     "room-vision-ptz": { label: "Room Vision PTZ", pid: "CS-RoomVisionPTZ", shape: "camera", ports: "cam-hdmi", w: 56, h: 52, poeW: 0, mount: "wall-camera", role: "camera", model3d: "camera", aliases: ["room vision", "ptz camera", "ptz"] },
-    "quad-cam": { label: "Quad Camera", pid: "CS-QUADCAM-K9", shape: "camera", ports: "cam-hdmi", w: 56, h: 52, mount: "wall-camera", role: "camera", model3d: "camera", aliases: ["quad camera", "quad cam", "quadcam"] },
+    "quad-cam": { label: "Quad Camera", pid: "CS-QUADCAM-K9", shape: "camera", ports: "cam-quad", w: 56, h: 52, poeW: 30, mount: "wall-camera", role: "camera", model3d: "camera", aliases: ["quad camera", "quad cam", "quadcam"] },
     "ceiling-mic": { label: "Ceiling Mic Pro", pid: "CS-MIC-CLGPRO", shape: "ceiling-mic", ports: "mic-poe", w: 52, h: 36, poeW: 15, mount: "ceiling", role: "microphone", model3d: "ceiling-mic", cableAnchor: "ceiling", defaultCount: 2, aliases: ["ceiling mic", "ceiling microphone", "ceiling mic pro", "mic pro"] },
     "table-mic": { label: "Table Mic Pro", pid: "CS-MIC-TBLPRO", shape: "table-mic", ports: "mic-poe", w: 48, h: 40, poeW: 10, mount: "table", role: "microphone", model3d: "table-mic", cableAnchor: "table", defaultCount: 2, aliases: ["table mic", "table microphone", "table mic pro"] },
     "touch-10": { label: "Touch 10", pid: "CS-TOUCH10-K9", shape: "touch", ports: "touch-lan", w: 58, h: 42, poeW: 12, mount: "table", role: "control", model3d: "touch", aliases: ["touch 10", "touch panel", "touch controller", "touch10"] },

@@ -535,6 +535,7 @@
         { fi: 4, ti: 3, media: "cat6", label: "PoE-Touch", fromPort: "Gi1/0/2", toPort: "LAN" },
         { fi: 4, ti: 6, media: "cat6", label: "PoE-Mic-L", fromPort: "Gi1/0/3", toPort: "ETH" },
         { fi: 4, ti: 7, media: "cat6", label: "PoE-Mic-R", fromPort: "Gi1/0/4", toPort: "ETH" },
+        { fi: 4, ti: 0, media: "cat6", label: "PoE-Cam", fromPort: "Gi1/0/5", toPort: "ETH" },
         { fi: 2, ti: 1, media: "hdmi", label: "Primary Video", fromPort: "HDMI1", toPort: "HDMI1" },
         { fi: 2, ti: 0, media: "hdmi", label: "Camera", fromPort: "HDMI2", toPort: "HDMI" }
       ]
@@ -567,6 +568,7 @@
         { fi: 4, ti: 6, media: "cat6", label: "PoE-Mic1", fromPort: "Gi1/0/3", toPort: "ETH" },
         { fi: 4, ti: 7, media: "cat6", label: "PoE-Mic2", fromPort: "Gi1/0/4", toPort: "ETH" },
         { fi: 4, ti: 8, media: "cat6", label: "PoE-Mic3", fromPort: "Gi1/0/5", toPort: "ETH" },
+        { fi: 4, ti: 2, media: "cat6", label: "PoE-Cam", fromPort: "Gi1/0/6", toPort: "ETH" },
         { fi: 0, ti: 1, media: "hdmi", label: "Aux Video", fromPort: "HDMI1", toPort: "HDMI1" },
         { fi: 2, ti: 0, media: "hdmi", label: "Camera", fromPort: "HDMI", toPort: "HDMI2" }
       ]
@@ -741,6 +743,7 @@
         { fi: 5, ti: 4, media: "cat6", label: "PoE-Touch", fromPort: "Gi1/0/2", toPort: "LAN" },
         { fi: 5, ti: 6, media: "cat6", label: "PoE-Mic-L", fromPort: "Gi1/0/3", toPort: "ETH" },
         { fi: 5, ti: 7, media: "cat6", label: "PoE-Mic-R", fromPort: "Gi1/0/4", toPort: "ETH" },
+        { fi: 5, ti: 2, media: "cat6", label: "PoE-Cam", fromPort: "Gi1/0/5", toPort: "ETH" },
         { fi: 3, ti: 0, media: "hdmi", label: "People", fromPort: "HDMI1", toPort: "HDMI1" },
         { fi: 3, ti: 1, media: "hdmi", label: "Content", fromPort: "HDMI2", toPort: "HDMI1" }
       ]
@@ -771,6 +774,7 @@
         { fi: 4, ti: 0, media: "cat6", label: "PoE-Codec", fromPort: "Gi1/0/1", toPort: "LAN" },
         { fi: 4, ti: 3, media: "cat6", label: "PoE-Touch", fromPort: "Gi1/0/2", toPort: "LAN" },
         { fi: 4, ti: 5, media: "cat6", label: "PoE-Mic", fromPort: "Gi1/0/3", toPort: "ETH" },
+        { fi: 4, ti: 2, media: "cat6", label: "PoE-Cam", fromPort: "Gi1/0/4", toPort: "ETH" },
         { fi: 0, ti: 1, media: "hdmi", label: "Video", fromPort: "HDMI1", toPort: "HDMI1" },
         { fi: 0, ti: 2, media: "hdmi", label: "Camera", fromPort: "HDMI2", toPort: "HDMI" }
       ]
@@ -806,6 +810,7 @@
         { fi: 4, ti: 6, media: "cat6", label: "PoE-Mic2", fromPort: "Gi1/0/4", toPort: "ETH" },
         { fi: 4, ti: 7, media: "cat6", label: "PoE-Mic3", fromPort: "Gi1/0/5", toPort: "ETH" },
         { fi: 4, ti: 8, media: "cat6", label: "PoE-Mic4", fromPort: "Gi1/0/6", toPort: "ETH" },
+        { fi: 4, ti: 2, media: "cat6", label: "PoE-Cam", fromPort: "Gi1/0/7", toPort: "ETH" },
         { fi: 0, ti: 1, media: "hdmi", label: "Primary Video", fromPort: "HDMI1", toPort: "HDMI1" },
         { fi: 0, ti: 2, media: "hdmi", label: "Camera", fromPort: "HDMI2", toPort: "HDMI" }
       ]
@@ -838,6 +843,7 @@
         { fi: 6, ti: 5, media: "cat6", label: "PoE-Touch", fromPort: "Gi1/0/2", toPort: "LAN" },
         { fi: 6, ti: 7, media: "cat6", label: "PoE-Mic1", fromPort: "Gi1/0/3", toPort: "ETH" },
         { fi: 6, ti: 8, media: "cat6", label: "PoE-Mic2", fromPort: "Gi1/0/4", toPort: "ETH" },
+        { fi: 6, ti: 4, media: "cat6", label: "PoE-Cam", fromPort: "Gi1/0/5", toPort: "ETH" },
         { fi: 0, ti: 1, media: "hdmi", label: "Front Video", fromPort: "HDMI1", toPort: "HDMI1" },
         { fi: 0, ti: 2, media: "hdmi", label: "Confidence L", fromPort: "HDMI2", toPort: "HDMI1" },
         { fi: 4, ti: 0, media: "hdmi", label: "Camera", fromPort: "HDMI", toPort: "HDMI2" }

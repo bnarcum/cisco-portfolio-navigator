@@ -103,6 +103,13 @@ const placementErrors = await page.evaluate(() => {
       if (Math.abs(aux.faceYaw ?? 0) > 0.05)
         errs.push(`boardroom: Aux Display should face into the room (faceYaw=${aux.faceYaw})`);
     }
+    const camIdx = boardTpl.items.findIndex(it => it.label === "Primary Cam");
+    const swIdx = boardTpl.items.findIndex(it => it.stencilId === "c9200-collab");
+    const camNet = (boardTpl.links || []).find(l => l.fi === swIdx && l.ti === camIdx && l.media === "cat6");
+    if (camIdx < 0 || swIdx < 0 || !camNet)
+      errs.push("boardroom: Primary Cam should have PoE+ CAT6 to the collab switch");
+    if (camNet?.toPort !== "ETH")
+      errs.push(`boardroom: Primary Cam network link should land on ETH, got ${camNet?.toPort}`);
   }
 
   return errs;
