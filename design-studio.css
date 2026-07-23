@@ -1174,6 +1174,34 @@
 #ds-walk-overlay.ds-walk-lab #ds-walk-canvas{filter:contrast(1.05) saturate(1.08)}
 #ds-walk-overlay.ds-walk-explore #ds-walk-canvas{filter:contrast(1.06) saturate(1.1)}
 
+#ds-walk-overlay .ds-walk-avatar-panel{
+  position:absolute;top:72px;right:14px;z-index:12;width:min(300px,calc(100vw - 28px));
+  padding:12px 14px;border-radius:12px;
+  background:rgba(4,16,31,.94);border:1px solid rgba(2,200,255,.28);
+  box-shadow:0 16px 48px rgba(0,0,0,.55);backdrop-filter:blur(14px)}
+#ds-walk-overlay .ds-walk-avatar-panel[hidden]{display:none!important}
+#ds-walk-overlay .ds-walk-avatar-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+#ds-walk-overlay .ds-walk-avatar-head strong{font-size:12px;color:#e8f4ff;letter-spacing:.04em}
+#ds-walk-overlay .ds-walk-avatar-x{
+  border:1px solid rgba(255,120,120,.35);background:rgba(255,100,100,.12);color:#ffb8b8;
+  border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:12px}
+#ds-walk-overlay .ds-walk-avatar-hint{margin:0 0 8px;font-size:10px;line-height:1.35;color:#8fb6cc}
+#ds-walk-overlay .ds-walk-avatar-presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+#ds-walk-overlay .ds-walk-avatar-preset{
+  border:1px solid rgba(126,234,255,.24);background:rgba(2,200,255,.06);color:#bfefff;
+  border-radius:999px;padding:4px 10px;font-size:9px;cursor:pointer}
+#ds-walk-overlay .ds-walk-avatar-preset:hover{border-color:rgba(126,234,255,.45);background:rgba(2,200,255,.12)}
+#ds-walk-overlay .ds-walk-avatar-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+#ds-walk-overlay .ds-walk-avatar-field{display:flex;flex-direction:column;gap:4px;font-size:9px;color:#9ec4d8}
+#ds-walk-overlay .ds-walk-avatar-field input[type=color]{
+  width:100%;height:28px;padding:0;border:1px solid rgba(126,234,255,.22);border-radius:8px;background:transparent;cursor:pointer}
+#ds-walk-overlay .ds-walk-avatar-field select{
+  width:100%;height:28px;border:1px solid rgba(126,234,255,.22);border-radius:8px;
+  background:rgba(2,12,24,.85);color:#dff4ff;font-size:10px;padding:0 6px}
+#ds-walk-overlay .ds-walk-avatar-check{grid-column:1/-1;flex-direction:row;align-items:center;gap:8px}
+#ds-walk-overlay .ds-walk-avatar-actions{display:flex;gap:8px;flex-wrap:wrap}
+#ds-walk-overlay.ds-walk-avatar-open .ds-walk-panel-backdrop{display:block!important;opacity:.35}
+
 #ds-walk-overlay.ds-walk-epic{background:#000}
 #ds-walk-overlay.ds-walk-epic .ds-walk-hud{
   position:absolute;top:10px;left:10px;right:auto;z-index:8;width:min(560px,calc(100% - 20px));

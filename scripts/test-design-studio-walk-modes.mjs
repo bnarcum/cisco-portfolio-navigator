@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const walk = fs.readFileSync(path.join(root, "design-studio-walk.js"), "utf8");
+const voxel = fs.readFileSync(path.join(root, "design-studio-walk-voxel.js"), "utf8");
 const css = fs.readFileSync(path.join(root, "design-studio.css"), "utf8");
 const studio = fs.readFileSync(path.join(root, "design-studio.js"), "utf8");
 
@@ -45,6 +46,13 @@ must(/Open guided solution walkthrough/.test(studio), "Toolbar title should desc
 must(/function shouldRenderWalk/.test(walk), "walk render gate is missing");
 must(/visibilitychange/.test(walk), "walk must pause WebGL when the tab is hidden");
 must(/window\.__DS_WALK\?\.close/.test(studio), "closing Design Studio must stop Walk mode");
+
+must(/const WALK_AVATAR_KEY\s*=\s*"cpn-walk-avatar-v1"/.test(walk), "walk avatar storage key is missing");
+must(/data-action="avatar-open"/.test(walk), "in-walk avatar builder button is missing");
+must(/function openAvatarBuilder/.test(walk), "openAvatarBuilder is missing");
+must(/function makeAvatar\(THREE, config\)/.test(voxel), "makeAvatar must accept avatar config");
+must(/AVATAR_PRESETS/.test(voxel), "avatar presets are missing");
+must(/#ds-walk-overlay \.ds-walk-avatar-panel/.test(css), "avatar builder panel styles are missing");
 
 if (errors.length) {
   console.error("FAIL test-design-studio-walk-modes");

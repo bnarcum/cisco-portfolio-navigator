@@ -43,6 +43,7 @@
   const WALK_INSIGHTS_OFF_KEY = "cpn-ds-walk-insights-off";
   const WALK_PACKETS_KEY = "cpn-ds-walk-packets";
   const WALK_STYLE_KEY = "cpn-ds-walk-style";
+  const WALK_AVATAR_KEY = "cpn-walk-avatar-v1";
   const WALK_STYLES = {
     explore: {
       label: "Explore",
@@ -94,6 +95,7 @@
     packetsEnabled: true, packetSpeedIdx: 1,
     quest: null,
     walkStyle: "lab",
+    avatarDraft: null, avatarPanelOpen: false,
     linksExpanded: false
   };
 
@@ -455,6 +457,181 @@
     addAdaptiveVenue(THREE, scene, bounds, graph);
   }
 
+  function loadAvatarConfig() {
+    const VOX = window.__DS_WALK_VOXEL;
+    const fallback = VOX?.DEFAULT_AVATAR_CONFIG || {};
+    try {
+      const raw = localStorage.getItem(WALK_AVATAR_KEY);
+      if (!raw) return VOX?.normalizeAvatarConfig?.(fallback) || { ...fallback };
+      return VOX?.normalizeAvatarConfig?.(JSON.parse(raw)) || { ...fallback };
+    } catch (e) {
+      return VOX?.normalizeAvatarConfig?.(fallback) || { ...fallback };
+    }
+  }
+
+  function saveAvatarConfig(cfg) {
+    const VOX = window.__DS_WALK_VOXEL;
+    const norm = VOX?.normalizeAvatarConfig?.(cfg) || cfg;
+    try { localStorage.setItem(WALK_AVATAR_KEY, JSON.stringify(norm)); } catch (e) { /* ignore */ }
+    return norm;
+  }
+
+  function disposeObject3D(root) {
+    if (!root) return;
+    root.traverse(obj => {
+      obj.geometry?.dispose?.();
+      const m = obj.material;
+      if (Array.isArray(m)) m.forEach(x => { x?.map?.dispose?.(); x?.dispose?.(); });
+      else { m?.map?.dispose?.(); m?.dispose?.(); }
+    });
+  }
+
+  function rebuildViewmodel(cfg) {
+    if (!state.camera || !state.THREE) return;
+    const VOX = window.__DS_WALK_VOXEL;
+    if (!VOX?.makeBlockViewmodel) return;
+    if (state.viewmodel) {
+      state.camera.remove(state.viewmodel);
+      disposeObject3D(state.viewmodel);
+    }
+    state.viewmodel = VOX.makeBlockViewmodel(state.THREE, state.camera, cfg || loadAvatarConfig());
+    const style = activeWalkStyle();
+    state.viewmodel.visible = !state.thirdPerson && !!style.features.viewmodel;
+  }
+
+  function rebuildAvatar(cfg, persist = true) {
+    const style = activeWalkStyle();
+    if (!style.features.avatar || !state.scene || !state.THREE) return;
+    const VOX = window.__DS_WALK_VOXEL;
+    if (!VOX?.makeAvatar) return;
+    const norm = VOX.normalizeAvatarConfig(cfg || loadAvatarConfig());
+    if (persist) saveAvatarConfig(norm);
+    if (state.avatar) {
+      state.scene.remove(state.avatar);
+      disposeObject3D(state.avatar);
+    }
+    state.avatar = VOX.makeAvatar(state.THREE, norm);
+    state.scene.add(state.avatar);
+    state.avatar.visible = state.thirdPerson;
+    rebuildViewmodel(norm);
+  }
+
+  function avatarBuilderHtml(cfg) {
+    const VOX = window.__DS_WALK_VOXEL;
+    const presets = VOX?.AVATAR_PRESETS || [];
+    const presetBtns = presets.map(p =>
+      `<button type="button" class="ds-walk-avatar-preset" data-action="avatar-preset" data-preset="${esc(p.id)}">${esc(p.label)}</button>`
+    ).join("");
+    return `<div class="ds-walk-avatar-head">
+        <strong>Your avatar</strong>
+        <button type="button" class="ds-walk-avatar-x" data-action="avatar-close" title="Close builder">✕</button>
+      </div>
+      <p class="ds-walk-avatar-hint">Pick a preset or tune colors — live preview in third-person (<kbd>V</kbd>).</p>
+      <div class="ds-walk-avatar-presets" role="group" aria-label="Avatar presets">${presetBtns}</div>
+      <div class="ds-walk-avatar-grid">
+        <label class="ds-walk-avatar-field">Skin <input type="color" data-avatar-key="skin" value="${esc(cfg.skin)}"></label>
+        <label class="ds-walk-avatar-field">Hair <input type="color" data-avatar-key="hair" value="${esc(cfg.hair)}"></label>
+        <label class="ds-walk-avatar-field">Shirt <input type="color" data-avatar-key="shirt" value="${esc(cfg.shirt)}"></label>
+        <label class="ds-walk-avatar-field">Pants <input type="color" data-avatar-key="pants" value="${esc(cfg.pants)}"></label>
+        <label class="ds-walk-avatar-field">Shoes <input type="color" data-avatar-key="shoes" value="${esc(cfg.shoes)}"></label>
+        <label class="ds-walk-avatar-field">Hair style
+          <select data-avatar-key="hairStyle">
+            <option value="cap"${cfg.hairStyle === "cap" ? " selected" : ""}>Cap</option>
+            <option value="short"${cfg.hairStyle === "short" ? " selected" : ""}>Short</option>
+            <option value="bald"${cfg.hairStyle === "bald" ? " selected" : ""}>Bald</option>
+          </select>
+        </label>
+        <label class="ds-walk-avatar-field">Face
+          <select data-avatar-key="face">
+            <option value="friendly"${cfg.face === "friendly" ? " selected" : ""}>Friendly</option>
+            <option value="smile"${cfg.face === "smile" ? " selected" : ""}>Smile</option>
+            <option value="neutral"${cfg.face === "neutral" ? " selected" : ""}>Neutral</option>
+          </select>
+        </label>
+        <label class="ds-walk-avatar-field ds-walk-avatar-check">
+          <input type="checkbox" data-avatar-key="badge"${cfg.badge ? " checked" : ""}> Cisco badge
+        </label>
+      </div>
+      <div class="ds-walk-avatar-actions">
+        <button type="button" class="ds-walk-btn ds-walk-btn-primary" data-action="avatar-apply">Save avatar</button>
+        <button type="button" class="ds-walk-btn ds-walk-btn-ghost" data-action="avatar-reset">Reset default</button>
+      </div>`;
+  }
+
+  function readAvatarDraftFromPanel() {
+    const panel = document.getElementById("ds-walk-avatar-panel");
+    const VOX = window.__DS_WALK_VOXEL;
+    const base = { ...(state.avatarDraft || loadAvatarConfig()) };
+    if (!panel) return VOX?.normalizeAvatarConfig?.(base) || base;
+    panel.querySelectorAll("[data-avatar-key]").forEach(el => {
+      const key = el.dataset.avatarKey;
+      if (el.type === "checkbox") base[key] = el.checked;
+      else if (el.value != null && el.value !== "") base[key] = el.value;
+    });
+    return VOX?.normalizeAvatarConfig?.(base) || base;
+  }
+
+  function syncAvatarBuilderPanel() {
+    const panel = document.getElementById("ds-walk-avatar-panel");
+    if (!panel || panel.hidden) return;
+    const cfg = readAvatarDraftFromPanel();
+    state.avatarDraft = cfg;
+    rebuildAvatar(cfg, false);
+  }
+
+  function openAvatarBuilder() {
+    const style = activeWalkStyle();
+    if (!style.features.avatar || !state.overlay) return;
+    state.avatarDraft = loadAvatarConfig();
+    state.avatarPanelOpen = true;
+    state.overlay.classList.add("ds-walk-avatar-open");
+    let panel = document.getElementById("ds-walk-avatar-panel");
+    if (!panel) {
+      panel = document.createElement("div");
+      panel.id = "ds-walk-avatar-panel";
+      panel.className = "ds-walk-avatar-panel";
+      panel.setAttribute("role", "dialog");
+      panel.setAttribute("aria-label", "Avatar builder");
+      state.overlay.querySelector(".ds-walk-stage")?.appendChild(panel);
+    }
+    panel.innerHTML = avatarBuilderHtml(state.avatarDraft);
+    panel.removeAttribute("hidden");
+    panel.onclick = e => e.stopPropagation();
+    panel.onpointerdown = e => e.stopPropagation();
+    if (!state.thirdPerson) toggleCameraMode();
+    bindAvatarBuilder(panel);
+    setStatus("Avatar builder — tune your look, then Save avatar");
+  }
+
+  function closeAvatarBuilder(revert) {
+    const panel = document.getElementById("ds-walk-avatar-panel");
+    state.avatarPanelOpen = false;
+    state.overlay?.classList.remove("ds-walk-avatar-open");
+    panel?.setAttribute("hidden", "");
+    if (revert) rebuildAvatar(loadAvatarConfig(), false);
+    state.avatarDraft = null;
+  }
+
+  function bindAvatarBuilder(panel) {
+    panel.querySelectorAll("[data-avatar-key]").forEach(el => {
+      el.addEventListener("input", () => syncAvatarBuilderPanel());
+      el.addEventListener("change", () => syncAvatarBuilderPanel());
+    });
+    panel.querySelectorAll('[data-action="avatar-preset"]').forEach(btn => {
+      btn.addEventListener("click", e => {
+        e.preventDefault();
+        e.stopPropagation();
+        const id = btn.dataset.preset;
+        const preset = (window.__DS_WALK_VOXEL?.AVATAR_PRESETS || []).find(p => p.id === id);
+        if (!preset) return;
+        state.avatarDraft = window.__DS_WALK_VOXEL.normalizeAvatarConfig(preset.config);
+        panel.innerHTML = avatarBuilderHtml(state.avatarDraft);
+        bindAvatarBuilder(panel);
+        rebuildAvatar(state.avatarDraft, false);
+      });
+    });
+  }
+
   function setupAvatar(THREE, scene, style) {
     style = WALK_STYLES[style] || activeWalkStyle();
     if (!style.features.avatar) {
@@ -466,8 +643,11 @@
     const VOX = window.__DS_WALK_VOXEL;
     if (!VOX) return;
     if (style.features.avatar) state.thirdPerson = true;
-    if (state.avatar) scene.remove(state.avatar);
-    state.avatar = VOX.makeAvatar(THREE);
+    if (state.avatar) {
+      scene.remove(state.avatar);
+      disposeObject3D(state.avatar);
+    }
+    state.avatar = VOX.makeAvatar(THREE, loadAvatarConfig());
     scene.add(state.avatar);
     state.avatar.visible = state.thirdPerson;
   }
@@ -1264,7 +1444,7 @@
     }
     const VOX = window.__DS_WALK_VOXEL;
     if (VOX?.makeBlockViewmodel) {
-      const vm = VOX.makeBlockViewmodel(THREE, camera);
+      const vm = VOX.makeBlockViewmodel(THREE, camera, loadAvatarConfig());
       vm.visible = !state.thirdPerson;
       return vm;
     }
@@ -2931,6 +3111,9 @@
     const styleBtns = Object.entries(WALK_STYLES).map(([key, cfg]) =>
       `<button type="button" class="ds-walk-style${key === currentWalkStyle() ? " active" : ""}" data-action="walk-style" data-style="${key}" title="${esc(cfg.hint)}">${esc(cfg.label.toUpperCase())}</button>`
     ).join("");
+    const avatarBtn = style.features.avatar
+      ? `<button type="button" class="ds-walk-btn ds-walk-btn-ghost" data-action="avatar-open" title="Customize your walk avatar">Avatar</button>`
+      : "";
     return `<div class="ds-walk-hud ds-walk-hud-glass">
       <div class="ds-walk-hud-row1">
         <strong class="ds-walk-title">${esc(style.title)}</strong>
@@ -2945,6 +3128,7 @@
           <span class="ds-walk-btn-ico" aria-hidden="true">◎</span> Where to?
         </button>
         ${outcomesBtn}
+        ${avatarBtn}
         <button type="button" class="ds-walk-btn ds-walk-btn-ghost" data-action="packets" title="Show or hide data packets on links">Packets</button>
         <button type="button" class="ds-walk-btn ds-walk-btn-ghost ds-walk-pkt-speed" data-action="packet-speed" title="Packet speed">Speed · Normal</button>
       </div>
@@ -3004,6 +3188,29 @@
       if (!btn) return;
       const a = btn.dataset.action;
       if (a === "outcomes") { e.preventDefault(); e.stopPropagation(); toggleOutcomes(); }
+      else if (a === "avatar-open") { e.preventDefault(); e.stopPropagation(); openAvatarBuilder(); }
+      else if (a === "avatar-close") { e.preventDefault(); e.stopPropagation(); closeAvatarBuilder(true); setStatus("Avatar changes discarded"); }
+      else if (a === "avatar-apply") {
+        e.preventDefault();
+        e.stopPropagation();
+        const cfg = readAvatarDraftFromPanel();
+        saveAvatarConfig(cfg);
+        rebuildAvatar(cfg, false);
+        closeAvatarBuilder(false);
+        setStatus("Avatar saved — press V for third-person view");
+      }
+      else if (a === "avatar-reset") {
+        e.preventDefault();
+        e.stopPropagation();
+        const VOX = window.__DS_WALK_VOXEL;
+        state.avatarDraft = VOX?.normalizeAvatarConfig?.(VOX?.DEFAULT_AVATAR_CONFIG) || {};
+        const panel = document.getElementById("ds-walk-avatar-panel");
+        if (panel) {
+          panel.innerHTML = avatarBuilderHtml(state.avatarDraft);
+          bindAvatarBuilder(panel);
+        }
+        rebuildAvatar(state.avatarDraft, false);
+      }
       else if (a === "packets") { e.preventDefault(); e.stopPropagation(); togglePackets(); }
       else if (a === "packet-speed") { e.preventDefault(); e.stopPropagation(); cyclePacketSpeed(); }
       else if (a === "links-expand") {
@@ -3098,6 +3305,11 @@
         if (e.key === "Escape") {
           e.preventDefault();
           e.stopPropagation();
+          if (state.avatarPanelOpen) {
+            closeAvatarBuilder(true);
+            setStatus("Avatar changes discarded");
+            return;
+          }
           if (window.__DS_WALK_QUEST?.isActive?.()) {
             window.__DS_WALK_QUEST.end(false);
             return;
@@ -3391,6 +3603,7 @@
     }
     window.__DS_FIELD_PANEL?.close?.();
     window.__DS_WALK_QUEST?.end?.(false);
+    closeAvatarBuilder(false);
     window.__DS_WALK_AUDIO?.stop?.();
     state.mode = null;
     if (!silent) state.studio = null;
