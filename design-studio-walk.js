@@ -33,6 +33,14 @@
   const NET_LAYER_Z = { wan: -18, security: -12, core: -6, distribution: 0, dc: 2, access: 8, mgmt: 4, collab: 12 };
 
   const EYE_HEIGHT = 1.62;
+
+  function avatarEyeHeight(cfg) {
+    const VOX = window.__DS_WALK_VOXEL;
+    const c = cfg || state.avatar?.userData?.avatarConfig || loadAvatarConfig();
+    const norm = VOX?.normalizeAvatarConfig?.(c) || c || {};
+    const h = Number(norm.height);
+    return EYE_HEIGHT * (Number.isFinite(h) ? h : 1);
+  }
   const PLAYER_R = 0.4;
 
   // Camera glide pacing (walk speed — ~3s short hops, ~6s longer runs).
@@ -522,18 +530,23 @@
     const presetBtns = presets.map(p =>
       `<button type="button" class="ds-walk-avatar-preset" data-action="avatar-preset" data-preset="${esc(p.id)}">${esc(p.label)}</button>`
     ).join("");
+    const heightPct = Math.round((Number(cfg.height) || 1) * 100);
     return `<div class="ds-walk-avatar-head">
         <strong>Your avatar</strong>
         <button type="button" class="ds-walk-avatar-x" data-action="avatar-close" title="Close builder">✕</button>
       </div>
-      <p class="ds-walk-avatar-hint">Pick a preset or tune colors — live preview in third-person (<kbd>V</kbd>).</p>
-      <div class="ds-walk-avatar-presets" role="group" aria-label="Avatar presets">${presetBtns}</div>
+      <p class="ds-walk-avatar-hint">Outfit themes keep your skin tone. Randomize shuffles clothes and accessories only.</p>
+      <div class="ds-walk-avatar-presets" role="group" aria-label="Outfit themes">${presetBtns}</div>
       <div class="ds-walk-avatar-grid">
         <label class="ds-walk-avatar-field">Skin <input type="color" data-avatar-key="skin" value="${esc(cfg.skin)}"></label>
         <label class="ds-walk-avatar-field">Hair <input type="color" data-avatar-key="hair" value="${esc(cfg.hair)}"></label>
         <label class="ds-walk-avatar-field">Shirt <input type="color" data-avatar-key="shirt" value="${esc(cfg.shirt)}"></label>
         <label class="ds-walk-avatar-field">Pants <input type="color" data-avatar-key="pants" value="${esc(cfg.pants)}"></label>
         <label class="ds-walk-avatar-field">Shoes <input type="color" data-avatar-key="shoes" value="${esc(cfg.shoes)}"></label>
+        <label class="ds-walk-avatar-field">Badge <input type="color" data-avatar-key="badgeColor" value="${esc(cfg.badgeColor || "#00bceb")}"></label>
+        <label class="ds-walk-avatar-field">Lanyard / belt <input type="color" data-avatar-key="lanyardColor" value="${esc(cfg.lanyardColor || "#161b24")}"></label>
+        <label class="ds-walk-avatar-field">Eyes <input type="color" data-avatar-key="eyeColor" value="${esc(cfg.eyeColor || "#2b3a4a")}"></label>
+        <label class="ds-walk-avatar-field">Glasses frame <input type="color" data-avatar-key="glassesColor" value="${esc(cfg.glassesColor || "#1a202c")}"></label>
         <label class="ds-walk-avatar-field">Hair style
           <select data-avatar-key="hairStyle">
             <option value="cap"${cfg.hairStyle === "cap" ? " selected" : ""}>Cap</option>
@@ -548,12 +561,26 @@
             <option value="neutral"${cfg.face === "neutral" ? " selected" : ""}>Neutral</option>
           </select>
         </label>
+        <label class="ds-walk-avatar-field">Head accessory
+          <select data-avatar-key="headAccessory">
+            <option value="none"${cfg.headAccessory === "none" || !cfg.headAccessory ? " selected" : ""}>None</option>
+            <option value="headset"${cfg.headAccessory === "headset" ? " selected" : ""}>Headset</option>
+            <option value="hardhat"${cfg.headAccessory === "hardhat" ? " selected" : ""}>Hard hat</option>
+          </select>
+        </label>
+        <label class="ds-walk-avatar-field">Height <span class="ds-walk-avatar-range-val">${heightPct}%</span>
+          <input type="range" min="92" max="108" step="1" data-avatar-key="height" data-avatar-range="height" value="${heightPct}">
+        </label>
         <label class="ds-walk-avatar-field ds-walk-avatar-check">
           <input type="checkbox" data-avatar-key="badge"${cfg.badge ? " checked" : ""}> Cisco badge
+        </label>
+        <label class="ds-walk-avatar-field ds-walk-avatar-check">
+          <input type="checkbox" data-avatar-key="glasses"${cfg.glasses ? " checked" : ""}> Glasses
         </label>
       </div>
       <div class="ds-walk-avatar-actions">
         <button type="button" class="ds-walk-btn ds-walk-btn-primary" data-action="avatar-apply">Save avatar</button>
+        <button type="button" class="ds-walk-btn ds-walk-btn-ghost" data-action="avatar-randomize">Randomize outfit</button>
         <button type="button" class="ds-walk-btn ds-walk-btn-ghost" data-action="avatar-reset">Reset default</button>
       </div>`;
   }
@@ -566,6 +593,7 @@
     panel.querySelectorAll("[data-avatar-key]").forEach(el => {
       const key = el.dataset.avatarKey;
       if (el.type === "checkbox") base[key] = el.checked;
+      else if (el.type === "range" && key === "height") base[key] = Number(el.value) / 100;
       else if (el.value != null && el.value !== "") base[key] = el.value;
     });
     return VOX?.normalizeAvatarConfig?.(base) || base;
@@ -614,7 +642,13 @@
 
   function bindAvatarBuilder(panel) {
     panel.querySelectorAll("[data-avatar-key]").forEach(el => {
-      el.addEventListener("input", () => syncAvatarBuilderPanel());
+      el.addEventListener("input", () => {
+        if (el.type === "range" && el.dataset.avatarRange === "height") {
+          const lbl = el.closest(".ds-walk-avatar-field")?.querySelector(".ds-walk-avatar-range-val");
+          if (lbl) lbl.textContent = `${el.value}%`;
+        }
+        syncAvatarBuilderPanel();
+      });
       el.addEventListener("change", () => syncAvatarBuilderPanel());
     });
     panel.querySelectorAll('[data-action="avatar-preset"]').forEach(btn => {
@@ -624,11 +658,22 @@
         const id = btn.dataset.preset;
         const preset = (window.__DS_WALK_VOXEL?.AVATAR_PRESETS || []).find(p => p.id === id);
         if (!preset) return;
-        state.avatarDraft = window.__DS_WALK_VOXEL.normalizeAvatarConfig(preset.config);
+        const keepSkin = state.avatarDraft?.skin || loadAvatarConfig().skin;
+        state.avatarDraft = window.__DS_WALK_VOXEL.normalizeAvatarConfig({ ...preset.config, skin: keepSkin });
         panel.innerHTML = avatarBuilderHtml(state.avatarDraft);
         bindAvatarBuilder(panel);
         rebuildAvatar(state.avatarDraft, false);
       });
+    });
+    panel.querySelector('[data-action="avatar-randomize"]')?.addEventListener("click", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      const VOX = window.__DS_WALK_VOXEL;
+      if (!VOX?.randomizeOutfit) return;
+      state.avatarDraft = VOX.randomizeOutfit(state.avatarDraft || loadAvatarConfig());
+      panel.innerHTML = avatarBuilderHtml(state.avatarDraft);
+      bindAvatarBuilder(panel);
+      rebuildAvatar(state.avatarDraft, false);
     });
   }
 
@@ -2326,8 +2371,8 @@
     {
       state.vel.y = (state.vel.y ?? 0) - 30 * dt;
       state.pos.y += state.vel.y * dt;
-      if (state.pos.y <= EYE_HEIGHT) {
-        state.pos.y = EYE_HEIGHT;
+      if (state.pos.y <= avatarEyeHeight()) {
+        state.pos.y = avatarEyeHeight();
         state.vel.y = 0;
         state.onGround = true;
       } else {
@@ -2511,10 +2556,11 @@
       const cx = state.pos.x - Math.sin(state.yaw) * dist;
       const cz = state.pos.z - Math.cos(state.yaw) * dist;
       cam.position.set(cx, camY, cz);
-      cam.lookAt(state.pos.x, state.pos.y + 0.95, state.pos.z);
+      cam.lookAt(state.pos.x, state.pos.y + 0.95 * (state.avatar?.userData?.avatarConfig?.height || 1), state.pos.z);
       const moving = spd > 0.25;
       const stride = moving ? Math.abs(Math.sin(state.bobPhase)) * 0.05 : 0;
-      state.avatar.position.set(state.pos.x, state.pos.y - EYE_HEIGHT + stride, state.pos.z);
+      const eyeH = avatarEyeHeight();
+      state.avatar.position.set(state.pos.x, state.pos.y - eyeH + stride, state.pos.z);
       state.avatar.rotation.y = state.facing;
       state.avatar.visible = true;
       animateAvatar(moving);

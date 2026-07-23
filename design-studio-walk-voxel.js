@@ -130,14 +130,22 @@
     pants: "#2d3748",
     shoes: "#191f2b",
     face: "friendly",
-    badge: true
+    badge: true,
+    badgeColor: "#00bceb",
+    lanyardColor: "#161b24",
+    eyeColor: "#2b3a4a",
+    glasses: false,
+    glassesColor: "#1a202c",
+    headAccessory: "none",
+    height: 1
   });
 
+  /** Outfit themes only — presets never include skin (applied separately in walk.js). */
   const AVATAR_PRESETS = Object.freeze([
-    { id: "engineer", label: "Field Engineer", config: { ...DEFAULT_AVATAR_CONFIG } },
-    { id: "customer", label: "Customer", config: { skin: "#c68642", hair: "#1a1208", hairStyle: "short", shirt: "#4a5568", pants: "#1a202c", shoes: "#111827", face: "smile", badge: false } },
-    { id: "executive", label: "Executive", config: { skin: "#e0b890", hair: "#2c1810", hairStyle: "short", shirt: "#1e293b", pants: "#0f172a", shoes: "#020617", face: "neutral", badge: true } },
-    { id: "night", label: "Night Ops", config: { skin: "#8d5524", hair: "#0a0a0a", hairStyle: "cap", shirt: "#14532d", pants: "#111827", shoes: "#000000", face: "friendly", badge: false } }
+    { id: "classic", label: "Classic", config: { hair: "#43301f", hairStyle: "cap", shirt: "#1289b0", pants: "#2d3748", shoes: "#191f2b", face: "friendly", badge: true, badgeColor: "#00bceb", lanyardColor: "#161b24", eyeColor: "#2b3a4a", glasses: false, headAccessory: "none", height: 1 } },
+    { id: "cisco-blue", label: "Cisco Blue", config: { hair: "#1a1208", hairStyle: "cap", shirt: "#049fd9", pants: "#1e293b", shoes: "#0f172a", face: "friendly", badge: true, badgeColor: "#00bceb", lanyardColor: "#0b3044", eyeColor: "#1e3a5f", glasses: false, headAccessory: "headset", height: 1 } },
+    { id: "business", label: "Business", config: { hair: "#2c1810", hairStyle: "short", shirt: "#1e293b", pants: "#0f172a", shoes: "#020617", face: "neutral", badge: true, badgeColor: "#64748b", lanyardColor: "#111827", eyeColor: "#334155", glasses: true, glassesColor: "#0f172a", headAccessory: "none", height: 1.02 } },
+    { id: "night", label: "Night Ops", config: { hair: "#0a0a0a", hairStyle: "cap", shirt: "#14532d", pants: "#111827", shoes: "#000000", face: "friendly", badge: false, badgeColor: "#22c55e", lanyardColor: "#0a0f0a", eyeColor: "#4ade80", glasses: false, headAccessory: "hardhat", height: 0.98 } }
   ]);
 
   function hexColor(v, fallback) {
@@ -161,22 +169,56 @@
       if (input.shirt) base.shirt = hexInput(input.shirt, base.shirt);
       if (input.pants) base.pants = hexInput(input.pants, base.pants);
       if (input.shoes) base.shoes = hexInput(input.shoes, base.shoes);
+      if (input.badgeColor) base.badgeColor = hexInput(input.badgeColor, base.badgeColor);
+      if (input.lanyardColor) base.lanyardColor = hexInput(input.lanyardColor, base.lanyardColor);
+      if (input.eyeColor) base.eyeColor = hexInput(input.eyeColor, base.eyeColor);
+      if (input.glassesColor) base.glassesColor = hexInput(input.glassesColor, base.glassesColor);
       if (["cap", "short", "bald"].includes(input.hairStyle)) base.hairStyle = input.hairStyle;
       if (["friendly", "smile", "neutral"].includes(input.face)) base.face = input.face;
+      if (["none", "headset", "hardhat"].includes(input.headAccessory)) base.headAccessory = input.headAccessory;
       if (typeof input.badge === "boolean") base.badge = input.badge;
+      if (typeof input.glasses === "boolean") base.glasses = input.glasses;
+      if (input.height != null) {
+        const h = Number(input.height);
+        if (Number.isFinite(h)) base.height = Math.min(1.08, Math.max(0.92, h));
+      }
     }
     return base;
   }
 
+  function randomizeOutfit(baseConfig) {
+    const skin = (baseConfig && baseConfig.skin) || DEFAULT_AVATAR_CONFIG.skin;
+    const pick = arr => arr[(Math.random() * arr.length) | 0];
+    const randHex = () => "#" + ((Math.random() * 0xffffff) | 0).toString(16).padStart(6, "0");
+    return normalizeAvatarConfig({
+      skin,
+      hair: randHex(),
+      shirt: randHex(),
+      pants: randHex(),
+      shoes: randHex(),
+      badgeColor: randHex(),
+      lanyardColor: randHex(),
+      eyeColor: randHex(),
+      glassesColor: randHex(),
+      hairStyle: pick(["cap", "short", "bald"]),
+      face: pick(["friendly", "smile", "neutral"]),
+      badge: Math.random() > 0.35,
+      glasses: Math.random() > 0.55,
+      headAccessory: pick(["none", "none", "headset", "hardhat"]),
+      height: 0.92 + Math.random() * 0.16
+    });
+  }
+
   /** Front-facing head texture: simple voxel face variants. */
-  function avatarFaceTex(THREE, faceId = "friendly", skinHex = "#d8aa78") {
+  function avatarFaceTex(THREE, faceId = "friendly", skinHex = "#d8aa78", eyeHex = "#2b3a4a") {
+    const eye = hexInput(eyeHex, "#2b3a4a");
     return makePixelTexture(THREE, (ctx, s) => {
       ctx.fillStyle = hexInput(skinHex, "#d8aa78");
       ctx.fillRect(0, 0, s, s);
       ctx.fillStyle = "#c79566";
       ctx.fillRect(0, 0, s, 3);
       if (faceId === "neutral") {
-        ctx.fillStyle = "#2b3a4a";
+        ctx.fillStyle = eye;
         ctx.fillRect(5, 7, 2, 2);
         ctx.fillRect(9, 7, 2, 2);
         ctx.fillStyle = "#6a4f38";
@@ -186,7 +228,7 @@
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(4, 7, 3, 2);
       ctx.fillRect(9, 7, 3, 2);
-      ctx.fillStyle = "#2b3a4a";
+      ctx.fillStyle = eye;
       ctx.fillRect(5, 7, 2, 2);
       ctx.fillRect(10, 7, 2, 2);
       ctx.fillStyle = "#6a4f38";
@@ -231,6 +273,28 @@
     head.add(part(THREE, 0.18, 0.16, 0.1, hairMat, 0.28, 0.18, 0.3));
   }
 
+  function addGlasses(THREE, head, frameMat) {
+    head.add(part(THREE, 0.52, 0.08, 0.06, frameMat, 0, 0.08, 0.38));
+    head.add(part(THREE, 0.14, 0.14, 0.04, frameMat, -0.2, 0.08, 0.4));
+    head.add(part(THREE, 0.14, 0.14, 0.04, frameMat, 0.2, 0.08, 0.4));
+    head.add(part(THREE, 0.08, 0.04, 0.04, frameMat, 0, 0.1, 0.4));
+  }
+
+  function addHeadAccessory(THREE, head, acc, mats) {
+    if (acc === "headset") {
+      head.add(part(THREE, 0.82, 0.08, 0.12, mats.strap, 0, 0.34, -0.28));
+      head.add(part(THREE, 0.12, 0.22, 0.14, mats.strap, -0.38, 0.02, 0.08));
+      head.add(part(THREE, 0.12, 0.22, 0.14, mats.strap, 0.38, 0.02, 0.08));
+      head.add(part(THREE, 0.08, 0.08, 0.06, mats.badge, -0.38, -0.06, 0.1));
+      head.add(part(THREE, 0.08, 0.08, 0.06, mats.badge, 0.38, -0.06, 0.1));
+      return;
+    }
+    if (acc === "hardhat") {
+      head.add(part(THREE, 0.92, 0.18, 0.92, mats.hat, 0, 0.42, 0));
+      head.add(part(THREE, 0.98, 0.06, 0.98, mats.hatBrim, 0, 0.34, 0));
+    }
+  }
+
   function makeAvatar(THREE, config) {
     const cfg = normalizeAvatarConfig(config);
     const g = new THREE.Group();
@@ -244,9 +308,10 @@
     const pants = blockMat(THREE, null, hexColor(cfg.pants, 0x2d3748));
     const shoe = blockMat(THREE, null, hexColor(cfg.shoes, 0x191f2b));
     const hair = blockMat(THREE, null, hexColor(cfg.hair, 0x43301f));
-    const strap = blockMat(THREE, null, 0x161b24);
-    const badge = blockMat(THREE, null, 0x00bceb);
-    const faceTex = avatarFaceTex(THREE, cfg.face, cfg.skin);
+    const strap = blockMat(THREE, null, hexColor(cfg.lanyardColor, 0x161b24));
+    const badge = blockMat(THREE, null, hexColor(cfg.badgeColor, 0x00bceb));
+    const glassesMat = blockMat(THREE, null, hexColor(cfg.glassesColor, 0x1a202c));
+    const faceTex = avatarFaceTex(THREE, cfg.face, cfg.skin, cfg.eyeColor);
     const faceMat = blockMat(THREE, faceTex);
 
     // Head: face texture on the front (+Z) face only.
@@ -255,6 +320,13 @@
     head.position.y = 1.62;
     head.castShadow = true;
     addHair(THREE, head, hair, cfg.hairStyle);
+    if (cfg.glasses) addGlasses(THREE, head, glassesMat);
+    addHeadAccessory(THREE, head, cfg.headAccessory, {
+      strap: blockMat(THREE, null, hexColor(cfg.lanyardColor, 0x161b24)),
+      badge: blockMat(THREE, null, hexColor(cfg.badgeColor, 0x00bceb)),
+      hat: blockMat(THREE, null, 0xfacc15),
+      hatBrim: blockMat(THREE, null, 0xeab308)
+    });
     g.add(head);
 
     // Torso with collar, belt, optional lanyard + badge.
@@ -289,6 +361,7 @@
     g.add(shoulderR);
 
     g.userData.parts = { head, torso, legL: hipL, legR: hipR, armL: shoulderL, armR: shoulderR };
+    g.scale.setScalar(cfg.height);
     return g;
   }
 
@@ -309,7 +382,7 @@
 
   window.__DS_WALK_VOXEL = {
     WOOL, woolMat, addDiagramWorld, setBlockSky,
-    DEFAULT_AVATAR_CONFIG, AVATAR_PRESETS, normalizeAvatarConfig,
+    DEFAULT_AVATAR_CONFIG, AVATAR_PRESETS, normalizeAvatarConfig, randomizeOutfit,
     makeAvatar, makeBlockViewmodel
   };
 })();
