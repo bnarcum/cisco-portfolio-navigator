@@ -137,15 +137,17 @@
     glasses: false,
     glassesColor: "#1a202c",
     headAccessory: "none",
-    height: 1
+    height: 1,
+    brandMark: "badge",
+    logoColor: "#00bceb"
   });
 
   /** Outfit themes only — presets never include skin (applied separately in walk.js). */
   const AVATAR_PRESETS = Object.freeze([
-    { id: "classic", label: "Classic", config: { hair: "#43301f", hairStyle: "cap", shirt: "#1289b0", pants: "#2d3748", shoes: "#191f2b", face: "friendly", badge: true, badgeColor: "#00bceb", lanyardColor: "#161b24", eyeColor: "#2b3a4a", glasses: false, headAccessory: "none", height: 1 } },
-    { id: "cisco-blue", label: "Cisco Blue", config: { hair: "#1a1208", hairStyle: "cap", shirt: "#049fd9", pants: "#1e293b", shoes: "#0f172a", face: "friendly", badge: true, badgeColor: "#00bceb", lanyardColor: "#0b3044", eyeColor: "#1e3a5f", glasses: false, headAccessory: "headset", height: 1 } },
-    { id: "business", label: "Business", config: { hair: "#2c1810", hairStyle: "short", shirt: "#1e293b", pants: "#0f172a", shoes: "#020617", face: "neutral", badge: true, badgeColor: "#64748b", lanyardColor: "#111827", eyeColor: "#334155", glasses: true, glassesColor: "#0f172a", headAccessory: "none", height: 1.02 } },
-    { id: "night", label: "Night Ops", config: { hair: "#0a0a0a", hairStyle: "cap", shirt: "#14532d", pants: "#111827", shoes: "#000000", face: "friendly", badge: false, badgeColor: "#22c55e", lanyardColor: "#0a0f0a", eyeColor: "#4ade80", glasses: false, headAccessory: "hardhat", height: 0.98 } }
+    { id: "classic", label: "Classic", config: { hair: "#43301f", hairStyle: "cap", shirt: "#1289b0", pants: "#2d3748", shoes: "#191f2b", face: "friendly", badge: true, badgeColor: "#ffffff", lanyardColor: "#161b24", eyeColor: "#2b3a4a", glasses: false, headAccessory: "none", height: 1, brandMark: "badge", logoColor: "#00bceb" } },
+    { id: "cisco-blue", label: "Cisco Blue", config: { hair: "#1a1208", hairStyle: "cap", shirt: "#049fd9", pants: "#1e293b", shoes: "#0f172a", face: "friendly", badge: true, badgeColor: "#ffffff", lanyardColor: "#0b3044", eyeColor: "#1e3a5f", glasses: false, headAccessory: "headset", height: 1, brandMark: "shirt", logoColor: "#ffffff" } },
+    { id: "business", label: "Business", config: { hair: "#2c1810", hairStyle: "short", shirt: "#1e293b", pants: "#0f172a", shoes: "#020617", face: "neutral", badge: false, badgeColor: "#ffffff", lanyardColor: "#111827", eyeColor: "#334155", glasses: true, glassesColor: "#0f172a", headAccessory: "none", height: 1.02, brandMark: "shirt", logoColor: "#00bceb" } },
+    { id: "night", label: "Night Ops", config: { hair: "#0a0a0a", hairStyle: "cap", shirt: "#14532d", pants: "#111827", shoes: "#000000", face: "friendly", badge: false, badgeColor: "#ffffff", lanyardColor: "#0a0f0a", eyeColor: "#4ade80", glasses: false, headAccessory: "hardhat", height: 0.98, brandMark: "none", logoColor: "#22c55e" } }
   ]);
 
   function hexColor(v, fallback) {
@@ -170,13 +172,23 @@
       if (input.pants) base.pants = hexInput(input.pants, base.pants);
       if (input.shoes) base.shoes = hexInput(input.shoes, base.shoes);
       if (input.badgeColor) base.badgeColor = hexInput(input.badgeColor, base.badgeColor);
+      if (input.logoColor) base.logoColor = hexInput(input.logoColor, base.logoColor);
       if (input.lanyardColor) base.lanyardColor = hexInput(input.lanyardColor, base.lanyardColor);
       if (input.eyeColor) base.eyeColor = hexInput(input.eyeColor, base.eyeColor);
       if (input.glassesColor) base.glassesColor = hexInput(input.glassesColor, base.glassesColor);
       if (["cap", "short", "bald"].includes(input.hairStyle)) base.hairStyle = input.hairStyle;
       if (["friendly", "smile", "neutral"].includes(input.face)) base.face = input.face;
       if (["none", "headset", "hardhat"].includes(input.headAccessory)) base.headAccessory = input.headAccessory;
+      if (["none", "badge", "shirt", "cap", "tattoo-left", "tattoo-right"].includes(input.brandMark)) {
+        base.brandMark = input.brandMark;
+      } else if (input.brandMark === undefined && input.badge === false) {
+        base.brandMark = "none";
+      } else if (input.brandMark === undefined && input.badge === true) {
+        base.brandMark = "badge";
+      }
       if (typeof input.badge === "boolean") base.badge = input.badge;
+      if (base.brandMark === "badge") base.badge = true;
+      else if (base.brandMark !== "none") base.badge = false;
       if (typeof input.glasses === "boolean") base.glasses = input.glasses;
       if (input.height != null) {
         const h = Number(input.height);
@@ -197,12 +209,13 @@
       pants: randHex(),
       shoes: randHex(),
       badgeColor: randHex(),
+      logoColor: randHex(),
       lanyardColor: randHex(),
       eyeColor: randHex(),
       glassesColor: randHex(),
       hairStyle: pick(["cap", "short", "bald"]),
       face: pick(["friendly", "smile", "neutral"]),
-      badge: Math.random() > 0.35,
+      brandMark: pick(["none", "badge", "shirt", "cap", "tattoo-left", "tattoo-right"]),
       glasses: Math.random() > 0.55,
       headAccessory: pick(["none", "none", "headset", "hardhat"]),
       height: 0.92 + Math.random() * 0.16
@@ -245,6 +258,48 @@
     }, 16);
   }
 
+  /** Pixel Cisco bridges mark — simplified vertical-bar silhouette. */
+  function drawCiscoBridges(ctx, x, y, w, h, color) {
+    ctx.fillStyle = color;
+    const heights = [0.34, 0.52, 0.78, 0.52, 0.34];
+    const gap = w / (heights.length * 2);
+    const barW = gap * 0.85;
+    heights.forEach((rel, i) => {
+      const bh = h * rel;
+      ctx.fillRect(x + gap + i * (barW + gap), y + h - bh, barW, bh);
+    });
+  }
+
+  function ciscoLogoTex(THREE, logoHex, bgHex = "#ffffff") {
+    const logo = hexInput(logoHex, "#00bceb");
+    const bg = hexInput(bgHex, "#ffffff");
+    return makePixelTexture(THREE, (ctx, s) => {
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, s, s);
+      drawCiscoBridges(ctx, 2, 2, s - 4, s - 4, logo);
+    }, 16);
+  }
+
+  function tattooLogoTex(THREE, logoHex, skinHex) {
+    const logo = hexInput(logoHex, "#00bceb");
+    const skin = hexInput(skinHex, "#d8aa78");
+    return makePixelTexture(THREE, (ctx, s) => {
+      ctx.fillStyle = skin;
+      ctx.fillRect(0, 0, s, s);
+      ctx.fillStyle = "#c79566";
+      ctx.fillRect(0, 0, s, 2);
+      drawCiscoBridges(ctx, 1, 3, s - 2, s - 5, logo);
+    }, 16);
+  }
+
+  function logoMat(THREE, logoHex, bgHex) {
+    return blockMat(THREE, ciscoLogoTex(THREE, logoHex, bgHex));
+  }
+
+  function tattooMat(THREE, logoHex, skinHex) {
+    return blockMat(THREE, tattooLogoTex(THREE, logoHex, skinHex));
+  }
+
   function part(THREE, w, h, d, mat, x, y, z) {
     const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
     m.position.set(x, y, z);
@@ -264,13 +319,14 @@
    * off shoulder/hip pivots so walk.js can drive a natural walk cycle. Group origin
    * sits at the feet; eyes land near EYE_HEIGHT (1.62) for a clean 1st/3rd swap.
    */
-  function addHair(THREE, head, hairMat, style) {
+  function addHair(THREE, head, hairMat, style, capLogoMat) {
     if (style === "bald") return;
     head.add(part(THREE, 0.8, 0.26, 0.82, hairMat, 0, 0.3, 0));
     if (style === "short") return;
     head.add(part(THREE, 0.8, 0.46, 0.16, hairMat, 0, 0.02, -0.33));
     head.add(part(THREE, 0.18, 0.16, 0.1, hairMat, -0.28, 0.18, 0.3));
     head.add(part(THREE, 0.18, 0.16, 0.1, hairMat, 0.28, 0.18, 0.3));
+    if (capLogoMat) head.add(part(THREE, 0.22, 0.08, 0.04, capLogoMat, 0, 0.44, 0.36));
   }
 
   function addGlasses(THREE, head, frameMat) {
@@ -315,17 +371,24 @@
     const shoe = blockMat(THREE, null, hexColor(cfg.shoes, 0x191f2b));
     const hair = blockMat(THREE, null, hexColor(cfg.hair, 0x43301f));
     const strap = blockMat(THREE, null, hexColor(cfg.lanyardColor, 0x161b24));
-    const badge = blockMat(THREE, null, hexColor(cfg.badgeColor, 0x00bceb));
+    const badgeCard = logoMat(THREE, cfg.logoColor, cfg.badgeColor);
+    const shirtLogo = logoMat(THREE, cfg.logoColor, cfg.shirt);
+    const capLogo = logoMat(THREE, cfg.logoColor, cfg.hair);
+    const tattooInk = tattooMat(THREE, cfg.logoColor, cfg.skin);
     const glassesMat = blockMat(THREE, null, hexColor(cfg.glassesColor, 0x1a202c));
     const faceTex = avatarFaceTex(THREE, cfg.face, cfg.skin, cfg.eyeColor);
     const faceMat = blockMat(THREE, faceTex);
+    const mark = cfg.brandMark || (cfg.badge ? "badge" : "none");
 
     // Head: face texture on the front (+Z) face only.
     const headMats = [skin, skin, skin, skin, faceMat, skin];
     const head = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.74, 0.74), headMats);
     head.position.y = 1.62;
     head.castShadow = true;
-    addHair(THREE, head, hair, cfg.hairStyle);
+    addHair(THREE, head, hair, cfg.hairStyle, mark === "cap" ? capLogo : null);
+    if (mark === "cap" && cfg.hairStyle !== "cap") {
+      head.add(part(THREE, 0.22, 0.08, 0.04, capLogo, 0, 0.36, 0.36));
+    }
     if (cfg.glasses) addGlasses(THREE, head, glassesMat);
     addHeadAccessory(THREE, head, cfg.headAccessory, {
       strap: blockMat(THREE, null, hexColor(cfg.lanyardColor, 0x161b24)),
@@ -339,10 +402,13 @@
     const torso = part(THREE, 0.86, 0.92, 0.44, shirt, 0, 0.86, 0);
     torso.add(part(THREE, 0.86, 0.12, 0.46, shirtDark, 0, 0.4, 0));
     torso.add(part(THREE, 0.9, 0.12, 0.48, strap, 0, -0.46, 0));
-    if (cfg.badge) {
+    if (mark === "badge") {
       torso.add(part(THREE, 0.06, 0.5, 0.02, strap, 0.06, 0.16, 0.23));
       torso.add(part(THREE, 0.2, 0.26, 0.05, strap, 0.06, -0.12, 0.24));
-      torso.add(part(THREE, 0.15, 0.2, 0.07, badge, 0.06, -0.12, 0.25));
+      torso.add(part(THREE, 0.15, 0.2, 0.07, badgeCard, 0.06, -0.12, 0.25));
+    }
+    if (mark === "shirt") {
+      torso.add(part(THREE, 0.22, 0.22, 0.03, shirtLogo, 0, 0.18, 0.24));
     }
     g.add(torso);
 
@@ -359,11 +425,15 @@
     // Arms on shoulder pivots, with skin hands at the cuffs.
     const shoulderL = pivotGroup(THREE, -0.56, 1.28, 0);
     shoulderL.add(part(THREE, 0.3, 0.6, 0.3, shirt, 0, -0.32, 0));
-    shoulderL.add(part(THREE, 0.3, 0.18, 0.3, skin, 0, -0.7, 0));
+    const armL = part(THREE, 0.3, 0.18, 0.3, skin, 0, -0.7, 0);
+    if (mark === "tattoo-left") armL.add(part(THREE, 0.14, 0.14, 0.02, tattooInk, 0, 0.02, 0.16));
+    shoulderL.add(armL);
     g.add(shoulderL);
     const shoulderR = pivotGroup(THREE, 0.56, 1.28, 0);
     shoulderR.add(part(THREE, 0.3, 0.6, 0.3, shirt, 0, -0.32, 0));
-    shoulderR.add(part(THREE, 0.3, 0.18, 0.3, skin, 0, -0.7, 0));
+    const armR = part(THREE, 0.3, 0.18, 0.3, skin, 0, -0.7, 0);
+    if (mark === "tattoo-right") armR.add(part(THREE, 0.14, 0.14, 0.02, tattooInk, 0, 0.02, 0.16));
+    shoulderR.add(armR);
     g.add(shoulderR);
 
     g.userData.parts = { head, torso, legL: hipL, legR: hipR, armL: shoulderL, armR: shoulderR };

@@ -56,7 +56,9 @@ must(/randomizeOutfit/.test(voxel), "randomizeOutfit helper is missing");
 must(/data-action="avatar-randomize"/.test(walk), "randomize outfit button is missing");
 must(/function applyAvatarDraft/.test(walk), "applyAvatarDraft helper is missing");
 must(/bindAvatarPanelActions/.test(walk), "avatar panel actions must bind on the panel");
-must(/badgeColor/.test(voxel), "avatar badge color config is missing");
+must(/brandMark/.test(voxel), "avatar brandMark config is missing");
+must(/data-avatar-key="brandMark"/.test(walk), "Cisco mark selector is missing");
+must(/drawCiscoBridges/.test(voxel), "Cisco bridges logo texture is missing");
 must(/#ds-walk-overlay \.ds-walk-avatar-panel/.test(css), "avatar builder panel styles are missing");
 
 if (errors.length) {

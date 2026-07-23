@@ -1175,7 +1175,7 @@
 #ds-walk-overlay.ds-walk-explore #ds-walk-canvas{filter:contrast(1.06) saturate(1.1)}
 
 #ds-walk-overlay .ds-walk-avatar-panel{
-  position:absolute;top:72px;right:14px;z-index:12;width:min(300px,calc(100vw - 28px));
+  position:absolute;top:72px;right:14px;z-index:12;width:min(320px,calc(100vw - 28px));
   padding:12px 14px;border-radius:12px;
   background:rgba(4,16,31,.94);border:1px solid rgba(2,200,255,.28);
   box-shadow:0 16px 48px rgba(0,0,0,.55);backdrop-filter:blur(14px)}

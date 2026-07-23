@@ -543,7 +543,8 @@
         <label class="ds-walk-avatar-field">Shirt <input type="color" data-avatar-key="shirt" value="${esc(cfg.shirt)}"></label>
         <label class="ds-walk-avatar-field">Pants <input type="color" data-avatar-key="pants" value="${esc(cfg.pants)}"></label>
         <label class="ds-walk-avatar-field">Shoes <input type="color" data-avatar-key="shoes" value="${esc(cfg.shoes)}"></label>
-        <label class="ds-walk-avatar-field">Badge <input type="color" data-avatar-key="badgeColor" value="${esc(cfg.badgeColor || "#00bceb")}"></label>
+        <label class="ds-walk-avatar-field">Badge card <input type="color" data-avatar-key="badgeColor" value="${esc(cfg.badgeColor || "#ffffff")}"></label>
+        <label class="ds-walk-avatar-field">Logo <input type="color" data-avatar-key="logoColor" value="${esc(cfg.logoColor || "#00bceb")}"></label>
         <label class="ds-walk-avatar-field">Lanyard / belt <input type="color" data-avatar-key="lanyardColor" value="${esc(cfg.lanyardColor || "#161b24")}"></label>
         <label class="ds-walk-avatar-field">Eyes <input type="color" data-avatar-key="eyeColor" value="${esc(cfg.eyeColor || "#2b3a4a")}"></label>
         <label class="ds-walk-avatar-field">Glasses frame <input type="color" data-avatar-key="glassesColor" value="${esc(cfg.glassesColor || "#1a202c")}"></label>
@@ -568,11 +569,18 @@
             <option value="hardhat"${cfg.headAccessory === "hardhat" ? " selected" : ""}>Hard hat</option>
           </select>
         </label>
+        <label class="ds-walk-avatar-field">Cisco mark
+          <select data-avatar-key="brandMark">
+            <option value="none"${(cfg.brandMark || "none") === "none" ? " selected" : ""}>None</option>
+            <option value="badge"${cfg.brandMark === "badge" ? " selected" : ""}>Lanyard badge</option>
+            <option value="shirt"${cfg.brandMark === "shirt" ? " selected" : ""}>Shirt chest</option>
+            <option value="cap"${cfg.brandMark === "cap" ? " selected" : ""}>Cap / head</option>
+            <option value="tattoo-left"${cfg.brandMark === "tattoo-left" ? " selected" : ""}>Tattoo — left arm</option>
+            <option value="tattoo-right"${cfg.brandMark === "tattoo-right" ? " selected" : ""}>Tattoo — right arm</option>
+          </select>
+        </label>
         <label class="ds-walk-avatar-field">Height <span class="ds-walk-avatar-range-val">${heightPct}%</span>
           <input type="range" min="92" max="108" step="1" data-avatar-key="height" data-avatar-range="height" value="${heightPct}">
-        </label>
-        <label class="ds-walk-avatar-field ds-walk-avatar-check">
-          <input type="checkbox" data-avatar-key="badge"${cfg.badge ? " checked" : ""}> Cisco badge
         </label>
         <label class="ds-walk-avatar-field ds-walk-avatar-check">
           <input type="checkbox" data-avatar-key="glasses"${cfg.glasses ? " checked" : ""}> Glasses
