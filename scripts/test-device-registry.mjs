@@ -79,6 +79,25 @@ const placementErrors = await page.evaluate(() => {
       if (prof.mount !== "ceiling") errs.push(`${key}: ceiling-mic canonical mount is ${prof.mount}`);
     });
   }
+  const boardTpl = TPL.ROOM_TEMPLATES.boardroom;
+  if (boardTpl?.items?.length) {
+    const chambers = boardTpl.items.map((it, i) => ({
+      id: "c" + i, stencilId: it.stencilId, label: it.label,
+      zone: it.zone, relX: it.relX, relY: it.relY,
+      pos: { x: (i % 5) * 3, y: 3, z: Math.floor(i / 5) * 3 }
+    }));
+    const nodes = chambers.map(c => ({ id: c.id, stencilId: c.stencilId, label: c.label }));
+    LAY.applySemanticPlacement(chambers, nodes, "room", { items: boardTpl.items });
+    const cam = chambers.find(c => c.label === "Primary Cam");
+    const aux = chambers.find(c => c.label === "Aux Display");
+    if (cam && aux) {
+      if (Math.abs(aux.pos.x - cam.pos.x) > 0.12)
+        errs.push(`boardroom: Aux Display x=${aux.pos.x.toFixed(2)} should align with Primary Cam x=${cam.pos.x.toFixed(2)}`);
+      if (aux.pos.y >= cam.pos.y - 0.15)
+        errs.push(`boardroom: Aux Display y=${aux.pos.y.toFixed(2)} should sit below Primary Cam y=${cam.pos.y.toFixed(2)}`);
+    }
+  }
+
   return errs;
 });
 errors.push(...placementErrors);

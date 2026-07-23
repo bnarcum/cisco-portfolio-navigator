@@ -205,9 +205,41 @@
     });
   }
 
+  function primaryCameraItem(items) {
+    if (!items?.length) return null;
+    return items.find(it => deviceKind(it.stencilId, it.label, it.zone) === "camera"
+      && /primary|quad/i.test(it.label || ""))
+      || items.find(it => deviceKind(it.stencilId, it.label, it.zone) === "camera");
+  }
+
+  function shouldStackAuxUnderCamera(ch) {
+    if (ch.mount !== "wall-display") return false;
+    if (/confidence/i.test(ch.label || "")) return false;
+    return /aux/i.test(ch.label || "")
+      || (/display-86|86/i.test(ch.stencilId || "") && !/primary|main|board|front|confidence/i.test(ch.label || ""));
+  }
+
+  function anchorAuxDisplaysUnderCamera(chambers, frame, camItem) {
+    if (!camItem || !chambers?.length) return;
+    const camCh = chambers.find(c => deviceKind(c.stencilId, c.label, c.zone) === "camera");
+    const camRx = camItem.relX ?? 0.5;
+    const camX = Number.isFinite(camCh?.pos?.x)
+      ? camCh.pos.x
+      : frame.tableCx + (camRx - 0.5) * 3;
+    const camY = camCh?.pos?.y ?? 2.65;
+    const panelH = 0.95;
+    const auxY = Math.max(0.42, camY - 0.32 - 0.1 - panelH * 0.5);
+    chambers.forEach(ch => {
+      if (!shouldStackAuxUnderCamera(ch)) return;
+      ch.pos.x = camX;
+      ch.pos.y = auxY;
+    });
+  }
+
   function applyRoomSemantics(chambers, nodes, items, placementById) {
     if (!chambers?.length) return buildRoomFrame(chambers, nodes);
     const frame = buildRoomFrame(chambers, nodes);
+    const camItem = primaryCameraItem(items);
     const itemFor = ch => {
       const placed = placementById?.[ch.id];
       if (placed) return placed;
@@ -245,13 +277,22 @@
       switch (mount) {
         case "wall-display": {
           ch.pos.z = frame.frontZ + 0.12;
-          const aux = /aux|secondary|content display|confidence|people display/i.test(ch.label || "")
-            || (/display-86|86/i.test(ch.stencilId || "") && !/primary|main|board|front/i.test(ch.label || ""));
-          const panelH = aux ? 0.95 : 1.2;
+          const confidence = /confidence/i.test(ch.label || "");
+          const aux = (/aux|secondary|content display|people display/i.test(ch.label || "")
+            || (/display-86|86/i.test(ch.stencilId || "") && !/primary|main|board|front|confidence/i.test(ch.label || "")))
+            && !confidence;
+          const panelH = aux || confidence ? 0.95 : 1.2;
           const wallTop = 3.42, wallBot = 0.42;
           const travel = Math.max(0.4, wallTop - wallBot - panelH);
-          ch.pos.y = Math.max(wallBot, Math.min(wallTop - panelH, wallBot + ry * travel));
-          ch.pos.x = frame.tableCx + (rx - 0.5) * spread;
+          const stackUnderCam = aux && camItem && !confidence;
+          if (stackUnderCam) {
+            const camRx = camItem.relX ?? 0.5;
+            ch.pos.x = frame.tableCx + (camRx - 0.5) * 3;
+            ch.pos.y = Math.max(wallBot, 2.65 - 0.32 - 0.1 - panelH * 0.5);
+          } else {
+            ch.pos.y = Math.max(wallBot, Math.min(wallTop - panelH, wallBot + ry * travel));
+            ch.pos.x = frame.tableCx + (rx - 0.5) * spread;
+          }
           ch.faceYaw = 0;
           break;
         }
@@ -312,6 +353,7 @@
       }
     });
     constrainedRelax(chambers, "room");
+    anchorAuxDisplaysUnderCamera(chambers, frame, camItem);
     clampToRoomFrame(chambers, frame);
     return frame;
   }

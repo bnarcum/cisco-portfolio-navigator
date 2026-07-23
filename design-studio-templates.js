@@ -552,7 +552,7 @@
       },
       items: [
         { stencilId: "board-pro", zone: "display", relX: 0.3, relY: 0.66, label: "Board Pro" },
-        { stencilId: "display-86", zone: "display", relX: 0.78, relY: 0.66, label: "Aux Display" },
+        { stencilId: "display-86", zone: "display", relX: 0.54, relY: 0.42, label: "Aux Display" },
         { stencilId: "quad-cam", zone: "display", relX: 0.54, relY: 0.16, label: "Primary Cam" },
         { stencilId: "touch-10", zone: "table", relX: 0.38, relY: 0.35, label: "Touch 10" },
         { stencilId: "c9200-collab", zone: "rack", relX: 0.72, relY: 0.42, label: "C9200-24P" },
