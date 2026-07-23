@@ -93,10 +93,19 @@
     const frontZ = display.length ? Math.min(...display.map(c => c.pos.z)) : (zs.length ? Math.min(...zs) : 0);
     const tableCx = table.length ? table.reduce((s, c) => s + c.pos.x, 0) / table.length : (xs.length ? (Math.min(...xs) + Math.max(...xs)) / 2 : 0);
     const tableCz = table.length ? table.reduce((s, c) => s + c.pos.z, 0) / table.length : frontZ + 4;
-    const tableSpread = table.length > 1 ? Math.max(3, Math.max(...table.map(c => c.pos.x)) - Math.min(...table.map(c => c.pos.x)) + 2) : 5.5;
-    const tableDepth = table.length > 1 ? Math.max(2, Math.max(...table.map(c => c.pos.z)) - Math.min(...table.map(c => c.pos.z)) + 1.5) : 2.4;
+    const rawWide = table.length > 1
+      ? Math.max(3, Math.max(...table.map(c => c.pos.x)) - Math.min(...table.map(c => c.pos.x)) + 2)
+      : 5.5;
+    const rawNarrow = table.length > 1
+      ? Math.max(2, Math.max(...table.map(c => c.pos.z)) - Math.min(...table.map(c => c.pos.z)) + 1.5)
+      : 2.4;
+    // Long axis toward the display wall (Z); narrow width across X — real boardroom orientation.
+    const tableLength = Math.max(4.8, Math.min(12, Math.max(rawWide, rawNarrow)));
+    const tableWidth = Math.max(2.0, Math.min(4.2, Math.min(rawWide, rawNarrow)));
+    const tableSpread = tableWidth;
+    const tableDepth = tableLength;
     const credenzaZ = Math.max(...zs, frontZ + 6);
-    return { frontZ, tableCx, tableCz, tableSpread, tableDepth, credenzaZ, hasDisplay: display.length > 0 };
+    return { frontZ, tableCx, tableCz, tableSpread, tableDepth, tableWidth, tableLength, credenzaZ, hasDisplay: display.length > 0 };
   }
 
   function buildNetworkFrame(chambers) {
@@ -178,15 +187,21 @@
   function clampToRoomFrame(chambers, frame) {
     if (!frame || !chambers?.length) return;
     const margin = 1.4;
-    const halfW = Math.max(frame.tableSpread * 0.55, 4.5) + margin;
-    const minX = frame.tableCx - halfW;
-    const maxX = frame.tableCx + halfW;
+    const halfX = Math.max((frame.tableWidth ?? frame.tableSpread) * 0.55, 2.5) + margin;
+    const halfZ = Math.max((frame.tableLength ?? frame.tableDepth) * 0.55, 4.5) + margin;
+    const minX = frame.tableCx - halfX;
+    const maxX = frame.tableCx + halfX;
+    const minTableZ = frame.tableCz - halfZ;
+    const maxTableZ = frame.tableCz + halfZ;
     const minZ = frame.frontZ - margin;
     const maxZ = frame.credenzaZ + margin;
     chambers.forEach(ch => {
       if (!ch.pos || !Number.isFinite(ch.pos.x)) return;
       ch.pos.x = Math.max(minX, Math.min(maxX, ch.pos.x));
       ch.pos.z = Math.max(minZ, Math.min(maxZ, ch.pos.z));
+      if (ch.mount === "ceiling" && ch.semantic?.kind === "ceiling-mic") {
+        ch.pos.z = Math.max(minTableZ, Math.min(maxTableZ, ch.pos.z));
+      }
     });
   }
 
@@ -214,10 +229,12 @@
       ch.semantic = { kind, mount, mode: "room", why: placementWhy(kind, ch.zone, null, "room") };
       ch.anchored = true;
 
-      const spread = Math.max(frame.tableSpread, 4);
+      const tableW = frame.tableWidth ?? frame.tableSpread;
+      const tableL = frame.tableLength ?? frame.tableDepth;
+      const spread = Math.max(tableL, 4);
       const onTable = () => {
-        ch.pos.x = frame.tableCx + (rx - 0.5) * frame.tableSpread;
-        ch.pos.z = frame.tableCz + (ry - 0.5) * frame.tableDepth;
+        ch.pos.x = frame.tableCx + (rx - 0.5) * tableW;
+        ch.pos.z = frame.tableCz + (ry - 0.5) * tableL;
       };
       const inCredenza = () => {
         ch.pos.z = Math.max(ch.pos.z, frame.credenzaZ - 1);
@@ -258,8 +275,14 @@
           break;
         case "ceiling":
           ch.pos.y = 2.85;
-          ch.pos.x = frame.tableCx + (rx - 0.5) * frame.tableSpread;
-          ch.pos.z = frame.tableCz + (ry - 0.5) * Math.max(frame.tableDepth, 2.4);
+          if (kind === "ceiling-mic") {
+            // Row centered over the table; relX spreads along the long axis toward the display.
+            ch.pos.x = frame.tableCx;
+            ch.pos.z = frame.tableCz + (rx - 0.5) * tableL;
+          } else {
+            ch.pos.x = frame.tableCx + (rx - 0.5) * tableW;
+            ch.pos.z = frame.tableCz + (ry - 0.5) * tableL;
+          }
           break;
         case "table":
           onTable();
@@ -333,14 +356,24 @@
   }
 
   function constrainedRelax(chambers, kind) {
-    const minSep = kind === "room" ? 3.6 : 3.4;
+    const defaultMinSep = kind === "room" ? 3.6 : 3.4;
     const maxStep = 0.22;
+    const isCeilingMic = ch => ch.semantic?.kind === "ceiling-mic" || ch.stencilId === "ceiling-mic";
+    const pairMinSep = (a, b) => (isCeilingMic(a) && isCeilingMic(b) ? 2.05 : defaultMinSep);
+    const skipPair = (a, b) => {
+      const mounts = new Set([a.mount, b.mount]);
+      const floorLike = m => m === "table" || m === "desk" || m === "floor-table";
+      if (mounts.has("ceiling") && [...mounts].some(floorLike)) return true;
+      return false;
+    };
     const list = chambers.filter(c => c.pos && Number.isFinite(c.pos.x));
     for (let iter = 0; iter < 32; iter++) {
       let moved = false;
       for (let i = 0; i < list.length; i++) {
         for (let j = i + 1; j < list.length; j++) {
           const a = list[i], b = list[j];
+          if (skipPair(a, b)) continue;
+          const minSep = pairMinSep(a, b);
           let dx = b.pos.x - a.pos.x, dz = b.pos.z - a.pos.z;
           let d = Math.hypot(dx, dz);
           if (d >= minSep) continue;

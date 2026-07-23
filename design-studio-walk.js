@@ -1022,20 +1022,22 @@
   function addConferenceFurniture(THREE, scene, bounds, graph) {
     const wood = new THREE.MeshStandardMaterial({ color: 0x4a3c30, roughness: 0.62, metalness: 0.08 });
     const chairMat = new THREE.MeshStandardMaterial({ color: 0x2a3238, roughness: 0.7, metalness: 0.2 });
-    const tableChambers = (graph.chambers || []).filter(ch => /table|mic/i.test(ch.zone || "") || /table/i.test(ch.label || ""));
-    const xs = tableChambers.length ? tableChambers.map(ch => ch.pos.x) : [bounds.minX + 4, bounds.maxX - 4];
-    const zs = tableChambers.length ? tableChambers.map(ch => ch.pos.z) : [bounds.minZ + 5, bounds.maxZ - 5];
-    const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
-    const cz = (Math.min(...zs) + Math.max(...zs)) / 2;
-    const tw = Math.max(4.8, Math.min(12, Math.max(...xs) - Math.min(...xs) + 4));
-    const td = Math.max(2.0, Math.min(4.2, Math.max(...zs) - Math.min(...zs) + 2.2));
+    const frame = graph.semanticFrame || {};
+    const cx = Number.isFinite(frame.tableCx)
+      ? frame.tableCx
+      : (bounds.minX + bounds.maxX) / 2;
+    const cz = Number.isFinite(frame.tableCz)
+      ? frame.tableCz
+      : (bounds.minZ + bounds.maxZ) / 2;
+    const tw = frame.tableWidth ?? frame.tableSpread ?? 2.4;
+    const td = frame.tableLength ?? frame.tableDepth ?? 5.5;
     box(THREE, scene, "room-table", [tw, 0.12, td], [cx, 0.38, cz], wood);
-    const seats = Math.max(4, Math.min(12, Math.round(tw / 1.2) * 2));
+    const seats = Math.max(4, Math.min(16, Math.round(td / 1.2) * 2));
     for (let i = 0; i < seats / 2; i++) {
-      const x = cx - tw / 2 + 0.75 + i * ((tw - 1.5) / Math.max(1, seats / 2 - 1));
+      const z = cz - td / 2 + 0.75 + i * ((td - 1.5) / Math.max(1, seats / 2 - 1));
       [-1, 1].forEach(side => {
-        box(THREE, scene, "room-chair", [0.55, 0.1, 0.55], [x, 0.42, cz + side * (td / 2 + 0.55)], chairMat);
-        box(THREE, scene, "room-chair", [0.55, 0.48, 0.08], [x, 0.72, cz + side * (td / 2 + 0.86)], chairMat);
+        box(THREE, scene, "room-chair", [0.55, 0.1, 0.55], [cx + side * (tw / 2 + 0.55), 0.42, z], chairMat);
+        box(THREE, scene, "room-chair", [0.55, 0.48, 0.08], [cx + side * (tw / 2 + 0.86), 0.72, z], chairMat);
       });
     }
   }

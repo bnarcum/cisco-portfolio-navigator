@@ -61,6 +61,14 @@ const placementErrors = await page.evaluate(() => {
       // Front-mounted surfaces must stay in front of the credenza (gross sanity).
       if ((m === "wall-display" || m === "wall-camera" || m === "wall-panel" || m === "shelf") && z > credenzaZ + 0.6)
         errs.push(`${key}/${ch.label}: wall device at z=${z.toFixed(2)} behind credenza=${credenzaZ.toFixed(2)}`);
+      if (m === "ceiling" && ch.stencilId === "ceiling-mic" && frame) {
+        const halfW = (frame.tableWidth ?? frame.tableSpread ?? 2.4) / 2 + 0.45;
+        const halfL = (frame.tableLength ?? frame.tableDepth ?? 5.5) / 2 + 0.45;
+        if (Math.abs(ch.pos.x - frame.tableCx) > halfW)
+          errs.push(`${key}/${ch.label}: ceiling mic x=${ch.pos.x.toFixed(2)} off table center x=${frame.tableCx.toFixed(2)}`);
+        if (Math.abs(ch.pos.z - frame.tableCz) > halfL)
+          errs.push(`${key}/${ch.label}: ceiling mic z=${ch.pos.z.toFixed(2)} off table center z=${frame.tableCz.toFixed(2)}`);
+      }
     });
   }
 
