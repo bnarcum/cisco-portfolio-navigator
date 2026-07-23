@@ -624,6 +624,7 @@
     }
     panel.innerHTML = avatarBuilderHtml(state.avatarDraft);
     panel.removeAttribute("hidden");
+    document.getElementById("ds-walk-panel-backdrop")?.removeAttribute("hidden");
     panel.onclick = e => e.stopPropagation();
     panel.onpointerdown = e => e.stopPropagation();
     if (!state.thirdPerson) toggleCameraMode();
@@ -636,11 +637,71 @@
     state.avatarPanelOpen = false;
     state.overlay?.classList.remove("ds-walk-avatar-open");
     panel?.setAttribute("hidden", "");
+    if (openColorPicker) { openColorPicker.blur(); openColorPicker = null; }
+    const fp = document.getElementById("ds-field-panel");
+    if (!fp || fp.hidden) document.getElementById("ds-walk-panel-backdrop")?.setAttribute("hidden", "");
     if (revert) rebuildAvatar(loadAvatarConfig(), false);
     state.avatarDraft = null;
   }
 
+  function applyAvatarDraft() {
+    const cfg = readAvatarDraftFromPanel();
+    saveAvatarConfig(cfg);
+    rebuildAvatar(cfg, false);
+    closeAvatarBuilder(false);
+    setStatus("Avatar saved — press V for third-person view");
+  }
+
+  let openColorPicker = null;
+
+  function bindAvatarPanelActions(panel) {
+    panel.querySelector('[data-action="avatar-close"]')?.addEventListener("click", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeAvatarBuilder(true);
+      setStatus("Avatar changes discarded");
+    });
+    panel.querySelector('[data-action="avatar-apply"]')?.addEventListener("click", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      applyAvatarDraft();
+    });
+    panel.querySelector('[data-action="avatar-reset"]')?.addEventListener("click", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      const VOX = window.__DS_WALK_VOXEL;
+      state.avatarDraft = VOX?.normalizeAvatarConfig?.(VOX?.DEFAULT_AVATAR_CONFIG) || {};
+      panel.innerHTML = avatarBuilderHtml(state.avatarDraft);
+      bindAvatarBuilder(panel);
+      rebuildAvatar(state.avatarDraft, false);
+    });
+  }
+
+  function bindAvatarColorPickers(panel) {
+    const closeOpenPicker = except => {
+      if (openColorPicker && openColorPicker !== except) {
+        openColorPicker.blur();
+        openColorPicker = null;
+      }
+    };
+    panel.querySelectorAll('input[type="color"]').forEach(el => {
+      el.addEventListener("pointerdown", () => closeOpenPicker(el));
+      el.addEventListener("focus", () => {
+        closeOpenPicker(el);
+        openColorPicker = el;
+      });
+      el.addEventListener("blur", () => {
+        if (openColorPicker === el) openColorPicker = null;
+      });
+    });
+    panel.querySelectorAll('select, input[type="range"], input[type="checkbox"], button').forEach(el => {
+      el.addEventListener("pointerdown", () => closeOpenPicker(null));
+    });
+  }
+
   function bindAvatarBuilder(panel) {
+    bindAvatarPanelActions(panel);
+    bindAvatarColorPickers(panel);
     panel.querySelectorAll("[data-avatar-key]").forEach(el => {
       el.addEventListener("input", () => {
         if (el.type === "range" && el.dataset.avatarRange === "height") {
@@ -3236,15 +3297,7 @@
       if (a === "outcomes") { e.preventDefault(); e.stopPropagation(); toggleOutcomes(); }
       else if (a === "avatar-open") { e.preventDefault(); e.stopPropagation(); openAvatarBuilder(); }
       else if (a === "avatar-close") { e.preventDefault(); e.stopPropagation(); closeAvatarBuilder(true); setStatus("Avatar changes discarded"); }
-      else if (a === "avatar-apply") {
-        e.preventDefault();
-        e.stopPropagation();
-        const cfg = readAvatarDraftFromPanel();
-        saveAvatarConfig(cfg);
-        rebuildAvatar(cfg, false);
-        closeAvatarBuilder(false);
-        setStatus("Avatar saved — press V for third-person view");
-      }
+      else if (a === "avatar-apply") { e.preventDefault(); e.stopPropagation(); applyAvatarDraft(); }
       else if (a === "avatar-reset") {
         e.preventDefault();
         e.stopPropagation();
@@ -3292,7 +3345,16 @@
         e.stopPropagation();
         window.__DS_WALK_QUEST?.end?.(false);
       }
-      else if (a === "fp-close") window.__DS_FIELD_PANEL?.close?.();
+      else if (a === "fp-close") {
+        if (state.avatarPanelOpen) {
+          e.preventDefault();
+          e.stopPropagation();
+          closeAvatarBuilder(true);
+          setStatus("Avatar changes discarded");
+          return;
+        }
+        window.__DS_FIELD_PANEL?.close?.();
+      }
       else if (a === "fp-fly") {
         const id = document.getElementById("ds-field-panel")?.dataset?.chamberId;
         const ch = state.chambers.find(c => c.id === id);

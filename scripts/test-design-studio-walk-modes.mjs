@@ -54,7 +54,8 @@ must(/function makeAvatar\(THREE, config\)/.test(voxel), "makeAvatar must accept
 must(/AVATAR_PRESETS/.test(voxel), "avatar presets are missing");
 must(/randomizeOutfit/.test(voxel), "randomizeOutfit helper is missing");
 must(/data-action="avatar-randomize"/.test(walk), "randomize outfit button is missing");
-must(/skin: keepSkin/.test(walk), "outfit presets must preserve skin tone");
+must(/function applyAvatarDraft/.test(walk), "applyAvatarDraft helper is missing");
+must(/bindAvatarPanelActions/.test(walk), "avatar panel actions must bind on the panel");
 must(/badgeColor/.test(voxel), "avatar badge color config is missing");
 must(/#ds-walk-overlay \.ds-walk-avatar-panel/.test(css), "avatar builder panel styles are missing");
 

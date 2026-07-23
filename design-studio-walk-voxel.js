@@ -274,10 +274,16 @@
   }
 
   function addGlasses(THREE, head, frameMat) {
-    head.add(part(THREE, 0.52, 0.08, 0.06, frameMat, 0, 0.08, 0.38));
-    head.add(part(THREE, 0.14, 0.14, 0.04, frameMat, -0.2, 0.08, 0.4));
-    head.add(part(THREE, 0.14, 0.14, 0.04, frameMat, 0.2, 0.08, 0.4));
-    head.add(part(THREE, 0.08, 0.04, 0.04, frameMat, 0, 0.1, 0.4));
+    const lensMat = blockMat(THREE, null, 0x9ecae8);
+    const y = -0.04;
+    const z = 0.39;
+    head.add(part(THREE, 0.18, 0.14, 0.04, frameMat, -0.2, y, z));
+    head.add(part(THREE, 0.12, 0.1, 0.02, lensMat, -0.2, y, z + 0.015));
+    head.add(part(THREE, 0.18, 0.14, 0.04, frameMat, 0.2, y, z));
+    head.add(part(THREE, 0.12, 0.1, 0.02, lensMat, 0.2, y, z + 0.015));
+    head.add(part(THREE, 0.08, 0.03, 0.03, frameMat, 0, y + 0.02, z));
+    head.add(part(THREE, 0.24, 0.04, 0.05, frameMat, -0.36, y + 0.02, 0.1));
+    head.add(part(THREE, 0.24, 0.04, 0.05, frameMat, 0.36, y + 0.02, 0.1));
   }
 
   function addHeadAccessory(THREE, head, acc, mats) {
