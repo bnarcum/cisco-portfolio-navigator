@@ -130,13 +130,17 @@ async function inspectHero(page, id, kind) {
         return { id: pid, kind: pkind, ok: false, reason: "missing hero/fallback/use" };
       }
 
-      const bgLum = fallbackBgLuminance(fallback);
+      // The compact glossy banner (option 4, mockups/product-hero-panel-mockup.html) intentionally
+      // uses a theme-aware dark/light card background instead of the old always-light photo-card
+      // fallback — the badge-vs-icon contrast check below is what actually guarantees legibility.
+      const isCompact = hero.classList.contains("p-hero--compact");
+      const bgLum = isCompact ? 1 : fallbackBgLuminance(fallback);
       let fillLum = useFillLuminance(use);
       const fillAttr = use.getAttribute("fill") || "";
       const iconOnly = hero.classList.contains("p-hero--icon-only");
       const checkIcon = iconOnly;
 
-      let ok = bgLum >= bgMin;
+      let ok = isCompact ? true : bgLum >= bgMin;
       let reason = "";
 
       if (!ok) reason = `fallback bg too dark (lum=${bgLum.toFixed(3)})`;

@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.43";
+  window.__CPN_BUILD="3.5.45";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -12156,6 +12156,31 @@ STYLE.textContent = `
     box-shadow:0 4px 18px rgba(15,23,42,0.2);flex-shrink:0}
   .p-hero-icon-badge svg{width:44px;height:44px;opacity:1;color:#fff;fill:#fff}
   .p-hero--icon-only .p-hero-fallback{z-index:1}
+  /* Compact glossy hero banner — used whenever there's no real product photo (all family panels,
+     plus products without Matrix imagery). Badge sits inline with the name/chips instead of a tall
+     centered card (mockups/product-hero-panel-mockup.html, option 4). Theme-aware via --surface / --border vars. */
+  .p-hero--compact{
+    height:auto;padding:14px 16px;margin-bottom:14px;border-radius:12px;
+    display:flex;align-items:center;gap:14px;
+    background:
+      radial-gradient(circle at 16% 22%, color-mix(in srgb, var(--hero-tint, #64748b) 16%, transparent), transparent 62%),
+      linear-gradient(155deg, var(--surface2), var(--surface));
+    border:1px solid var(--border);box-shadow:none}
+  .p-hero--compact .p-hero-fallback{position:static;inset:auto;height:auto;background:none!important;flex-shrink:0}
+  .p-hero--compact .p-hero-icon-badge{
+    width:64px;height:64px;position:relative;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.14),
+      0 0 18px 1px color-mix(in srgb, var(--hero-tint, #64748b) 50%, transparent),
+      0 8px 16px -6px rgba(0,0,0,.4)}
+  .p-hero--compact .p-hero-icon-badge::after{
+    content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
+    background:radial-gradient(circle at 32% 26%, rgba(255,255,255,.5) 0%, rgba(255,255,255,.2) 35%, transparent 72%);
+    mix-blend-mode:screen}
+  .p-hero--compact .p-hero-icon-badge svg{width:32px;height:32px}
+  .p-hero--compact .p-hero-text{flex:1;min-width:0}
+  .p-hero--compact .p-hero-text .p-head-badges{margin-bottom:6px;padding-right:0}
+  .p-hero--compact .p-hero-text .p-name{margin-bottom:0}
   .p-hero--matrix .p-hero-fallback--reserve{display:none!important}
   .p-hero--icon-only.p-hero--matrix .p-hero-fallback--reserve{display:flex!important}
   .p-hero--matrix .p-hero-scrim{background:linear-gradient(180deg, transparent 72%, rgba(15,23,42,0.08) 100%)}
@@ -15603,7 +15628,17 @@ function productMatrixHeroUrl(id){
 
 function insertProductHero(id, kind){
   const host = panelHead() || $("#pbody"); if (!host) return;
-  host.querySelector(".p-hero")?.remove();
+  const oldHero = host.querySelector(".p-hero");
+  if (oldHero){
+    // insertProductHero can re-run after this (e.g. refreshMatrixVisuals() once matrix-bridge
+    // data loads async) — rescue any chips/name we folded into a previous compact hero so
+    // they aren't destroyed along with it, instead of being permanently lost.
+    const rescueBadges = oldHero.querySelector(".p-head-badges");
+    const rescueName = oldHero.querySelector(".p-name");
+    if (rescueBadges) host.insertBefore(rescueBadges, oldHero);
+    if (rescueName) host.insertBefore(rescueName, oldHero);
+    oldHero.remove();
+  }
   host.querySelector(".p-photo")?.remove();
   const n = (kind === "product") ? prodById[id] : nodeById[id];
   if (!n) return;
@@ -15614,10 +15649,7 @@ function insertProductHero(id, kind){
   const matrixUrl = kind === "product" ? productMatrixHeroUrl(id) : null;
   const hero = document.createElement("div");
   const catLabel = cat ? escapeHtml(CATS[cat].label) : "";
-  const fallbackHtml = `<div class="p-hero-fallback" style="background:${heroCategoryGradient(iconFill)}">${heroIconBadgeHtml(symId, iconFill)}</div>`;
   const fallbackReserveHtml = `<div class="p-hero-fallback p-hero-fallback--reserve" style="display:none;background:${heroCategoryGradient(iconFill)}">${heroIconBadgeHtml(symId, iconFill)}</div>`;
-  const metaHtml = `<div class="p-hero-scrim"></div>
-    <div class="p-hero-meta"><span></span><span class="p-hero-cat">${catLabel}</span></div>`;
   if (matrixUrl){
     hero.className = "p-hero p-hero--matrix p-hero--clickable";
     hero.dataset.productId = id;
@@ -15657,12 +15689,23 @@ function insertProductHero(id, kind){
       }, { once: true });
     }
   } else {
-    hero.className = "p-hero p-hero--icon-only";
-    hero.innerHTML = `${fallbackHtml}${metaHtml}`;
+    // Compact glossy banner: icon badge + moved category chips/name folded inline, badge
+    // centered via the existing .p-hero-icon-badge flex rules (mockups/product-hero-panel-mockup.html, option 4).
+    hero.className = "p-hero p-hero--icon-only p-hero--compact";
+    hero.style.setProperty("--hero-tint", iconFill);
+    hero.innerHTML = `<div class="p-hero-fallback">${heroIconBadgeHtml(symId, iconFill)}</div><div class="p-hero-text"></div>`;
   }
   const nameEl = host.querySelector(".p-name");
   if (nameEl) host.insertBefore(hero, nameEl);
   else host.prepend(hero);
+  if (hero.classList.contains("p-hero--compact")){
+    const textWrap = hero.querySelector(".p-hero-text");
+    const badgesEl = host.querySelector(".p-head-badges");
+    if (textWrap){
+      if (badgesEl) textWrap.appendChild(badgesEl);
+      if (nameEl) textWrap.appendChild(nameEl);
+    }
+  }
 }
 function heroIconBadgeHtml(symId, iconFill){
   return `<div class="p-hero-icon-badge" style="background:${escapeHtml(iconFill)}">
