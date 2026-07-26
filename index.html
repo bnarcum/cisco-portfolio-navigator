@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.40";
+  window.__CPN_BUILD="3.5.41";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -20,18 +20,14 @@
         localStorage.setItem(key,V);
         if(!sessionStorage.getItem(reloadKey)){
           sessionStorage.setItem(reloadKey,"1");
-          var q=location.search.replace(/[?&]_v=[^&]*/g,"").replace(/^&/,"?");
-          var sep=q?"&":"?";
-          location.replace(location.pathname+q+sep+"_v="+encodeURIComponent(V));
+          location.reload();
           return;
         }
         sessionStorage.removeItem(reloadKey);
       }else if(!seen){localStorage.setItem(key,V);}
-      var want="_v="+encodeURIComponent(V);
-      if(location.search.indexOf(want)<0){
-        var q2=location.search.replace(/[?&]_v=[^&]*/g,"").replace(/^&/,"?");
-        var sep2=(q2&&q2!=="?")?"&":"?";
-        history.replaceState(null,"",location.pathname+q2+sep2+want);
+      if(/[?&]_v=/.test(location.search)){
+        var q=location.search.replace(/[?&]_v=[^&]*/g,"").replace(/^&/,"?").replace(/\?&/,"?").replace(/\?$/,"");
+        history.replaceState(null,"",location.pathname+(q||"")+location.hash);
       }
     }catch(e){}
   })();
