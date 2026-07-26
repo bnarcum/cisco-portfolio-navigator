@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.47";
+  window.__CPN_BUILD="3.5.48";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -10105,6 +10105,7 @@ function closePanel() {
   document.getElementById("panel")?.classList.remove("open");
   document.getElementById("panel-backdrop")?.classList.remove("open");
   window.__cpnOutcomeCard?.hide?.();
+  if (window.__ccTeaserTimer){ clearInterval(window.__ccTeaserTimer); window.__ccTeaserTimer = null; }
   if (viewMode !== "spatial" && viewMode !== "overview") refitGraphForChrome(true);
 }
 document.getElementById("pcl").addEventListener("click",()=>{ selected=null; clearLinkSelection(); resetHL(); closePanel(); });
@@ -12248,6 +12249,54 @@ STYLE.textContent = `
   .p-hero-meta{position:absolute;left:10px;right:10px;bottom:8px;display:flex;justify-content:space-between;
     align-items:center;gap:8px;z-index:3;pointer-events:none}
   .p-hero-cat{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(15,23,42,0.5)}
+  /* Cloud Control platform hero: stylized AI Canvas preview standing in for a device photo
+     (mockups/cloud-control-hero-mockup.html, option 6B) — reuses the matrix glass-card +
+     two-button action bar so the platform node reads as "a real, deep product" at a glance. */
+  .cc-hero-shot{position:absolute;inset:0;padding:30px 14px 42px;display:flex;flex-direction:column;
+    filter:drop-shadow(0 14px 22px rgba(0,0,0,.4));pointer-events:none}
+  .cc-hero-shot-frame{flex:1;background:#0a1220;border:1px solid rgba(255,255,255,.1);border-radius:8px;
+    padding:9px 10px;display:flex;flex-direction:column;gap:7px;overflow:hidden}
+  .cc-hero-shot-titlebar{display:flex;align-items:center;gap:5px;font-size:8px;color:#8290a3;font-weight:700}
+  .cc-hero-shot-dot{width:5px;height:5px;border-radius:50%;background:#454f60}
+  .cc-hero-shot-row{display:flex;gap:6px;flex:1;min-height:0}
+  .cc-hero-shot-widget{flex:1;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);
+    border-radius:5px;padding:5px 6px;display:flex;flex-direction:column;gap:3px}
+  .cc-hero-shot-wt{font-size:6.5px;color:#7f8a97;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+  .cc-hero-shot-topo{display:flex;align-items:center;justify-content:space-around;flex:1;padding-top:2px}
+  .cc-hero-shot-node{width:11px;height:11px;border-radius:50%;background:#2a3550;border:1px solid #48547a}
+  .cc-hero-shot-node.bad{background:rgba(244,63,94,.25);border-color:#f43f5e}
+  .cc-hero-shot-link{flex:1;height:1px;background:#334160;margin:0 2px}
+  .cc-hero-shot-link.bad{background:#f43f5e}
+  .cc-hero-shot-spark{flex:1;display:flex;align-items:flex-end;gap:1.5px;padding-top:2px}
+  .cc-hero-shot-bar{flex:1;background:var(--accent);border-radius:1px;opacity:.75}
+  .cc-hero-shot-chat{display:flex;gap:5px;align-items:flex-start;font-size:6.5px;color:#aeb9d0;line-height:1.35}
+  .cc-hero-shot-chat .cc-hero-shot-av{width:10px;height:10px;border-radius:50%;flex-shrink:0;
+    background:linear-gradient(135deg,#7c3aed,#c084fc)}
+  /* Scenario carousel teaser — rotates through the AgenticOps demo scenarios right under the
+     Cloud Control platform hero (mockups/cloud-control-hero-mockup.html, option 3A). */
+  .cc-teaser{border-radius:11px;position:relative;overflow:hidden;padding:11px 13px 12px;margin-bottom:14px;
+    background:linear-gradient(160deg, var(--surface3), var(--surface2));border:1px solid var(--border);
+    cursor:pointer}
+  .cc-teaser:hover{border-color:color-mix(in srgb, var(--sev, var(--accent)) 45%, var(--border))}
+  .cc-teaser::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:var(--sev, var(--accent))}
+  .cc-teaser-top{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+  .cc-live-dot{width:6px;height:6px;border-radius:50%;background:var(--sev, var(--accent));flex-shrink:0;
+    animation:cc-teaser-pulse 1.8s infinite}
+  @keyframes cc-teaser-pulse{
+    0%{box-shadow:0 0 0 0 color-mix(in srgb, var(--sev, var(--accent)) 55%, transparent)}
+    70%{box-shadow:0 0 0 6px transparent}100%{box-shadow:0 0 0 0 transparent}}
+  .cc-live-lbl{font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--sev, var(--accent))}
+  .cc-teaser-title{font-size:12.5px;font-weight:700;margin-bottom:3px;color:var(--text)}
+  .cc-teaser-q{font-size:11px;color:var(--muted);font-style:italic;line-height:1.4;margin-bottom:9px}
+  .cc-teaser-foot{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .cc-teaser-agents{display:flex}
+  .cc-ag{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:7px;font-weight:800;color:#fff;border:1.5px solid var(--surface2);margin-left:-5px;flex-shrink:0}
+  .cc-ag:first-child{margin-left:0}
+  .cc-teaser-cta{font-size:10.5px;font-weight:700;color:var(--accent);white-space:nowrap}
+  .cc-dots{display:flex;gap:4px;justify-content:center;margin-top:9px}
+  .cc-dot{width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.18);transition:all .2s}
+  .cc-dot.on{background:var(--sev, var(--accent));width:12px;border-radius:3px}
   .p-matrix-link{margin:0 0 10px;padding:0;border:none;background:transparent}
   .p-photo svg{width:60px;height:60px;color:var(--accent);opacity:.65}
   .p-photo .p-photo-cat{position:absolute;bottom:6px;left:8px;font-size:9px;color:var(--subtle);
@@ -15387,12 +15436,13 @@ function buildCloudControlBrief(focusFamilyId){
   };
 }
 
-function openCloudControlBriefing(focusFamilyId){
+function openCloudControlBriefing(focusFamilyId, scenarioId){
   try {
     sessionStorage.setItem("cpn-cc-brief", JSON.stringify(buildCloudControlBrief(focusFamilyId)));
   } catch (e) { /* sessionStorage may be unavailable */ }
   const params = new URLSearchParams();
   if (focusFamilyId) params.set("focus", focusFamilyId);
+  if (scenarioId) params.set("scenario", scenarioId);
   params.set("from", "cpn");
   const url = "cloud-control-briefing.html" + (params.toString() ? "?" + params.toString() : "");
   window.open(url, "_blank", "noopener");
@@ -15708,7 +15758,46 @@ function insertProductHero(id, kind){
   const hero = document.createElement("div");
   const catLabel = cat ? escapeHtml(CATS[cat].label) : "";
   const fallbackReserveHtml = `<div class="p-hero-fallback p-hero-fallback--reserve" style="display:none;background:${heroCategoryGradient(iconFill)}">${heroIconBadgeHtml(symId, iconFill)}</div>`;
-  if (matrixUrl){
+  const isCCPlatform = kind === "node" && id === "cloud-control";
+  if (isCCPlatform){
+    // Screenshot-style platform hero: a stylized AI Canvas preview instead of a device photo
+    // (mockups/cloud-control-hero-mockup.html, option 6B) — signals this is the deep,
+    // cross-domain platform rather than a plain icon-only family, before the user clicks in.
+    const scnCount = Object.keys(window.__cpnOps?.SCENARIOS || {}).length || 6;
+    hero.className = "p-hero p-hero--matrix p-hero--cc-platform";
+    hero.innerHTML = `
+      <span class="p-hero-cat-chip" style="background:${escapeHtml(iconFill)};color:#1a0f00">${catLabel}</span>
+      <div class="cc-hero-shot">
+        <div class="cc-hero-shot-frame">
+          <div class="cc-hero-shot-titlebar"><span class="cc-hero-shot-dot"></span><span class="cc-hero-shot-dot"></span><span class="cc-hero-shot-dot"></span>AI Canvas — live board</div>
+          <div class="cc-hero-shot-row">
+            <div class="cc-hero-shot-widget">
+              <div class="cc-hero-shot-wt">Topology</div>
+              <div class="cc-hero-shot-topo">
+                <div class="cc-hero-shot-node"></div><div class="cc-hero-shot-link"></div>
+                <div class="cc-hero-shot-node bad"></div><div class="cc-hero-shot-link bad"></div>
+                <div class="cc-hero-shot-node bad"></div><div class="cc-hero-shot-link"></div>
+                <div class="cc-hero-shot-node"></div>
+              </div>
+            </div>
+            <div class="cc-hero-shot-widget">
+              <div class="cc-hero-shot-wt">Path health</div>
+              <div class="cc-hero-shot-spark">
+                <div class="cc-hero-shot-bar" style="height:30%"></div><div class="cc-hero-shot-bar" style="height:45%"></div>
+                <div class="cc-hero-shot-bar" style="height:38%;background:#f43f5e"></div><div class="cc-hero-shot-bar" style="height:70%;background:#f43f5e"></div>
+                <div class="cc-hero-shot-bar" style="height:55%"></div><div class="cc-hero-shot-bar" style="height:60%"></div>
+                <div class="cc-hero-shot-bar" style="height:42%"></div>
+              </div>
+            </div>
+          </div>
+          <div class="cc-hero-shot-chat"><span class="cc-hero-shot-av"></span><span>Correlating device health with WAN path quality for affected boardrooms…</span></div>
+        </div>
+      </div>
+      <div class="p-hero-action-bar">
+        <button type="button" class="p-hero-action-btn p-hero-action-btn--primary" data-cc-hero="open">Open AI Canvas</button>
+        <button type="button" class="p-hero-action-btn" data-cc-hero="investigations">${scnCount} Investigations</button>
+      </div>`;
+  } else if (matrixUrl){
     // Glass card + persistent action bar: both 3D Showroom and Device Aisle are always-visible
     // buttons instead of a hover-only hint + single Aisle chip (mockups/product-photo-hero-mockup.html, option 1).
     const catFg = cat === "computing" ? "#fff" : "#000";
@@ -15774,6 +15863,60 @@ function insertProductHero(id, kind){
       if (nameEl) textWrap.appendChild(nameEl);
     }
   }
+  if (isCCPlatform){
+    hero.querySelectorAll("[data-cc-hero]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (typeof openCloudControlBriefing === "function") openCloudControlBriefing("cloud-control");
+      });
+    });
+  }
+  insertCloudControlTeaser(isCCPlatform ? id : null, hero);
+}
+
+/* Scenario carousel teaser — rotates through the AgenticOps demo scenarios right under the
+   Cloud Control platform hero (mockups/cloud-control-hero-mockup.html, option 3A). Clicking
+   deep-links into whichever scenario is currently showing via openCloudControlBriefing. */
+function insertCloudControlTeaser(familyId, heroEl){
+  if (window.__ccTeaserTimer){ clearInterval(window.__ccTeaserTimer); window.__ccTeaserTimer = null; }
+  document.getElementById("phead")?.querySelectorAll(".cc-teaser").forEach(el => el.remove());
+  const ops = window.__cpnOps;
+  if (!ops || familyId !== "cloud-control" || !heroEl) return;
+  const scenarios = Object.keys(ops.SCENARIOS || {}).map(k => ops.getScenario(k)).filter(Boolean);
+  if (!scenarios.length) return;
+
+  let idx = 0;
+  const el = document.createElement("div");
+  el.className = "cc-teaser";
+  el.setAttribute("role", "button");
+  el.tabIndex = 0;
+  el.setAttribute("aria-label", "Live AI Canvas investigation — click to open");
+
+  const paint = () => {
+    const scn = scenarios[idx];
+    el.style.setProperty("--sev", scn.severity === "critical" ? "#f43f5e" : "#fbbf24");
+    const agents = (scn.domains || []).map(d => ops.DOMAIN_AGENTS[d]).filter(Boolean);
+    el.innerHTML = `
+      <div class="cc-teaser-top"><span class="cc-live-dot"></span><span class="cc-live-lbl">Live investigation</span></div>
+      <div class="cc-teaser-title">${escapeHtml(scn.title || "")}</div>
+      <div class="cc-teaser-q">“${escapeHtml(scn.question || "")}”</div>
+      <div class="cc-teaser-foot">
+        <div class="cc-teaser-agents">${agents.map(a => `<span class="cc-ag" style="background:${escapeHtml(a.color)}">${escapeHtml(a.short)}</span>`).join("")}</div>
+        <span class="cc-teaser-cta">Investigate →</span>
+      </div>
+      <div class="cc-dots">${scenarios.map((_, i) => `<span class="cc-dot${i === idx ? " on" : ""}"></span>`).join("")}</div>`;
+  };
+  const openActive = () => {
+    if (typeof openCloudControlBriefing === "function") openCloudControlBriefing(familyId, scenarios[idx].id);
+  };
+  el.addEventListener("click", openActive);
+  el.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); openActive(); } });
+
+  paint();
+  heroEl.insertAdjacentElement("afterend", el);
+  window.__ccTeaserTimer = setInterval(() => {
+    idx = (idx + 1) % scenarios.length;
+    paint();
+  }, 6000);
 }
 function heroIconBadgeHtml(symId, iconFill){
   return `<div class="p-hero-icon-badge" style="background:${escapeHtml(iconFill)}">

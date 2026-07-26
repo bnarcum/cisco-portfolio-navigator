@@ -13,6 +13,7 @@
 
   const params = new URLSearchParams(location.search);
   const focusFamily = params.get("focus");
+  const focusScenarioId = params.get("scenario");
 
   const DEMO_BRIEF = {
     account: "Wayne Enterprise",
@@ -40,9 +41,18 @@
     }
   } catch (e) { /* demo */ }
 
-  const scenarios = ops.scenariosForFamilies(brief.stackFamilies || []);
+  let scenarios = ops.scenariosForFamilies(brief.stackFamilies || []);
   let activeIdx = 0;
-  if (brief.focusFamily) {
+  if (focusScenarioId) {
+    // Deep link straight into a specific scenario (e.g. from the Cloud Control panel's
+    // live-investigation carousel) — independent of which family/scenario the stack implies.
+    let i = scenarios.findIndex(s => s.id === focusScenarioId);
+    if (i < 0) {
+      const s = ops.getScenario(focusScenarioId);
+      if (s) { scenarios = [s, ...scenarios]; i = 0; }
+    }
+    if (i >= 0) activeIdx = i;
+  } else if (brief.focusFamily) {
     const pr = ops.getOpsProfile(brief.focusFamily);
     if (pr && pr.scenario) { const i = scenarios.findIndex(s => s.id === pr.scenario); if (i >= 0) activeIdx = i; }
   }

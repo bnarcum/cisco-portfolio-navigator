@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Cloud Control — Scenario Carousel + Platform Hero</title>
+<style>
+  @font-face{font-family:"CiscoSansTT";src:local("Helvetica Neue"),local("Arial");font-weight:400 800}
+  :root{
+    --bg:#07182d;--surface:#0a2240;--surface2:#0d2847;--surface3:#102f54;
+    --border:rgba(214,214,214,.14);--text:#ffffff;--muted:#b4b9c0;--subtle:#7f8a97;
+    --accent:#02c8ff;--net:#02c8ff;--sec:#ff007f;--col:#34d399;--com:#0a60ff;--obs:#ff9000;
+    /* domain-agent colors (from cpn-cloud-control-ops.js DOMAIN_AGENTS — distinct from CATS) */
+    --ag-net:#02c8ff;--ag-col:#2dce5c;--ag-sec:#ff4d6d;--ag-com:#0a60ff;--ag-obs:#ff9000;
+    --red:#f43f5e;--amber:#fbbf24;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;font-family:"CiscoSansTT",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:radial-gradient(ellipse 70% 50% at 20% 8%, rgba(2,200,255,.05), transparent 60%), var(--bg);
+    color:var(--text);padding:0 0 90px;
+  }
+  .topnav{position:sticky;top:0;z-index:50;display:flex;gap:4px;padding:12px 32px;
+    background:rgba(7,24,45,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+  .topnav a{color:var(--muted);text-decoration:none;font-size:12px;font-weight:700;padding:8px 14px;
+    border-radius:7px}
+  .topnav a:hover{background:rgba(255,255,255,.06);color:var(--text)}
+  section{padding:44px 32px 20px;max-width:1180px;margin:0 auto;border-top:1px solid var(--border)}
+  section:first-of-type{border-top:none}
+  h1{font-size:22px;margin:24px 32px 4px;max-width:1180px;margin-left:auto;margin-right:auto}
+  .sec-title{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
+  .sec-title h2{font-size:17px;margin:0}
+  .sec-num{font-size:11px;font-weight:800;color:var(--accent);letter-spacing:.06em}
+  .lead{color:var(--muted);font-size:12.5px;max-width:860px;line-height:1.55;margin:0 0 24px}
+  .lead b{color:var(--text)}
+  .lead code{background:rgba(255,255,255,.08);padding:1px 5px;border-radius:4px;font-size:11.5px}
+  .opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:24px}
+  .opt{background:rgba(255,255,255,.015);border:1px solid var(--border);border-radius:14px;padding:18px}
+  .opt-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;gap:8px}
+  .opt-title{font-size:13.5px;font-weight:700}
+  .opt-tag{font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+    padding:3px 8px;border-radius:999px;background:rgba(2,200,255,.12);color:#7fe3ff;
+    border:1px solid rgba(2,200,255,.32);white-space:nowrap;flex-shrink:0}
+  .opt-desc{font-size:11.5px;color:var(--muted);line-height:1.5;margin:0 0 16px}
+  .stage{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;
+    display:flex;flex-direction:column;gap:14px}
+  .stage-lbl{font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--subtle)}
+
+  /* ==================================================================
+     Fake panel chrome (just enough to give context)
+     ================================================================== */
+  .panel-mock{width:340px;background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    overflow:hidden}
+  .panel-mock-head{padding:12px 14px 0;font-size:13px;font-weight:700}
+  .panel-mock-body{padding:12px 14px 16px}
+
+  /* Compact icon hero (already-shipped option 4 style, for context) */
+  .p-hero--compact{
+    height:auto;padding:14px 16px;margin-bottom:12px;border-radius:12px;
+    display:flex;align-items:center;gap:14px;
+    background:
+      radial-gradient(circle at 16% 22%, color-mix(in srgb, var(--obs) 16%, transparent), transparent 62%),
+      linear-gradient(155deg, var(--surface2), var(--surface));
+    border:1px solid var(--border)}
+  .p-hero-icon-badge{width:56px;height:56px;border-radius:50%;flex-shrink:0;position:relative;
+    background:radial-gradient(circle at 30% 26%, #ffb85c, var(--obs) 65%);
+    box-shadow:0 0 0 1px rgba(255,255,255,.14),0 0 16px 1px rgba(255,144,0,.45),0 8px 16px -6px rgba(0,0,0,.4)}
+  .p-hero-icon-badge::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
+    background:radial-gradient(circle at 32% 26%, rgba(255,255,255,.5) 0%, rgba(255,255,255,.2) 35%, transparent 72%);
+    mix-blend-mode:screen}
+  .p-hero-icon-badge svg{position:absolute;inset:0;margin:auto;width:28px;height:28px;color:#1a0f00}
+  .p-hero-text .p-head-badges{display:flex;gap:6px;margin-bottom:5px}
+  .p-badge{font-size:9px;font-weight:800;letter-spacing:.03em;padding:2px 8px;border-radius:999px;
+    background:rgba(255,144,0,.16);color:#ffb85c;border:1px solid rgba(255,144,0,.34)}
+  .p-name{font-size:15px;font-weight:800}
+
+  /* ==================================================================
+     SECTION 1 — Scenario carousel teaser
+     ================================================================== */
+  .cc-teaser{border-radius:11px;position:relative;overflow:hidden;padding:11px 13px 12px;
+    background:linear-gradient(160deg, var(--surface3), var(--surface2));border:1px solid var(--border)}
+  .cc-teaser::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:var(--sev,var(--red))}
+  .cc-teaser-top{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+  .cc-live-dot{width:6px;height:6px;border-radius:50%;background:var(--sev,var(--red));flex-shrink:0;
+    box-shadow:0 0 0 0 rgba(244,63,94,.5);animation:cc-pulse 1.8s infinite}
+  @keyframes cc-pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb, var(--sev,var(--red)) 55%, transparent)}
+    70%{box-shadow:0 0 0 6px transparent}100%{box-shadow:0 0 0 0 transparent}}
+  .cc-live-lbl{font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--sev,var(--red))}
+  .cc-teaser-title{font-size:12.5px;font-weight:700;margin-bottom:3px}
+  .cc-teaser-q{font-size:11px;color:var(--muted);font-style:italic;line-height:1.4;margin-bottom:9px}
+  .cc-teaser-foot{display:flex;align-items:center;justify-content:space-between}
+  .cc-teaser-agents{display:flex;gap:-4px}
+  .cc-ag{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:7px;font-weight:800;color:#fff;border:1.5px solid var(--surface2);margin-left:-5px}
+  .cc-ag:first-child{margin-left:0}
+  .cc-teaser-cta{font-size:10.5px;font-weight:700;color:var(--accent);white-space:nowrap}
+  .cc-dots{display:flex;gap:4px;justify-content:center;margin-top:9px}
+  .cc-dot{width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.18)}
+  .cc-dot.on{background:var(--sev,var(--red));width:12px;border-radius:3px}
+
+  /* Option B — richer card */
+  .cc-teaser-b{padding:13px 14px 13px}
+  .cc-teaser-b .cc-teaser-top{margin-bottom:8px}
+  .cc-teaser-b .cc-sev-chip{font-size:8.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+    padding:2px 7px;border-radius:999px;background:color-mix(in srgb, var(--sev,var(--red)) 18%, transparent);
+    color:var(--sev,var(--red));border:1px solid color-mix(in srgb, var(--sev,var(--red)) 40%, transparent);margin-left:auto}
+  .cc-teaser-b .cc-teaser-q{font-size:12px;color:var(--text);font-weight:600;font-style:normal;margin-bottom:10px}
+  .cc-teaser-b .cc-hyp{font-size:10px;color:var(--subtle);margin-bottom:10px;line-height:1.5}
+  .cc-teaser-b .cc-hyp b{color:#c8cfd8;font-weight:600}
+  .cc-investigate-btn{display:block;width:100%;text-align:center;padding:8px;border-radius:8px;border:none;
+    background:linear-gradient(90deg,#0a60ff,var(--accent));color:#001a24;font-size:11.5px;font-weight:700;
+    font-family:inherit;cursor:pointer}
+
+  .filmstrip{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .filmstrip .fr{display:flex;flex-direction:column;align-items:center;gap:5px}
+  .filmstrip .fr-lbl{font-size:9px;color:var(--subtle);font-weight:700}
+  .filmstrip .arrow{color:var(--subtle);font-size:14px}
+
+  /* ==================================================================
+     SECTION 2 — Platform hero (screenshot-style, matrix pattern reused)
+     ================================================================== */
+  .p-hero--matrix{
+    height:186px;position:relative;border-radius:12px;margin-bottom:12px;overflow:hidden;
+    background:
+      radial-gradient(circle at 30% 20%, rgba(168,85,247,.16), transparent 60%),
+      linear-gradient(155deg, var(--surface3), var(--surface2));
+    border:1px solid rgba(192,132,252,.28)}
+  .p-hero-cat-chip{position:absolute;top:10px;left:10px;z-index:4;font-size:9px;font-weight:800;
+    letter-spacing:.07em;text-transform:uppercase;padding:3px 9px;border-radius:999px;pointer-events:none;
+    background:var(--obs);color:#1a0f00}
+  .p-hero-action-bar{position:absolute;left:0;right:0;bottom:0;height:42px;display:flex;z-index:4}
+  .p-hero-action-btn{flex:1;border:none;font:inherit;cursor:pointer;display:flex;align-items:center;
+    justify-content:center;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+    background:rgba(255,255,255,.06);color:#e9d5ff}
+  .p-hero-action-btn + .p-hero-action-btn{border-left:1px solid rgba(192,132,252,.28)}
+  .p-hero-action-btn--primary{background:linear-gradient(135deg,#7c3aed,#c084fc);color:#fff}
+
+  /* mini fake "AI Canvas" screenshot content */
+  .cc-shot{position:absolute;inset:0;padding:30px 16px 42px;display:flex;flex-direction:column;gap:6px;
+    filter:drop-shadow(0 14px 22px rgba(0,0,0,.4))}
+  .cc-shot-frame{flex:1;background:#0a1220;border:1px solid rgba(255,255,255,.1);border-radius:8px;
+    padding:9px 10px;display:flex;flex-direction:column;gap:7px;overflow:hidden}
+  .cc-shot-titlebar{display:flex;align-items:center;gap:5px;font-size:8px;color:#8290a3;font-weight:700}
+  .cc-shot-dot{width:5px;height:5px;border-radius:50%;background:#454f60}
+  .cc-shot-row{display:flex;gap:6px;flex:1;min-height:0}
+  .cc-shot-widget{flex:1;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);
+    border-radius:5px;padding:5px 6px;display:flex;flex-direction:column;gap:3px}
+  .cc-shot-wt{font-size:6.5px;color:#7f8a97;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+  .cc-shot-topo{display:flex;align-items:center;justify-content:space-around;flex:1;padding-top:2px}
+  .cc-shot-node{width:11px;height:11px;border-radius:50%;background:#2a3550;border:1px solid #48547a;position:relative}
+  .cc-shot-node.bad{background:rgba(244,63,94,.25);border-color:var(--red)}
+  .cc-shot-link{flex:1;height:1px;background:#334160;margin:0 2px}
+  .cc-shot-link.bad{background:var(--red)}
+  .cc-shot-spark{flex:1;display:flex;align-items:flex-end;gap:1.5px;padding-top:2px}
+  .cc-shot-bar{flex:1;background:var(--accent);border-radius:1px;opacity:.75}
+  .cc-shot-chat{display:flex;gap:5px;align-items:flex-start;font-size:6.5px;color:#aeb9d0;line-height:1.35}
+  .cc-shot-chat .av{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#c084fc);
+    flex-shrink:0}
+
+  .before{opacity:.72}
+  .before .opt-tag{background:rgba(255,255,255,.06);color:var(--subtle);border-color:var(--border)}
+</style>
+</head>
+<body>
+
+<div class="topnav">
+  <a href="#s1">3 · Scenario carousel teaser</a>
+  <a href="#s2">6 · Platform hero (screenshot-style)</a>
+</div>
+
+<h1>Cloud Control — 2 mockups</h1>
+
+<!-- ============================================================ -->
+<section id="s1">
+  <div class="sec-title"><span class="sec-num">3</span><h2>Scenario carousel teaser</h2></div>
+  <p class="lead">Lives right under the Cloud Control hero (and could also appear under any connected
+    product's <code>.p-ops</code> card). Rotates through the 6 real scenarios already defined in
+    <code>cpn-cloud-control-ops.js</code> (<code>room-qoe</code>, <code>calling-registration</code>,
+    <code>wan-brownout</code>, <code>dc-ai-fabric</code>, <code>security-anomaly</code>,
+    <code>observability-gap</code>) every ~6s. Clicking jumps straight into that scenario in AI Canvas
+    via <code>openCloudControlBriefing(familyId)</code>.</p>
+
+  <div class="opts">
+    <div class="opt">
+      <div class="opt-head"><div class="opt-title">A · Compact ticker</div><span class="opt-tag">Lowest footprint</span></div>
+      <p class="opt-desc">One line: live-pulse dot, scenario title, italic question, tiny domain-agent avatars,
+        pagination dots. Reads almost like a stock ticker — cheap to build, doesn't compete with the hero above it.</p>
+      <div class="stage">
+        <div class="stage-lbl">Frame 1 of 6 — auto-advances</div>
+        <div class="cc-teaser" style="--sev:var(--red)">
+          <div class="cc-teaser-top"><span class="cc-live-dot"></span><span class="cc-live-lbl">Live investigation</span></div>
+          <div class="cc-teaser-title">Boardroom video quality degradation</div>
+          <div class="cc-teaser-q">"Why is video choppy in the Executive Boardroom right now?"</div>
+          <div class="cc-teaser-foot">
+            <div class="cc-teaser-agents">
+              <span class="cc-ag" style="background:var(--ag-col)">COL</span>
+              <span class="cc-ag" style="background:var(--ag-net)">NET</span>
+            </div>
+            <span class="cc-teaser-cta">Investigate →</span>
+          </div>
+          <div class="cc-dots">
+            <span class="cc-dot on"></span><span class="cc-dot"></span><span class="cc-dot"></span>
+            <span class="cc-dot"></span><span class="cc-dot"></span><span class="cc-dot"></span>
+          </div>
+        </div>
+        <div class="filmstrip" style="margin-top:6px">
+          <div class="fr"><div class="fr-lbl">next →</div></div>
+          <span class="arrow">…</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="opt">
+      <div class="opt-head"><div class="opt-title">B · Rich investigation card</div><span class="opt-tag">Most persuasive</span></div>
+      <p class="opt-desc">Bigger footprint: severity chip, the actual question as the headline, a one-line hypothesis
+        preview, and a full-width "Investigate" CTA. Sells the platform's cross-domain reasoning, not just its name.</p>
+      <div class="stage">
+        <div class="stage-lbl">Frame 4 of 6 — AI fabric congestion (critical)</div>
+        <div class="cc-teaser cc-teaser-b" style="--sev:var(--red)">
+          <div class="cc-teaser-top">
+            <span class="cc-live-dot"></span><span class="cc-live-lbl">Live investigation</span>
+            <span class="cc-sev-chip">Critical</span>
+          </div>
+          <div class="cc-teaser-q">"Our GPU training job stalled — is the fabric the bottleneck?"</div>
+          <div class="cc-hyp"><b>Leading hypothesis:</b> East-west congestion on a leaf switch is throttling RDMA traffic</div>
+          <button class="cc-investigate-btn">Open in AI Canvas →</button>
+          <div class="cc-dots">
+            <span class="cc-dot"></span><span class="cc-dot"></span><span class="cc-dot"></span>
+            <span class="cc-dot on"></span><span class="cc-dot"></span><span class="cc-dot"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="opts" style="margin-top:24px">
+    <div class="opt">
+      <div class="opt-head"><div class="opt-title">A in the full panel context</div><span class="opt-tag">Preview</span></div>
+      <div class="stage">
+        <div class="panel-mock">
+          <div class="panel-mock-body">
+            <div class="p-hero--compact">
+              <div class="p-hero-icon-badge"><svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" fill="currentColor"/></svg></div>
+              <div class="p-hero-text">
+                <div class="p-head-badges"><span class="p-badge">OBSERVABILITY</span></div>
+                <div class="p-name">Cisco Cloud Control</div>
+              </div>
+            </div>
+            <div class="cc-teaser" style="--sev:var(--amber)">
+              <div class="cc-teaser-top"><span class="cc-live-dot"></span><span class="cc-live-lbl">Live investigation</span></div>
+              <div class="cc-teaser-title">Webex Calling registration flapping</div>
+              <div class="cc-teaser-q">"Phones at the Denver site keep dropping registration — what's going on?"</div>
+              <div class="cc-teaser-foot">
+                <div class="cc-teaser-agents">
+                  <span class="cc-ag" style="background:var(--ag-col)">COL</span>
+                  <span class="cc-ag" style="background:var(--ag-net)">NET</span>
+                </div>
+                <span class="cc-teaser-cta">Investigate →</span>
+              </div>
+              <div class="cc-dots">
+                <span class="cc-dot"></span><span class="cc-dot on"></span><span class="cc-dot"></span>
+                <span class="cc-dot"></span><span class="cc-dot"></span><span class="cc-dot"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="s2">
+  <div class="sec-title"><span class="sec-num">6</span><h2>Platform hero — screenshot-style (reuses <code>.p-hero--matrix</code>)</h2></div>
+  <p class="lead">Today, clicking the "Cisco Cloud Control" family node gets the exact same generic
+    icon banner as any other icon-only family. This reuses the already-shipped purple glass-card +
+    action-bar pattern built for Room Systems' 3D Showroom/Aisle — but instead of a device photo, the
+    "photo" is a stylized preview of the real AI Canvas UI (topology + chart + assistant snippet),
+    so it visually signals "this is a real, deep product" before you click anything.</p>
+
+  <div class="opts">
+    <div class="opt before">
+      <div class="opt-head"><div class="opt-title">Current</div><span class="opt-tag">Baseline</span></div>
+      <div class="stage">
+        <div class="panel-mock" style="width:280px">
+          <div class="panel-mock-body">
+            <div class="p-hero--compact">
+              <div class="p-hero-icon-badge"><svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" fill="currentColor"/></svg></div>
+              <div class="p-hero-text">
+                <div class="p-head-badges"><span class="p-badge">OBSERVABILITY</span></div>
+                <div class="p-name">Cisco Cloud Control</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="stage-lbl">Identical treatment to any plain icon-only family — no signal that this is the platform.</div>
+      </div>
+    </div>
+
+    <div class="opt">
+      <div class="opt-head"><div class="opt-title">A · Screenshot hero, single CTA</div><span class="opt-tag">Simplest</span></div>
+      <p class="opt-desc">One full-width "Open AI Canvas" primary action — there's no dual-view split like
+        Showroom/Aisle, so a single button reads cleaner.</p>
+      <div class="stage">
+        <div class="panel-mock" style="width:280px">
+          <div class="panel-mock-body">
+            <div class="p-hero--matrix">
+              <span class="p-hero-cat-chip">Observability</span>
+              <div class="cc-shot">
+                <div class="cc-shot-frame">
+                  <div class="cc-shot-titlebar"><span class="cc-shot-dot"></span><span class="cc-shot-dot"></span><span class="cc-shot-dot"></span>AI Canvas — live board</div>
+                  <div class="cc-shot-row">
+                    <div class="cc-shot-widget">
+                      <div class="cc-shot-wt">Topology</div>
+                      <div class="cc-shot-topo">
+                        <div class="cc-shot-node"></div><div class="cc-shot-link"></div>
+                        <div class="cc-shot-node bad"></div><div class="cc-shot-link bad"></div>
+                        <div class="cc-shot-node bad"></div><div class="cc-shot-link"></div>
+                        <div class="cc-shot-node"></div>
+                      </div>
+                    </div>
+                    <div class="cc-shot-widget">
+                      <div class="cc-shot-wt">Path health</div>
+                      <div class="cc-shot-spark">
+                        <div class="cc-shot-bar" style="height:30%"></div><div class="cc-shot-bar" style="height:45%"></div>
+                        <div class="cc-shot-bar" style="height:38%;background:var(--red)"></div><div class="cc-shot-bar" style="height:70%;background:var(--red)"></div>
+                        <div class="cc-shot-bar" style="height:55%"></div><div class="cc-shot-bar" style="height:60%"></div>
+                        <div class="cc-shot-bar" style="height:42%"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="cc-shot-chat"><span class="av"></span><span>Correlating device health with WAN path quality for affected boardrooms…</span></div>
+                </div>
+              </div>
+              <div class="p-hero-action-bar">
+                <button class="p-hero-action-btn p-hero-action-btn--primary" style="flex:1">Open AI Canvas →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="opt">
+      <div class="opt-head"><div class="opt-title">B · Screenshot hero, two actions</div><span class="opt-tag">Matches Room Systems layout</span></div>
+      <p class="opt-desc">Keeps the two-button split for visual consistency with every other matrix hero in the app —
+        primary opens the live board, secondary jumps to the scenario list/investigation picker.</p>
+      <div class="stage">
+        <div class="panel-mock" style="width:280px">
+          <div class="panel-mock-body">
+            <div class="p-hero--matrix">
+              <span class="p-hero-cat-chip">Observability</span>
+              <div class="cc-shot">
+                <div class="cc-shot-frame">
+                  <div class="cc-shot-titlebar"><span class="cc-shot-dot"></span><span class="cc-shot-dot"></span><span class="cc-shot-dot"></span>AI Canvas — live board</div>
+                  <div class="cc-shot-row">
+                    <div class="cc-shot-widget">
+                      <div class="cc-shot-wt">Topology</div>
+                      <div class="cc-shot-topo">
+                        <div class="cc-shot-node"></div><div class="cc-shot-link"></div>
+                        <div class="cc-shot-node bad"></div><div class="cc-shot-link bad"></div>
+                        <div class="cc-shot-node bad"></div><div class="cc-shot-link"></div>
+                        <div class="cc-shot-node"></div>
+                      </div>
+                    </div>
+                    <div class="cc-shot-widget">
+                      <div class="cc-shot-wt">Path health</div>
+                      <div class="cc-shot-spark">
+                        <div class="cc-shot-bar" style="height:30%"></div><div class="cc-shot-bar" style="height:45%"></div>
+                        <div class="cc-shot-bar" style="height:38%;background:var(--red)"></div><div class="cc-shot-bar" style="height:70%;background:var(--red)"></div>
+                        <div class="cc-shot-bar" style="height:55%"></div><div class="cc-shot-bar" style="height:60%"></div>
+                        <div class="cc-shot-bar" style="height:42%"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="cc-shot-chat"><span class="av"></span><span>Correlating device health with WAN path quality for affected boardrooms…</span></div>
+                </div>
+              </div>
+              <div class="p-hero-action-bar">
+                <button class="p-hero-action-btn p-hero-action-btn--primary">Open AI Canvas</button>
+                <button class="p-hero-action-btn">6 Investigations</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="lead" style="margin-top:36px">
+    Note: the "screenshot" content here is a stylized abstraction built from CSS (mini topology dots,
+    sparkline bars, a chat snippet) — not a literal pixel copy of <code>cloud-control-briefing.html</code>.
+    A production version could either keep this lightweight abstraction (cheap, always in sync, no image
+    asset to maintain) or swap in an actual screenshot/render of the real AI Canvas board.
+  </p>
+</section>
+
+</body>
+</html>

@@ -111,6 +111,23 @@ async function inspectHero(page, id, kind) {
         return { id: pid, kind: pkind, ok: false, reason: "missing hero" };
       }
 
+      // Cloud Control platform hero (option 6B, mockups/cloud-control-hero-mockup.html) is a
+      // stylized AI Canvas screenshot card, not an icon/photo fallback — it has no <use> icon
+      // by design, so it's exempt from the fallback/contrast checks below.
+      if (hero.classList.contains("p-hero--cc-platform")) {
+        return {
+          id: pid,
+          kind: pkind,
+          ok: true,
+          reason: "",
+          bgLum: 1,
+          fillLum: null,
+          fillAttr: "",
+          iconOnly: false,
+          hasMatrixImage: false,
+        };
+      }
+
       const hasMatrixImage = !!(img && (img.getAttribute("src") || "").includes("img-"));
       if (hasMatrixImage) {
         return {
