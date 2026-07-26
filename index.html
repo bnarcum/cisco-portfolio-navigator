@@ -266,14 +266,25 @@
       background:rgba(245,158,11,.15);color:#FF9000;flex-shrink:0}
     .fr{display:flex;align-items:center;gap:5px;flex-wrap:wrap;min-width:0;flex:1 1 auto}
     .fl{font-size:11px;color:var(--subtle);white-space:nowrap}
-    .cp{padding:5px 11px 5px 9px;border-radius:999px;border:1px solid var(--border);
+    .cp{padding:5px 12px 5px 6px;border-radius:999px;border:1px solid var(--border);
       font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;
       display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.02);color:var(--muted)}
-    .cp::before{content:"";width:7px;height:7px;border-radius:50%;flex-shrink:0}
+    .cp-ic{width:16px;height:16px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;
+      justify-content:center;transition:opacity .15s}
+    .cp-ic svg{width:9px;height:9px;color:#fff;display:block}
     .cp.off{opacity:.42;background:transparent!important;border-color:var(--border)!important;color:var(--subtle)!important}
-    .pn::before{background:var(--net)}.ps::before{background:var(--sec)}.pc::before{background:var(--col)}
-    .po::before{background:var(--com)}.pb::before{background:var(--obs)}
+    .cp.off .cp-ic{opacity:.55}
+    .pn .cp-ic{background:radial-gradient(circle at 32% 26%, rgba(255,255,255,.4), transparent 70%), var(--net)}
+    .ps .cp-ic{background:radial-gradient(circle at 32% 26%, rgba(255,255,255,.4), transparent 70%), var(--sec)}
+    .pc .cp-ic{background:radial-gradient(circle at 32% 26%, rgba(255,255,255,.4), transparent 70%), var(--col)}
+    .po .cp-ic{background:radial-gradient(circle at 32% 26%, rgba(255,255,255,.4), transparent 70%), var(--com)}
+    .pb .cp-ic{background:radial-gradient(circle at 32% 26%, rgba(255,255,255,.4), transparent 70%), var(--obs)}
     .cp:not(.off){background:rgba(255,255,255,.05);border-color:var(--border-strong, var(--border));color:var(--text)}
+    .pn:not(.off){background:color-mix(in srgb, var(--net) 12%, transparent);border-color:color-mix(in srgb, var(--net) 45%, var(--border))}
+    .ps:not(.off){background:color-mix(in srgb, var(--sec) 12%, transparent);border-color:color-mix(in srgb, var(--sec) 45%, var(--border))}
+    .pc:not(.off){background:color-mix(in srgb, var(--col) 12%, transparent);border-color:color-mix(in srgb, var(--col) 45%, var(--border))}
+    .po:not(.off){background:color-mix(in srgb, var(--com) 12%, transparent);border-color:color-mix(in srgb, var(--com) 45%, var(--border))}
+    .pb:not(.off){background:color-mix(in srgb, var(--obs) 12%, transparent);border-color:color-mix(in srgb, var(--obs) 45%, var(--border))}
     .tbs{background:rgba(0,0,0,.15);border:1px solid var(--border);border-radius:7px;
       color:var(--muted);font-size:11px;font-weight:600;padding:6px 28px 6px 9px;outline:none;cursor:pointer;
       appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238b96a8' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
@@ -366,11 +377,19 @@
 
     /* TOOLTIP */
     #tip{position:fixed;pointer-events:none;background:var(--surface);
-      border:1px solid var(--glass-edge);border-radius:8px;padding:8px 12px;
+      border:1px solid var(--glass-edge);border-radius:8px;padding:0;overflow:hidden;
       font-size:13px;display:none;z-index:400;max-width:220px;
       box-shadow:0 8px 28px rgba(0,0,0,.45)}
-    #tn{font-weight:600;margin-bottom:2px;color:var(--text)}
+    #tip::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
+      background:var(--tip-accent, var(--accent));z-index:1}
+    .tip-body{padding:9px 12px 10px}
+    #tn{font-weight:600;margin-bottom:5px;color:var(--text)}
     #tc{font-size:11px;color:var(--muted);line-height:1.45}
+    .tip-cat-chip{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+      padding:2px 8px;border-radius:999px;
+      background:color-mix(in srgb, var(--tip-accent, var(--accent)) 18%, transparent);
+      color:color-mix(in srgb, var(--tip-accent, var(--accent)) 65%, white);
+      border:1px solid color-mix(in srgb, var(--tip-accent, var(--accent)) 38%, transparent)}
 
     /* LINK "WHY CONNECTED" CARD */
     #link-why-card{position:fixed;display:none;z-index:410;pointer-events:none;
@@ -503,9 +522,16 @@
     #pfooter .p-extra{display:flex;gap:6px;flex:1;margin:0}
     #pfooter .p-extra .rc-btn{flex:1;height:40px;font-size:11px}
     .p-head-badges{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:8px;padding-right:36px}
-    .p-stats-row{display:flex;flex-wrap:wrap;gap:16px;padding:10px 0;margin-bottom:8px;
-      border-top:1px solid rgba(255,255,255,.06);font-size:11px;color:#a8b2bf}
-    .p-stats-row b{color:var(--text);font-weight:700}
+    .p-stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 0;margin-bottom:8px;
+      border-top:1px solid rgba(255,255,255,.06)}
+    .p-stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:9px;
+      padding:10px 8px 9px;text-align:center;position:relative;overflow:hidden}
+    .p-stat-card::before{content:"";position:absolute;top:0;left:0;right:0;height:2px}
+    .p-stat-card.c1::before{background:var(--net)}
+    .p-stat-card.c2::before{background:var(--col)}
+    .p-stat-card.c3::before{background:var(--obs)}
+    .p-stat-card .n{font-size:19px;font-weight:800;color:var(--text);line-height:1.1}
+    .p-stat-card .l{font-size:9.5px;color:#8a95a3;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:3px}
     .p-head-actions{display:flex;gap:8px;margin-bottom:12px}
     .p-head-actions .explore-btn,.p-head-actions .p-head-add{flex:1;margin:0;height:36px;font-size:12px}
     .p-head-add{padding:9px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;
@@ -574,7 +600,8 @@
     [data-theme="light"] .p-outcome-label{color:#0f3d52}
     [data-theme="light"] .p-outcome-sym{color:#334155}
     [data-theme="light"] .p-outcome-head{color:#07182d}
-    [data-theme="light"] .p-stats-row{color:#64748b;border-top-color:rgba(7,24,45,.08)}
+    [data-theme="light"] .p-stats-row{border-top-color:rgba(7,24,45,.08)}
+    [data-theme="light"] .p-stat-card .l{color:#64748b}
     [data-theme="light"] .p-tab{color:#64748b}
     [data-theme="light"] .p-tab.on{color:#07182d}
     #pcl{position:absolute;top:14px;right:14px;width:32px;height:32px;
@@ -1632,7 +1659,7 @@
   </div>
   <svg id="gs"></svg>
 </div>
-<div id="tip"><div id="tn"></div><div id="tc"></div></div>
+<div id="tip"><div class="tip-body"><div id="tn"></div><div id="tc"></div></div></div>
 <div id="link-why-card" aria-hidden="true">
   <div class="lwc-head"><span class="lwc-type"></span><span class="lwc-label"></span></div>
   <div class="lwc-nodes"></div>
@@ -4397,9 +4424,17 @@ let analyzed    = false;
 // Category pills
 const pillsEl = document.getElementById("cpills");
 const pillMap = {networking:"pn",security:"ps",collaboration:"pc",computing:"po",observability:"pb"};
+const pillIcon = {
+  networking:    `<path d="M4 12h16M4 6h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>`,
+  security:      `<path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" fill="none"/>`,
+  collaboration: `<circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2" fill="none"/><path d="M4 20c0-4 3.5-6 8-6s8 2 8 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>`,
+  computing:     `<rect x="4" y="6" width="16" height="12" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>`,
+  observability: `<path d="M3 17l5-6 4 3 6-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`
+};
 Object.entries(CATS).forEach(([key, cat]) => {
   const btn = document.createElement("button");
-  btn.className = `cp ${pillMap[key]}`; btn.textContent = cat.label; btn.dataset.cat = key;
+  btn.className = `cp ${pillMap[key]}`; btn.dataset.cat = key;
+  btn.innerHTML = `<span class="cp-ic"><svg viewBox="0 0 24 24">${pillIcon[key] || ""}</svg></span>${escapeHtml(cat.label)}`;
   btn.addEventListener("click", () => {
     if (activeCats.has(key)) activeCats.delete(key); else activeCats.add(key);
     btn.classList.toggle("off", !activeCats.has(key));
@@ -6386,6 +6421,7 @@ function showCompositionNodeTip(ev, d){
   const matrixActions = d._kind === "product" ? matrixActionButtonsHtml(d.id) : "";
   const tc = document.getElementById("tc");
   tc.innerHTML = escapeHtml(short) + matrixActions;
+  tipEl.style.setProperty("--tip-accent", CATS[d.category]?.color || "#02c8ff");
   tipEl.classList.toggle("tip-interactive", !!matrixActions);
   tipEl.style.pointerEvents = matrixActions ? "auto" : "none";
   tipEl.style.display = "block";
@@ -7554,9 +7590,9 @@ function mountPanelOutcomeBlock(familyId){
 
 function renderPanelStats(prodCount, useCaseCount, linkCount){
   return `<div class="p-stats-row">
-    <span><b>${prodCount}</b> products</span>
-    <span><b>${useCaseCount}</b> use cases</span>
-    <span><b>${linkCount}</b> direct links</span>
+    <div class="p-stat-card c1"><div class="n">${prodCount}</div><div class="l">Products</div></div>
+    <div class="p-stat-card c2"><div class="n">${useCaseCount}</div><div class="l">Use cases</div></div>
+    <div class="p-stat-card c3"><div class="n">${linkCount}</div><div class="l">Direct links</div></div>
   </div>`;
 }
 
@@ -10303,9 +10339,11 @@ function resetAll() {
 const tipEl=document.getElementById("tip");
 function showNodeTip(ev,d){
   document.getElementById("tn").textContent = d.name;
-  const tc = d._kind === "pillar" ? (d.promise || PILLAR_BY_ID[d._pillarId]?.label)
-    : (nodeById[d.id] ? (pillarMeta(familyPillar(d.id))?.label || CATS[d.category].label) : CATS[d.category].label);
-  document.getElementById("tc").textContent = tc;
+  const pm = d._kind === "pillar" ? PILLAR_BY_ID[d._pillarId] : (nodeById[d.id] ? pillarMeta(familyPillar(d.id)) : null);
+  const label = (pm?.shortLabel || pm?.label) || CATS[d.category].label;
+  const accent = pm?.color || CATS[d.category]?.color || "#02c8ff";
+  document.getElementById("tc").innerHTML = `<span class="tip-cat-chip">${escapeHtml(label || "")}</span>`;
+  tipEl.style.setProperty("--tip-accent", accent);
   tipEl.style.display = "block"; moveTip(ev);
 }
 function moveTip(ev){ const {w}=getDims(),x=ev.clientX+14,y=ev.clientY-10; tipEl.style.left=(x+240>w?x-254:x)+"px"; tipEl.style.top=y+"px"; }
