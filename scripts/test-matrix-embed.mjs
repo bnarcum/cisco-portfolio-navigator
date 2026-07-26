@@ -20,7 +20,11 @@ try {
 
   const heroUi = await page.evaluate(() => ({
     clickable: document.querySelector(".p-hero--clickable") != null,
-    aisleBtn: document.querySelector(".p-hero-aisle-btn") != null,
+    // Persistent action-bar buttons (mockups/product-photo-hero-mockup.html, option 1) replaced the
+    // old hover-only hint + single .p-hero-aisle-btn chip — check both, since a broken image
+    // still degrades to the legacy .p-hero-aisle-btn chip.
+    aisleBtn: document.querySelector('.p-hero [data-matrix-view="aisle"]') != null,
+    showroomBtn: document.querySelector('.p-hero [data-matrix-view="showroom"]') != null,
     prefetch: document.querySelector(".p-hero")?.dataset.matrixPrefetch || null,
     loadingEl: !!document.getElementById("matrix-overlay-loading"),
   }));

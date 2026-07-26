@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Product Photo Hero — Options</title>
+<style>
+  @font-face{font-family:"CiscoSansTT";src:local("Helvetica Neue"),local("Arial");font-weight:400 800}
+  :root{
+    --bg:#07182d;--surface:#0a2240;--surface2:#0d2847;--surface3:#102f54;
+    --border:rgba(214,214,214,.14);--text:#ffffff;--muted:#b4b9c0;--subtle:#7f8a97;
+    --accent-collab:#34d399;
+    --matrix:#c084fc;--matrix-deep:#7c3aed;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;font-family:"CiscoSansTT",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:
+      radial-gradient(ellipse 70% 50% at 20% 10%, rgba(2,200,255,.05), transparent 60%),
+      var(--bg);
+    color:var(--text);padding:40px 32px 80px;
+  }
+  h1{font-size:22px;margin:0 0 6px}
+  .lead{color:var(--muted);font-size:13px;max-width:760px;line-height:1.55;margin:0 0 34px}
+  .lead b{color:var(--text)}
+  .grid{display:grid;grid-template-columns:repeat(2,minmax(360px,1fr));gap:34px;max-width:1180px}
+  .opt{background:rgba(255,255,255,.015);border:1px solid var(--border);border-radius:16px;padding:20px}
+  .opt-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+  .opt-title{font-size:15px;font-weight:700}
+  .opt-tag{font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    padding:3px 9px;border-radius:999px;background:rgba(192,132,252,.16);color:#e9d5ff;
+    border:1px solid rgba(192,132,252,.35);white-space:nowrap}
+  .opt-desc{font-size:12.5px;color:var(--muted);line-height:1.55;margin:0 0 16px}
+
+  /* ---- shared panel chrome (mirrors real #panel styling) ---- */
+  .panel-shell{
+    width:340px;background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    padding:16px 16px 18px;box-shadow:0 18px 44px rgba(0,0,0,.4)
+  }
+  .bc{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--subtle);margin-bottom:12px}
+  .bc b{color:var(--text);font-weight:600}
+  .bc .sep{opacity:.5}
+  .chips{display:flex;gap:6px;margin-bottom:12px}
+  .chip{display:inline-flex;align-items:center;padding:2px 10px;border-radius:20px;
+    font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+  .chip.cat{background:var(--accent-collab);color:#052015}
+  .chip.status{background:rgba(52,211,153,.16);color:#6ee7b0;border:1px solid rgba(52,211,153,.3)}
+  .pname{font-size:19px;font-weight:700;margin:14px 0 6px}
+  .pdesc{font-size:12.5px;color:#c8cfd8;line-height:1.6;margin:0}
+
+  /* generic photo element used across options */
+  .photo-img{display:block;width:100%;height:100%;object-fit:contain}
+
+  /* ============ OPTION 1 — Glass card + persistent dual action bar ============ */
+  .h1card{
+    position:relative;border-radius:12px;overflow:hidden;height:190px;margin-bottom:0;
+    background:
+      radial-gradient(circle at 30% 20%, rgba(192,132,252,.16), transparent 60%),
+      linear-gradient(155deg, var(--surface3), var(--surface2));
+    border:1px solid rgba(192,132,252,.28);
+  }
+  .h1card .photo-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:14px 14px 46px}
+  .h1card .photo-img{filter:drop-shadow(0 14px 22px rgba(0,0,0,.45))}
+  .h1card .cat-corner{position:absolute;top:10px;left:10px;font-size:9px;font-weight:800;letter-spacing:.08em;
+    text-transform:uppercase;color:#052015;background:var(--accent-collab);padding:3px 9px;border-radius:999px}
+  .h1-actions{display:flex;position:absolute;left:0;right:0;bottom:0;height:40px}
+  .h1-actions button{
+    flex:1;border:none;font:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
+    font-size:11px;font-weight:700;letter-spacing:.02em;transition:filter .15s
+  }
+  .h1-actions button:hover{filter:brightness(1.18)}
+  .h1-showroom{background:linear-gradient(135deg,var(--matrix-deep),var(--matrix));color:#fff}
+  .h1-aisle{background:rgba(255,255,255,.06);color:#e9d5ff;border-left:1px solid rgba(192,132,252,.28)!important}
+
+  /* ============ OPTION 2 — Cinematic spotlight ============ */
+  .h2card{
+    position:relative;border-radius:14px;overflow:hidden;height:220px;
+    background:
+      radial-gradient(ellipse 65% 55% at 50% 38%, rgba(168,85,247,.28), transparent 68%),
+      radial-gradient(ellipse 90% 60% at 50% 100%, rgba(2,200,255,.08), transparent 70%),
+      linear-gradient(180deg, #0b0f1c 0%, #05070d 100%);
+  }
+  .h2card .photo-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px 20px 54px}
+  .h2card .photo-img{filter:drop-shadow(0 20px 30px rgba(0,0,0,.6)) brightness(1.03)}
+  .h2card .glow-ring{position:absolute;left:50%;bottom:52px;width:70%;height:14px;transform:translateX(-50%);
+    background:radial-gradient(ellipse, rgba(168,85,247,.5), transparent 72%);filter:blur(2px)}
+  .h2-toolbar{
+    position:absolute;left:10px;right:10px;bottom:10px;display:flex;gap:8px;
+    background:rgba(15,6,28,.55);backdrop-filter:blur(10px);border:1px solid rgba(192,132,252,.3);
+    border-radius:10px;padding:6px
+  }
+  .h2-toolbar button{
+    flex:1;border:1px solid transparent;font:inherit;cursor:pointer;border-radius:7px;padding:8px 6px;
+    font-size:10.5px;font-weight:700;letter-spacing:.03em;display:flex;align-items:center;justify-content:center;gap:5px;
+    transition:all .15s
+  }
+  .h2-primary{background:rgba(168,85,247,.22);color:#fff;border-color:rgba(192,132,252,.4)}
+  .h2-primary:hover{background:rgba(168,85,247,.4);border-color:#c084fc}
+  .h2-secondary{background:transparent;color:#d8b4fe}
+  .h2-secondary:hover{background:rgba(192,132,252,.12);color:#fff}
+  .h2-cat{position:absolute;top:10px;right:10px;font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
+    color:rgba(255,255,255,.65)}
+
+  /* ============ OPTION 3 — Split banner (photo + stacked CTAs) ============ */
+  .h3card{
+    display:flex;gap:14px;align-items:stretch;border-radius:12px;padding:12px;
+    background:linear-gradient(155deg, var(--surface2), var(--surface));
+    border:1px solid var(--border);
+  }
+  .h3-photo{
+    width:118px;flex-shrink:0;border-radius:9px;overflow:hidden;position:relative;
+    background:radial-gradient(circle at 32% 26%, rgba(192,132,252,.22), transparent 65%), #0d1220;
+    display:flex;align-items:center;justify-content:center;padding:8px
+  }
+  .h3-photo .photo-img{filter:drop-shadow(0 8px 14px rgba(0,0,0,.5))}
+  .h3-actions{flex:1;display:flex;flex-direction:column;gap:7px;justify-content:center;min-width:0}
+  .h3-actions button{
+    border:none;font:inherit;cursor:pointer;border-radius:8px;padding:10px 12px;
+    display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:700;
+    transition:all .15s
+  }
+  .h3-primary{background:linear-gradient(135deg,var(--matrix-deep),var(--matrix));color:#fff}
+  .h3-primary:hover{filter:brightness(1.15)}
+  .h3-secondary{background:rgba(192,132,252,.08);color:#e9d5ff;border:1px solid rgba(192,132,252,.35)!important}
+  .h3-secondary:hover{background:rgba(192,132,252,.18);border-color:#c084fc!important}
+  .h3-actions .arrow{opacity:.6;font-size:13px}
+
+  /* ============ OPTION 4 — Minimal refined (closest to current, upgraded) ============ */
+  .h4card{
+    position:relative;border-radius:12px;overflow:hidden;height:178px;
+    background:linear-gradient(160deg,#111826 0%,#0a0f1a 100%);
+    border:1px solid var(--border);
+  }
+  .h4card .photo-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px 16px 12px}
+  .h4card .photo-img{filter:drop-shadow(0 12px 18px rgba(0,0,0,.5))}
+  .h4-topline{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;align-items:center}
+  .h4-cat{font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#052015;
+    background:var(--accent-collab);padding:3px 9px;border-radius:999px}
+  .h4-hint{font-size:9.5px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:.02em}
+  .h4-chips{position:absolute;left:10px;bottom:10px;display:flex;gap:6px}
+  .h4-chips button{
+    border:1px solid rgba(192,132,252,.45);background:rgba(88,28,135,.5);color:#f3e8ff;
+    border-radius:999px;font-size:10px;font-weight:700;padding:5px 11px;cursor:pointer;
+    display:flex;align-items:center;gap:5px;transition:all .15s;font:inherit
+  }
+  .h4-chips button:hover{border-color:#c084fc;background:rgba(168,85,247,.4);color:#fff}
+  .h4-chips button.primary{background:linear-gradient(135deg,var(--matrix-deep),var(--matrix));border-color:transparent}
+  .h4-chips button.primary:hover{filter:brightness(1.15)}
+
+  .foot-note{margin-top:64px;font-size:11.5px;color:var(--subtle);max-width:760px;line-height:1.6}
+</style>
+</head>
+<body>
+
+<h1>Product photo hero — 4 options</h1>
+<p class="lead">All four keep the real Matrix device photo front and center and preserve <b>both</b> click targets —
+  <b>3D Showroom</b> and <b>Device Aisle</b> — as explicit, always-visible controls instead of the current
+  hover-only "Click for 3D Showroom" hint + single Aisle chip. Photo shown: <b>Cisco Room Kit Pro G2</b>.</p>
+
+<div class="grid">
+
+  <!-- OPTION 1 -->
+  <div class="opt">
+    <div class="opt-head"><div class="opt-title">1 · Glass card + action bar</div><div class="opt-tag">Persistent CTAs</div></div>
+    <p class="opt-desc">Photo floats on a soft purple-tinted glass card (matches the Matrix brand color) instead of
+      a stark white background. A full-width two-button bar replaces the hover-only hint — both actions are
+      always visible and equally weighted.</p>
+    <div class="panel-shell">
+      <div class="bc"><span>All</span><span class="sep">›</span><span>Collaboration</span><span class="sep">›</span><b>Cisco Room Systems</b></div>
+      <div class="chips"><span class="chip cat">Collaboration</span><span class="chip status">Current</span></div>
+      <div class="h1card">
+        <span class="cat-corner">Collaboration</span>
+        <div class="photo-wrap"><img class="photo-img" src="../assets/matrix-photos/img-d451a37ab5.png" alt="Room Kit Pro G2"></div>
+        <div class="h1-actions">
+          <button class="h1-showroom">🔮 3D Showroom</button>
+          <button class="h1-aisle">📦 Device Aisle</button>
+        </div>
+      </div>
+      <div class="pname">Cisco Room Kit Pro G2</div>
+      <p class="pdesc">Flagship codec Pro G2 with Quad Camera — NVIDIA-powered AVoIP-first room system for large and executive meeting spaces.</p>
+    </div>
+  </div>
+
+  <!-- OPTION 2 -->
+  <div class="opt">
+    <div class="opt-head"><div class="opt-title">2 · Cinematic spotlight</div><div class="opt-tag">Showroom feel</div></div>
+    <p class="opt-desc">Near-black backdrop with a soft purple spotlight glow under the device (echoes the
+      real 3D Showroom lighting) plus a subtle contact-shadow ring. A glass toolbar overlays the bottom edge
+      with both actions.</p>
+    <div class="panel-shell">
+      <div class="bc"><span>All</span><span class="sep">›</span><span>Collaboration</span><span class="sep">›</span><b>Cisco Room Systems</b></div>
+      <div class="chips"><span class="chip cat">Collaboration</span><span class="chip status">Current</span></div>
+      <div class="h2card">
+        <span class="h2-cat">Collaboration</span>
+        <div class="glow-ring"></div>
+        <div class="photo-wrap"><img class="photo-img" src="../assets/matrix-photos/img-d451a37ab5.png" alt="Room Kit Pro G2"></div>
+        <div class="h2-toolbar">
+          <button class="h2-primary">🔮 3D Showroom</button>
+          <button class="h2-secondary">📦 Aisle</button>
+        </div>
+      </div>
+      <div class="pname">Cisco Room Kit Pro G2</div>
+      <p class="pdesc">Flagship codec Pro G2 with Quad Camera — NVIDIA-powered AVoIP-first room system for large and executive meeting spaces.</p>
+    </div>
+  </div>
+
+  <!-- OPTION 3 -->
+  <div class="opt">
+    <div class="opt-head"><div class="opt-title">3 · Split banner</div><div class="opt-tag">Matches family-panel style</div></div>
+    <p class="opt-desc">Mirrors the compact glossy banner already used on family panels — photo takes the badge's
+      spot on the left, two full-width labeled buttons sit on the right instead of hidden chip/hover affordances.
+      Most explicit and scannable option.</p>
+    <div class="panel-shell">
+      <div class="bc"><span>All</span><span class="sep">›</span><span>Collaboration</span><span class="sep">›</span><b>Cisco Room Systems</b></div>
+      <div class="chips"><span class="chip cat">Collaboration</span><span class="chip status">Current</span></div>
+      <div class="h3card">
+        <div class="h3-photo"><img class="photo-img" src="../assets/matrix-photos/img-d451a37ab5.png" alt="Room Kit Pro G2"></div>
+        <div class="h3-actions">
+          <button class="h3-primary"><span>🔮 3D Showroom</span><span class="arrow">›</span></button>
+          <button class="h3-secondary"><span>📦 Device Aisle</span><span class="arrow">›</span></button>
+        </div>
+      </div>
+      <div class="pname">Cisco Room Kit Pro G2</div>
+      <p class="pdesc">Flagship codec Pro G2 with Quad Camera — NVIDIA-powered AVoIP-first room system for large and executive meeting spaces.</p>
+    </div>
+  </div>
+
+  <!-- OPTION 4 -->
+  <div class="opt">
+    <div class="opt-head"><div class="opt-title">4 · Minimal refined</div><div class="opt-tag">Closest to today</div></div>
+    <p class="opt-desc">Smallest change from the current design: same footprint and interaction model (whole
+      card still opens Showroom), but a moody dark card instead of white, a persistent (not hover-only) hint,
+      and the Aisle chip gets a matching "3D Showroom" chip beside it so both are always discoverable.</p>
+    <div class="panel-shell">
+      <div class="bc"><span>All</span><span class="sep">›</span><span>Collaboration</span><span class="sep">›</span><b>Cisco Room Systems</b></div>
+      <div class="chips"><span class="chip cat">Collaboration</span><span class="chip status">Current</span></div>
+      <div class="h4card">
+        <div class="h4-topline"><span class="h4-cat">Collaboration</span><span class="h4-hint">Click photo for 3D Showroom</span></div>
+        <div class="photo-wrap"><img class="photo-img" src="../assets/matrix-photos/img-d451a37ab5.png" alt="Room Kit Pro G2"></div>
+        <div class="h4-chips">
+          <button class="primary">🔮 Showroom</button>
+          <button>📦 Aisle</button>
+        </div>
+      </div>
+      <div class="pname">Cisco Room Kit Pro G2</div>
+      <p class="pdesc">Flagship codec Pro G2 with Quad Camera — NVIDIA-powered AVoIP-first room system for large and executive meeting spaces.</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="foot-note">Note: local fonts aren't installed in this sandbox preview, so text falls back to
+  system sans-serif — colors, layout, and spacing are representative of the live app. Emoji glyphs (🔮📦) stand
+  in for real inline SVG icons in the actual implementation.</p>
+
+</body>
+</html>

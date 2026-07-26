@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.45";
+  window.__CPN_BUILD="3.5.46";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -12182,7 +12182,27 @@ STYLE.textContent = `
   .p-hero--compact .p-hero-text .p-head-badges{margin-bottom:6px;padding-right:0}
   .p-hero--compact .p-hero-text .p-name{margin-bottom:0}
   .p-hero--matrix .p-hero-fallback--reserve{display:none!important}
-  .p-hero--icon-only.p-hero--matrix .p-hero-fallback--reserve{display:flex!important}
+  .p-hero--icon-only  .p-hero--matrix .p-hero-fallback--reserve{display:flex!important}
+  /* Matrix photo hero: dark glass card with a Matrix-purple glow behind the device, plus a
+     persistent two-button action bar so 3D Showroom + Device Aisle are both always discoverable
+     (mockups/product-photo-hero-mockup.html, option 1 — replaces the old hover-only hint). */
+  .p-hero--matrix{
+    height:182px;
+    background:
+      radial-gradient(circle at 30% 20%, rgba(168,85,247,.16), transparent 60%),
+      linear-gradient(155deg, var(--surface3), var(--surface2));
+    border:1px solid rgba(192,132,252,.28);box-shadow:none}
+  .p-hero--matrix .p-hero-matrix-img{padding:14px 14px 50px;filter:drop-shadow(0 14px 20px rgba(0,0,0,.4))}
+  .p-hero-cat-chip{position:absolute;top:10px;left:10px;z-index:4;font-size:9px;font-weight:800;
+    letter-spacing:.07em;text-transform:uppercase;padding:3px 9px;border-radius:999px;pointer-events:none}
+  .p-hero-action-bar{position:absolute;left:0;right:0;bottom:0;height:42px;display:flex;z-index:4}
+  .p-hero-action-btn{
+    flex:1;border:none;font:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;transition:filter .15s;
+    background:rgba(255,255,255,.06);color:#e9d5ff}
+  .p-hero-action-btn:hover{filter:brightness(1.2)}
+  .p-hero-action-btn + .p-hero-action-btn{border-left:1px solid rgba(192,132,252,.28)}
+  .p-hero-action-btn--primary{background:linear-gradient(135deg,#7c3aed,#c084fc);color:#fff}
   .p-hero--matrix .p-hero-scrim{background:linear-gradient(180deg, transparent 72%, rgba(15,23,42,0.08) 100%)}
   .p-hero--icon-only .p-hero-scrim{background:linear-gradient(180deg, transparent 70%, rgba(15,23,42,0.06) 100%)}
   .p-hero-scrim{position:absolute;inset:0;background:linear-gradient(180deg, transparent 58%, rgba(15,23,42,0.1) 100%);
@@ -15651,19 +15671,21 @@ function insertProductHero(id, kind){
   const catLabel = cat ? escapeHtml(CATS[cat].label) : "";
   const fallbackReserveHtml = `<div class="p-hero-fallback p-hero-fallback--reserve" style="display:none;background:${heroCategoryGradient(iconFill)}">${heroIconBadgeHtml(symId, iconFill)}</div>`;
   if (matrixUrl){
+    // Glass card + persistent action bar: both 3D Showroom and Device Aisle are always-visible
+    // buttons instead of a hover-only hint + single Aisle chip (mockups/product-photo-hero-mockup.html, option 1).
+    const catFg = cat === "computing" ? "#fff" : "#000";
     hero.className = "p-hero p-hero--matrix p-hero--clickable";
     hero.dataset.productId = id;
     hero.dataset.matrixPrefetch = id;
     hero.title = "Click for 3D Showroom";
     hero.innerHTML = `
-      <span class="p-hero-open-hint">Click for 3D Showroom</span>
       <img class="p-hero-matrix-img" src="${escapeHtml(matrixUrl)}" alt="${escapeHtml(n.name || id)}"
         loading="lazy" decoding="async">
       ${fallbackReserveHtml}
-      <div class="p-hero-scrim"></div>
-      <div class="p-hero-meta">
-        <button type="button" class="p-hero-aisle-btn" data-matrix-view="aisle" data-matrix-product="${escapeHtml(id)}">Aisle</button>
-        <span class="p-hero-cat">${catLabel}</span>
+      <span class="p-hero-cat-chip" style="background:${escapeHtml(iconFill)};color:${catFg}">${catLabel}</span>
+      <div class="p-hero-action-bar">
+        <button type="button" class="p-hero-action-btn p-hero-action-btn--primary" data-matrix-view="showroom" data-matrix-product="${escapeHtml(id)}">3D Showroom</button>
+        <button type="button" class="p-hero-action-btn" data-matrix-view="aisle" data-matrix-product="${escapeHtml(id)}">Device Aisle</button>
       </div>`;
     const img = hero.querySelector(".p-hero-matrix-img");
     if (img){
@@ -15681,11 +15703,19 @@ function insertProductHero(id, kind){
         hero.classList.add("p-hero--icon-only");
         delete hero.dataset.productId;
         delete hero.dataset.matrixPrefetch;
+        hero.querySelector(".p-hero-cat-chip")?.remove();
+        hero.querySelector(".p-hero-action-bar")?.remove();
         const fb = hero.querySelector(".p-hero-fallback");
         if (fb){
           fb.classList.remove("p-hero-fallback--reserve");
           fb.style.display = "";
         }
+        // Photo failed entirely — fall back to the plain icon card, keeping Aisle reachable.
+        hero.insertAdjacentHTML("beforeend", `<div class="p-hero-scrim"></div>
+          <div class="p-hero-meta">
+            <button type="button" class="p-hero-aisle-btn" data-matrix-view="aisle" data-matrix-product="${escapeHtml(id)}">Aisle</button>
+            <span class="p-hero-cat">${catLabel}</span>
+          </div>`);
       }, { once: true });
     }
   } else {
