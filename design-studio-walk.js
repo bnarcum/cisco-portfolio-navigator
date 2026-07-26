@@ -548,36 +548,26 @@
           <strong>Your avatar</strong>
           <button type="button" class="ds-walk-avatar-x" data-action="avatar-close" title="Close builder">✕</button>
         </div>
-        <p class="ds-walk-avatar-hint">Outfit themes keep your skin tone. Randomize shuffles clothes and accessories only.</p>
+        <p class="ds-walk-avatar-hint">Themes keep your skin tone. Randomize changes outfit only.</p>
         <div class="ds-walk-avatar-presets" role="group" aria-label="Outfit themes">${presetBtns}</div>
 
-        <section class="ds-walk-avatar-group" aria-labelledby="ds-walk-avatar-grp-app">
-          <h3 class="ds-walk-avatar-group-title" id="ds-walk-avatar-grp-app">Appearance</h3>
+        <section class="ds-walk-avatar-group" aria-labelledby="ds-walk-avatar-grp-colors">
+          <h3 class="ds-walk-avatar-group-title" id="ds-walk-avatar-grp-colors">Colors</h3>
           <div class="ds-walk-avatar-color-grid">
             ${avatarColorSwatch("skin", "Skin", cfg.skin)}
             ${avatarColorSwatch("hair", "Hair", cfg.hair)}
             ${avatarColorSwatch("shirt", "Shirt", cfg.shirt)}
             ${avatarColorSwatch("pants", "Pants", cfg.pants)}
             ${avatarColorSwatch("shoes", "Shoes", cfg.shoes)}
-          </div>
-        </section>
-
-        <section class="ds-walk-avatar-group" aria-labelledby="ds-walk-avatar-grp-brand">
-          <h3 class="ds-walk-avatar-group-title" id="ds-walk-avatar-grp-brand">Cisco &amp; gear</h3>
-          <div class="ds-walk-avatar-color-grid ds-walk-avatar-color-grid--5">
-            ${avatarColorSwatch("badgeColor", "Card", cfg.badgeColor || "#ffffff")}
-            ${avatarColorSwatch("logoColor", "Logo", cfg.logoColor || "#00bceb")}
-            ${avatarColorSwatch("lanyardColor", "Lanyard", cfg.lanyardColor || "#161b24")}
             ${avatarColorSwatch("eyeColor", "Eyes", cfg.eyeColor || "#2b3a4a")}
             ${avatarColorSwatch("glassesColor", "Frames", cfg.glassesColor || "#1a202c")}
           </div>
-          <p class="ds-walk-avatar-swatch-tip">Tap a swatch to open one color picker.</p>
         </section>
 
         <section class="ds-walk-avatar-group" aria-labelledby="ds-walk-avatar-grp-details">
           <h3 class="ds-walk-avatar-group-title" id="ds-walk-avatar-grp-details">Details</h3>
           <div class="ds-walk-avatar-field-row">
-            <label class="ds-walk-avatar-field">Hair style
+            <label class="ds-walk-avatar-field">Hair
               <select data-avatar-key="hairStyle">
                 <option value="cap"${cfg.hairStyle === "cap" ? " selected" : ""}>Cap</option>
                 <option value="short"${cfg.hairStyle === "short" ? " selected" : ""}>Short</option>
@@ -600,20 +590,10 @@
                 <option value="hardhat"${cfg.headAccessory === "hardhat" ? " selected" : ""}>Hard hat</option>
               </select>
             </label>
-            <label class="ds-walk-avatar-field">Cisco mark
-              <select data-avatar-key="brandMark">
-                <option value="none"${(cfg.brandMark || "none") === "none" ? " selected" : ""}>None</option>
-                <option value="badge"${cfg.brandMark === "badge" ? " selected" : ""}>Lanyard badge</option>
-                <option value="shirt"${cfg.brandMark === "shirt" ? " selected" : ""}>Shirt chest</option>
-                <option value="cap"${cfg.brandMark === "cap" ? " selected" : ""}>Cap / head</option>
-                <option value="tattoo-left"${cfg.brandMark === "tattoo-left" ? " selected" : ""}>Tattoo — left</option>
-                <option value="tattoo-right"${cfg.brandMark === "tattoo-right" ? " selected" : ""}>Tattoo — right</option>
-              </select>
+            <label class="ds-walk-avatar-field ds-walk-avatar-field--range">Height <span class="ds-walk-avatar-range-val">${heightPct}%</span>
+              <input type="range" min="92" max="108" step="1" data-avatar-key="height" data-avatar-range="height" value="${heightPct}">
             </label>
           </div>
-          <label class="ds-walk-avatar-field ds-walk-avatar-field--range">Height <span class="ds-walk-avatar-range-val">${heightPct}%</span>
-            <input type="range" min="92" max="108" step="1" data-avatar-key="height" data-avatar-range="height" value="${heightPct}">
-          </label>
           <label class="ds-walk-avatar-chip">
             <input type="checkbox" data-avatar-key="glasses"${cfg.glasses ? " checked" : ""}>
             <span>Glasses</span>
