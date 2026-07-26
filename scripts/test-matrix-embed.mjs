@@ -5,7 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-const html = path.join(root, "cisco-portfolio-navigator.html");
+const html = path.join(root, "index.html");
 const MATRIX_PRODUCT = "desk-pro-g2";
 
 const browser = await chromium.launch();

@@ -136,7 +136,7 @@ function main() {
   }
   const version = (() => {
     try {
-      const html = fs.readFileSync(path.join(PLUS_ROOT, "cisco-portfolio-navigator.html"), "utf8");
+      const html = fs.readFileSync(path.join(PLUS_ROOT, "index.html"), "utf8");
       const m = html.match(/const APP_VERSION\s*=\s*"([^"]+)"/);
       return m?.[1] || "?";
     } catch { return "?"; }
@@ -154,7 +154,7 @@ function main() {
     walkCopy(PLUS_ROOT, prodRoot, stats);
     restorePreserve(prodRoot, preserved);
     patchPackageJson(prodRoot);
-    injectPreviewBanner(path.join(prodRoot, "cisco-portfolio-navigator.html"));
+    injectPreviewBanner(path.join(prodRoot, "index.html"));
   } else {
     walkCopy(PLUS_ROOT, prodRoot, stats);
   }

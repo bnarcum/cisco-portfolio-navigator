@@ -26,7 +26,7 @@ try {
 
   const appPage = await browser.newPage({ viewport: { width: 1280, height: 800 } });
   appPage.on("pageerror", e => errors.push(`app pageerror: ${e.message}`));
-  await appPage.goto(`file://${path.join(root, "cisco-portfolio-navigator.html")}?mode=kiosk&pillar=workplaces`, {
+  await appPage.goto(`file://${path.join(root, "index.html")}?mode=kiosk&pillar=workplaces`, {
     waitUntil: "load",
     timeout: 60000
   });

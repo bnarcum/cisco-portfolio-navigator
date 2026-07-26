@@ -7,7 +7,7 @@ import { fileURLToPath } from "url";
 import { dirname, resolve } from "path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const html = resolve(__dirname, "../cisco-portfolio-navigator.html");
+const html = resolve(__dirname, "../index.html");
 const errors = [];
 
 const browser = await chromium.launch();

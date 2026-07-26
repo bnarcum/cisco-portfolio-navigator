@@ -6,7 +6,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-const htmlPath = path.join(root, "cisco-portfolio-navigator.html");
+const htmlPath = path.join(root, "index.html");
 const html = readFileSync(htmlPath, "utf8");
 
 function extractIds(constName) {

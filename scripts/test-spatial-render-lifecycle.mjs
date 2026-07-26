@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-const html = fs.readFileSync(path.join(root, "cisco-portfolio-navigator.html"), "utf8");
+const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
 const errors = [];
 const must = (ok, msg) => { if (!ok) errors.push(msg); };
 

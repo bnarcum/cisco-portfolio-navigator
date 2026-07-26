@@ -6,7 +6,7 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-const html = path.join(root, "cisco-portfolio-navigator.html");
+const html = path.join(root, "index.html");
 const dcloudJson = JSON.parse(fs.readFileSync(path.join(root, "dcloud-links.json"), "utf8"));
 
 const browser = await chromium.launch();

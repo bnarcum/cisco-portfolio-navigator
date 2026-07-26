@@ -2,7 +2,7 @@
 /** Walk — player can move with keyboard/dpad immediately on entering the walk */
 import { chromium } from "playwright";
 
-const URL = "http://127.0.0.1:8765/cisco-portfolio-navigator.html";
+const URL = "http://127.0.0.1:8765/";
 const errors = [];
 
 const browser = await chromium.launch();

@@ -16,16 +16,16 @@ import { recoverPages } from "./pages-recovery.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
-const HTML = path.join(ROOT, "cisco-portfolio-navigator.html");
+const HTML = path.join(ROOT, "index.html");
 
 const TARGETS = {
   production: {
     repo: "bnarcum/cisco-portfolio-navigator",
-    url: "https://bnarcum.github.io/cisco-portfolio-navigator/cisco-portfolio-navigator.html"
+    url: "https://bnarcum.github.io/cisco-portfolio-navigator/"
   },
   preview: {
     repo: "bnarcum/cisco-portfolio-navigator-preview",
-    url: "https://bnarcum.github.io/cisco-portfolio-navigator-preview/cisco-portfolio-navigator.html"
+    url: "https://bnarcum.github.io/cisco-portfolio-navigator-preview/"
   }
 };
 
@@ -70,7 +70,7 @@ function parseAppVersion(html) {
 function readLocalVersion() {
   const html = fs.readFileSync(HTML, "utf8");
   const v = parseAppVersion(html);
-  if (!v) throw new Error("APP_VERSION / __CPN_BUILD not found in cisco-portfolio-navigator.html");
+  if (!v) throw new Error("APP_VERSION / __CPN_BUILD not found in index.html");
   return v;
 }
 

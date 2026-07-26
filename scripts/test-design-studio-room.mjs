@@ -5,7 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-const html = path.join(root, "cisco-portfolio-navigator.html");
+const html = path.join(root, "index.html");
 const errors = [];
 
 const browser = await chromium.launch();
@@ -17,7 +17,7 @@ try {
     if (msg.type() === "error" && !/Failed to load resource|404/.test(t)) errors.push(`console: ${t}`);
   });
 
-  await page.goto("http://127.0.0.1:8765/cisco-portfolio-navigator.html", { waitUntil: "load", timeout: 60000 });
+  await page.goto("http://127.0.0.1:8765/", { waitUntil: "load", timeout: 60000 });
   await page.waitForFunction(() => window.__cpnV2?.APP_VERSION, { timeout: 60000 });
 
   // Open Design Studio (lazy-loaded on first click)

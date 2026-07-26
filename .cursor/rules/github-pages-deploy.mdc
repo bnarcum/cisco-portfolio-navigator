@@ -27,14 +27,15 @@ npm run deploy
 
 ## URLs
 
-- Production: https://bnarcum.github.io/cisco-portfolio-navigator/cisco-portfolio-navigator.html
-- Preview: https://bnarcum.github.io/cisco-portfolio-navigator-preview/cisco-portfolio-navigator.html
+- Production: https://bnarcum.github.io/cisco-portfolio-navigator/
+- Preview: https://bnarcum.github.io/cisco-portfolio-navigator-preview/
+- Legacy bookmark (redirects to root): `…/cisco-portfolio-navigator.html`
 
 ## If verification times out
 
 1. Check live vs expected version:
    ```bash
-   curl -sS "https://bnarcum.github.io/cisco-portfolio-navigator/cisco-portfolio-navigator.html?cb=$RANDOM" | rg -o '__CPN_BUILD="[^"]+"'
+   curl -sS "https://bnarcum.github.io/cisco-portfolio-navigator/?cb=$RANDOM" | rg -o '__CPN_BUILD="[^"]+"'
    gh api repos/bnarcum/cisco-portfolio-navigator/pages --jq '{status, build_type}'
    gh api "repos/bnarcum/cisco-portfolio-navigator/pages/builds?per_page=2" --jq '.[] | {status, commit: .commit[0:7], error: .error.message}'
    ```

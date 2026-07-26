@@ -12,7 +12,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 950 } });
   page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
 
-  await page.goto(`file://${path.join(root, "cisco-portfolio-navigator.html")}`, {
+  await page.goto(`file://${path.join(root, "index.html")}`, {
     waitUntil: "load",
     timeout: 60000
   });

@@ -335,7 +335,7 @@
     document.addEventListener("click", e => { if (!menu.contains(e.target) && e.target !== dash) menu.classList.remove("show"); });
     $("#cc-back").addEventListener("click", () => {
       if (params.get("from") === "cpn" && window.history.length > 1) window.history.back();
-      else window.location.href = "cisco-portfolio-navigator.html";
+      else window.location.href = "./";
     });
     $("#cc-composer").addEventListener("submit", e => {
       e.preventDefault();

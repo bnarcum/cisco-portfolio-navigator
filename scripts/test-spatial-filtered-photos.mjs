@@ -7,7 +7,7 @@ import { fileURLToPath } from "url";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const port = 9876 + Math.floor(Math.random() * 1000);
-const url = `http://127.0.0.1:${port}/cisco-portfolio-navigator.html`;
+const url = `http://127.0.0.1:${port}/`;
 const FAMILY = "room-systems";
 
 const server = spawn("python3", ["-m", "http.server", String(port)], {

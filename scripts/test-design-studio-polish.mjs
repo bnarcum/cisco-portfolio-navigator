@@ -15,7 +15,7 @@ try {
   page.on("pageerror", e => errors.push(`pageerror: ${e.message}`));
   page.on("console", m => { if (m.type() === "error" && !/Failed to load resource|404/.test(m.text())) errors.push(`console: ${m.text()}`); });
 
-  await page.goto("http://127.0.0.1:8765/cisco-portfolio-navigator.html", { waitUntil: "load", timeout: 60000 });
+  await page.goto("http://127.0.0.1:8765/", { waitUntil: "load", timeout: 60000 });
   await page.waitForFunction(() => window.__cpnV2?.APP_VERSION, { timeout: 60000 });
   const version = await page.evaluate(() => window.__cpnV2.APP_VERSION);
   if (version !== "2.79.17") errors.push(`version ${version} != 2.79.17`);

@@ -3,7 +3,7 @@
  * UA-aware external link checker for the Portfolio Navigator.
  *
  * Extracts every external URL referenced from the product catalog
- * (cisco-portfolio-navigator.html) and the Design Studio templates
+ * (index.html) and the Design Studio templates
  * (design-studio-templates.js), then verifies each one with a
  * browser-like User-Agent, following redirects and detecting soft-404s.
  *
@@ -47,7 +47,7 @@ const SOFT_404 =
   /page not found|404 error|we couldn't find|no longer available|page you (?:are looking for|requested) (?:cannot|could not) be found|does not exist/i;
 
 const SOURCES = [
-  "cisco-portfolio-navigator.html",
+  "index.html",
   "design-studio-templates.js",
   "design-studio-intent.js",
 ];

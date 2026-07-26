@@ -26,10 +26,10 @@ v3 adds SVG stencils, port-based linking, 12 network + 8 room templates (Gallery
 
 ```bash
 cd "/Users/bnarcum/Projects/Cisco Portfolio Navigator"
-open cisco-portfolio-navigator.html
+open index.html
 # or
 python3 -m http.server 8765
-# → http://localhost:8765/cisco-portfolio-navigator.html
+# → http://localhost:8765/
 ```
 
 Optional tests: `npm install && npm test`

@@ -21,7 +21,7 @@ preview  → github.com/bnarcum/cisco-portfolio-navigator-preview.git (sandbox)
 ```bash
 git checkout dev
 
-# edit cisco-portfolio-navigator.html, assets, JSON, etc.
+# edit index.html, assets, JSON, etc.
 
 git add -A && git commit -m "Describe your enhancement"
 git push preview dev:main    # publishes to the preview URL (~1 min)
@@ -85,7 +85,7 @@ No build step required:
 
 ```bash
 python3 -m http.server 8765
-# open http://localhost:8765/cisco-portfolio-navigator.html
+# open http://localhost:8765/
 ```
 
 Playwright tests (optional):
