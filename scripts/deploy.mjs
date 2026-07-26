@@ -5,7 +5,7 @@
  * Usage:
  *   node scripts/deploy.mjs              # verify only (after you pushed)
  *   node scripts/deploy.mjs --push       # merge main + push all remotes + verify
- *   node scripts/deploy.mjs --push --skip-preview
+ *   node scripts/deploy.mjs --push --with-preview
  */
 import { execSync } from "child_process";
 import path from "path";
@@ -25,9 +25,10 @@ function sleep(ms) {
 }
 
 function parseArgs(argv) {
+  const withPreview = argv.includes("--with-preview");
   return {
     push: argv.includes("--push"),
-    skipPreview: argv.includes("--skip-preview"),
+    skipPreview: !withPreview,
     skipProduction: argv.includes("--skip-production"),
     verifyOnly: argv.includes("--verify-only") || !argv.includes("--push")
   };

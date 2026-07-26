@@ -32,7 +32,7 @@ const TARGETS = {
 function parseArgs(argv) {
   const opts = {
     version: null,
-    targets: ["production", "preview"],
+    targets: ["production"],
     timeoutSec: 360,
     intervalSec: 12
   };
@@ -47,7 +47,7 @@ function parseArgs(argv) {
 
 Options:
   --version <semver>     Expected APP_VERSION (default: read from local HTML)
-  --targets <list>       production, preview, or both (default: both)
+  --targets <list>       production or preview (default: production)
   --timeout <seconds>    Max wait per target (default: 360)
   --interval <seconds>   Poll interval (default: 12)
 `);
@@ -174,14 +174,14 @@ async function waitForTarget(name, target, expected, timeoutSec, intervalSec, us
       return { ok: true, live: lastLive, build: lastBuild };
     }
 
-    // Auto-recover wedged legacy Pages once per target (stale deployments block new builds)
+    // Auto-recover only on real wedge signals — not "old version still live while build runs"
     const wedged =
       useGh &&
       !recoveryAttempted &&
-      polls >= 2 &&
+      polls >= 4 &&
       (pagesStatus === "errored" ||
-        buildStatus === "building" ||
-        (lastLive && lastLive !== expected));
+        buildStatus === "errored" ||
+        (buildStatus === "building" && polls >= 12 && lastLive !== expected));
     if (wedged) {
       recoveryAttempted = true;
       console.log(`  [${name}] wedged deploy detected — running pages-recovery…`);

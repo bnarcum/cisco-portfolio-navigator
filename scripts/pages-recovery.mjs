@@ -127,9 +127,34 @@ function clearDeployment(d) {
   return null;
 }
 
+function cancelStuckPagesWorkflowRuns(slug, quiet) {
+  try {
+    const out = execSync(
+      `gh run list --repo ${slug} --workflow=pages-build-deployment --limit 10 --json databaseId,status,conclusion`,
+      { encoding: "utf8", cwd: ROOT }
+    );
+    const runs = JSON.parse(out);
+    const actions = [];
+    for (const r of runs) {
+      if (r.status === "in_progress" || r.status === "queued") continue;
+      if (r.conclusion === "failure" || r.conclusion === "cancelled") {
+        try {
+          execSync(`gh run delete ${r.databaseId} --repo ${slug}`, { stdio: "ignore", cwd: ROOT });
+          actions.push(`deleted failed workflow ${String(r.databaseId).slice(-6)}`);
+        } catch { /* ignore */ }
+      }
+    }
+    return actions;
+  } catch (err) {
+    log(`  workflow cleanup skipped: ${err.message}`, quiet);
+    return [];
+  }
+}
+
 function isWedged(pagesMeta, build, deployments, expectedShaFull) {
   if (!pagesMeta) return false;
   if (pagesMeta.status === "errored") return true;
+  if (build?.status === "errored") return true;
 
   const sha7 = expectedShaFull?.slice(0, 7);
   const failures = deployments.filter(d => d.latestStatus?.state === "FAILURE");
@@ -137,18 +162,33 @@ function isWedged(pagesMeta, build, deployments, expectedShaFull) {
   const inProgress = deployments.filter(d =>
     ["IN_PROGRESS", "QUEUED", "PENDING"].includes(d.latestStatus?.state)
   );
-  const successOther = deployments.find(
-    d => d.latestStatus?.state === "SUCCESS" && !d.commitOid?.startsWith(sha7)
-  );
   const successExpected = deployments.find(
     d => d.latestStatus?.state === "SUCCESS" && d.commitOid?.startsWith(sha7)
   );
+  const successOther = deployments.find(
+    d => d.latestStatus?.state === "SUCCESS" && !d.commitOid?.startsWith(sha7)
+  );
 
-  if (inProgress.length > 0) return true;
-  if (errors.length > 0 && !successExpected) return true;
-  if (failures.length > 0 && !successExpected) return true;
-  if (successOther && !successExpected) return true;
-  if (build?.status === "building" && (build.duration === 0 || build.duration == null)) return true;
+  // Failures/errors with no successful deploy for the expected commit.
+  if ((failures.length > 0 || errors.length > 0) && !successExpected) return true;
+
+  // Piled-up environment deployments (Actions + legacy fighting each other).
+  if (inProgress.length > 1) return true;
+
+  // Stale SUCCESS on another commit while the current legacy build is stuck or errored.
+  if (successOther && !successExpected) {
+    if (build?.status === "errored" || pagesMeta.status === "errored") return true;
+    if (build?.status === "building" && (build.duration === 0 || build.duration == null)) return true;
+  }
+
+  // Legacy build stuck at duration 0 with blocking deployment noise.
+  if (
+    build?.status === "building" &&
+    (build.duration === 0 || build.duration == null) &&
+    (failures.length > 0 || errors.length > 0 || inProgress.length > 0)
+  ) {
+    return true;
+  }
 
   return false;
 }
@@ -185,10 +225,12 @@ export async function recoverPages(target, opts = {}) {
   const wedged = isWedged(pagesMeta, build, deployments, sha);
   log(`  pages=${pagesMeta?.status || "?"} build=${build?.status || "?"} deployments=${deployments.length} wedged=${wedged}`, quiet);
 
-  if (!wedged && pagesMeta?.status === "built") {
+  if (!wedged && pagesMeta?.status === "built" && build?.status !== "errored") {
     log(`  no recovery needed`, quiet);
     return { recovered: false, reason: "healthy" };
   }
+
+  actions.push(...cancelStuckPagesWorkflowRuns(cfg.slug, quiet));
 
   // 1) Clear wedged deployment nodes (IN_PROGRESS / ERROR / FAILURE)
   for (const d of deployments) {
@@ -231,11 +273,11 @@ export async function recoverPages(target, opts = {}) {
   // 4) Queue a legacy build. Do NOT rerun pages-build-deployment — it uses
   // actions/deploy-pages and piles up github-pages deployments that block
   // legacy builds with "in progress deployment" / "cancel … first" errors.
+  const buildInFlight = build?.status === "building" || build?.status === "queued";
   const needsLegacyBuild =
     pagesMeta?.status === "errored" ||
-    build?.status === "building" ||
     build?.status === "errored" ||
-    !hasSuccessForExpected;
+    (!hasSuccessForExpected && !buildInFlight);
   if (needsLegacyBuild) {
     try {
       ghApi(`repos/${cfg.slug}/pages/builds`, { method: "POST" });
