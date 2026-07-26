@@ -59,6 +59,8 @@ must(/bindAvatarPanelActions/.test(walk), "avatar panel actions must bind on the
 must(/brandMark/.test(voxel), "avatar brandMark config is missing");
 must(/data-avatar-key="brandMark"/.test(walk), "Cisco mark selector is missing");
 must(/drawCiscoBridges/.test(voxel), "Cisco bridges logo texture is missing");
+must(/data-avatar-swatch/.test(walk), "avatar color swatches are missing");
+must(/ds-walk-avatar-hero-bar/.test(css), "avatar deck hero bar is missing");
 must(/#ds-walk-overlay \.ds-walk-avatar-panel/.test(css), "avatar builder panel styles are missing");
 
 if (errors.length) {

@@ -524,72 +524,109 @@
     rebuildViewmodel(norm);
   }
 
+  function avatarColorSwatch(key, label, hex) {
+    const h = hex || "#000000";
+    const light = /^#(fff|ffffff|f[ef][ef])/i.test(h) || parseInt(h.slice(1), 16) > 0xdddddd;
+    const border = light ? " ds-walk-avatar-swatch--light" : "";
+    return `<div class="ds-walk-avatar-color-cell">
+      <button type="button" class="ds-walk-avatar-swatch${border}" data-avatar-swatch="${esc(key)}" style="--swatch:${esc(h)}" title="${esc(label)} — click to change color" aria-label="${esc(label)} color"></button>
+      <span class="ds-walk-avatar-swatch-label">${esc(label)}</span>
+      <input type="hidden" data-avatar-key="${esc(key)}" value="${esc(h)}">
+    </div>`;
+  }
+
   function avatarBuilderHtml(cfg) {
     const VOX = window.__DS_WALK_VOXEL;
     const presets = VOX?.AVATAR_PRESETS || [];
     const presetBtns = presets.map(p =>
-      `<button type="button" class="ds-walk-avatar-preset" data-action="avatar-preset" data-preset="${esc(p.id)}">${esc(p.label)}</button>`
+      `<button type="button" class="ds-walk-avatar-pill" data-action="avatar-preset" data-preset="${esc(p.id)}">${esc(p.label)}</button>`
     ).join("");
     const heightPct = Math.round((Number(cfg.height) || 1) * 100);
-    return `<div class="ds-walk-avatar-head">
-        <strong>Your avatar</strong>
-        <button type="button" class="ds-walk-avatar-x" data-action="avatar-close" title="Close builder">✕</button>
-      </div>
-      <p class="ds-walk-avatar-hint">Outfit themes keep your skin tone. Randomize shuffles clothes and accessories only.</p>
-      <div class="ds-walk-avatar-presets" role="group" aria-label="Outfit themes">${presetBtns}</div>
-      <div class="ds-walk-avatar-grid">
-        <label class="ds-walk-avatar-field">Skin <input type="color" data-avatar-key="skin" value="${esc(cfg.skin)}"></label>
-        <label class="ds-walk-avatar-field">Hair <input type="color" data-avatar-key="hair" value="${esc(cfg.hair)}"></label>
-        <label class="ds-walk-avatar-field">Shirt <input type="color" data-avatar-key="shirt" value="${esc(cfg.shirt)}"></label>
-        <label class="ds-walk-avatar-field">Pants <input type="color" data-avatar-key="pants" value="${esc(cfg.pants)}"></label>
-        <label class="ds-walk-avatar-field">Shoes <input type="color" data-avatar-key="shoes" value="${esc(cfg.shoes)}"></label>
-        <label class="ds-walk-avatar-field">Badge card <input type="color" data-avatar-key="badgeColor" value="${esc(cfg.badgeColor || "#ffffff")}"></label>
-        <label class="ds-walk-avatar-field">Logo <input type="color" data-avatar-key="logoColor" value="${esc(cfg.logoColor || "#00bceb")}"></label>
-        <label class="ds-walk-avatar-field">Lanyard / belt <input type="color" data-avatar-key="lanyardColor" value="${esc(cfg.lanyardColor || "#161b24")}"></label>
-        <label class="ds-walk-avatar-field">Eyes <input type="color" data-avatar-key="eyeColor" value="${esc(cfg.eyeColor || "#2b3a4a")}"></label>
-        <label class="ds-walk-avatar-field">Glasses frame <input type="color" data-avatar-key="glassesColor" value="${esc(cfg.glassesColor || "#1a202c")}"></label>
-        <label class="ds-walk-avatar-field">Hair style
-          <select data-avatar-key="hairStyle">
-            <option value="cap"${cfg.hairStyle === "cap" ? " selected" : ""}>Cap</option>
-            <option value="short"${cfg.hairStyle === "short" ? " selected" : ""}>Short</option>
-            <option value="bald"${cfg.hairStyle === "bald" ? " selected" : ""}>Bald</option>
-          </select>
-        </label>
-        <label class="ds-walk-avatar-field">Face
-          <select data-avatar-key="face">
-            <option value="friendly"${cfg.face === "friendly" ? " selected" : ""}>Friendly</option>
-            <option value="smile"${cfg.face === "smile" ? " selected" : ""}>Smile</option>
-            <option value="neutral"${cfg.face === "neutral" ? " selected" : ""}>Neutral</option>
-          </select>
-        </label>
-        <label class="ds-walk-avatar-field">Head accessory
-          <select data-avatar-key="headAccessory">
-            <option value="none"${cfg.headAccessory === "none" || !cfg.headAccessory ? " selected" : ""}>None</option>
-            <option value="headset"${cfg.headAccessory === "headset" ? " selected" : ""}>Headset</option>
-            <option value="hardhat"${cfg.headAccessory === "hardhat" ? " selected" : ""}>Hard hat</option>
-          </select>
-        </label>
-        <label class="ds-walk-avatar-field">Cisco mark
-          <select data-avatar-key="brandMark">
-            <option value="none"${(cfg.brandMark || "none") === "none" ? " selected" : ""}>None</option>
-            <option value="badge"${cfg.brandMark === "badge" ? " selected" : ""}>Lanyard badge</option>
-            <option value="shirt"${cfg.brandMark === "shirt" ? " selected" : ""}>Shirt chest</option>
-            <option value="cap"${cfg.brandMark === "cap" ? " selected" : ""}>Cap / head</option>
-            <option value="tattoo-left"${cfg.brandMark === "tattoo-left" ? " selected" : ""}>Tattoo — left arm</option>
-            <option value="tattoo-right"${cfg.brandMark === "tattoo-right" ? " selected" : ""}>Tattoo — right arm</option>
-          </select>
-        </label>
-        <label class="ds-walk-avatar-field">Height <span class="ds-walk-avatar-range-val">${heightPct}%</span>
-          <input type="range" min="92" max="108" step="1" data-avatar-key="height" data-avatar-range="height" value="${heightPct}">
-        </label>
-        <label class="ds-walk-avatar-field ds-walk-avatar-check">
-          <input type="checkbox" data-avatar-key="glasses"${cfg.glasses ? " checked" : ""}> Glasses
-        </label>
-      </div>
-      <div class="ds-walk-avatar-actions">
-        <button type="button" class="ds-walk-btn ds-walk-btn-primary" data-action="avatar-apply">Save avatar</button>
-        <button type="button" class="ds-walk-btn ds-walk-btn-ghost" data-action="avatar-randomize">Randomize outfit</button>
-        <button type="button" class="ds-walk-btn ds-walk-btn-ghost" data-action="avatar-reset">Reset default</button>
+    return `<div class="ds-walk-avatar-hero-bar" aria-hidden="true"></div>
+      <div class="ds-walk-avatar-inner">
+        <div class="ds-walk-avatar-head">
+          <strong>Your avatar</strong>
+          <button type="button" class="ds-walk-avatar-x" data-action="avatar-close" title="Close builder">✕</button>
+        </div>
+        <p class="ds-walk-avatar-hint">Outfit themes keep your skin tone. Randomize shuffles clothes and accessories only.</p>
+        <div class="ds-walk-avatar-presets" role="group" aria-label="Outfit themes">${presetBtns}</div>
+
+        <section class="ds-walk-avatar-group" aria-labelledby="ds-walk-avatar-grp-app">
+          <h3 class="ds-walk-avatar-group-title" id="ds-walk-avatar-grp-app">Appearance</h3>
+          <div class="ds-walk-avatar-color-grid">
+            ${avatarColorSwatch("skin", "Skin", cfg.skin)}
+            ${avatarColorSwatch("hair", "Hair", cfg.hair)}
+            ${avatarColorSwatch("shirt", "Shirt", cfg.shirt)}
+            ${avatarColorSwatch("pants", "Pants", cfg.pants)}
+            ${avatarColorSwatch("shoes", "Shoes", cfg.shoes)}
+          </div>
+        </section>
+
+        <section class="ds-walk-avatar-group" aria-labelledby="ds-walk-avatar-grp-brand">
+          <h3 class="ds-walk-avatar-group-title" id="ds-walk-avatar-grp-brand">Cisco &amp; gear</h3>
+          <div class="ds-walk-avatar-color-grid ds-walk-avatar-color-grid--5">
+            ${avatarColorSwatch("badgeColor", "Card", cfg.badgeColor || "#ffffff")}
+            ${avatarColorSwatch("logoColor", "Logo", cfg.logoColor || "#00bceb")}
+            ${avatarColorSwatch("lanyardColor", "Lanyard", cfg.lanyardColor || "#161b24")}
+            ${avatarColorSwatch("eyeColor", "Eyes", cfg.eyeColor || "#2b3a4a")}
+            ${avatarColorSwatch("glassesColor", "Frames", cfg.glassesColor || "#1a202c")}
+          </div>
+          <p class="ds-walk-avatar-swatch-tip">Tap a swatch to open one color picker.</p>
+        </section>
+
+        <section class="ds-walk-avatar-group" aria-labelledby="ds-walk-avatar-grp-details">
+          <h3 class="ds-walk-avatar-group-title" id="ds-walk-avatar-grp-details">Details</h3>
+          <div class="ds-walk-avatar-field-row">
+            <label class="ds-walk-avatar-field">Hair style
+              <select data-avatar-key="hairStyle">
+                <option value="cap"${cfg.hairStyle === "cap" ? " selected" : ""}>Cap</option>
+                <option value="short"${cfg.hairStyle === "short" ? " selected" : ""}>Short</option>
+                <option value="bald"${cfg.hairStyle === "bald" ? " selected" : ""}>Bald</option>
+              </select>
+            </label>
+            <label class="ds-walk-avatar-field">Face
+              <select data-avatar-key="face">
+                <option value="friendly"${cfg.face === "friendly" ? " selected" : ""}>Friendly</option>
+                <option value="smile"${cfg.face === "smile" ? " selected" : ""}>Smile</option>
+                <option value="neutral"${cfg.face === "neutral" ? " selected" : ""}>Neutral</option>
+              </select>
+            </label>
+          </div>
+          <div class="ds-walk-avatar-field-row">
+            <label class="ds-walk-avatar-field">Head gear
+              <select data-avatar-key="headAccessory">
+                <option value="none"${cfg.headAccessory === "none" || !cfg.headAccessory ? " selected" : ""}>None</option>
+                <option value="headset"${cfg.headAccessory === "headset" ? " selected" : ""}>Headset</option>
+                <option value="hardhat"${cfg.headAccessory === "hardhat" ? " selected" : ""}>Hard hat</option>
+              </select>
+            </label>
+            <label class="ds-walk-avatar-field">Cisco mark
+              <select data-avatar-key="brandMark">
+                <option value="none"${(cfg.brandMark || "none") === "none" ? " selected" : ""}>None</option>
+                <option value="badge"${cfg.brandMark === "badge" ? " selected" : ""}>Lanyard badge</option>
+                <option value="shirt"${cfg.brandMark === "shirt" ? " selected" : ""}>Shirt chest</option>
+                <option value="cap"${cfg.brandMark === "cap" ? " selected" : ""}>Cap / head</option>
+                <option value="tattoo-left"${cfg.brandMark === "tattoo-left" ? " selected" : ""}>Tattoo — left</option>
+                <option value="tattoo-right"${cfg.brandMark === "tattoo-right" ? " selected" : ""}>Tattoo — right</option>
+              </select>
+            </label>
+          </div>
+          <label class="ds-walk-avatar-field ds-walk-avatar-field--range">Height <span class="ds-walk-avatar-range-val">${heightPct}%</span>
+            <input type="range" min="92" max="108" step="1" data-avatar-key="height" data-avatar-range="height" value="${heightPct}">
+          </label>
+          <label class="ds-walk-avatar-chip">
+            <input type="checkbox" data-avatar-key="glasses"${cfg.glasses ? " checked" : ""}>
+            <span>Glasses</span>
+          </label>
+        </section>
+
+        <input type="color" class="ds-walk-avatar-color-native" id="ds-walk-avatar-color-native" tabindex="-1" aria-hidden="true">
+
+        <div class="ds-walk-avatar-actions">
+          <button type="button" class="ds-walk-btn ds-walk-btn-primary ds-walk-avatar-save" data-action="avatar-apply">Save avatar</button>
+          <button type="button" class="ds-walk-btn ds-walk-btn-ghost" data-action="avatar-randomize">Randomize outfit</button>
+          <button type="button" class="ds-walk-btn ds-walk-btn-ghost" data-action="avatar-reset">Reset default</button>
+        </div>
       </div>`;
   }
 
@@ -601,6 +638,7 @@
     panel.querySelectorAll("[data-avatar-key]").forEach(el => {
       const key = el.dataset.avatarKey;
       if (el.type === "checkbox") base[key] = el.checked;
+      else if (el.type === "hidden" || el.type === "color") base[key] = el.value;
       else if (el.type === "range" && key === "height") base[key] = Number(el.value) / 100;
       else if (el.value != null && el.value !== "") base[key] = el.value;
     });
@@ -625,12 +663,13 @@
     if (!panel) {
       panel = document.createElement("div");
       panel.id = "ds-walk-avatar-panel";
-      panel.className = "ds-walk-avatar-panel";
+      panel.className = "ds-walk-avatar-panel ds-walk-avatar-panel--deck";
       panel.setAttribute("role", "dialog");
       panel.setAttribute("aria-label", "Avatar builder");
       state.overlay.querySelector(".ds-walk-stage")?.appendChild(panel);
     }
     panel.innerHTML = avatarBuilderHtml(state.avatarDraft);
+    panel.classList.add("ds-walk-avatar-panel--deck");
     panel.removeAttribute("hidden");
     document.getElementById("ds-walk-panel-backdrop")?.removeAttribute("hidden");
     panel.onclick = e => e.stopPropagation();
@@ -645,7 +684,6 @@
     state.avatarPanelOpen = false;
     state.overlay?.classList.remove("ds-walk-avatar-open");
     panel?.setAttribute("hidden", "");
-    if (openColorPicker) { openColorPicker.blur(); openColorPicker = null; }
     const fp = document.getElementById("ds-field-panel");
     if (!fp || fp.hidden) document.getElementById("ds-walk-panel-backdrop")?.setAttribute("hidden", "");
     if (revert) rebuildAvatar(loadAvatarConfig(), false);
@@ -659,8 +697,6 @@
     closeAvatarBuilder(false);
     setStatus("Avatar saved — press V for third-person view");
   }
-
-  let openColorPicker = null;
 
   function bindAvatarPanelActions(panel) {
     panel.querySelector('[data-action="avatar-close"]')?.addEventListener("click", e => {
@@ -685,31 +721,46 @@
     });
   }
 
-  function bindAvatarColorPickers(panel) {
-    const closeOpenPicker = except => {
-      if (openColorPicker && openColorPicker !== except) {
-        openColorPicker.blur();
-        openColorPicker = null;
-      }
-    };
-    panel.querySelectorAll('input[type="color"]').forEach(el => {
-      el.addEventListener("pointerdown", () => closeOpenPicker(el));
-      el.addEventListener("focus", () => {
-        closeOpenPicker(el);
-        openColorPicker = el;
-      });
-      el.addEventListener("blur", () => {
-        if (openColorPicker === el) openColorPicker = null;
+  function updateAvatarSwatchVisual(panel, key, hex) {
+    const btn = panel.querySelector(`[data-avatar-swatch="${key}"]`);
+    if (!btn) return;
+    btn.style.setProperty("--swatch", hex);
+    const light = /^#(fff|ffffff|f[ef])/i.test(hex) || (parseInt(String(hex).replace("#", ""), 16) > 0xdddddd);
+    btn.classList.toggle("ds-walk-avatar-swatch--light", light);
+  }
+
+  function bindAvatarSwatches(panel) {
+    const native = panel.querySelector("#ds-walk-avatar-color-native");
+    if (!native) return;
+    let activeKey = null;
+
+    panel.querySelectorAll("[data-avatar-swatch]").forEach(btn => {
+      btn.addEventListener("click", e => {
+        e.preventDefault();
+        e.stopPropagation();
+        activeKey = btn.dataset.avatarSwatch;
+        const hidden = panel.querySelector(`input[data-avatar-key="${activeKey}"]`);
+        if (!hidden) return;
+        native.value = hidden.value;
+        native.dataset.activeKey = activeKey;
+        native.click();
       });
     });
-    panel.querySelectorAll('select, input[type="range"], input[type="checkbox"], button').forEach(el => {
-      el.addEventListener("pointerdown", () => closeOpenPicker(null));
+
+    native.addEventListener("input", () => {
+      const key = native.dataset.activeKey;
+      if (!key) return;
+      const hex = native.value;
+      const hidden = panel.querySelector(`input[data-avatar-key="${key}"]`);
+      if (hidden) hidden.value = hex;
+      updateAvatarSwatchVisual(panel, key, hex);
+      syncAvatarBuilderPanel();
     });
   }
 
   function bindAvatarBuilder(panel) {
     bindAvatarPanelActions(panel);
-    bindAvatarColorPickers(panel);
+    bindAvatarSwatches(panel);
     panel.querySelectorAll("[data-avatar-key]").forEach(el => {
       el.addEventListener("input", () => {
         if (el.type === "range" && el.dataset.avatarRange === "height") {
