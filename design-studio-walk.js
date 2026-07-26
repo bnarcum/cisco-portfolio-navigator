@@ -545,7 +545,7 @@
     return `<div class="ds-walk-avatar-hero-bar" aria-hidden="true"></div>
       <div class="ds-walk-avatar-inner">
         <div class="ds-walk-avatar-head">
-          <strong>Your avatar</strong>
+          <strong>Avatar Designer</strong>
           <button type="button" class="ds-walk-avatar-x" data-action="avatar-close" title="Close builder">✕</button>
         </div>
         <p class="ds-walk-avatar-hint">Themes keep your skin tone. Randomize changes outfit only.</p>
@@ -604,8 +604,10 @@
 
         <div class="ds-walk-avatar-actions">
           <button type="button" class="ds-walk-btn ds-walk-btn-primary ds-walk-avatar-save" data-action="avatar-apply">Save avatar</button>
-          <button type="button" class="ds-walk-btn ds-walk-btn-ghost" data-action="avatar-randomize">Randomize outfit</button>
-          <button type="button" class="ds-walk-btn ds-walk-btn-ghost" data-action="avatar-reset">Reset default</button>
+          <div class="ds-walk-avatar-actions-row">
+            <button type="button" class="ds-walk-btn ds-walk-btn-ghost" data-action="avatar-randomize">Randomize outfit</button>
+            <button type="button" class="ds-walk-btn ds-walk-btn-ghost" data-action="avatar-reset">Reset default</button>
+          </div>
         </div>
       </div>`;
   }

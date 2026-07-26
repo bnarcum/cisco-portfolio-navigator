@@ -1175,26 +1175,23 @@
 #ds-walk-overlay.ds-walk-explore #ds-walk-canvas{filter:contrast(1.06) saturate(1.1)}
 
 #ds-walk-overlay .ds-walk-avatar-panel{
-  position:absolute;top:56px;right:14px;bottom:56px;z-index:12;width:min(340px,calc(100vw - 28px));
+  position:absolute;top:56px;right:14px;z-index:12;width:min(340px,calc(100vw - 28px));
   padding:0;border-radius:16px;overflow:hidden;
-  display:flex;flex-direction:column;
   background:rgba(7,24,45,.96);border:1px solid rgba(2,200,255,.32);
   box-shadow:0 20px 56px rgba(0,0,0,.58),0 0 0 1px rgba(255,255,255,.06) inset;
   backdrop-filter:blur(18px)}
 #ds-walk-overlay .ds-walk-avatar-panel[hidden]{display:none!important}
 #ds-walk-overlay .ds-walk-avatar-hero-bar{
-  height:4px;flex-shrink:0;background:linear-gradient(90deg,#3070e5 0%,#1abbe9 45%,#02c8ff 100%)}
-#ds-walk-overlay .ds-walk-avatar-inner{
-  flex:1;min-height:0;padding:12px 14px 14px;overflow:visible;
-  display:flex;flex-direction:column;gap:0}
-#ds-walk-overlay .ds-walk-avatar-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;flex-shrink:0}
+  height:4px;background:linear-gradient(90deg,#3070e5 0%,#1abbe9 45%,#02c8ff 100%)}
+#ds-walk-overlay .ds-walk-avatar-inner{padding:12px 14px 14px}
+#ds-walk-overlay .ds-walk-avatar-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
 #ds-walk-overlay .ds-walk-avatar-head strong{font-size:15px;color:#ffffff;letter-spacing:.02em;font-weight:600}
 #ds-walk-overlay .ds-walk-avatar-x{
   border:1px solid rgba(255,140,140,.45);background:rgba(255,100,100,.18);color:#ffe0e0;
   border-radius:10px;width:32px;height:32px;cursor:pointer;font-size:14px;line-height:1}
 #ds-walk-overlay .ds-walk-avatar-x:hover{background:rgba(255,100,100,.28)}
-#ds-walk-overlay .ds-walk-avatar-hint{margin:0 0 10px;font-size:12px;line-height:1.4;color:#e0f2ff;flex-shrink:0}
-#ds-walk-overlay .ds-walk-avatar-presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;flex-shrink:0}
+#ds-walk-overlay .ds-walk-avatar-hint{margin:0 0 10px;font-size:12px;line-height:1.4;color:#e0f2ff}
+#ds-walk-overlay .ds-walk-avatar-presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 #ds-walk-overlay .ds-walk-avatar-pill,
 #ds-walk-overlay .ds-walk-avatar-preset{
   border:1px solid rgba(2,200,255,.35);background:rgba(2,200,255,.1);color:#e8f4ff;
@@ -1202,7 +1199,7 @@
 #ds-walk-overlay .ds-walk-avatar-pill:hover,
 #ds-walk-overlay .ds-walk-avatar-preset:hover{border-color:#02c8ff;background:rgba(2,200,255,.2)}
 #ds-walk-overlay .ds-walk-avatar-group{
-  margin-bottom:10px;padding:10px 10px 8px;border-radius:12px;flex-shrink:0;
+  margin-bottom:10px;padding:10px 10px 8px;border-radius:12px;
   background:rgba(2,12,24,.55);border:1px solid rgba(255,255,255,.08)}
 #ds-walk-overlay .ds-walk-avatar-group-title{
   margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#02c8ff}
@@ -1233,8 +1230,10 @@
 #ds-walk-overlay .ds-walk-avatar-color-native{
   position:fixed;left:-9999px;width:4px;height:4px;opacity:0.001;border:0;padding:0}
 #ds-walk-overlay .ds-walk-avatar-actions{
-  margin-top:auto;padding-top:10px;display:flex;flex-wrap:wrap;gap:8px;flex-shrink:0}
-#ds-walk-overlay .ds-walk-avatar-save{flex:1 1 100%;font-weight:700!important}
+  margin-top:10px;display:flex;flex-direction:column;align-items:stretch;gap:8px}
+#ds-walk-overlay .ds-walk-avatar-actions-row{
+  display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;width:100%}
+#ds-walk-overlay .ds-walk-avatar-save{width:100%;font-weight:700!important}
 #ds-walk-overlay.ds-walk-avatar-open .ds-walk-panel-backdrop{display:block!important;opacity:.35}
 
 #ds-walk-overlay.ds-walk-epic{background:#000}
