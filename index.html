@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.41";
+  window.__CPN_BUILD="3.5.42";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -5056,6 +5056,14 @@ const getDims = () => ({w: svgEl.clientWidth, h: svgEl.clientHeight});
 const defs = svg.append("defs");
 defs.append("filter").attr("id","glow").html(`<feGaussianBlur stdDeviation="5" result="blur"/>
   <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>`);
+/* ── Glossy node sheen: white radial highlight blended with `screen` over the flat
+   category/pillar fill color — gives every node circle a "glossy button" look without
+   needing a per-color SVG gradient (mockups/family-node-icon-styles-mockup.html, option 3). */
+defs.append("radialGradient").attr("id","node-gloss")
+  .attr("cx","32%").attr("cy","26%").attr("r","70%")
+  .html(`<stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+    <stop offset="42%" stop-color="#ffffff" stop-opacity="0.32"/>
+    <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>`);
 
 /* ── Graph icons: official Cisco brand symbols (assets/cisco-symbols.js) + Overview deck marks. */
 if (window.CPN_CISCO_SYMBOLS) defs.node().insertAdjacentHTML("beforeend", window.CPN_CISCO_SYMBOLS);
@@ -5724,6 +5732,12 @@ function buildNodeGroup(sel){
     .attr("fill-opacity", d => d._hasImage ? 1 : 0.88)
     .attr("stroke", d => d._hasImage ? MATRIX_NODE_RING : "transparent")
     .attr("stroke-width", d => d._hasImage ? 1.4 : 2.5);
+  inner.append("circle").attr("class","gloss")
+    .attr("r", d => d._r * 0.97)
+    .attr("fill", "url(#node-gloss)")
+    .style("mix-blend-mode", "screen")
+    .style("pointer-events", "none")
+    .style("display", d => d._hasImage ? "none" : null);
   inner.append("circle").attr("class","mring")
     .attr("r", d => d._r + 1.4).attr("fill", "none")
     .attr("stroke", d => {
@@ -5787,6 +5801,7 @@ function syncNodeProductImages(){
     } else if (!pimg.empty()){
       pimg.remove();
     }
+    inner.select(".gloss").style("display", url ? "none" : null);
   });
 }
 
@@ -6231,7 +6246,7 @@ function applyPillarNodeVisualState(selectedNode){
     g.select(".gr")
       .attr("fill", accent)
       .attr("fill-opacity", hot ? 0.46 : (boosted ? 0.38 : 0.3))
-      .attr("filter", boosted || hot ? "url(#glow)" : null);
+      .attr("filter", "url(#glow)");
     g.select(".mc")
       .attr("fill-opacity", hot ? 1 : (boosted ? 1 : 0.9))
       .attr("stroke", hot ? "#ffffff" : accent)
