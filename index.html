@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.50";
+  window.__CPN_BUILD="3.5.51";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -4791,6 +4791,10 @@ function pillarLinkOpacity(l, k){
 }
 function applyPillarLinkStyles(k){
   if (!lviz || !usePillarLayout()) return;
+  if (solutionLensProblemId && viewMode === "families"){
+    applySolutionLensHighlight();
+    return;
+  }
   k = k ?? (svgEl ? d3.zoomTransform(svgEl).k : 1);
   lviz.attr("stroke-opacity", l => pillarLinkOpacity(l, k));
 }
@@ -9796,14 +9800,15 @@ function applyConnectionHighlight(d, depth = connectionHighlightDepth){
     applyPillarNodeVisualState(d);
     applyPillarLabelStyles(d);
     const conn = connectionNodeSet(d.id, depth);
-    if (lviz) lviz.attr("stroke-opacity", l => {
-      const s = sid(l), t = tid(l);
-      const lit = conn.has(s) && conn.has(t);
-      if (!lit) return pillarLinkOpacity(l) * 0.35;
-      return l.type === "direct" ? 0.62 : 0.38;
-    });
     if (solutionLensProblemId && viewMode === "families"){
       applySolutionLensHighlight({ connectionSet: conn });
+    } else if (lviz) {
+      lviz.attr("stroke-opacity", l => {
+        const s = sid(l), t = tid(l);
+        const lit = conn.has(s) && conn.has(t);
+        if (!lit) return pillarLinkOpacity(l) * 0.35;
+        return l.type === "direct" ? 0.62 : 0.38;
+      });
     }
     return;
   }
@@ -9887,6 +9892,9 @@ function setSolutionLens(problemId){
   if (!window.__cpnSolutions?.getOutcome(problemId)) return;
   solutionLensProblemId = problemId;
   window.solutionLensProblemId = problemId;
+  selected = null;
+  clearLinkSelection();
+  closePanel();
   updateSolutionLensBar();
 }
 
@@ -9898,6 +9906,45 @@ function clearSolutionLens(){
   highlightStack();
   const badge = document.getElementById("fbadge");
   if (badge && viewMode === "families") applyFilters();
+}
+
+function paintSolutionLensLinks(set, conn, hub){
+  if (!lviz || !set?.size) return;
+  const hubNode = hub && nodeById[hub];
+  const strokeAccent = hubNode ? catColor(hubNode.category) : "#02c8ff";
+  const pillar = usePillarLayout();
+  const zK = svgEl ? d3.zoomTransform(svgEl).k : 1;
+  lviz.each(function(l){
+    const s = sid(l), t = tid(l);
+    const isDA = l.type === "direct" || l.type === "adjacent";
+    const inSol = set.has(s) && set.has(t);
+    const inConn = conn && conn.has(s) && conn.has(t);
+    const el = d3.select(this);
+    if (inSol && isDA){
+      const direct = l.type === "direct";
+      el.attr("stroke", direct ? strokeAccent : (pillar ? "#b8c5d6" : "#64748b"))
+        .attr("stroke-opacity", direct ? 0.92 : 0.62)
+        .attr("stroke-width", direct ? (pillar ? 2.5 : 2.6) : (pillar ? 1.85 : 1.75))
+        .attr("stroke-dasharray", direct ? null : "6 4");
+      return;
+    }
+    if (inConn && isDA){
+      el.attr("stroke", strokeAccent)
+        .attr("stroke-opacity", l.type === "direct" ? 0.78 : 0.48)
+        .attr("stroke-width", l.type === "direct" ? 2.2 : 1.5)
+        .attr("stroke-dasharray", l.type === "direct" ? null : "5 4");
+      return;
+    }
+    el.attr("stroke-dasharray", null);
+    if (pillar){
+      el.attr("stroke-opacity", Math.min(0.07, pillarLinkOpacity(l, zK) * 0.2))
+        .attr("stroke-width", l.type === "direct" ? 1.1 : 0.85);
+    } else {
+      el.attr("stroke", l.type === "direct" ? "#4a5568" : "#2d3748")
+        .attr("stroke-opacity", 0.06)
+        .attr("stroke-width", l.type === "direct" ? 1.4 : 1);
+    }
+  });
 }
 
 function applySolutionLensHighlight(opts){
@@ -9933,20 +9980,7 @@ function applySolutionLensHighlight(opts){
       g.select(".node-scaler").attr("transform", (inSol && nd.id === hub) ? "scale(1.08)" : null);
     }
   });
-  if (lviz){
-    lviz.each(function(l){
-      const s = sid(l), t = tid(l);
-      const inSol = set.has(s) && set.has(t);
-      const inConn = conn && conn.has(s) && conn.has(t);
-      const el = d3.select(this);
-      if (inSol || inConn){
-        el.attr("stroke-opacity", inConn ? 0.78 : (l.type === "direct" ? 0.82 : 0.48))
-          .attr("stroke-width", inConn ? 2.2 : (l.type === "direct" ? 2 : 1.4));
-      } else {
-        el.attr("stroke-opacity", 0.05).attr("stroke-width", 1);
-      }
-    });
-  }
+  paintSolutionLensLinks(set, conn, hub);
   updateSolutionLensBar();
   updateSolutionLensBadge();
   return true;

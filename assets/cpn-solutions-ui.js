@@ -156,12 +156,13 @@
   }
 
   function activateGraphLens(problemId) {
-    if (typeof window.setSolutionLens === "function") window.setSolutionLens(problemId);
     closeOverlay();
+    if (typeof window.setSolutionLens === "function") window.setSolutionLens(problemId);
     if (typeof window.applyViewLevel === "function") {
       window.applyViewLevel("families");
     }
     setTimeout(() => {
+      if (typeof window.applyFilters === "function") window.applyFilters();
       if (typeof window.applySolutionLensHighlight === "function") window.applySolutionLensHighlight();
       if (typeof window.fitSolutionLensGraph === "function") window.fitSolutionLensGraph();
     }, 400);

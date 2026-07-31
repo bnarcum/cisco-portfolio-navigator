@@ -40,6 +40,26 @@ try {
     console.error("FAIL test-solutions", JSON.stringify(result, null, 2));
     process.exit(1);
   }
+
+  const lensLinks = await page.evaluate(async () => {
+    window.setSolutionLens("campus-manual-ops");
+    window.applyViewLevel("families");
+    await new Promise(r => setTimeout(r, 500));
+    window.applyFilters();
+    window.applySolutionLensHighlight();
+    let lit = 0;
+    document.querySelectorAll("line.lv").forEach(el => {
+      const op = parseFloat(el.getAttribute("stroke-opacity") || "0");
+      const w = parseFloat(el.getAttribute("stroke-width") || "0");
+      if (op >= 0.55 && w >= 1.5) lit++;
+    });
+    return { litAtLeast: lit };
+  });
+  if (lensLinks.litAtLeast < 1) {
+    console.error("FAIL test-solutions lens links", lensLinks);
+    process.exit(1);
+  }
+
   console.log(`OK test-solutions (${result.outcomeCount} outcomes from ${result.problems} problems)`);
 } finally {
   await browser.close();
