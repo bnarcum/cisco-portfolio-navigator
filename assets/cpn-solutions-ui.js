@@ -103,7 +103,7 @@
         <div class="oc-inner">
           <div class="oc-top">
             <div class="oc-glyph">${pillarGlyphSvg(pillarKey)}</div>
-            <div>
+            <div class="oc-top-copy">
               <div class="oc-pillar">${escapeHtml(o.pillarLabel)}</div>
               <div class="oc-outcome">${escapeHtml(o.outcome)}</div>
             </div>
