@@ -87,7 +87,6 @@
 #solution-lens-bar button{font:inherit;font-size:10px;font-weight:700;padding:6px 11px;border-radius:7px;
   cursor:pointer;border:1px solid var(--border);background:rgba(255,255,255,.06);color:var(--text)}
 #solution-lens-bar button.sl-primary{border:none;background:linear-gradient(90deg,#0a60ff,var(--accent));color:#001a24}
-#solutions-btn{border-color:rgba(2,200,255,.35)!important}
 [data-theme="light"] #solutions-ov{background:rgba(255,255,255,.88)}
 [data-theme="light"] .ba-before{color:#9d174d}
 [data-theme="light"] .ba-after{color:#0369a1}

@@ -126,6 +126,8 @@
 #guided-btn,
 #ai-btn,
 #design-studio-btn,
+#dcloud-btn,
+#solutions-btn,
 #theme-toggle,
 #rst {
   padding: var(--cpn-btn-py) var(--cpn-btn-px);
@@ -166,7 +168,8 @@
 #guided-btn,
 #ai-btn,
 #design-studio-btn,
-#dcloud-btn {
+#dcloud-btn,
+#solutions-btn {
   background: rgba(255, 255, 255, 0.02);
   color: var(--muted);
   border: 1px solid var(--border);
@@ -176,7 +179,8 @@
 #guided-btn:hover,
 #ai-btn:hover,
 #design-studio-btn:hover,
-#dcloud-btn:hover {
+#dcloud-btn:hover,
+#solutions-btn:hover {
   background: rgba(255, 255, 255, 0.05);
   border-color: var(--border-strong, var(--border));
   color: var(--text);
@@ -184,7 +188,8 @@
   filter: none;
 }
 #ai-btn.active,
-#dcloud-btn.active {
+#dcloud-btn.active,
+#solutions-btn.active {
   background: rgba(2, 200, 255, 0.1);
   color: var(--accent);
   border-color: rgba(2, 200, 255, 0.4);

@@ -88,7 +88,8 @@
 :root:not([data-theme="light"]) #design-studio-btn,
 :root:not([data-theme="light"]) #guided-btn,
 :root:not([data-theme="light"]) #ai-btn,
-:root:not([data-theme="light"]) #dcloud-btn {
+:root:not([data-theme="light"]) #dcloud-btn,
+:root:not([data-theme="light"]) #solutions-btn {
   background: rgba(255, 255, 255, 0.02) !important;
   color: var(--muted) !important;
   border: 1px solid var(--border) !important;
@@ -98,7 +99,8 @@
 :root:not([data-theme="light"]) #design-studio-btn:hover,
 :root:not([data-theme="light"]) #guided-btn:hover,
 :root:not([data-theme="light"]) #ai-btn:hover,
-:root:not([data-theme="light"]) #dcloud-btn:hover {
+:root:not([data-theme="light"]) #dcloud-btn:hover,
+:root:not([data-theme="light"]) #solutions-btn:hover {
   background: rgba(255, 255, 255, 0.05) !important;
   border-color: var(--border-strong) !important;
   color: var(--text) !important;
