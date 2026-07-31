@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Outcome-first solution composition — mockup</title>
+<style>
+  @font-face{font-family:"CiscoSansTT";src:local("Helvetica Neue"),local("Arial");font-weight:400 800}
+  :root{
+    --bg:#07182d;--surface:#0a2240;--surface2:#0d2847;--surface3:#102f54;
+    --border:rgba(214,214,214,.14);--text:#ffffff;--muted:#b4b9c0;--subtle:#7f8a97;
+    --accent:#02c8ff;--net:#02c8ff;--sec:#ff007f;--col:#34d399;--com:#0a60ff;--obs:#ff9000;
+    --green:#2dce5c;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;font-family:"CiscoSansTT",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:radial-gradient(ellipse 70% 50% at 20% 8%, rgba(2,200,255,.05), transparent 60%), var(--bg);
+    color:var(--text);padding:0 0 88px;
+  }
+  .page-hdr{max-width:1200px;margin:20px auto 0;padding:0 28px}
+  .page-hdr h1{font-size:21px;margin:0 0 6px}
+  .page-hdr p{color:var(--muted);font-size:12.5px;line-height:1.55;margin:0;max-width:780px}
+  .topnav{position:sticky;top:0;z-index:60;display:flex;flex-wrap:wrap;gap:4px;padding:10px 28px;
+    background:rgba(7,24,45,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+  .topnav a,.topnav button{
+    color:var(--muted);text-decoration:none;font-size:12px;font-weight:700;padding:8px 14px;border-radius:7px;
+    border:none;background:transparent;font:inherit;cursor:pointer}
+  .topnav a:hover,.topnav button:hover{background:rgba(255,255,255,.06);color:var(--text)}
+  .topnav button.on{background:rgba(2,200,255,.14);color:#fff;border:1px solid rgba(2,200,255,.35)}
+
+  .chrome{max-width:1200px;margin:20px auto 0;border:1px solid var(--border);border-radius:14px;
+    overflow:hidden;background:var(--surface);box-shadow:0 28px 70px rgba(0,0,0,.4)}
+  .mini-topbar{height:46px;display:flex;align-items:center;gap:8px;padding:0 14px;
+    background:rgba(7,24,45,.98);border-bottom:1px solid var(--border);font-size:11px;flex-wrap:wrap}
+  .mini-logo{font-weight:800;color:var(--accent)}
+  .mini-spacer{flex:1}
+  .mini-btn{padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:rgba(255,255,255,.03);
+    color:var(--muted);font-size:10px;font-weight:700}
+  .mini-btn.on{background:rgba(2,200,255,.14);border-color:rgba(2,200,255,.4);color:#fff}
+  .mini-btn.primary{background:linear-gradient(90deg,#0a60ff,var(--accent));color:#001a24;border:none}
+  .vm-seg{display:inline-flex;gap:2px;padding:3px;border-radius:999px;background:rgba(5,14,28,.95);
+    border:1px solid rgba(255,255,255,.08)}
+  .vm-seg span{font-size:10px;font-weight:600;padding:4px 10px;border-radius:999px;color:var(--muted)}
+  .vm-seg span.on{background:linear-gradient(90deg,#0a60ff,var(--accent));color:#000}
+
+  .view{display:none;min-height:520px}
+  .view.on{display:block}
+
+  /* ── View 1: Outcome catalog ── */
+  .catalog{padding:20px 22px 24px}
+  .catalog-h{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:18px}
+  .catalog-h h2{font-size:16px;margin:0;flex:1;min-width:200px}
+  .catalog-search{flex:1;min-width:220px;max-width:340px;padding:9px 12px;border-radius:9px;
+    border:1px solid var(--border);background:var(--surface3);color:var(--text);font:inherit;font-size:12px}
+  .filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+  .fchip{font:inherit;font-size:10px;font-weight:700;padding:5px 11px;border-radius:999px;
+    border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer}
+  .fchip.on{background:rgba(2,200,255,.12);border-color:rgba(2,200,255,.4);color:#fff}
+  .outcome-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+  .oc-card{text-align:left;border:1px solid var(--border);border-radius:12px;padding:14px 15px;
+    background:linear-gradient(165deg, var(--surface2), var(--surface));cursor:pointer;transition:border-color .15s,transform .12s;
+    font:inherit;color:inherit;width:100%}
+  .oc-card:hover{border-color:rgba(2,200,255,.45);transform:translateY(-1px)}
+  .oc-card.selected{border-color:var(--accent);box-shadow:0 0 0 1px rgba(2,200,255,.2)}
+  .oc-pillar{font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+  .oc-outcome{font-size:13.5px;font-weight:800;line-height:1.3;margin-bottom:6px}
+  .oc-symptom{font-size:11px;color:var(--muted);line-height:1.45;font-style:italic;margin-bottom:10px}
+  .oc-meta{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:10px;color:var(--subtle)}
+  .oc-stack-preview{display:flex;gap:3px}
+  .oc-dot{width:8px;height:8px;border-radius:50%;background:var(--net)}
+  .oc-dot.c2{background:var(--col)}.oc-dot.c3{background:var(--sec)}.oc-dot.c4{background:var(--obs)}
+
+  /* ── View 2: Solution composition ── */
+  .compose{display:grid;grid-template-columns:1fr 340px;min-height:540px}
+  .compose-main{padding:18px 20px 22px;border-right:1px solid var(--border)}
+  .compose-side{padding:16px;background:var(--surface2)}
+  .back-link{font:inherit;background:none;border:none;color:var(--accent);font-size:11px;font-weight:700;
+    cursor:pointer;padding:0;margin-bottom:12px}
+  .compose-quote{font-size:13px;color:var(--muted);line-height:1.5;margin:0 0 8px}
+  .compose-quote em{color:rgba(255,255,255,.92);font-style:normal;font-weight:600}
+  .compose-headline{font-size:17px;font-weight:800;line-height:1.25;margin:0 0 14px;letter-spacing:-.02em}
+  .before-after{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;margin-bottom:18px;font-size:10.5px;line-height:1.4}
+  .ba-box{padding:10px;border-radius:8px}
+  .ba-before{background:rgba(255,0,127,.08);color:#ffb3d9}
+  .ba-after{background:rgba(2,200,255,.08);color:#7ee8ff}
+  .ba-lbl{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;opacity:.75;margin-bottom:4px}
+  .ba-arrow{color:var(--subtle);align-self:center;font-size:14px}
+
+  .layer-stack{display:flex;flex-direction:column;gap:10px}
+  .layer{border:1px solid var(--border);border-radius:11px;overflow:hidden;background:rgba(0,0,0,.12)}
+  .layer-h{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:10px;font-weight:800;
+    text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid rgba(255,255,255,.06)}
+  .layer-h .bar{width:3px;height:14px;border-radius:2px}
+  .layer-h.connect .bar{background:var(--net)}
+  .layer-h.secure .bar{background:var(--sec)}
+  .layer-h.collab .bar{background:var(--col)}
+  .layer-h.observe .bar{background:var(--obs)}
+  .layer-h.automate .bar{background:var(--com)}
+  .layer-rows{padding:6px 8px 8px}
+  .stack-row{display:flex;align-items:flex-start;gap:10px;padding:8px 6px;border-radius:8px;cursor:pointer}
+  .stack-row:hover{background:rgba(255,255,255,.04)}
+  .stack-row + .stack-row{border-top:1px solid rgba(255,255,255,.05)}
+  .stack-role{flex:1;min-width:0}
+  .stack-role .t{font-size:11.5px;font-weight:700}
+  .stack-role .s{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.35}
+  .stack-fam{font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap;
+    background:rgba(255,255,255,.06);border:1px solid var(--border)}
+  .stack-fam.core{border-color:rgba(2,200,255,.4);background:rgba(2,200,255,.1);color:#7fe3ff}
+  .stack-fam.opt{opacity:.85}
+  .tag-core{font-size:8px;font-weight:800;color:var(--accent);margin-left:4px}
+
+  .side-block{margin-bottom:14px;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--surface3)}
+  .side-block .lbl{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--subtle);margin-bottom:6px}
+  .bundle-pill{display:inline-block;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;
+    background:rgba(45,206,92,.12);border:1px solid rgba(45,206,92,.35);color:#7dffb0}
+  .side-actions{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+  .act-btn{padding:10px;border-radius:9px;border:none;font:inherit;font-size:11px;font-weight:800;cursor:pointer}
+  .act-btn.primary{background:linear-gradient(90deg,#0a60ff,var(--accent));color:#001a24}
+  .act-btn.ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}
+
+  /* ── View 3: Graph lens ── */
+  .lens-wrap{display:grid;grid-template-columns:280px 1fr;min-height:540px}
+  .lens-rail{padding:14px;border-right:1px solid var(--border);background:var(--surface2)}
+  .lens-rail h3{font-size:13px;margin:0 0 8px}
+  .lens-rail p{font-size:11px;color:var(--muted);line-height:1.45;margin:0 0 12px}
+  .lens-list{list-style:none;margin:0;padding:0;font-size:11px}
+  .lens-list li{padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06);display:flex;gap:8px;align-items:center}
+  .lens-list li span.dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0}
+  .lens-list li.dim{opacity:.45}
+  .lens-canvas{position:relative;padding:20px;background:
+    radial-gradient(circle at 35% 40%, rgba(2,200,255,.07), transparent 55%),
+    linear-gradient(180deg, var(--surface), #061528);min-height:540px}
+  .lens-badge{position:absolute;top:14px;left:50%;transform:translateX(-50%);padding:6px 14px;border-radius:999px;
+    font-size:10px;font-weight:700;background:rgba(2,200,255,.12);border:1px solid rgba(2,200,255,.35);color:#7eeaff;
+    white-space:nowrap;max-width:90%;overflow:hidden;text-overflow:ellipsis}
+  .lens-graph{position:relative;height:420px;margin-top:36px}
+  .g-node{position:absolute;width:54px;height:54px;border-radius:50%;display:flex;align-items:center;
+    justify-content:center;font-size:7.5px;font-weight:800;text-align:center;line-height:1.05;padding:4px;
+    border:2px solid var(--border);background:var(--surface2);color:var(--muted);transition:opacity .2s,transform .2s}
+  .g-node.in{ border-color:var(--accent);color:#fff;
+    box-shadow:0 0 0 3px rgba(2,200,255,.12),0 0 18px rgba(2,200,255,.22);
+    background:radial-gradient(circle at 32% 28%, rgba(255,255,255,.22), transparent 70%), var(--surface3)}
+  .g-node.hub{transform:scale(1.1);border-color:#fff}
+  .g-node.out{opacity:.22;pointer-events:none}
+  .g-link{position:absolute;height:2px;background:rgba(2,200,255,.35);transform-origin:left center;pointer-events:none}
+  .g-link.out{opacity:.08;background:rgba(255,255,255,.15)}
+  .float-card{position:absolute;right:16px;bottom:16px;width:240px;padding:12px 14px;border-radius:11px;
+    background:var(--surface2);border:1px solid var(--border);font-size:10.5px;box-shadow:0 12px 40px rgba(0,0,0,.4)}
+  .float-card .t{font-weight:800;font-size:11px;margin-bottom:4px}
+  .float-card .s{color:var(--muted);line-height:1.4;margin-bottom:10px}
+
+  .note{max-width:1200px;margin:14px auto 0;padding:0 28px;font-size:11px;color:var(--subtle);line-height:1.5}
+  @media (max-width:880px){
+    .compose,.lens-wrap{grid-template-columns:1fr}
+    .compose-main{border-right:none;border-bottom:1px solid var(--border)}
+    .lens-rail{border-right:none;border-bottom:1px solid var(--border)}
+  }
+</style>
+</head>
+<body>
+
+<div class="page-hdr">
+  <h1>Outcome-first → solution composition</h1>
+  <p>Start from a <b>business outcome</b> (from <code>cpn-problems.js</code>), see the multi-family <b>solution stack</b> by layer, then jump to a <b>graph lens</b> that highlights the same building blocks. Static mockup with light interactivity.</p>
+</div>
+
+<nav class="topnav" aria-label="Mockup views">
+  <button type="button" class="on" data-view="catalog">1 · Outcome catalog</button>
+  <button type="button" data-view="compose">2 · Solution stack</button>
+  <button type="button" data-view="lens">3 · Graph lens</button>
+</nav>
+
+<div class="chrome">
+  <div class="mini-topbar">
+    <span class="mini-logo">CPN</span>
+    <div class="vm-seg" aria-hidden="true">
+      <span>Overview</span><span>Composition</span><span class="on">Solutions</span><span>Families</span>
+    </div>
+    <span class="mini-spacer"></span>
+    <span class="mini-btn on">By outcome</span>
+    <span class="mini-btn">By package</span>
+    <span class="mini-btn">Account Planner</span>
+    <span class="mini-btn primary" id="cta-primary">Add solution to plan</span>
+  </div>
+
+  <!-- VIEW 1: Catalog -->
+  <div class="view on" id="view-catalog">
+    <div class="catalog">
+      <div class="catalog-h">
+        <h2>What outcome are you driving?</h2>
+        <input type="search" class="catalog-search" placeholder="Search outcomes, symptoms, use cases…" aria-label="Search outcomes">
+      </div>
+      <div class="filter-row" role="tablist">
+        <button type="button" class="fchip on" data-filter="all">All</button>
+        <button type="button" class="fchip" data-filter="connectivity">Connectivity</button>
+        <button type="button" class="fchip" data-filter="workplaces">Workplaces</button>
+        <button type="button" class="fchip" data-filter="security">Security</button>
+        <button type="button" class="fchip" data-filter="observability">Observability</button>
+      </div>
+      <div class="outcome-grid" id="outcome-grid"></div>
+    </div>
+  </div>
+
+  <!-- VIEW 2: Composition -->
+  <div class="view" id="view-compose">
+    <div class="compose">
+      <div class="compose-main">
+        <button type="button" class="back-link" data-goto="catalog">← All outcomes</button>
+        <p class="compose-quote" id="compose-symptom"></p>
+        <h2 class="compose-headline" id="compose-outcome"></h2>
+        <div class="before-after" id="compose-proof"></div>
+        <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--subtle);margin:0 0 10px">Solution composition — families that work together</p>
+        <div class="layer-stack" id="layer-stack"></div>
+      </div>
+      <aside class="compose-side">
+        <div class="side-block">
+          <div class="lbl">Related package</div>
+          <span class="bundle-pill" id="compose-bundle">—</span>
+        </div>
+        <div class="side-block">
+          <div class="lbl">Use cases</div>
+          <p id="compose-ucs" style="margin:0;font-size:11px;color:var(--muted);line-height:1.5"></p>
+        </div>
+        <div class="side-block">
+          <div class="lbl">Persona framing</div>
+          <p id="compose-persona" style="margin:0;font-size:11px;color:var(--muted);line-height:1.5"></p>
+        </div>
+        <div class="side-actions">
+          <button type="button" class="act-btn primary">Add full solution to plan</button>
+          <button type="button" class="act-btn ghost" data-goto="lens">Show on graph →</button>
+          <button type="button" class="act-btn ghost">Start learning path (Bet 1)</button>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- VIEW 3: Graph lens -->
+  <div class="view" id="view-lens">
+    <div class="lens-wrap">
+      <aside class="lens-rail">
+        <h3 id="lens-title">Solution lens</h3>
+        <p id="lens-desc">Only families in this outcome stay bright; the rest of the portfolio dims. Links between highlighted nodes emphasize how the solution connects.</p>
+        <ul class="lens-list" id="lens-families"></ul>
+        <button type="button" class="act-btn ghost" style="width:100%;margin-top:8px" data-goto="compose">← Solution detail</button>
+      </aside>
+      <div class="lens-canvas">
+        <div class="lens-badge" id="lens-badge">Outcome lens active</div>
+        <div class="lens-graph" id="lens-graph" aria-hidden="true"></div>
+        <div class="float-card">
+          <div class="t">Not a single product</div>
+          <div class="s" id="lens-float-text">This outcome spans multiple families. The side panel still shows product detail when you click one node.</div>
+          <button type="button" class="act-btn primary" style="width:100%">Add highlighted families to plan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="note">Data in this mock mirrors curated entries in <code>assets/cpn-problems.js</code> and package names from <code>BUNDLES</code>. Implementation could add a “Solutions” view mode or top-level entry without replacing Families/Composition.</p>
+
+<script>
+(function(){
+  const OUTCOMES = [
+    {
+      id: "branch-app-experience",
+      pillar: "connectivity",
+      filter: "connectivity",
+      symptom: "Branch and remote users blame the network when SaaS, voice, and Webex feel slow.",
+      outcome: "Consistent application experience from every site and home office.",
+      proof: { before: "Hours of finger-pointing with no shared evidence", after: "Minutes to pinpoint the failing hop" },
+      bundle: "Cloud Branch (SASE)",
+      useCases: "SD-WAN / SASE · Hybrid Work · Cloud Migration",
+      persona: "NetOps: steer around brownouts with per-hop evidence. CIO: better app experience without buying more bandwidth first.",
+      families: ["sdwan", "meraki-mx", "thousandeyes", "secure-access", "isr-routers"],
+      hub: "sdwan",
+      layers: [
+        { key: "connect", label: "Connect & steer", rows: [
+          { role: "Application-aware WAN / SD-WAN", fam: "Catalyst SD-WAN", id: "sdwan", core: true },
+          { role: "Branch edge / simplified ops", fam: "Meraki MX", id: "meraki-mx", core: false }
+        ]},
+        { key: "secure", label: "Secure access", rows: [
+          { role: "Cloud-delivered SSE / ZTNA", fam: "Secure Access", id: "secure-access", core: true }
+        ]},
+        { key: "observe", label: "Observe & prove", rows: [
+          { role: "End-to-end path visibility", fam: "ThousandEyes", id: "thousandeyes", core: true }
+        ]}
+      ]
+    },
+    {
+      id: "hybrid-meeting-equity",
+      pillar: "workplaces",
+      filter: "workplaces",
+      symptom: "Remote and in-room participants don't get the same meeting experience.",
+      outcome: "Equitable hybrid meetings — everyone seen, heard, and able to contribute.",
+      proof: { before: "Room-first meetings leave remote staff as second-class", after: "Purpose-built devices and software for every space" },
+      bundle: "Hybrid Work Suite",
+      useCases: "Hybrid Work · Collaboration",
+      persona: "Facilities + IT: standardize room types with certified devices and one admin model.",
+      families: ["room-systems", "webex-meetings", "webex-app", "desk-devices", "cisco-headsets"],
+      hub: "room-systems",
+      layers: [
+        { key: "collab", label: "Collaborate", rows: [
+          { role: "Meetings platform & messaging", fam: "Webex Suite", id: "webex-meetings", core: true },
+          { role: "Room and desk endpoints", fam: "Room Systems", id: "room-systems", core: true },
+          { role: "Personal collaboration", fam: "Desk devices", id: "desk-devices", core: false }
+        ]},
+        { key: "connect", label: "Connect (when needed)", rows: [
+          { role: "Headsets & accessories", fam: "Cisco Headsets", id: "cisco-headsets", core: false }
+        ]}
+      ]
+    },
+    {
+      id: "collab-experience-assurance",
+      pillar: "workplaces",
+      filter: "observability",
+      symptom: "Executives only notice collaboration problems when the boardroom fails during a live meeting.",
+      outcome: "Proactive assurance for meeting quality across sites and WAN paths.",
+      proof: { before: "Reactive war rooms after executive escalations", after: "Correlate codec, network, and path health before users notice" },
+      bundle: "Hybrid Work Suite",
+      useCases: "Hybrid Work · Digital Experience Monitoring",
+      persona: "Ops: tie Room Systems telemetry to ThousandEyes and Cloud Control investigations.",
+      families: ["room-systems", "thousandeyes", "webex-meetings", "cloud-control"],
+      hub: "cloud-control",
+      layers: [
+        { key: "collab", label: "Collaborate", rows: [
+          { role: "Room endpoints", fam: "Room Systems", id: "room-systems", core: true },
+          { role: "Meetings cloud", fam: "Webex Meetings", id: "webex-meetings", core: false }
+        ]},
+        { key: "observe", label: "Observe & automate", rows: [
+          { role: "Digital experience monitoring", fam: "ThousandEyes", id: "thousandeyes", core: true },
+          { role: "AgenticOps / AI Canvas", fam: "Cloud Control", id: "cloud-control", core: true }
+        ]}
+      ]
+    },
+    {
+      id: "zero-trust-foundation",
+      pillar: "security",
+      filter: "security",
+      symptom: "Users and devices reach apps without consistent identity, posture, or policy.",
+      outcome: "Zero Trust access — verify identity and context before granting connectivity.",
+      proof: { before: "VPN-centric trust and siloed policy", after: "Identity + NAC + SSE enforced consistently" },
+      bundle: "Zero Trust Foundation",
+      useCases: "Zero Trust · Secure Access",
+      persona: "CISO: unify identity, device posture, and network enforcement.",
+      families: ["duo", "ise", "sf-branch", "secure-access"],
+      hub: "ise",
+      layers: [
+        { key: "secure", label: "Secure", rows: [
+          { role: "Strong authentication", fam: "Duo", id: "duo", core: true },
+          { role: "Policy / NAC", fam: "ISE", id: "ise", core: true },
+          { role: "Cloud security edge", fam: "Secure Firewall", id: "sf-branch", core: true },
+          { role: "SSE / ZTNA", fam: "Secure Access", id: "secure-access", core: true }
+        ]}
+      ]
+    }
+  ];
+
+  let activeId = OUTCOMES[0].id;
+
+  const grid = document.getElementById("outcome-grid");
+  OUTCOMES.forEach(o => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "oc-card";
+    btn.dataset.id = o.id;
+    btn.dataset.filter = o.filter;
+    btn.innerHTML = `
+      <div class="oc-pillar">${o.pillar.replace(/^\w/, c => c.toUpperCase())}</div>
+      <div class="oc-outcome">${o.outcome}</div>
+      <div class="oc-symptom">"${o.symptom}"</div>
+      <div class="oc-meta">
+        <span>${o.families.length} families · ${o.bundle}</span>
+        <span class="oc-stack-preview" aria-hidden="true">
+          <span class="oc-dot"></span><span class="oc-dot c2"></span><span class="oc-dot c3"></span><span class="oc-dot c4"></span>
+        </span>
+      </div>`;
+    btn.addEventListener("click", () => { activeId = o.id; renderCompose(); showView("compose"); });
+    grid.appendChild(btn);
+  });
+
+  document.querySelectorAll(".fchip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      document.querySelectorAll(".fchip").forEach(c => c.classList.remove("on"));
+      chip.classList.add("on");
+      const f = chip.dataset.filter;
+      grid.querySelectorAll(".oc-card").forEach(card => {
+        card.style.display = (f === "all" || card.dataset.filter === f) ? "" : "none";
+      });
+    });
+  });
+
+  function showView(name){
+    document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "view-" + name));
+    document.querySelectorAll(".topnav button").forEach(b => b.classList.toggle("on", b.dataset.view === name));
+    if (name === "lens") renderLens();
+  }
+
+  document.querySelectorAll(".topnav button").forEach(b => {
+    b.addEventListener("click", () => showView(b.dataset.view));
+  });
+  document.querySelectorAll("[data-goto]").forEach(el => {
+    el.addEventListener("click", () => showView(el.dataset.goto));
+  });
+
+  function getActive(){ return OUTCOMES.find(o => o.id === activeId) || OUTCOMES[0]; }
+
+  function renderCompose(){
+    const o = getActive();
+    document.getElementById("compose-symptom").innerHTML = `Customer symptom: <em>"${o.symptom}"</em>`;
+    document.getElementById("compose-outcome").textContent = o.outcome;
+    document.getElementById("compose-proof").innerHTML = `
+      <div class="ba-box ba-before"><div class="ba-lbl">Before</div>${o.proof.before}</div>
+      <div class="ba-arrow">→</div>
+      <div class="ba-box ba-after"><div class="ba-lbl">After</div>${o.proof.after}</div>`;
+    document.getElementById("compose-bundle").textContent = o.bundle;
+    document.getElementById("compose-ucs").textContent = o.useCases;
+    document.getElementById("compose-persona").textContent = o.persona;
+    const stack = document.getElementById("layer-stack");
+    stack.innerHTML = o.layers.map(layer => `
+      <div class="layer">
+        <div class="layer-h ${layer.key}"><span class="bar"></span>${layer.label}</div>
+        <div class="layer-rows">${layer.rows.map(r => `
+          <div class="stack-row" title="Jump to family in graph">
+            <div class="stack-role">
+              <div class="t">${r.role}${r.core ? '<span class="tag-core">CORE</span>' : ''}</div>
+              <div class="s">Portfolio family · click to open panel</div>
+            </div>
+            <span class="stack-fam ${r.core ? "core" : "opt"}">${r.fam}</span>
+          </div>`).join("")}</div>
+      </div>`).join("");
+  }
+
+  const GRAPH_NODES = [
+    { id: "sdwan", label: "SD-WAN", x: 18, y: 28 },
+    { id: "meraki-mx", label: "Meraki MX", x: 12, y: 48 },
+    { id: "thousandeyes", label: "ThousandEyes", x: 42, y: 18 },
+    { id: "secure-access", label: "Secure Access", x: 28, y: 42 },
+    { id: "ise", label: "ISE", x: 62, y: 32 },
+    { id: "duo", label: "Duo", x: 72, y: 18 },
+    { id: "sf-branch", label: "Secure FW", x: 78, y: 44 },
+    { id: "room-systems", label: "Room Sys", x: 38, y: 58 },
+    { id: "webex-meetings", label: "Webex", x: 52, y: 68 },
+    { id: "cloud-control", label: "Cloud Ctrl", x: 58, y: 48 },
+    { id: "catalyst-center", label: "Cat Center", x: 82, y: 62 },
+    { id: "nexus", label: "Nexus", x: 88, y: 28 }
+  ];
+
+  const LINKS = [
+    ["sdwan", "thousandeyes"], ["sdwan", "secure-access"], ["room-systems", "thousandeyes"],
+    ["room-systems", "cloud-control"], ["cloud-control", "thousandeyes"], ["duo", "ise"],
+    ["ise", "sf-branch"], ["webex-meetings", "room-systems"]
+  ];
+
+  function renderLens(){
+    const o = getActive();
+    document.getElementById("lens-title").textContent = o.outcome;
+    document.getElementById("lens-badge").textContent = "Lens: " + o.outcome.slice(0, 48) + (o.outcome.length > 48 ? "…" : "");
+    document.getElementById("lens-float-text").textContent =
+      `${o.families.length} families solve this together — not one SKU. Planner can add the full set or show gaps vs "${o.bundle}".`;
+    const set = new Set(o.families);
+    const list = document.getElementById("lens-families");
+    list.innerHTML = o.families.map(fid => {
+      const n = GRAPH_NODES.find(g => g.id === fid);
+      return `<li><span class="dot"></span>${n ? n.label : fid}${fid === o.hub ? " (anchor)" : ""}</li>`;
+    }).join("") +
+      `<li class="dim"><span class="dot" style="background:var(--subtle)"></span>+ rest of portfolio dimmed</li>`;
+
+    const host = document.getElementById("lens-graph");
+    host.innerHTML = "";
+    const rect = { w: 100, h: 100 };
+    LINKS.forEach(([a, b]) => {
+      const na = GRAPH_NODES.find(n => n.id === a);
+      const nb = GRAPH_NODES.find(n => n.id === b);
+      if (!na || !nb) return;
+      const inLink = set.has(a) && set.has(b);
+      const el = document.createElement("div");
+      el.className = "g-link" + (inLink ? "" : " out");
+      const x1 = na.x, y1 = na.y + 4, x2 = nb.x, y2 = nb.y + 4;
+      const len = Math.hypot(x2 - x1, y2 - y1);
+      const ang = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+      el.style.cssText = `left:${x1}%;top:${y1}%;width:${len}%;transform:rotate(${ang}deg)`;
+      host.appendChild(el);
+    });
+    GRAPH_NODES.forEach(n => {
+      const el = document.createElement("div");
+      const inSol = set.has(n.id);
+      el.className = "g-node" + (inSol ? " in" : " out") + (n.id === o.hub ? " hub" : "");
+      el.style.left = n.x + "%";
+      el.style.top = n.y + "%";
+      el.textContent = n.label;
+      host.appendChild(el);
+    });
+  }
+
+  renderCompose();
+})();
+</script>
+</body>
+</html>
