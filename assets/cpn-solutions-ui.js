@@ -17,6 +17,40 @@
 
   function ov() { return document.getElementById("solutions-ov"); }
 
+  const PILLAR_ICONS = {
+    connectivity: '<path d="M3 8h10M6 4v8M10 4v8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/>',
+    workplaces: '<path d="M4 11V6l4-3 4 3v5" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linejoin="round"/><rect x="6" y="9" width="4" height="3" rx=".5" fill="currentColor" opacity=".5"/>',
+    "ai-dc": '<rect x="3" y="4" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M6 7h4M6 9.5h2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>',
+    resilience: '<path d="M8 2.5v3M8 10.5v3M2.5 8h3M10.5 8h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.3" fill="none"/>',
+    other: '<path d="M8 2.5 2.5 5.75 8 9l5.5-3.25L8 2.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" fill="none"/>'
+  };
+
+  const CAT_DOT = {
+    networking: "oc-dot-net",
+    security: "oc-dot-sec",
+    collaboration: "oc-dot-col",
+    observability: "oc-dot-obs",
+    computing: "oc-dot-com"
+  };
+
+  function pillarGlyphSvg(pillarKey) {
+    const paths = PILLAR_ICONS[pillarKey] || PILLAR_ICONS.other;
+    return `<svg viewBox="0 0 16 16" fill="none" aria-hidden="true">${paths}</svg>`;
+  }
+
+  function orbitDotsHtml(familyIds) {
+    const max = 8;
+    const dots = [];
+    (familyIds || []).forEach(fid => {
+      const node = window.nodeById && window.nodeById[fid];
+      const cls = CAT_DOT[(node && node.category) || "networking"] || "oc-dot-net";
+      dots.push(`<span class="${cls}" title="${escapeHtml(node?.name || fid)}"></span>`);
+    });
+    if (dots.length <= max) return `<span class="oc-orbit" aria-hidden="true">${dots.join("")}</span>`;
+    const rest = dots.length - (max - 1);
+    return `<span class="oc-orbit" aria-hidden="true">${dots.slice(0, max - 1).join("")}<span class="oc-dot-more">+${rest}</span></span>`;
+  }
+
   function openOverlay() {
     const el = ov();
     if (!el) return;
@@ -60,15 +94,28 @@
       const hay = [o.outcome, o.symptom, o.bundlePrimary, ...(o.useCases || [])].join(" ").toLowerCase();
       return hay.includes(q);
     });
-    grid.innerHTML = items.map(o => `
-      <button type="button" class="oc-card" data-problem-id="${escapeHtml(o.id)}">
-        <div class="oc-pillar">${escapeHtml(o.pillarLabel)}</div>
-        <div class="oc-outcome">${escapeHtml(o.outcome)}</div>
-        <div class="oc-symptom">"${escapeHtml(o.symptom)}"</div>
-        <div class="oc-meta">
-          <span>${o.familyCount} families${o.bundlePrimary ? " · " + escapeHtml(o.bundlePrimary) : ""}</span>
+    grid.innerHTML = items.map(o => {
+      const pillarKey = o.pillar && PILLAR_ICONS[o.pillar] ? o.pillar : "other";
+      const meta = `${o.familyCount} families${o.bundlePrimary ? " · " + escapeHtml(o.bundlePrimary) : ""}`;
+      return `
+      <button type="button" class="oc-card" data-problem-id="${escapeHtml(o.id)}" data-pillar="${escapeHtml(pillarKey)}">
+        <div class="oc-ribbon"></div>
+        <div class="oc-inner">
+          <div class="oc-top">
+            <div class="oc-glyph">${pillarGlyphSvg(pillarKey)}</div>
+            <div>
+              <div class="oc-pillar">${escapeHtml(o.pillarLabel)}</div>
+              <div class="oc-outcome">${escapeHtml(o.outcome)}</div>
+            </div>
+          </div>
+          <div class="oc-symptom">"${escapeHtml(o.symptom)}"</div>
+          <div class="oc-foot">
+            <span class="oc-meta">${meta}</span>
+            ${orbitDotsHtml(o.familyIds)}
+          </div>
         </div>
-      </button>`).join("");
+      </button>`;
+    }).join("");
     grid.querySelectorAll("[data-problem-id]").forEach(btn => {
       btn.addEventListener("click", () => showDetail(btn.getAttribute("data-problem-id")));
     });

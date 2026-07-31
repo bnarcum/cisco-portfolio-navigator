@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solutions outcome cards — visual options</title>
+<style>
+  @font-face{font-family:"CiscoSansTT";src:local("Helvetica Neue"),local("Arial");font-weight:400 800}
+  :root{
+    --bg:#07182d;--surface:#0a2240;--surface2:#0d2847;--surface3:#102f54;
+    --border:rgba(214,214,214,.14);--text:#fff;--muted:#b4b9c0;--subtle:#7f8a97;
+    --accent:#02c8ff;--net:#02c8ff;--sec:#ff007f;--col:#34d399;--com:#0a60ff;--obs:#ff9000;
+    --wp:#2dce5c;--res:#ff9000;--aidc:#5b8cff;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;font-family:"CiscoSansTT",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:radial-gradient(ellipse 80% 40% at 50% 0%, rgba(2,200,255,.06), transparent 55%), var(--bg);
+    color:var(--text);padding:0 0 48px;
+  }
+  .hdr{max-width:1100px;margin:0 auto;padding:28px 24px 8px}
+  .hdr h1{font-size:20px;margin:0 0 8px;letter-spacing:-.02em}
+  .hdr p{color:var(--muted);font-size:12.5px;line-height:1.55;margin:0;max-width:72ch}
+  .pick{
+    position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+    padding:12px 24px;background:rgba(7,24,45,.92);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border);margin-bottom:8px;
+  }
+  .pick span{font-size:11px;font-weight:700;color:var(--subtle);margin-right:4px}
+  .pick button{
+    font:inherit;font-size:11px;font-weight:700;padding:7px 14px;border-radius:999px;cursor:pointer;
+    border:1px solid var(--border);background:transparent;color:var(--muted);
+  }
+  .pick button.on{background:rgba(2,200,255,.14);border-color:rgba(2,200,255,.45);color:#fff}
+  .panel{display:none;max-width:1100px;margin:0 auto;padding:16px 24px 32px}
+  .panel.on{display:block}
+  .panel-note{
+    font-size:11px;color:var(--muted);line-height:1.5;margin:0 0 16px;padding:10px 12px;
+    border-radius:9px;border:1px dashed rgba(255,255,255,.12);background:rgba(0,0,0,.15);
+  }
+  .panel-note strong{color:var(--text);font-weight:700}
+
+  /* Shared faux modal chrome */
+  .modal{
+    border:1px solid var(--border);border-radius:14px;background:var(--surface2);
+    box-shadow:0 32px 80px rgba(0,0,0,.5);overflow:hidden;
+  }
+  .modal-head{padding:14px 18px 10px;border-bottom:1px solid var(--border)}
+  .modal-head h2{font-size:1.05rem;margin:0;font-weight:800}
+  .modal-head p{font-size:12px;color:var(--muted);margin:6px 0 0;max-width:58ch;line-height:1.45}
+  .modal-body{padding:14px 18px 18px}
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .search{
+    flex:1;min-width:160px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);
+    background:var(--surface3);color:var(--muted);font:inherit;font-size:12px;
+  }
+  .fchip{font:inherit;font-size:10px;font-weight:700;padding:5px 11px;border-radius:999px;
+    border:1px solid var(--border);color:var(--muted)}
+  .fchip.on{background:rgba(2,200,255,.12);border-color:rgba(2,200,255,.4);color:#fff}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media (max-width:900px){.grid{grid-template-columns:1fr 1fr}}
+  @media (max-width:560px){.grid{grid-template-columns:1fr}}
+
+  /* ── Version A: Pillar ribbon + stack orbit ── */
+  .va .card{
+    position:relative;text-align:left;border:1px solid var(--border);border-radius:12px;padding:0;
+    background:linear-gradient(165deg,var(--surface3),var(--surface));cursor:pointer;overflow:hidden;
+    font:inherit;color:inherit;transition:border-color .15s,transform .12s;
+  }
+  .va .card:hover{border-color:rgba(2,200,255,.4);transform:translateY(-1px)}
+  .va .ribbon{
+    height:4px;width:100%;
+    background:linear-gradient(90deg,var(--ribbon-a),var(--ribbon-b));
+  }
+  .va .inner{padding:12px 14px 13px}
+  .va .top{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+  .va .glyph{
+    width:40px;height:40px;border-radius:10px;flex-shrink:0;display:grid;place-items:center;
+    background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  }
+  .va .glyph svg{width:22px;height:22px;opacity:.95}
+  .va .pillar{font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);margin-bottom:3px}
+  .va .outcome{font-size:12.5px;font-weight:800;line-height:1.28;margin:0}
+  .va .symptom{font-size:10.5px;color:var(--muted);font-style:italic;line-height:1.4;margin:8px 0 10px}
+  .va .foot{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .va .meta{font-size:10px;color:var(--subtle)}
+  .va .orbit{display:flex;align-items:center;gap:2px}
+  .va .orbit span{
+    width:9px;height:9px;border-radius:50%;border:1px solid rgba(255,255,255,.25);
+    box-shadow:0 0 6px rgba(0,0,0,.3);
+  }
+
+  /* ── Version B: Wide art band + layer chips ── */
+  .vb .card{
+    text-align:left;border:1px solid var(--border);border-radius:12px;padding:0;overflow:hidden;
+    background:var(--surface);cursor:pointer;transition:border-color .15s,transform .12s;
+    font:inherit;color:inherit;
+  }
+  .vb .card:hover{border-color:rgba(2,200,255,.4);transform:translateY(-1px)}
+  .vb .art{
+    height:56px;position:relative;overflow:hidden;
+    background:linear-gradient(135deg,var(--art-a) 0%,transparent 55%),linear-gradient(225deg,var(--art-b) 0%,transparent 50%);
+    border-bottom:1px solid rgba(255,255,255,.06);
+  }
+  .vb .art::after{
+    content:"";position:absolute;inset:0;
+    background-image:radial-gradient(circle at 20% 80%, rgba(255,255,255,.08) 0 1px, transparent 2px);
+    background-size:14px 14px;opacity:.35;
+  }
+  .vb .art-icon{
+    position:absolute;right:12px;top:50%;transform:translateY(-50%);
+    width:44px;height:44px;border-radius:50%;
+    background:rgba(7,24,45,.55);border:1px solid rgba(255,255,255,.12);
+    display:grid;place-items:center;backdrop-filter:blur(4px);
+  }
+  .vb .art-icon svg{width:24px;height:24px}
+  .vb .art-pillar{
+    position:absolute;left:12px;top:10px;font-size:9px;font-weight:800;letter-spacing:.07em;
+    text-transform:uppercase;color:rgba(255,255,255,.92);
+  }
+  .vb .body{padding:11px 13px 12px}
+  .vb .outcome{font-size:12.5px;font-weight:800;line-height:1.28;margin:0 0 6px}
+  .vb .symptom{font-size:10.5px;color:var(--muted);font-style:italic;line-height:1.4;margin:0 0 10px}
+  .vb .chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+  .vb .chip{
+    font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;
+    padding:3px 7px;border-radius:4px;background:rgba(255,255,255,.06);color:var(--subtle);
+    border-left:2px solid var(--chip-c);
+  }
+  .vb .meta{font-size:10px;color:var(--subtle)}
+
+  /* ── Version C: Mini composition diagram ── */
+  .vc .card{
+    text-align:left;border:1px solid var(--border);border-radius:12px;padding:13px 14px;
+    background:linear-gradient(165deg,var(--surface3),var(--surface));cursor:pointer;
+    display:grid;grid-template-columns:72px 1fr;gap:12px;align-items:start;
+    transition:border-color .15s,transform .12s;font:inherit;color:inherit;
+  }
+  .vc .card:hover{border-color:rgba(2,200,255,.4);transform:translateY(-1px)}
+  .vc .stack-viz{
+    width:72px;height:72px;border-radius:10px;position:relative;
+    background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.08);
+  }
+  .vc .stack-viz svg{position:absolute;inset:0;width:100%;height:100%}
+  .vc .pillar{font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+  .vc .outcome{font-size:12.5px;font-weight:800;line-height:1.28;margin:0 0 5px}
+  .vc .symptom{font-size:10.5px;color:var(--muted);font-style:italic;line-height:1.38;margin:0 0 8px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .vc .meta{font-size:10px;color:var(--subtle);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .vc .meta .arr{color:var(--accent);font-weight:800}
+
+  .compare{
+    max-width:1100px;margin:24px auto 0;padding:0 24px;
+    font-size:11px;color:var(--muted);line-height:1.6;
+  }
+  .compare table{width:100%;border-collapse:collapse;margin-top:10px;font-size:10.5px}
+  .compare th,.compare td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+  .compare th{color:var(--subtle);font-weight:700}
+</style>
+</head>
+<body>
+<header class="hdr">
+  <h1>Solutions catalog cards — visual options</h1>
+  <p>Three treatments for the outcome grid in the Solutions overlay. Same copy as production; graphics are CSS + inline SVG (no new assets). Pick a direction and we wire it into <code>cpn-solutions.css</code> + <code>cpn-solutions-ui.js</code>.</p>
+</header>
+
+<nav class="pick" aria-label="Choose version">
+  <span>Preview:</span>
+  <button type="button" class="on" data-panel="a">A — Ribbon + orbit dots</button>
+  <button type="button" data-panel="b">B — Art band + layer chips</button>
+  <button type="button" data-panel="c">C — Stack diagram thumb</button>
+</nav>
+
+<section class="panel on" id="panel-a">
+  <p class="panel-note"><strong>Version A</strong> — Top pillar color ribbon, small category glyph, family “orbit” dots (category colors). Compact; works well at 3 columns. <em>Recommended default.</em></p>
+  <div class="modal va">
+    <div class="modal-head">
+      <h2>Business outcomes → solution stacks</h2>
+      <p>Pick an outcome to see which portfolio families compose the solution — not a single product.</p>
+    </div>
+    <div class="modal-body">
+      <div class="toolbar">
+        <input class="search" type="search" placeholder="Search outcomes…" disabled>
+        <span class="fchip on">All</span><span class="fchip">Connectivity</span><span class="fchip">Workplaces</span>
+      </div>
+      <div class="grid" id="grid-a"></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="panel-b">
+  <p class="panel-note"><strong>Version B</strong> — Taller cards with a gradient “hero band” per pillar and layer chips (Connect / Secure / Observe). More editorial; best if you want cards to feel like story tiles.</p>
+  <div class="modal vb">
+    <div class="modal-head">
+      <h2>Business outcomes → solution stacks</h2>
+      <p>Pick an outcome to see which portfolio families compose the solution — not a single product.</p>
+    </div>
+    <div class="modal-body">
+      <div class="toolbar">
+        <input class="search" type="search" placeholder="Search outcomes…" disabled>
+        <span class="fchip on">All</span><span class="fchip">Resilience</span>
+      </div>
+      <div class="grid" id="grid-b"></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="panel-c">
+  <p class="panel-note"><strong>Version C</strong> — Left thumbnail is a mini layer-stack diagram (same metaphor as detail view). Scannable composition preview; slightly wider minimum column.</p>
+  <div class="modal vc">
+    <div class="modal-head">
+      <h2>Business outcomes → solution stacks</h2>
+      <p>Pick an outcome to see which portfolio families compose the solution — not a single product.</p>
+    </div>
+    <div class="modal-body">
+      <div class="toolbar">
+        <input class="search" type="search" placeholder="Search outcomes…" disabled>
+        <span class="fchip on">All</span>
+      </div>
+      <div class="grid" id="grid-c"></div>
+    </div>
+  </div>
+</section>
+
+<div class="compare">
+  <strong style="color:var(--text)">Quick comparison</strong>
+  <table>
+    <tr><th></th><th>Density</th><th>Composition hint</th><th>Implementation</th></tr>
+    <tr><td>A Ribbon + orbit</td><td>High (3-col friendly)</td><td>Colored dots = category mix</td><td>CSS vars + 6 pillar SVGs</td></tr>
+    <tr><td>B Art band</td><td>Medium (taller cards)</td><td>Layer chips from stack data</td><td>Per-pillar gradients + chips in render</td></tr>
+    <tr><td>C Stack thumb</td><td>Medium-wide</td><td>Mini layer bars in SVG</td><td>Generate SVG from layer keys in JS</td></tr>
+  </table>
+</div>
+
+<script>
+const PILLAR = {
+  connectivity: { label: "Connectivity", accent: "#02c8ff", artA: "rgba(2,200,255,.35)", artB: "rgba(10,96,255,.2)",
+    ribbonA: "#02c8ff", ribbonB: "#0a60ff", icon: "net" },
+  workplaces: { label: "Workplaces", accent: "#2dce5c", artA: "rgba(45,206,92,.35)", artB: "rgba(52,211,153,.2)",
+    ribbonA: "#2dce5c", ribbonB: "#34d399", icon: "wp" },
+  "ai-dc": { label: "AI & data center", accent: "#5b8cff", artA: "rgba(91,140,255,.4)", artB: "rgba(10,96,255,.25)",
+    ribbonA: "#5b8cff", ribbonB: "#02c8ff", icon: "aidc" },
+  resilience: { label: "Resilience & ops", accent: "#ff9000", artA: "rgba(255,144,0,.35)", artB: "rgba(255,0,127,.15)",
+    ribbonA: "#ff9000", ribbonB: "#ff007f", icon: "res" },
+};
+const CAT = { net: "#02c8ff", sec: "#ff007f", col: "#34d399", obs: "#ff9000", com: "#0a60ff" };
+const ICONS = {
+  net: '<path d="M3 8h10M6 4v8M10 4v8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/>',
+  wp: '<path d="M4 11V6l4-3 4 3v5" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linejoin="round"/><rect x="6" y="9" width="4" height="3" rx=".5" fill="currentColor" opacity=".5"/>',
+  aidc: '<rect x="3" y="4" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M6 7h4M6 9.5h2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>',
+  res: '<path d="M8 2.5v3M8 10.5v3M2.5 8h3M10.5 8h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.3" fill="none"/>',
+};
+const SAMPLES = [
+  { pillar: "connectivity", outcome: "Consistent application experience from every site and home office.",
+    symptom: "Branch and remote users blame the network when SaaS, voice, and Webex feel slow.",
+    meta: "6 families · Cloud Branch (SASE)", dots: ["net","sec","net","col","obs","sec"],
+    layers: [{ k: "connect", c: "net" }, { k: "secure", c: "sec" }, { k: "observe", c: "obs" }] },
+  { pillar: "workplaces", outcome: "Standardized, intent-based operations and assurance across campus and branch wired and wireless networks.",
+    symptom: "The network team spends its week on manual CLI changes, tickets, and firefighting.",
+    meta: "5 families · —", dots: ["net","net","net","col","obs"],
+    layers: [{ k: "connect", c: "net" }, { k: "observe", c: "obs" }] },
+  { pillar: "resilience", outcome: "A shared operations workspace for cross-domain evidence, human operators, and AI-assisted investigation.",
+    symptom: "Operators juggle a dozen dashboards and still can't answer a simple question fast.",
+    meta: "1 family · Cloud Control Platform", dots: ["obs"],
+    layers: [{ k: "observe", c: "obs" }] },
+  { pillar: "connectivity", outcome: "Secure global connectivity with consistent policy from branch to cloud.",
+    symptom: "Every new site means a new stack of boxes and a new set of policies to reconcile.",
+    meta: "5 families · Cloud Branch (SASE)", dots: ["net","sec","sec","obs","net"],
+    layers: [{ k: "connect", c: "net" }, { k: "secure", c: "sec" }] },
+  { pillar: "ai-dc", outcome: "AI-ready data center fabric with operational visibility from day one.",
+    symptom: "GPU clusters are live but ops still can't see workload health end to end.",
+    meta: "4 families · AI Pod", dots: ["com","net","obs","com"],
+    layers: [{ k: "automate", c: "com" }, { k: "connect", c: "net" }, { k: "observe", c: "obs" }] },
+  { pillar: "workplaces", outcome: "Meeting equity — every room sounds and looks like the best room in the building.",
+    symptom: "Executives notice when the all-hands drops or the CEO room looks worse than a huddle space.",
+    meta: "3 families · Hybrid Work Suite", dots: ["col","obs","col"],
+    layers: [{ k: "collab", c: "col" }, { k: "observe", c: "obs" }] },
+];
+
+function svgIcon(key, color) {
+  const p = ICONS[key] || ICONS.net;
+  return `<svg viewBox="0 0 16 16" fill="none" style="color:${color}">${p}</svg>`;
+}
+
+function stackThumbSvg(layers) {
+  const bars = layers.map((L, i) => {
+    const y = 8 + i * 18;
+    const c = CAT[L.c] || "#02c8ff";
+    return `<rect x="10" y="${y}" width="52" height="12" rx="3" fill="${c}" fill-opacity=".35" stroke="${c}" stroke-width="1"/>
+      <rect x="14" y="${y + 3}" width="28" height="6" rx="2" fill="${c}" fill-opacity=".85"/>`;
+  }).join("");
+  return `<svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
+    <rect x="4" y="4" width="64" height="64" rx="8" fill="rgba(255,255,255,.03)"/>
+    ${bars}
+  </svg>`;
+}
+
+function renderA() {
+  document.getElementById("grid-a").innerHTML = SAMPLES.map(s => {
+    const p = PILLAR[s.pillar];
+    const dots = s.dots.map(d => `<span style="background:${CAT[d]}"></span>`).join("");
+    return `<article class="card" style="--ribbon-a:${p.ribbonA};--ribbon-b:${p.ribbonB}">
+      <div class="ribbon"></div>
+      <div class="inner">
+        <div class="top">
+          <div class="glyph">${svgIcon(p.icon, p.accent)}</div>
+          <div>
+            <div class="pillar" style="color:${p.accent}">${p.label}</div>
+            <h3 class="outcome">${s.outcome}</h3>
+          </div>
+        </div>
+        <p class="symptom">"${s.symptom}"</p>
+        <div class="foot">
+          <span class="meta">${s.meta}</span>
+          <span class="orbit" title="Category mix">${dots}</span>
+        </div>
+      </div>
+    </article>`;
+  }).join("");
+}
+
+function renderB() {
+  document.getElementById("grid-b").innerHTML = SAMPLES.map(s => {
+    const p = PILLAR[s.pillar];
+    const chips = s.layers.map(L => {
+      const labels = { connect: "Connect", secure: "Secure", collab: "Collaborate", observe: "Observe", automate: "Compute" };
+      return `<span class="chip" style="--chip-c:${CAT[L.c]}">${labels[L.k] || L.k}</span>`;
+    }).join("");
+    return `<article class="card" style="--art-a:${p.artA};--art-b:${p.artB}">
+      <div class="art">
+        <span class="art-pillar">${p.label}</span>
+        <div class="art-icon">${svgIcon(p.icon, p.accent)}</div>
+      </div>
+      <div class="body">
+        <h3 class="outcome">${s.outcome}</h3>
+        <p class="symptom">"${s.symptom}"</p>
+        <div class="chips">${chips}</div>
+        <div class="meta">${s.meta}</div>
+      </div>
+    </article>`;
+  }).join("");
+}
+
+function renderC() {
+  document.getElementById("grid-c").innerHTML = SAMPLES.map(s => {
+    const p = PILLAR[s.pillar];
+    return `<article class="card">
+      <div class="stack-viz">${stackThumbSvg(s.layers)}</div>
+      <div>
+        <div class="pillar" style="color:${p.accent}">${p.label}</div>
+        <h3 class="outcome">${s.outcome}</h3>
+        <p class="symptom">"${s.symptom}"</p>
+        <div class="meta"><span>${s.meta}</span><span class="arr">→ stack</span></div>
+      </div>
+    </article>`;
+  }).join("");
+}
+
+document.querySelectorAll(".pick button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".pick button").forEach(b => b.classList.remove("on"));
+    btn.classList.add("on");
+    const id = btn.dataset.panel;
+    document.querySelectorAll(".panel").forEach(p => p.classList.toggle("on", p.id === "panel-" + id));
+  });
+});
+
+renderA(); renderB(); renderC();
+</script>
+</body>
+</html>
