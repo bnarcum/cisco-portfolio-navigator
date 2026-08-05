@@ -8,3 +8,4 @@ node_modules/
 .env.*
 PN Video/
 .worktrees/
+mockups/

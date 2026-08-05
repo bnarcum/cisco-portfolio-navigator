@@ -1,0 +1,12 @@
+---
+description: Mockups stay local — never commit or push mockups/ unless the user explicitly asks
+alwaysApply: true
+---
+
+# Mockups are local-only
+
+The `mockups/` directory is **gitignored**. It is for design exploration on the user's machine only.
+
+- **Do not** `git add`, commit, or push anything under `mockups/` unless the user explicitly requests that a specific mockup be published.
+- Production work may reference mockup filenames in comments; shipped code lives in `index.html`, `assets/`, etc.
+- When creating new mockups, write them under `mockups/` and tell the user to open the file locally — do not include them in deploy commits by default.
