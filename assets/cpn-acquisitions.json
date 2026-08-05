@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-05T17:48:52.036Z",
+  "generated": "2026-08-05T17:57:22.325Z",
   "sources": [
     "https://en.wikipedia.org/wiki/List_of_acquisitions_by_Cisco",
     "https://www.cisco.com/site/us/en/about/corporate-development/acquisitions/acquisitions-list-years/index.html"
@@ -6218,6 +6218,31 @@
       "visualIdentity": {
         "kind": "name-tile",
         "path": "assets/acq-logos/astrix-security.svg",
+        "source": "generated",
+        "sourceUrl": null
+      }
+    },
+    {
+      "id": "widefield-security",
+      "company": "WideField Security Inc. (intent to acquire)",
+      "announced": "2026-06-18",
+      "business": "",
+      "country": "",
+      "valueUsd": null,
+      "summary": "WideField Security is a modern identity lifecycle security company, headquartered in Santa Clara, California. WideField’s technology has critical capabilities in the correlation and normalization of identity telemetry, ensuring that deterministic data serves as the bedrock for securing non-deterministic AI workflows in the Agentic SOC. WideField will accelerate Splunk's Agentic SOC capabilities by expanding the lens of threat investigation with identity, credentials, sessions, and blast radius.",
+      "families": [
+        "splunk"
+      ],
+      "era": "ai",
+      "featured": false,
+      "sources": [
+        "cisco"
+      ],
+      "logo": "assets/acq-logos/widefield-security.webp",
+      "wikiTitle": "WideField Security Inc. (intent to acquire)",
+      "visualIdentity": {
+        "kind": "name-tile",
+        "path": "assets/acq-logos/widefield-security.svg",
         "source": "generated",
         "sourceUrl": null
       }

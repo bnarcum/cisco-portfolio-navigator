@@ -49,6 +49,8 @@ const FAMILY_MAP = {
   slido: ["webex-meetings"],
   armorblox: ["email-security"],
   isovalent: ["hypershield"],
+  widefield: ["splunk"],
+  widefieldsecurity: ["splunk"],
 };
 
 const ERA_BANDS = [
@@ -235,15 +237,15 @@ export function parseWikiTable(html) {
 
 export function parseCiscoPage(html) {
   const items = [];
-  const re = /<li[^>]*>\s*(?:<a[^>]*>)?([^<]+)(?:<\/a>)?\s*[-–]\s*([^<\n]+)(?:<br\s*\/?>|\n)([\s\S]*?)<\/li>/gi;
+  const re = /<li[^>]*>\s*(?:<a[^>]*>)?([^<]+)(?:<\/a>)?\s*(?:<i>\s*\((intent to acquire)\)\s*<\/i>\s*)?[-–]\s*([^<\n]+)(?:<br\s*\/?>|\n)([\s\S]*?)<\/li>/gi;
   let m;
   while ((m = re.exec(html))) {
-    const company = decodeHtmlEntities(m[1])
-      .replace(/\(intent to acquire\)/i, "")
+    let company = decodeHtmlEntities(m[1])
       .replace(/\u00a0/g, " ")
       .trim();
-    const dateRaw = m[2].replace(/\u00a0/g, " ").trim();
-    const summary = stripHtml(m[3]).slice(0, 1200);
+    if (m[2]) company = `${company} (${m[2]})`;
+    const dateRaw = m[3].replace(/\u00a0/g, " ").trim();
+    const summary = stripHtml(m[4]).slice(0, 1200);
     const announced = parseWikiDate(dateRaw) || parseWikiDate(dateRaw.replace(/^Subject to close\.\s*/i, ""));
     if (company && announced && !/^view by/i.test(company)) {
       items.push({ company, announced, summary });
@@ -366,14 +368,46 @@ export function mergeRecords(wiki, cisco) {
   return list;
 }
 
+async function fetchWikiRows() {
+  const fixturePath = path.join(root, "scripts/fixtures/wikipedia-acquisitions-table.html");
+  try {
+    const wikiRes = await fetch(WIKI_URL, {
+      headers: { "User-Agent": "CiscoPortfolioNavigator/1.0 (build script)" },
+    });
+    const wikiJson = await wikiRes.json();
+    const html = wikiJson.parse?.text?.["*"] || wikiJson.parse?.text || "";
+    const rows = parseWikiTable(html);
+    if (rows.length >= 100) return rows;
+    console.warn(`  Wikipedia live table small (${rows.length} rows); trying fallback.`);
+  } catch (err) {
+    console.warn(`  Wikipedia fetch failed (${err.message}); trying fallback.`);
+  }
+  if (fs.existsSync(outJson)) {
+    try {
+      const prev = JSON.parse(fs.readFileSync(outJson, "utf8"));
+      const rows = (prev.acquisitions || [])
+        .filter(a => Array.isArray(a.sources) && a.sources.includes("wikipedia"))
+        .map(a => ({
+          company: (a.wikiTitle || a.company).replace(/ \(intent to acquire\)$/i, "").trim(),
+          announced: a.announced,
+          business: a.business || "",
+          country: a.country || "",
+          valueUsd: a.valueUsd ?? null,
+        }));
+      if (rows.length >= 100) {
+        console.warn(`  Wikipedia: ${rows.length} rows from previous dataset`);
+        return rows;
+      }
+    } catch (_) { /* ignore */ }
+  }
+  const rows = parseWikiTable(fs.readFileSync(fixturePath, "utf8"));
+  console.warn(`  Wikipedia: ${rows.length} rows from parser fixture`);
+  return rows;
+}
+
 async function main() {
   console.log("Fetching Wikipedia acquisitions list…");
-  const wikiRes = await fetch(WIKI_URL, {
-    headers: { "User-Agent": "CiscoPortfolioNavigator/1.0 (build script)" },
-  });
-  const wikiJson = await wikiRes.json();
-  const wikiHtml = wikiJson.parse?.text?.["*"] || wikiJson.parse?.text || "";
-  const wikiRows = parseWikiTable(wikiHtml);
+  const wikiRows = await fetchWikiRows();
   console.log(`  Wikipedia: ${wikiRows.length} rows`);
 
   console.log("Fetching Cisco official list…");

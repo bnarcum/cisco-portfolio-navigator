@@ -48,6 +48,13 @@ const [decodedCisco] = parseCiscoPage(fs.readFileSync(
 if (decodedCisco?.company !== "Telebit's MICA Technologies") {
   errors.push(`Cisco fixture: company entities were not decoded (${decodedCisco?.company})`);
 }
+const intentSample = parseCiscoPage(
+  '<ul><li><a href="#">WideField Security Inc.</a> <i>(intent to acquire)</i> - June 18, 2026<br />Summary here.</li></ul>',
+);
+if (intentSample[0]?.company !== "WideField Security Inc. (intent to acquire)" ||
+    intentSample[0]?.announced !== "2026-06-18") {
+  errors.push(`Cisco parser: intent-to-acquire markup (${intentSample[0]?.company})`);
+}
 
 for (const fixture of aliasFixtures) {
   const merged = mergeRecords(
