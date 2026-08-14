@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.55";
+  window.__CPN_BUILD="3.5.56";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -11379,7 +11379,7 @@ document.addEventListener("keydown",ev=>{
   // The old "cisco-portfolio-tour-completed-v1" key still suppresses the *first-time* tour
   // for users who already completed v1; they can re-launch the latest via the ? button.
   const STORAGE_KEY = "cisco-portfolio-tour-completed-v1";
-  const TOUR_VERSION = "v3.2";
+  const TOUR_VERSION = "v3.3";
   const STORAGE_KEY_LATEST = "cisco-portfolio-tour-latest-seen";
 
   // Inject DOM
@@ -11409,9 +11409,11 @@ document.addEventListener("keydown",ev=>{
       title: "One portfolio, one story",
       body: `<strong>Cisco Portfolio Navigator</strong> starts with the <strong>One Cisco</strong> narrative — three
              outcome pillars on Overview — then lets you <strong>drill down</strong> through connected families and
-             products, <strong>learn</strong> with dCloud labs and courses in the side panel, and
-             <strong>plan</strong> the account with Guided Plan, AI, and export.<br><br>
-             We'll walk that path in ~3 minutes. Skip anytime with <code>Esc</code>.`
+             products, <strong>learn</strong> with dCloud labs and courses in the side panel,
+             <strong>design</strong> validated network and room diagrams in <strong>Design Studio</strong>
+             (including the 3D <strong>Walk</strong> demo), and <strong>plan</strong> the account with Guided Plan,
+             AI, and export.<br><br>
+             We'll walk that path in ~4 minutes. Skip anytime with <code>Esc</code>.`
     },
     {
       target: "#gw", place: "bottom",
@@ -11504,12 +11506,81 @@ document.addEventListener("keydown",ev=>{
              each step with duration, level, and a direct launch link.`,
       tip: `Complete labs with a customer, then export a <strong>Customer Learning Agenda</strong> from the planner.`,
       before: () => {
+        tourCloseDesignStudio();
         window.closePanel && window.closePanel();
         if (window.getViewMode && window.getViewMode() !== "families") {
           window.applyViewLevel && window.applyViewLevel("families");
         }
         const uc = document.getElementById("ucs");
         if (uc) { uc.value = "Hybrid Work"; uc.dispatchEvent(new Event("change")); }
+      }
+    },
+    {
+      target: "#design-studio-btn", place: "bottom",
+      title: "Design Studio — brief to validated design",
+      body: `<strong>Design Studio</strong> turns an opportunity brief into presales-ready output:
+             <ul style="margin:8px 0 0 16px;padding:0;line-height:1.55">
+               <li><b>Intent</b> — describe the deal; Generate Draft picks CVD templates + room mix</li>
+               <li><b>Network</b> — logical topology with port-to-port links, PoE, and design score</li>
+               <li><b>Room</b> — collaboration floor plans from Cisco Tested guides</li>
+               <li><b>Quote</b> — BOM, validation, suggestions, CCW export</li>
+             </ul>`,
+      tip: `17 network + 10 room templates in <strong>Gallery</strong>. Press <code>/</code> in Studio for command search.`,
+      before: () => {
+        tourCloseDesignStudio();
+        tourCloseGuidedWizard();
+        window.closePanel && window.closePanel();
+        const pn = document.getElementById("planner");
+        if (pn?.classList.contains("open")) document.getElementById("planner-btn")?.click();
+        if (window.getViewMode && window.getViewMode() !== "families") {
+          window.applyViewLevel && window.applyViewLevel("families");
+        }
+      }
+    },
+    {
+      target: "#ds-tabs", place: "bottom",
+      title: "Network diagram creator",
+      body: `The <strong>Network</strong> tab is your logical topology canvas — Cisco device silhouettes,
+             layer bands (WAN → core → access), and <strong>port-to-port</strong> links with cable media hints.<br><br>
+             Drag stencils from <strong>Build</strong>, wire with link mode (<code>L</code>), run
+             <strong>Validate</strong> + <strong>Suggest</strong> for one-click fixes, then export CCW prep
+             or a customer narrative.`,
+      tip: `<code>F</code> fit view · <code>P</code> presentation mode · minimap bottom-left.`,
+      before: async () => {
+        const inst = await tourEnsureDesignStudioDemo();
+        window.__DS_WALK?.close?.(true);
+        if (inst) {
+          inst.roomView = "diagram";
+          inst.setTab("network");
+          inst.fitView();
+          window.__DS_PREMIUM?.renderCanvasViewToggle?.(inst);
+        }
+      }
+    },
+    {
+      target: "#ds-canvas-view-toggle", place: "bottom",
+      title: "Walk mode — the demo favorite",
+      body: `<strong>Walk</strong> drops you into a <strong>3D walkthrough</strong> of your design — campus
+             corridors between network zones and collaboration rooms you can explore like a customer site visit.<br><br>
+             Proximity labels, outcome overlays, and cinema-style presentation make this the highlight in live demos.
+             Toggle back to <strong>Diagram</strong> anytime to edit the canvas.`,
+      tip: `Click <strong>Walk</strong> now to try it — use WASD or arrow keys to move, mouse to look.`,
+      ctaText: "Next →",
+      before: async () => {
+        const inst = await tourEnsureDesignStudioDemo();
+        if (!inst) return;
+        window.__DS_WALK?.close?.(true);
+        inst.roomView = "diagram";
+        if (inst.design.rooms?.length) {
+          inst.activeRoomId = inst.design.activeRoomId || inst.design.rooms[0].id;
+          inst.design.activeRoomId = inst.activeRoomId;
+          inst.setTab("room");
+        } else {
+          inst.setTab("network");
+        }
+        inst.fitView();
+        window.__DS_PREMIUM?.renderCanvasViewToggle?.(inst);
+        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
       }
     },
     {
@@ -11522,6 +11593,7 @@ document.addEventListener("keydown",ev=>{
              customer email, or gap analysis inline.`,
       tip: `Press <code>G</code> from anywhere. The button stays green-outlined so you can return to your results.`,
       before: () => {
+        tourCloseDesignStudio();
         document.getElementById("plans-menu")?.classList.remove("show");
         window.closePanel && window.closePanel();
         const pn = document.getElementById("planner");
@@ -11575,8 +11647,9 @@ document.addEventListener("keydown",ev=>{
       target: "#help-fab", place: "left",
       title: "You're ready!",
       body: `Re-launch this tour anytime with the <strong>?</strong> button or press <code>?</code>.<br><br>
-             <strong>Quick keys:</strong> <code>G</code> Guided Plan · <code>/</code> search ·
-             <code>a</code> Ask AI · Overview → Families → Composition for the One Cisco story.`,
+             <strong>Quick keys:</strong> <code>G</code> Guided Plan · Design Studio toolbar ·
+             <code>/</code> search · <code>a</code> Ask AI · Overview → Families → Composition for the One Cisco story.
+             In Design Studio, open <strong>Walk</strong> for the 3D demo.`,
       finalBtnText: "Get started",
       before: () => {
         try {
@@ -11604,8 +11677,47 @@ document.addEventListener("keydown",ev=>{
     window.openGuidedWizard && window.openGuidedWizard();
     document.body.classList.add("tour-highlight-wizard");
   }
+  function tourCloseDesignStudio(){
+    try {
+      window.__DS_WALK?.close?.(true);
+      if (window.DesignStudio?.instance?.el?.classList.contains("open")) {
+        window.DesignStudio.close();
+      }
+    } catch (e) { /* ignore */ }
+    document.body.classList.remove("tour-highlight-design-studio");
+  }
+  async function tourEnsureDesignStudioOpen(){
+    tourCloseGuidedWizard();
+    window.closePanel && window.closePanel();
+    const pn = document.getElementById("planner");
+    if (pn?.classList.contains("open")) document.getElementById("planner-btn")?.click();
+    if (!window.__cpnLazy?.loadDesignStudio) throw new Error("Design Studio lazy loader missing");
+    await window.__cpnLazy.loadDesignStudio();
+    if (!window.DesignStudio?.instance?.el?.classList.contains("open")) {
+      window.DesignStudio.open();
+    }
+    document.body.classList.add("tour-highlight-design-studio");
+    return window.DesignStudio.instance;
+  }
+  async function tourEnsureDesignStudioDemo(){
+    const inst = await tourEnsureDesignStudioOpen();
+    if (!inst) return null;
+    const hasNet = inst.design.nodes.some(n => n.canvas !== "room");
+    const hasRooms = (inst.design.rooms || []).length > 0;
+    if (!hasNet || !hasRooms) {
+      const ta = document.getElementById("ds-intent-text");
+      if (ta && !ta.value.trim()) {
+        ta.value = "Hybrid workplace: campus Wi-Fi with Cisco Spaces, 1 boardroom, 2 medium video rooms, and 4 huddles.";
+      }
+      document.querySelector("#ds-one-cisco-deck [data-pillar='workplaces']")?.click();
+      inst.runGenerate();
+      await new Promise(r => setTimeout(r, 150));
+    }
+    return inst;
+  }
   function tourResetToOverview(){
     tourCloseGuidedWizard();
+    tourCloseDesignStudio();
     const uc = document.getElementById("ucs");
     if (uc && uc.value) { uc.value = ""; uc.dispatchEvent(new Event("change")); }
     window.closePanel && window.closePanel();
@@ -11641,11 +11753,14 @@ document.addEventListener("keydown",ev=>{
       } catch(e){}
     }
   }
-  function showStep() {
+  async function showStep() {
     const step = STEPS[stepIdx];
     if (!step) { end(true); return; }
     if (step.before) {
-      try { step.before(); } catch(e){ console.warn("tour step.before failed", e); }
+      try {
+        const result = step.before();
+        if (result && typeof result.then === "function") await result;
+      } catch(e){ console.warn("tour step.before failed", e); }
     }
     // Render content
     const isFirst = stepIdx === 0;
