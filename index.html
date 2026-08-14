@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.56";
+  window.__CPN_BUILD="3.5.57";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -11379,7 +11379,7 @@ document.addEventListener("keydown",ev=>{
   // The old "cisco-portfolio-tour-completed-v1" key still suppresses the *first-time* tour
   // for users who already completed v1; they can re-launch the latest via the ? button.
   const STORAGE_KEY = "cisco-portfolio-tour-completed-v1";
-  const TOUR_VERSION = "v3.3";
+  const TOUR_VERSION = "v3.4";
   const STORAGE_KEY_LATEST = "cisco-portfolio-tour-latest-seen";
 
   // Inject DOM
@@ -11411,9 +11411,10 @@ document.addEventListener("keydown",ev=>{
              outcome pillars on Overview — then lets you <strong>drill down</strong> through connected families and
              products, <strong>learn</strong> with dCloud labs and courses in the side panel,
              <strong>design</strong> validated network and room diagrams in <strong>Design Studio</strong>
-             (including the 3D <strong>Walk</strong> demo), and <strong>plan</strong> the account with Guided Plan,
-             AI, and export.<br><br>
-             We'll walk that path in ~4 minutes. Skip anytime with <code>Esc</code>.`
+             (including the 3D <strong>Walk</strong> demo), browse portfolio by <strong>business outcome</strong>
+             in <strong>Solutions</strong>, track refresh and acquisition history on the graph tools, and
+             <strong>plan</strong> the account with Guided Plan, AI, and export.<br><br>
+             We'll walk that path in ~5 minutes. Skip anytime with <code>Esc</code>.`
     },
     {
       target: "#gw", place: "bottom",
@@ -11427,6 +11428,7 @@ document.addEventListener("keydown",ev=>{
              Secure global connectivity runs through the center — the spine that ties the portfolio together.`,
       tip: `Click any pillar card to jump into <strong>Families</strong> filtered to that outcome.`,
       before: () => {
+        tourCloseOverlays();
         document.getElementById("gw-overlay")?.classList.remove("show");
         window.closePanel && window.closePanel();
         if (window.getViewMode && window.getViewMode() !== "overview") {
@@ -11444,10 +11446,48 @@ document.addEventListener("keydown",ev=>{
              <strong>Right-click</strong> for quick actions · scroll to zoom, drag to pan.`,
       tip: `Use the pillar legend (top-left) to focus on one outcome — AI-Ready DC, Workplaces, or Resilience.`,
       before: () => {
+        tourCloseOverlays();
         window.closePanel && window.closePanel();
         if (window.getViewMode && window.getViewMode() !== "families") {
           window.applyViewLevel && window.applyViewLevel("families");
         }
+      }
+    },
+    {
+      target: "#solutions-btn", place: "bottom",
+      title: "Solutions — outcomes, not SKUs",
+      body: `<strong>Solutions</strong> flips the map to a <strong>business-outcome</strong> lens — Hybrid Work,
+             Zero Trust, SD-WAN, AI-ready DC, and more.<br><br>
+             Each outcome card shows which <strong>portfolio families</strong> compose the stack (core, adjacent,
+             optional), then lets you <strong>highlight those families on the graph</strong> or add the bundle to
+             your account plan.`,
+      tip: `Toolbar button next to dCloud · filter by One Cisco pillar inside the catalog.`,
+      before: () => {
+        tourCloseOverlays();
+        tourCloseGuidedWizard();
+        window.closePanel && window.closePanel();
+        if (window.getViewMode && window.getViewMode() !== "families") {
+          window.applyViewLevel && window.applyViewLevel("families");
+        }
+      }
+    },
+    {
+      target: "#sol-toolbar", place: "bottom",
+      title: "Solution stacks catalog",
+      body: `Search outcomes, symptoms, and use cases — or filter by pillar chip.
+             <strong>Click a card</strong> for the layered stack: core families, adjacent integrations, optional
+             add-ons, and bundle coverage hints.<br><br>
+             From detail view, <strong>View on graph</strong> dims everything except the solution families and
+             draws direct/adjacent integration lines between them.`,
+      tip: `<strong>Add to plan</strong> pushes the stack into Account Planner in one click.`,
+      before: () => {
+        tourCloseOverlays();
+        tourCloseGuidedWizard();
+        window.closePanel && window.closePanel();
+        if (window.getViewMode && window.getViewMode() !== "families") {
+          window.applyViewLevel && window.applyViewLevel("families");
+        }
+        window.__cpnSolutionsUI?.openOverlay?.();
       }
     },
     {
@@ -11458,6 +11498,7 @@ document.addEventListener("keydown",ev=>{
              Same relationships as the 2D map; <strong>Spatial</strong> offers the same drill-down in 3D when you
              want an immersive walkthrough.`,
       before: () => {
+        tourCloseOverlays();
         window.closePanel && window.closePanel();
         if (window.getViewMode && window.getViewMode() !== "composition") {
           window.applyViewLevel && window.applyViewLevel("composition", { focusFamily: "room-systems" });
@@ -11506,13 +11547,75 @@ document.addEventListener("keydown",ev=>{
              each step with duration, level, and a direct launch link.`,
       tip: `Complete labs with a customer, then export a <strong>Customer Learning Agenda</strong> from the planner.`,
       before: () => {
-        tourCloseDesignStudio();
+        tourCloseOverlays();
         window.closePanel && window.closePanel();
         if (window.getViewMode && window.getViewMode() !== "families") {
           window.applyViewLevel && window.applyViewLevel("families");
         }
         const uc = document.getElementById("ucs");
         if (uc) { uc.value = "Hybrid Work"; uc.dispatchEvent(new Event("change")); }
+      }
+    },
+    {
+      target: "#tools-timeline", place: "top",
+      title: "Refresh Timeline — lifecycle at a glance",
+      body: `The bottom-left <strong>graph tools</strong> bar opens portfolio workspaces on top of the map.
+             <strong>Refresh Timeline</strong> plots every product's <strong>current</strong>,
+             <strong>End-of-Sale</strong>, and <strong>End-of-Life</strong> dates by family — scroll to pan years,
+             hover bars for readout, filter by main portfolio or stack-only.`,
+      tip: `Press <code>T</code> to toggle · <code>FIT</code> zooms the data span into view.`,
+      before: () => {
+        tourCloseOverlays();
+        tourCloseGuidedWizard();
+        window.closePanel && window.closePanel();
+        if (window.getViewMode && window.getViewMode() !== "families") {
+          window.applyViewLevel && window.applyViewLevel("families");
+        }
+      }
+    },
+    {
+      target: "#tl-head", place: "bottom",
+      title: "EOS / EOL signal map",
+      body: `Each row is a product family; bars show lifecycle milestones across time.
+             Use the portfolio filter and <strong>Show only stack items</strong> when you've built an account plan —
+             instantly see what's going EOS/EOL in the customer's stack.<br><br>
+             Minimap and zoom controls match the Acquisitions Timeline for a consistent explore UX.`,
+      before: () => {
+        tourCloseOverlays();
+        tourCloseGuidedWizard();
+        window.closePanel && window.closePanel();
+        window.CPN_RefreshTimeline?.open?.();
+      }
+    },
+    {
+      target: "#tools-acquisitions", place: "top",
+      title: "Acquisitions Timeline — Cisco's build story",
+      body: `<strong>Acquisitions Timeline</strong> is an interactive logo history — 250+ deals from Webex and Meraki
+             through Splunk, Isovalent, and recent intent-to-acquire announcements.<br><br>
+             Scroll the year rail, search by company, filter by portfolio family, and open a deal card to see
+             summary, price, and links to Cisco + Wikipedia sources.`,
+      tip: `Press <code>M</code> to toggle · inner <strong>Tour</strong> button plays landmark highlights.`,
+      before: () => {
+        tourCloseOverlays();
+        tourCloseGuidedWizard();
+        window.closePanel && window.closePanel();
+        if (window.getViewMode && window.getViewMode() !== "families") {
+          window.applyViewLevel && window.applyViewLevel("families");
+        }
+      }
+    },
+    {
+      target: "#acq-head", place: "bottom",
+      title: "Explore deals by year",
+      body: `The timeline groups acquisitions by announcement year with parallax logo tiles.
+             Click a year cluster to expand · arrow keys or ← → to step deal-by-deal ·
+             focus panel shows integration context and which portfolio families the acquisition feeds.<br><br>
+             Great for “how did Cisco get here?” conversations with customers and partners.`,
+      before: () => {
+        tourCloseOverlays();
+        tourCloseGuidedWizard();
+        window.closePanel && window.closePanel();
+        window.CPN_AcquisitionTimeline?.open?.();
       }
     },
     {
@@ -11527,7 +11630,7 @@ document.addEventListener("keydown",ev=>{
              </ul>`,
       tip: `17 network + 10 room templates in <strong>Gallery</strong>. Press <code>/</code> in Studio for command search.`,
       before: () => {
-        tourCloseDesignStudio();
+        tourCloseOverlays();
         tourCloseGuidedWizard();
         window.closePanel && window.closePanel();
         const pn = document.getElementById("planner");
@@ -11593,7 +11696,7 @@ document.addEventListener("keydown",ev=>{
              customer email, or gap analysis inline.`,
       tip: `Press <code>G</code> from anywhere. The button stays green-outlined so you can return to your results.`,
       before: () => {
-        tourCloseDesignStudio();
+        tourCloseOverlays();
         document.getElementById("plans-menu")?.classList.remove("show");
         window.closePanel && window.closePanel();
         const pn = document.getElementById("planner");
@@ -11647,9 +11750,9 @@ document.addEventListener("keydown",ev=>{
       target: "#help-fab", place: "left",
       title: "You're ready!",
       body: `Re-launch this tour anytime with the <strong>?</strong> button or press <code>?</code>.<br><br>
-             <strong>Quick keys:</strong> <code>G</code> Guided Plan · Design Studio toolbar ·
-             <code>/</code> search · <code>a</code> Ask AI · Overview → Families → Composition for the One Cisco story.
-             In Design Studio, open <strong>Walk</strong> for the 3D demo.`,
+             <strong>Quick keys:</strong> <code>G</code> Guided Plan · Solutions toolbar ·
+             <code>T</code> Refresh Timeline · <code>M</code> Acquisitions · Design Studio ·
+             <code>/</code> search · <code>a</code> Ask AI · In Design Studio, open <strong>Walk</strong> for the 3D demo.`,
       finalBtnText: "Get started",
       before: () => {
         try {
@@ -11686,6 +11789,23 @@ document.addEventListener("keydown",ev=>{
     } catch (e) { /* ignore */ }
     document.body.classList.remove("tour-highlight-design-studio");
   }
+  function tourCloseSolutions(){
+    try {
+      window.__cpnSolutionsUI?.closeOverlay?.();
+      window.clearSolutionLens?.();
+    } catch (e) { /* ignore */ }
+  }
+  function tourCloseTimelines(){
+    try {
+      window.CPN_RefreshTimeline?.close?.();
+      window.CPN_AcquisitionTimeline?.close?.();
+    } catch (e) { /* ignore */ }
+  }
+  function tourCloseOverlays(){
+    tourCloseDesignStudio();
+    tourCloseSolutions();
+    tourCloseTimelines();
+  }
   async function tourEnsureDesignStudioOpen(){
     tourCloseGuidedWizard();
     window.closePanel && window.closePanel();
@@ -11717,7 +11837,7 @@ document.addEventListener("keydown",ev=>{
   }
   function tourResetToOverview(){
     tourCloseGuidedWizard();
-    tourCloseDesignStudio();
+    tourCloseOverlays();
     const uc = document.getElementById("ucs");
     if (uc && uc.value) { uc.value = ""; uc.dispatchEvent(new Event("change")); }
     window.closePanel && window.closePanel();
