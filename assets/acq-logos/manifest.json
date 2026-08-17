@@ -1,8 +1,7 @@
 {
-  "generated": "2026-08-05T17:57:21.129Z",
+  "generated": "2026-08-17T17:08:46.846Z",
   "counts": {
-    "generated": 253,
-    "wikipedia-candidate": 1,
+    "generated": 254,
     "wikipedia": 4
   },
   "items": {
@@ -1368,9 +1367,9 @@
     },
     "sourcefire": {
       "id": "sourcefire",
-      "source": "wikipedia-candidate",
-      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0a/Sourcefire_black_logo.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
-      "path": "assets/acq-logos/sourcefire.webp",
+      "source": "generated",
+      "sourceUrl": null,
+      "path": "assets/acq-logos/sourcefire.svg",
       "verified": false,
       "ok": true
     },

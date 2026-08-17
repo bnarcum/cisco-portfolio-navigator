@@ -16,7 +16,7 @@ try {
   await page.waitForFunction(() => window.__cpnV2?.APP_VERSION, { timeout: 120000 });
 
   await page.evaluate((pid) => window.showProductDetail(pid), MATRIX_PRODUCT);
-  await page.waitForSelector(".p-matrix-link", { timeout: 8000 });
+  await page.waitForSelector(".p-matrix-link", { timeout: 8000, state: "attached" });
 
   const heroUi = await page.evaluate(() => ({
     clickable: document.querySelector(".p-hero--clickable") != null,

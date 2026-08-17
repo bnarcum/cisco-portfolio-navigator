@@ -70,12 +70,12 @@ try {
             !byId("flat-network-breach")?.families?.includes("secure-workload"),
           hyperflexLifecycle: P.topProblemForFamily("hyperflex")?.id === "hyperflex-migration",
           splunkObservabilityFirst:
-            P.topProblemForFamily("splunk")?.id === "observability-blindspots" &&
+            P.topProblemForFamily("splunk")?.id === "agentic-soc-trust" &&
             !P.problemsForFamily("splunk").some(p => p.id === "threat-dwell-time"),
           hyperflexCatalogStatus: typeof PRODUCTS !== "undefined" &&
             PRODUCTS.filter(p => p.family === "hyperflex").every(p => p.status !== "current"),
           roomSource: /Control Hub.*ThousandEyes/i.test(byId("room-quality")?.proof?.source || ""),
-          cloudControlQualified: /Controlled Availability/i.test(byId("tool-sprawl-ops")?.proof?.source || ""),
+          cloudControlQualified: /Controlled Availability|generally available/i.test(byId("tool-sprawl-ops")?.proof?.source || ""),
           collaborationScoped: (() => {
             const hybrid = byId("hybrid-meeting-equity");
             const pbx = byId("pbx-eol");
@@ -142,8 +142,8 @@ try {
               vulns.families[0] === "vuln-mgmt";
           })(),
           catalogAvailabilityQualified:
-            /Controlled Availability/i.test(window.nodeById?.["cloud-control"]?.desc || "") &&
-            /Controlled Availability/i.test(BUNDLES.find(x => x.name === "Cloud Control Platform")?.desc || ""),
+            /Controlled Availability|generally available/i.test(window.nodeById?.["cloud-control"]?.desc || "") &&
+            /Controlled Availability|generally available/i.test(BUNDLES.find(x => x.name === "Cloud Control Platform")?.desc || ""),
           appDynamicsBrand: window.nodeById?.appdynamics?.name === "Splunk AppDynamics",
           noGuaranteeLanguage: !/\b(stops? lateral movement cold|every time|complete asset inventory|nothing to babysit)\b/i.test(text)
         };
@@ -182,7 +182,7 @@ try {
   if (!model.editorial.aiSecuritySplit) errors.push("catalog: AI Defense and Hypershield need separate problems");
   if (!model.editorial.campusSegmentationScoped) errors.push("catalog: campus segmentation should not imply workload-security products");
   if (!model.editorial.hyperflexLifecycle) errors.push("catalog: HyperFlex should lead with its current migration/EOL motion");
-  if (!model.editorial.splunkObservabilityFirst) errors.push("catalog: Splunk should lead with observability problems, not Threat Defense stack");
+  if (!model.editorial.splunkObservabilityFirst) errors.push("catalog: Splunk should lead with agentic SOC problems, not Threat Defense stack");
   if (!model.editorial.hyperflexCatalogStatus) errors.push("catalog: HyperFlex products must not remain marked current after HXDP end of maintenance");
   if (!model.editorial.roomSource) errors.push("catalog: room-quality proof should cite Control Hub + ThousandEyes");
   if (!model.editorial.cloudControlQualified) errors.push("catalog: Cloud Control claims must disclose Controlled Availability");
@@ -263,12 +263,12 @@ try {
       headline: block?.querySelector(".oc-headline")?.textContent || "",
       hasCiscoIqChain: /consolidated Cisco asset view/i.test(text),
       hasThreatDwell: /Detect and contain incidents before they become headlines/i.test(text),
-      hasObservability: /war room|Cross-domain observability|Less downtime/i.test(text)
+      hasAgenticSoc: /Reduce SOC labor|Agentic SOC|trusted incident|AI-generated verdicts/i.test(text)
     };
   });
   if (splunkCard.hasThreatDwell) errors.push("splunk panel: should not show Threat Defense primary narrative");
   if (splunkCard.hasCiscoIqChain) errors.push("splunk panel: should not chain to Cisco IQ asset view");
-  if (!splunkCard.hasObservability) errors.push("splunk panel: expected observability-first CIO narrative");
+  if (!splunkCard.hasAgenticSoc) errors.push("splunk panel: expected agentic SOC CIO narrative");
 
   // 3) Analyze a stack -> Outcomes tab + reframed suggestions/bundles
   const analysis = await page.evaluate(() => {

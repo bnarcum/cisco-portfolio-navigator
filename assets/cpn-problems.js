@@ -248,7 +248,7 @@
       families: ["xdr", "secure-endpoint", "talos", "stealthwatch"],
       signals: { has: ["secure-endpoint"], missing: ["xdr"] },
       dcloudPath: "zero-trust",
-      maturityNext: "unknown-assets"
+      maturityNext: "agentic-soc-trust"
     },
     {
       id: "phishing-email",
@@ -760,7 +760,7 @@
         metric: "Consoles per investigation",
         before: "Swivel-chair across many disconnected tools",
         after: "A shared AI-assisted workspace preserves evidence and investigation context",
-        source: "Cisco Cloud Control and AI Canvas positioning — Controlled Availability in the United States as of June 2026"
+        source: "Cisco Cloud Control and AI Canvas positioning — generally available July 2026"
       },
       personas: {
         netops: {
@@ -783,6 +783,111 @@
       bundles: ["Cloud Control Platform"],
       families: ["cloud-control"],
       signals: { has: ["catalyst-center"], missing: ["cloud-control"] },
+      dcloudPath: "ai-networking",
+      maturityNext: "ai-stack-deploy"
+    },
+    {
+      id: "agentic-soc-trust",
+      pillar: "resilience",
+      symptom: "Analysts don't trust AI-generated verdicts and still manually re-verify every alert.",
+      outcome: "Agentic SOC workflows that validate attacks in minutes with evidence the analyst can inspect and approve.",
+      proof: {
+        metric: "Time to trusted incident verdict",
+        before: "Hours of manual enrichment across SIEM, EDR, and identity consoles",
+        after: "Minutes with Instant Attack Verification and guided Agentic SOC playbooks",
+        source: "Splunk Agentic SOC + Instant Attack Verification + Cisco XDR positioning"
+      },
+      personas: {
+        netops: {
+          line: "Feed network context into agentic investigations without rebuilding evidence by hand.",
+          symptom: "Security pulls you into cases but network context lives in a separate console.",
+          proof: { metric: "Network context in SOC cases", before: "Manual exports and screenshots per investigation", after: "Correlated telemetry flows into the agentic investigation workspace" }
+        },
+        cio: {
+          line: "Reduce SOC labor on repetitive triage while keeping humans in control of consequential actions.",
+          symptom: "AI hype meets analyst skepticism — leadership wants speed without blind automation.",
+          proof: { metric: "Analyst time on tier-1 triage", before: "Analysts manually re-verify every AI suggestion", after: "Agentic workflows produce inspectable evidence and analyst-approved actions" }
+        },
+        ciso: {
+          line: "Pair Splunk Agentic SOC, Instant Attack Verification, and XDR for correlated, auditable response.",
+          symptom: "Alert volume outpaces analyst capacity and automation lacks explainability.",
+          proof: { metric: "Trusted incident verdict time", before: "Siloed enrichment across SIEM, EDR, and identity tools", after: "Agentic SOC validates attacks in minutes with analyst-visible evidence" }
+        }
+      },
+      useCases: ["Threat Detection & Response"],
+      bundles: ["Agentic SOC", "Threat Defense Platform"],
+      families: ["splunk", "xdr", "identity-intel", "cloud-control"],
+      signals: { has: ["splunk"], missing: ["xdr"] },
+      dcloudPath: "zero-trust",
+      maturityNext: "nhi-agent-identity"
+    },
+    {
+      id: "nhi-agent-identity",
+      pillar: "resilience",
+      symptom: "Service accounts, API keys, and AI agents proliferate faster than identity teams can govern them.",
+      outcome: "Non-human identity discovery, lifecycle controls, and threat detection across agents and automation.",
+      proof: {
+        metric: "Unmanaged non-human identities",
+        before: "Shadow service accounts and agent credentials with no owner or rotation policy",
+        after: "Continuous NHI inventory with risky behavior surfaced to ITDR and XDR",
+        source: "Cisco Identity Intelligence + Astrix/WideField acquisition positioning"
+      },
+      personas: {
+        netops: {
+          line: "See which automation and integration accounts touch your infrastructure before they become an incident.",
+          symptom: "Ops teams discover new API integrations only after something breaks or gets abused.",
+          proof: { metric: "Integration account visibility", before: "Ad-hoc spreadsheets of service accounts", after: "Continuous NHI inventory tied to infrastructure access patterns" }
+        },
+        cio: {
+          line: "Govern the identity layer for AI agents and automation without slowing innovation.",
+          symptom: "Agent and API sprawl creates audit and breach exposure leadership can't quantify.",
+          proof: { metric: "NHI governance readiness", before: "No authoritative inventory of non-human identities", after: "Lifecycle and risk policies applied to agents and service accounts" }
+        },
+        ciso: {
+          line: "Extend ITDR to non-human identities — agents, keys, and service accounts — with Duo and AI Defense context.",
+          symptom: "Human-centric IAM misses the fastest-growing identity surface: machines and agents.",
+          proof: { metric: "Non-human identity risk detection", before: "Dormant keys and over-privileged service accounts go unnoticed", after: "ITDR correlates NHI behavior with Splunk and XDR investigations" }
+        }
+      },
+      useCases: ["Zero Trust Security", "Threat Detection & Response", "AI Networking"],
+      bundles: ["Agentic SOC", "Zero Trust Foundation"],
+      families: ["identity-intel", "ai-defense", "duo"],
+      signals: { has: ["duo"], missing: ["identity-intel"] },
+      dcloudPath: "zero-trust",
+      maturityNext: "unknown-assets"
+    },
+    {
+      id: "ai-stack-deploy",
+      pillar: "resilience",
+      symptom: "AI infrastructure requests stall in ticket queues while GPU clusters sit idle waiting for baseline config.",
+      outcome: "Self-service, governed provisioning of AI stacks across data center and cloud with Stack Automation.",
+      proof: {
+        metric: "Time to production-ready AI environment",
+        before: "Weeks of manual rack-and-stack, network, and compute handoffs",
+        after: "Days with Cloud Control Stack Automation and Intersight lifecycle",
+        source: "Cisco Cloud Control Stack Automation by Quali + Intersight positioning"
+      },
+      personas: {
+        netops: {
+          line: "Deliver repeatable AI fabric and compute baselines without one-off runbooks per request.",
+          symptom: "Every AI cluster request reinvents switching, compute, and automation from scratch.",
+          proof: { metric: "AI environment stand-up time", before: "Custom runbooks and manual change windows per cluster", after: "Stack Automation templates provision validated AI infrastructure" }
+        },
+        cio: {
+          line: "Accelerate AI initiatives by standardizing how infrastructure teams fulfill stack requests.",
+          symptom: "GPU investments lag because operational handoffs can't keep pace with data science demand.",
+          proof: { metric: "AI project time-to-environment", before: "Weeks waiting on cross-team provisioning", after: "Governed self-service reduces idle GPU time" }
+        },
+        ciso: {
+          line: "Apply policy and approval gates to AI stack automation instead of shadow infrastructure builds.",
+          symptom: "Teams bypass process to stand up AI environments, creating ungoverned exposure.",
+          proof: { metric: "Governed AI infrastructure provisioning", before: "Ad-hoc builds outside change control", after: "Stack Automation enforces approved templates and audit trails" }
+        }
+      },
+      useCases: ["AI Networking", "Data Center Modernization", "Cloud Migration"],
+      bundles: ["Cloud Control Platform", "AI-Ready Data Center Network"],
+      families: ["cloud-control", "intersight", "nexus", "ucs"],
+      signals: { has: ["nexus"], missing: ["cloud-control"] },
       dcloudPath: "ai-networking",
       maturityNext: "unknown-assets"
     },
@@ -915,6 +1020,9 @@
     "ot-blind": "https://www.cisco.com/site/us/en/products/security/industrial-security/cyber-vision/index.html",
     "observability-blindspots": "https://www.cisco.com/site/us/en/products/networking/software/internet-cloud-intelligence/index.html",
     "tool-sprawl-ops": "https://newsroom.cisco.com/c/r/newsroom/en/us/a/y2026/m06/cisco-unveils-agentic-platform-for-operating-and-defending-critical-it-infrastructure.html",
+    "agentic-soc-trust": "https://www.splunk.com/en_us/products/enterprise-security.html",
+    "nhi-agent-identity": "https://www.cisco.com/site/us/en/products/security/identity-services-engine/index.html",
+    "ai-stack-deploy": "https://www.cisco.com/site/us/en/products/cloud-systems-management/cloud-control/index.html",
     "unknown-assets": "https://www.cisco.com/c/en/us/support/docs/cx/cisco-iq/getting-started-guide/cx225778-cisco-iq-getting-started-guide.html",
     "vulnerability-prioritization": "https://www.cisco.com/c/en/us/products/collateral/security/vulnerability-management/security-risk-score-so.html",
     "app-performance": "https://www.cisco.com/c/en/us/solutions/data-center/appdynamics-application-performance-monitoring.html"
@@ -925,7 +1033,7 @@
 
   // Prefer observability-first narratives for families that span security and ops.
   const FAMILY_PROBLEM_ORDER = {
-    splunk: ["observability-blindspots", "app-performance"]
+    splunk: ["agentic-soc-trust", "observability-blindspots", "app-performance"]
   };
 
   // Fast lookups

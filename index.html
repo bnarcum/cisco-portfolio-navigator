@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.57";
+  window.__CPN_BUILD="3.5.58";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     try{
@@ -2136,7 +2136,7 @@ const NODES = [
    url:"https://www.cisco.com/site/us/en/products/security/firewalls/index.html",
    docsUrl:"https://www.cisco.com/c/en/us/products/security/firewalls/index.html"},
   {id:"hypershield",       name:"Cisco Hypershield",            category:"security",
-   desc:"AI-native distributed security fabric embedding enforcement directly into the network and workloads — autonomous per-workload protection without appliance sprawl.",
+   desc:"Hybrid Mesh Firewall fabric — AI-native distributed enforcement embedded in Nexus switches, DPUs, and workloads for per-segment policy without appliance sprawl.",
    useCases:["Zero Trust Security","AI Networking","Threat Detection & Response","Data Center Modernization"],
    industries:["Financial Services","Healthcare","Government","Manufacturing"],
    url:"https://www.cisco.com/site/us/en/products/security/hypershield/index.html",
@@ -2187,7 +2187,7 @@ const NODES = [
    industries:["Financial Services","Healthcare","Government","Manufacturing","Education"],
    url:"https://talosintelligence.com", docsUrl:"https://talosintelligence.com/vulnerability_info"},
   {id:"xdr",               name:"Cisco XDR",                   category:"security",
-   desc:"Extended Detection and Response correlating signals across endpoint, network, cloud, and email for unified threat detection and automated response.",
+   desc:"Extended Detection and Response correlating endpoint, network, cloud, email, and identity signals — integrates with Splunk Agentic SOC and Instant Attack Verification for guided investigation and response.",
    useCases:["Threat Detection & Response","Zero Trust Security","Cloud Migration"],
    industries:["Financial Services","Healthcare","Government","Manufacturing"],
    url:"https://www.cisco.com/site/us/en/products/security/xdr/index.html",
@@ -2241,7 +2241,7 @@ const NODES = [
    url:"https://www.cisco.com/site/us/en/products/security/industrial-security/secure-equipment-access/index.html",
    docsUrl:"https://www.cisco.com/c/en/us/products/security/industrial-security/secure-equipment-access.html"},
   {id:"identity-intel",    name:"Cisco Identity Intelligence",  category:"security",
-   desc:"Identity threat detection and response (ITDR): correlates identity signals across Duo, ISE, Azure AD, Okta, and Active Directory to surface risky behavior and dormant accounts.",
+   desc:"Identity threat detection and response (ITDR): correlates human and non-human identity signals across Duo, ISE, SaaS, and cloud directories — extends with Astrix/WideField for agent and service-account lifecycle.",
    useCases:["Zero Trust Security","Threat Detection & Response"],
    industries:["Financial Services","Healthcare","Government","Education"],
    url:"https://www.cisco.com/site/us/en/products/security/identity-services-engine/index.html",
@@ -2335,7 +2335,7 @@ const NODES = [
 
   // OBSERVABILITY
   {id:"cloud-control",     name:"Cisco Cloud Control",         category:"observability",
-   desc:"Controlled Availability AgenticOps platform bringing connected Cisco domains, AI Canvas, and governed AI-assisted investigation into a shared workspace.",
+   desc:"AgenticOps platform (generally available July 2026) unifying connected Cisco domains, AI Canvas, Stack Automation, and governed AI-assisted cross-domain investigation.",
    useCases:["Hybrid Work","Network Automation","Digital Transformation","AI Networking"],
    industries:["Healthcare","Financial Services","Education","Government","Manufacturing","Retail"],
    url:"https://cloud.cisco.com",
@@ -2351,7 +2351,7 @@ const NODES = [
    industries:["Financial Services","Retail","Healthcare","Manufacturing","Education"],
    url:"https://www.appdynamics.com", docsUrl:"https://docs.appdynamics.com"},
   {id:"splunk",            name:"Splunk",                      category:"observability",
-   desc:"Data platform for security, IT operations, and business intelligence — SIEM, SOAR, log management, and AI-driven analytics across all data sources.",
+   desc:"Data platform for security and IT operations — SIEM, SOAR, Cisco Data Fabric, Agentic SOC, Instant Attack Verification, and AI-driven analytics across all data sources.",
    useCases:["Threat Detection & Response","Network Automation","Digital Transformation","AI Networking"],
    industries:["Financial Services","Healthcare","Government","Manufacturing","Retail"],
    url:"https://www.splunk.com", docsUrl:"https://docs.splunk.com"},
@@ -2625,7 +2625,7 @@ const PRODUCTS = [
    eosDate:"Jan 30, 2021", eolDate:"Jan 31, 2026",
    successor:"desk-pro",    successorName:"Cisco Desk Pro",
    migNote:"Desk Pro replaces DX80 with a larger 4K display, AI background removal, noise cancellation, and cloud management.",
-   desc:"23\" personal video collaboration device. EOS Jan 2021; Last Cloud Support Apr 27, 2025; Last Support Jan 31, 2026.",
+   desc:"23\" personal video collaboration device. Fully end-of-life — last support Jan 31, 2026.",
    url:"https://www.cisco.com/c/en/us/products/collateral/collaboration-endpoints/eos-eol-notice-c51-744413.html"},
   {id:"dx70",           name:"Cisco Webex DX70",            family:"desk-devices",   status:"eol",
    eosDate:"Oct 2020",  eolDate:"Oct 2025",
@@ -2947,6 +2947,9 @@ const PRODUCTS = [
   {id:"mx450",          name:"Meraki MX450",                 family:"meraki-mx",      status:"current",
    desc:"Highest-capacity Meraki security appliance with 10Gbps throughput and 8 SFP uplinks for enterprise HQ and large campuses.",
    url:"https://meraki.cisco.com/products/appliances/"},
+  {id:"meraki-mcp",     name:"Meraki MCP Server",            family:"meraki-mx",      status:"current",
+   desc:"Model Context Protocol server for Meraki Dashboard — exposes governed network, security, and device context to Cloud Control and third-party AI agents.",
+   url:"https://meraki.cisco.com/"},
 
   // ── FIREWALLS (Current - Branch)
   {id:"ftd-1010",       name:"Cisco Secure Firewall 1010",   family:"sf-branch",      status:"current",
@@ -3024,6 +3027,9 @@ const PRODUCTS = [
    url:"https://www.cisco.com/site/us/en/products/security/ai-defense/index.html"},
   {id:"aid-explorer",   name:"AI Defense Explorer Edition",  family:"ai-defense",     status:"current",
    desc:"Self-service red-team tier for AI builders — point at your model or application and get an in-depth security report in minutes, ready for security review. Entry-tier of the AI Defense subscription family.",
+   url:"https://www.cisco.com/site/us/en/products/security/ai-defense/index.html"},
+  {id:"aid-antares",    name:"Antares Small Language Models", family:"ai-defense",     status:"current",
+   desc:"Foundation AI SLMs for on-box and edge AI security inference — tuned for guardrail, classification, and agent-traffic inspection with AI Defense.",
    url:"https://www.cisco.com/site/us/en/products/security/ai-defense/index.html"},
 
   // ── FIREWALLS (EOL - ASA)
@@ -3317,6 +3323,9 @@ const PRODUCTS = [
   {id:"xdr-premier",    name:"Cisco XDR Premier",            family:"xdr",            status:"current",
    desc:"Adds Talos-led 24×7 managed threat hunting, MDR services, and advanced playbook authoring.",
    url:"https://www.cisco.com/site/us/en/products/security/xdr/index.html"},
+  {id:"xdr-iav",        name:"Instant Attack Verification",  family:"xdr",            status:"current",
+   desc:"Agentic SOC capability that validates suspected attacks in minutes — automated enrichment, evidence gathering, and analyst-ready verdicts integrated with XDR and Splunk.",
+   url:"https://www.splunk.com/en_us/products/enterprise-security.html"},
   {id:"securex",        name:"Cisco SecureX",                family:"xdr",            status:"eol",
    eosDate:"Jul 31, 2024", eolDate:"Jul 31, 2024",
    successor:"xdr-essentials", successorName:"Cisco XDR Essentials",
@@ -3434,6 +3443,9 @@ const PRODUCTS = [
   {id:"cc-ai-assistant", name:"Catalyst Center AI Assistant", family:"catalyst-center", status:"current",
    desc:"AI-driven assistant inside Catalyst Center — natural-language network ops, anomaly summarization, and guided remediation.",
    url:"https://www.cisco.com/c/en/us/products/cloud-systems-management/dna-center/index.html"},
+  {id:"cc-mcp-server", name:"Catalyst Center MCP Server",   family:"catalyst-center", status:"current",
+   desc:"Model Context Protocol server exposing governed campus and branch network context to AI agents — inventory, assurance, and change workflows.",
+   url:"https://www.cisco.com/site/us/en/products/networking/catalyst-center/index.html"},
 
   // ── SD-WAN control plane (Current)
   {id:"vmanage",        name:"Cisco SD-WAN Manager (vManage)", family:"sdwan", status:"current",
@@ -3484,6 +3496,9 @@ const PRODUCTS = [
    url:"https://www.cisco.com/site/us/en/products/networking/data-center-networking/nexus-hyperfabric/index.html"},
   {id:"nexus-cloud",    name:"Cisco Nexus Cloud",             family:"nexus-one", status:"current",
    desc:"SaaS lifecycle and assurance for Nexus switches — turnkey day-0/1/2 ops for NX-OS without on-prem controllers.",
+   url:"https://www.cisco.com/site/us/en/products/networking/data-center-networking/nexus-hyperfabric/index.html"},
+  {id:"nexus-live-protect", name:"Nexus Live Protect",      family:"nexus-one", status:"current",
+   desc:"Continuous fabric assurance and proactive remediation for Nexus One — AI-driven anomaly detection, drift correction, and change validation.",
    url:"https://www.cisco.com/site/us/en/products/networking/data-center-networking/nexus-hyperfabric/index.html"},
 
   // ── SILICON ONE chips (Current)
@@ -3799,6 +3814,12 @@ const PRODUCTS = [
   {id:"splunk-mission-control", name:"Splunk Mission Control", family:"splunk", status:"current",
    desc:"Unified SOC workbench bringing ES + SOAR + Intelligence Management + Attack Analyzer into a single analyst pane.",
    url:"https://www.splunk.com/en_us/products/mission-control.html"},
+  {id:"splunk-data-fabric", name:"Cisco Data Fabric",        family:"splunk", status:"current",
+   desc:"Unified data layer connecting Splunk, security telemetry, and Cisco domains — governed ingestion, entity resolution, and analytics for Agentic SOC workflows.",
+   url:"https://www.splunk.com/en_us/products.html"},
+  {id:"splunk-agentic-soc", name:"Splunk Agentic SOC",       family:"splunk", status:"current",
+   desc:"AI agents for tier-1 triage, investigation, and response — pairs with Mission Control, XDR, and Instant Attack Verification for analyst-guided automation.",
+   url:"https://www.splunk.com/en_us/products/enterprise-security.html"},
 
   // ── CLOUD CONTROL (Current)
   {id:"control-hub",       name:"Collaboration Control Hub",   family:"cloud-control", status:"current",
@@ -3813,6 +3834,12 @@ const PRODUCTS = [
    desc:"Conversational copilot inside Cloud Control — contextual Q&A and quick actions on the page you are viewing.",
    url:"https://cloud.cisco.com",
    docsUrl:"https://help.webex.com/en-us/cloud-control"},
+  {id:"cc-stack-automation", name:"Stack Automation by Quali", family:"cloud-control", status:"current",
+   desc:"Self-service environment provisioning and day-2 automation for hybrid infrastructure — integrated into Cloud Control for governed AI stack deployment.",
+   url:"https://cloud.cisco.com"},
+  {id:"cc-agent-studio", name:"Cloud Control Agent Studio",    family:"cloud-control", status:"current",
+   desc:"Build and govern custom AI agents for operational workflows — connects Cloud Control domains, MCP tools, and approved remediation playbooks.",
+   url:"https://cloud.cisco.com"},
 
   // ── FSO (Current)
   {id:"fso-platform",   name:"FSO Platform Subscription",     family:"fso", status:"current",
@@ -4391,10 +4418,10 @@ const BUNDLES = [
    desc:"Complete Zero Trust architecture: identity, device posture, network access control, and cloud-delivered security."},
   {name:"Hybrid Work Suite",
    products:["webex-app","vidcast","slido","webex-calling","room-systems","desk-devices","thousandeyes","secure-access","duo","cloud-control"],
-   desc:"Hybrid-work architecture spanning collaboration, calling, devices, network assurance, and secure access; Cloud Control capabilities require eligibility for Controlled Availability."},
+   desc:"Hybrid-work architecture spanning collaboration, calling, devices, network assurance, and secure access; Cloud Control is generally available with eligibility for some integrations."},
   {name:"Threat Defense Platform",
    products:["sf-branch","secure-endpoint","xdr","talos","splunk"],
-   desc:"Integrated threat detection and automated response across endpoint, network, and SIEM."},
+   desc:"Integrated threat detection and automated response across endpoint, network, SIEM, and Agentic SOC."},
   {name:"AI-Ready Data Center Network",
    products:["nexus","nexus-dashboard","nexus-one","silicon-one","ucs","intersight"],
    desc:"AI-ready compute and Ethernet fabric with Nexus switching, Nexus Dashboard operations, UCS, and Intersight lifecycle management."},
@@ -4412,7 +4439,10 @@ const BUNDLES = [
    desc:"Cloud-native omnichannel contact center with AI-powered routing, digital channels, and secure agent access."},
   {name:"Cloud Control Platform",
    products:["cloud-control","webex-app","webex-calling","thousandeyes","catalyst-center"],
-   desc:"Controlled Availability architecture for connected Cisco domains, AI Canvas, shared context, and cross-domain investigation; availability and integrations depend on the enrolled release."},
+   desc:"Generally available AgenticOps architecture for connected Cisco domains, AI Canvas, Stack Automation, and cross-domain investigation; integrations depend on enrolled release."},
+  {name:"Agentic SOC",
+   products:["splunk","xdr","identity-intel","talos"],
+   desc:"Agentic security operations — Splunk Agentic SOC, Instant Attack Verification, XDR correlation, and identity context for faster, trusted response."},
   {name:"Cisco IQ Operations",
    products:["cisco-iq","catalyst-center","intersight","thousandeyes","vuln-mgmt","xdr"],
    desc:"Cisco IQ asset intelligence paired with adjacent domain-management, assurance, vulnerability, and response platforms; each system retains its own operational scope."}
@@ -11379,7 +11409,7 @@ document.addEventListener("keydown",ev=>{
   // The old "cisco-portfolio-tour-completed-v1" key still suppresses the *first-time* tour
   // for users who already completed v1; they can re-launch the latest via the ? button.
   const STORAGE_KEY = "cisco-portfolio-tour-completed-v1";
-  const TOUR_VERSION = "v3.4";
+  const TOUR_VERSION = "v3.5";
   const STORAGE_KEY_LATEST = "cisco-portfolio-tour-latest-seen";
 
   // Inject DOM
@@ -11590,7 +11620,7 @@ document.addEventListener("keydown",ev=>{
     {
       target: "#tools-acquisitions", place: "top",
       title: "Acquisitions Timeline — Cisco's build story",
-      body: `<strong>Acquisitions Timeline</strong> is an interactive logo history — 250+ deals from Webex and Meraki
+      body: `<strong>Acquisitions Timeline</strong> is an interactive logo history — 258 deals from Webex and Meraki
              through Splunk, Isovalent, and recent intent-to-acquire announcements.<br><br>
              Scroll the year rail, search by company, filter by portfolio family, and open a deal card to see
              summary, price, and links to Cisco + Wikipedia sources.`,

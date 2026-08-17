@@ -51,6 +51,45 @@ const FAMILY_MAP = {
   isovalent: ["hypershield"],
   widefield: ["splunk"],
   widefieldsecurity: ["splunk"],
+  galileo: ["splunk", "appdynamics"],
+  galileotechnologies: ["splunk", "appdynamics"],
+  astrix: ["identity-intel", "ai-defense"],
+  astrixsecurity: ["identity-intel", "ai-defense"],
+  auraassetintelligence: ["splunk", "xdr"],
+  neuralfabric: ["cisco-iq", "cloud-control"],
+  ezdubs: ["webex-app", "webex-meetings"],
+};
+
+/** Post-merge overrides — completion dates, family links, summaries omitted upstream. */
+const MANUAL_PATCHES = {
+  galileo: {
+    business: "AI agent observability",
+    families: ["splunk", "appdynamics"],
+    featured: true,
+  },
+  "astrix-security": {
+    business: "Non-human identity (NHI) security",
+    families: ["identity-intel", "ai-defense"],
+    featured: true,
+  },
+  "widefield-security": {
+    company: "WideField Security Inc.",
+    business: "Identity lifecycle security for Agentic SOC",
+    families: ["splunk", "identity-intel"],
+    featured: true,
+    completed: "2026-07-31",
+  },
+  "aura-asset-intelligence": {
+    summary:
+      "Aura Asset Intelligence is a cyber asset attack surface management (CAASM) company based in Canada. The acquisition expands Splunk asset discovery and exposure context for security operations and threat investigation.",
+    families: ["splunk", "xdr"],
+  },
+  neuralfabric: {
+    families: ["cisco-iq", "cloud-control"],
+  },
+  ezdubs: {
+    families: ["webex-app", "webex-meetings"],
+  },
 };
 
 const ERA_BANDS = [
@@ -360,12 +399,28 @@ export function mergeRecords(wiki, cisco) {
   // Mark megadeals
   for (const r of list) {
     if ((r.valueUsd || 0) >= 3e9) r.featured = true;
-    if (["splunk", "webex-communications-inc", "webex", "meraki-inc", "duo-security", "thousandeyes-inc", "appdynamics-inc", "tandberg", "sourcefire", "scientific-atlanta-inc", "nds-group-ltd", "opendns", "acacia-communications-inc"].includes(r.id)) {
+    if (["splunk", "webex-communications-inc", "webex", "meraki-inc", "duo-security", "thousandeyes-inc", "appdynamics-inc", "tandberg", "sourcefire", "scientific-atlanta-inc", "nds-group-ltd", "opendns", "acacia-communications-inc", "galileo", "astrix-security", "widefield-security"].includes(r.id)) {
       r.featured = true;
     }
   }
 
   return list;
+}
+
+function applyManualPatches(list) {
+  for (const acq of list) {
+    const patch = MANUAL_PATCHES[acq.id];
+    if (!patch) continue;
+    if (patch.company) acq.company = patch.company;
+    else if (patch.completed) {
+      acq.company = acq.company.replace(/\s*\(intent to acquire\)/i, "").trim();
+    }
+    if (patch.business) acq.business = patch.business;
+    if (patch.summary) acq.summary = patch.summary;
+    if (patch.families) acq.families = patch.families;
+    if (patch.featured != null) acq.featured = patch.featured;
+    if (patch.completed) acq.completed = patch.completed;
+  }
 }
 
 async function fetchWikiRows() {
@@ -419,6 +474,7 @@ async function main() {
   console.log(`  Cisco: ${ciscoRows.length} entries`);
 
   const acquisitions = mergeRecords(wikiRows, ciscoRows);
+  applyManualPatches(acquisitions);
   console.log(`  Merged: ${acquisitions.length} unique acquisitions`);
 
   const manifestPath = path.join(root, "assets/acq-logos/manifest.json");
