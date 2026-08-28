@@ -10,26 +10,39 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.58";
+  window.__CPN_BUILD="3.5.59";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
+    var staleKeys=["cpn-view-mode-v2","cpn-view-focus-v2","cpn-autosave-v2","cpn-current-v2","cpn-all-products-layers-v1"];
     try{
       var seen=localStorage.getItem(key);
+      var needsBust=!/[?&]_v=/.test(location.search);
       if(seen&&seen!==V){
-        ["cpn-view-mode-v2","cpn-view-focus-v2","cpn-autosave-v2","cpn-current-v2"].forEach(function(k){localStorage.removeItem(k);});
+        staleKeys.forEach(function(k){localStorage.removeItem(k);});
         localStorage.setItem(key,V);
-        if(!sessionStorage.getItem(reloadKey)){
+        if(needsBust&&!sessionStorage.getItem(reloadKey)){
           sessionStorage.setItem(reloadKey,"1");
-          location.reload();
+          location.replace(location.pathname+"?_v="+encodeURIComponent(V)+(location.hash||""));
           return;
         }
         sessionStorage.removeItem(reloadKey);
       }else if(!seen){localStorage.setItem(key,V);}
       if(/[?&]_v=/.test(location.search)){
+        sessionStorage.removeItem(reloadKey);
         var q=location.search.replace(/[?&]_v=[^&]*/g,"").replace(/^&/,"?").replace(/\?&/,"?").replace(/\?$/,"");
         history.replaceState(null,"",location.pathname+(q||"")+location.hash);
       }
     }catch(e){}
+  })();
+  (function(){
+    var v=encodeURIComponent(window.__CPN_BUILD);
+    ["cpn-ui.css","cpn-light.css","cpn-iq-theme.css","cpn-logo-intro.css",
+     "cpn-acquisitions-timeline.css","cpn-refresh-timeline.css","cpn-solutions.css"].forEach(function(f){
+      var l=document.createElement("link");
+      l.rel="stylesheet";
+      l.href="assets/"+f+"?v="+v;
+      document.head.appendChild(l);
+    });
   })();
   (function(){
     var q = location.search || "";
@@ -55,13 +68,6 @@
   {"imports":{"three":"./vendor/three.module.min.js"}}
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
-  <link rel="stylesheet" href="assets/cpn-ui.css?v=3.5.13"/>
-  <link rel="stylesheet" href="assets/cpn-light.css?v=3.5.13"/>
-  <link rel="stylesheet" href="assets/cpn-iq-theme.css?v=3.5.13"/>
-  <link rel="stylesheet" href="assets/cpn-logo-intro.css?v=2.91.6"/>
-  <link rel="stylesheet" href="assets/cpn-acquisitions-timeline.css?v=3.5.12"/>
-  <link rel="stylesheet" href="assets/cpn-refresh-timeline.css?v=3.5.9"/>
-  <link rel="stylesheet" href="assets/cpn-solutions.css?v=3.5.53"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     @font-face{
@@ -6399,15 +6405,13 @@ function clearViewTransitionClasses(){
   });
 }
 
-/** Recover from bfcache or stale cache leaving the canvas invisible. */
+/** Recover from bfcache, stuck view transitions, or stale zoom leaving the canvas blank. */
 function repairCanvasView(){
   clearViewTransitionClasses();
   if (typeof viewMode === "undefined" || !lyr) return;
   if (viewMode === "overview"){
-    if (!lyr.select("g.overview-deck").node()){
-      updateOverviewDeck();
-      scheduleGraphFit("overview");
-    }
+    updateOverviewDeck();
+    fitOverviewDeckView();
   } else if (viewMode === "spatial"){
     if (spatialState?.active) refreshSpatialGraph();
   } else if (ndG){
@@ -6425,6 +6429,7 @@ function runViewTransition(callback, from, to){
   if (reduced || els.length === 0){ callback(); return; }
   document.body.classList.add("view-transitioning", xcls);
   els.forEach(el => { el.classList.add("view-exit", xcls); });
+  const safety = setTimeout(clearViewTransitionClasses, 720);
   setTimeout(() => {
     callback();
     requestAnimationFrame(() => {
@@ -6433,6 +6438,7 @@ function runViewTransition(callback, from, to){
         el.classList.add("view-enter", xcls);
       });
       setTimeout(() => {
+        clearTimeout(safety);
         clearViewTransitionClasses();
       }, 360);
     });
@@ -17950,7 +17956,10 @@ function boot(){
   // Restore prior state (URL hash > current plan > autosave)
   bootRestore();
   repairCanvasView();
-  window.addEventListener("pageshow", ev => { if (ev.persisted) repairCanvasView(); });
+  window.addEventListener("pageshow", () => repairCanvasView());
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") repairCanvasView();
+  });
   if (typeof updatePlannerUI === "function") updatePlannerUI();
   if (typeof NODES !== "undefined") {
     window.__cpnDesignCatalog = {
@@ -17986,16 +17995,15 @@ window.__cpnV2 = {
 };
 })();
 </script>
-<script src="assets/cpn-problems.js?v=3.5.12"></script>
-<script src="assets/cpn-solutions.js?v=3.5.52"></script>
-<script src="assets/cpn-solutions-ui.js?v=3.5.53"></script>
-<script src="assets/cpn-outcome-card.js?v=3.5.12"></script>
-<script src="assets/cpn-cloud-control-ops.js?v=3.3.0"></script>
-<script src="assets/cpn-lazy-load.js?v=3.3.0"></script>
-<script src="assets/cpn-kiosk.js?v=3.3.0"></script>
-<script src="assets/cpn-acquisitions-data.js?v=3.5.55"></script>
-<script src="assets/cpn-refresh-timeline.js?v=3.5.12"></script>
-<script src="assets/cpn-acquisitions-timeline.js?v=3.5.12"></script>
-<script src="assets/cpn-logo-intro.js?v=2.91.6"></script>
+<script>
+(function(){
+  var v=encodeURIComponent(window.__CPN_BUILD);
+  ["assets/cpn-problems.js","assets/cpn-solutions.js","assets/cpn-solutions-ui.js","assets/cpn-outcome-card.js",
+   "assets/cpn-cloud-control-ops.js","assets/cpn-lazy-load.js","assets/cpn-kiosk.js","assets/cpn-acquisitions-data.js",
+   "assets/cpn-refresh-timeline.js","assets/cpn-acquisitions-timeline.js","assets/cpn-logo-intro.js"].forEach(function(src){
+    document.write('<script src="'+src+"?v="+v+'"><\/script>');
+  });
+})();
+</script>
 </body>
 </html>
