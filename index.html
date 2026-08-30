@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.59";
+  window.__CPN_BUILD="3.5.60";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     var staleKeys=["cpn-view-mode-v2","cpn-view-focus-v2","cpn-autosave-v2","cpn-current-v2","cpn-all-products-layers-v1"];
@@ -6147,7 +6147,8 @@ function fitCompositionView(immediate = true){
 
 function refitGraphForChrome(animate){
   const immediate = compositionReducedMotion() || !animate;
-  if (viewMode === "composition") fitCompositionView(immediate);
+  if (viewMode === "overview") fitOverviewDeckView(immediate);
+  else if (viewMode === "composition") fitCompositionView(immediate);
   else if (viewMode === "families" && usePillarLayout()) fitPillarLayoutView(immediate);
   else if (viewMode === "families") fitVisibleGraphView(0.78, immediate);
   else if (viewMode === "all-products") fitAllProductsView();
@@ -6206,7 +6207,18 @@ function fitAllProductsView(){
   applyGraphTransform((minX + maxX) / 2, (minY + maxY) / 2, k);
 }
 
-function fitOverviewDeckView(){
+let overviewFitRetryTimer = null;
+function graphCanvasReady(){
+  const { w, h } = getDims();
+  return w >= 40 && h >= 40;
+}
+
+function fitOverviewDeckView(immediate = false){
+  if (!graphCanvasReady()){
+    clearTimeout(overviewFitRetryTimer);
+    overviewFitRetryTimer = setTimeout(() => fitOverviewDeckView(immediate), 32);
+    return;
+  }
   const D = OVERVIEW_DECK;
   const F = OVERVIEW_FIT;
   const pad = F.pad;
@@ -6222,7 +6234,7 @@ function fitOverviewDeckView(){
   const availH = Math.max(240, h - F.marginY);
   const k = Math.min(F.maxK, Math.max(F.minK,
     Math.min(availW / bw * F.widthFill, availH / bh * F.heightFill)));
-  applyGraphTransform(0, (minY + maxY) / 2, k);
+  applyGraphTransform(0, (minY + maxY) / 2, k, immediate);
 }
 
 function fitPillarLayoutView(immediate = false){
@@ -6411,7 +6423,7 @@ function repairCanvasView(){
   if (typeof viewMode === "undefined" || !lyr) return;
   if (viewMode === "overview"){
     updateOverviewDeck();
-    fitOverviewDeckView();
+    fitOverviewDeckView(true);
   } else if (viewMode === "spatial"){
     if (spatialState?.active) refreshSpatialGraph();
   } else if (ndG){
@@ -7350,8 +7362,15 @@ sim.on("end",() => {
   const {w,h}=getDims();
   svg.call(zoom.transform, d3.zoomIdentity.translate(w/2,h/2).scale(0.78));
 });
-const {w:iw,h:ih}=getDims();
-svg.call(zoom.transform, d3.zoomIdentity.translate(iw/2,ih/2).scale(0.78));
+(function applyDefaultGraphZoom(){
+  if (!graphCanvasReady()){
+    requestAnimationFrame(applyDefaultGraphZoom);
+    return;
+  }
+  if (viewMode === "overview") return;
+  const { w, h } = getDims();
+  svg.call(zoom.transform, d3.zoomIdentity.translate(w / 2, h / 2).scale(0.78));
+})();
 
 // ── Helpers
 const sid = l => (typeof l.source==="object" ? l.source.id : l.source);
@@ -10352,7 +10371,7 @@ function closePanel() {
   document.getElementById("panel-backdrop")?.classList.remove("open");
   window.__cpnOutcomeCard?.hide?.();
   if (window.__ccTeaserTimer){ clearInterval(window.__ccTeaserTimer); window.__ccTeaserTimer = null; }
-  if (viewMode !== "spatial" && viewMode !== "overview") refitGraphForChrome(true);
+  if (viewMode !== "spatial") refitGraphForChrome(true);
 }
 document.getElementById("pcl").addEventListener("click",()=>{ selected=null; clearLinkSelection(); resetHL(); closePanel(); });
 document.getElementById("panel-backdrop")?.addEventListener("click",()=>{ selected=null; clearLinkSelection(); resetHL(); closePanel(); });
@@ -10802,7 +10821,7 @@ function closePlanner(){
   plannerBtn.classList.remove("active");
   plannerBtn.innerHTML=`<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" fill="currentColor"/><rect x="9" y="2" width="5" height="5" rx="1" fill="currentColor" opacity=".6"/><rect x="2" y="9" width="5" height="5" rx="1" fill="currentColor" opacity=".6"/><rect x="9" y="9" width="5" height="5" rx="1" fill="currentColor"/></svg> Account Planner`;
   selected=null; resetHL();
-  if (viewMode !== "spatial" && viewMode !== "overview") refitGraphForChrome(true);
+  if (viewMode !== "spatial") refitGraphForChrome(true);
 }
 document.getElementById("pln-edit-stack")?.addEventListener("click", () => {
   plannerSetupExpanded = true;
@@ -16852,10 +16871,21 @@ function wireAdaptivePlaceholder(){
   ro.observe(sw);
 }
 
+let chromeRefitRaf = null;
+function queueGraphChromeRefit(){
+  if (chromeRefitRaf) cancelAnimationFrame(chromeRefitRaf);
+  chromeRefitRaf = requestAnimationFrame(() => {
+    chromeRefitRaf = null;
+    if (viewMode === "spatial") return;
+    refitGraphForChrome(false);
+  });
+}
+
 function syncTopbarHeight(){
   const chrome = document.getElementById("app-chrome");
   if (!chrome) return;
   document.documentElement.style.setProperty("--topbar-h", chrome.offsetHeight + "px");
+  queueGraphChromeRefit();
 }
 function wireTopbarHeightSync(){
   const chrome = document.getElementById("app-chrome");
@@ -16864,6 +16894,20 @@ function wireTopbarHeightSync(){
   const ro = new ResizeObserver(() => syncTopbarHeight());
   ro.observe(chrome);
   window.addEventListener("resize", syncTopbarHeight);
+}
+function wireCanvasResizeRefit(){
+  const gw = document.getElementById("gw");
+  if (!gw || typeof ResizeObserver === "undefined") return;
+  let raf = null;
+  const ro = new ResizeObserver(() => {
+    if (raf) cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => {
+      raf = null;
+      if (viewMode === "spatial") return;
+      refitGraphForChrome(false);
+    });
+  });
+  ro.observe(gw);
 }
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -17938,6 +17982,7 @@ function boot(){
   wireSearchPulse();
   wireAdaptivePlaceholder();
   wireTopbarHeightSync();
+  wireCanvasResizeRefit();
   wireKeyboardA11y();
   watchStackForAutoSave();
   watchAnalysisResults();

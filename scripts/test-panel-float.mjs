@@ -64,7 +64,7 @@ try {
     };
   });
 
-  if (state.version !== "3.5.59") errors.push(`expected 3.5.59, got ${state.version}`);
+  if (state.version !== "3.5.60") errors.push(`expected 3.5.60, got ${state.version}`);
   if (!state.panelOpen) errors.push("panel did not open");
   if (!state.hasHead) errors.push("missing phead content");
   if (!state.hasFooter) errors.push("missing pfooter content");
