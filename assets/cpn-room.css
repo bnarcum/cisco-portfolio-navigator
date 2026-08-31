@@ -23,7 +23,8 @@ html.cpn-room-mode .bg-glow { animation: none; }
 html.cpn-room-mode .logo-mark { animation: none; }
 html.cpn-room-mode #design-studio-btn,
 html.cpn-room-mode #vm-seg button[data-vm="spatial"],
-html.cpn-room-mode #vm-seg button[data-vm="all-products"] {
+html.cpn-room-mode #vm-seg button[data-vm="all-products"],
+html.cpn-room-mode #first-path {
   display: none !important;
 }
 html.cpn-room-mode #gs.view-x-dissolve.view-exit,

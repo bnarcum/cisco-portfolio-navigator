@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.61";
+  window.__CPN_BUILD="3.5.62";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     var staleKeys=["cpn-view-mode-v2","cpn-view-focus-v2","cpn-autosave-v2","cpn-current-v2","cpn-all-products-layers-v1"];
@@ -1409,6 +1409,31 @@
       background:var(--surface);border:1px solid var(--border);border-radius:20px;
       padding:5px 14px;font-size:11px;color:var(--subtle);z-index:50;
       white-space:nowrap;pointer-events:none}
+
+    #first-path{position:fixed;left:50%;top:calc(var(--topbar-h) + 14px);
+      transform:translateX(-50%);z-index:58;width:min(520px, calc(100vw - 28px));
+      background:var(--glass-bg);border:1px solid var(--border);border-radius:14px;
+      padding:16px 18px 14px;box-shadow:0 16px 40px rgba(0,0,0,.45);
+      backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+    #first-path[hidden]{display:none!important}
+    #first-path .fp-dismiss{position:absolute;top:8px;right:10px;width:28px;height:28px;
+      border:none;background:transparent;color:var(--muted);font-size:20px;line-height:1;
+      cursor:pointer;border-radius:6px}
+    #first-path .fp-dismiss:hover{color:var(--text);background:rgba(255,255,255,.06)}
+    #first-path .fp-kicker{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+      color:var(--accent);margin-bottom:4px}
+    #first-path .fp-title{font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px;line-height:1.25}
+    #first-path .fp-sub{font-size:12.5px;color:var(--muted);line-height:1.45;margin-bottom:12px}
+    #first-path .fp-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+    #first-path .fp-actions button{flex:1 1 140px;min-height:38px;border-radius:10px;
+      border:1px solid var(--border);background:var(--surface2);color:var(--text);
+      font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;padding:8px 10px}
+    #first-path .fp-actions button:hover{border-color:var(--accent);color:var(--accent)}
+    #first-path .fp-links{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+    #first-path .fp-links button{border:none;background:none;color:var(--muted);font:inherit;
+      font-size:12px;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px}
+    #first-path .fp-links button:hover{color:var(--text)}
+    [data-theme="light"] #first-path{box-shadow:0 12px 32px rgba(7,24,45,.12)}
     #fbadge{position:static;transform:none;
       background:var(--surface);border:1px solid var(--accent);border-radius:20px;
       padding:4px 14px;font-size:11px;color:var(--accent);display:none;pointer-events:none;
@@ -1587,9 +1612,9 @@
   <div class="vm-seg" id="vm-seg" role="group" aria-label="Visualization level">
     <button type="button" data-vm="overview"     class="active" title="Overview — One Cisco strategy (default)">Overview</button>
     <button type="button" data-vm="families"     title="Families — full product-family graph">Families</button>
-    <button type="button" data-vm="composition"  disabled title="Composition — pick a family first">Composition</button>
-    <button type="button" data-vm="all-products" title="All Products — every family + product (dense; power-user view)">All</button>
-    <button type="button" data-vm="spatial" title="Spatial — immersive 3D map of product families">Spatial</button>
+    <button type="button" data-vm="composition"  disabled title="Inside this family — pick a family first">Inside this family</button>
+    <button type="button" data-vm="all-products" title="Everything — every family and product (dense view)">Everything</button>
+    <button type="button" data-vm="spatial" title="3D map — immersive view of product families">3D map</button>
   </div>
   <div class="actionbar-sep" aria-hidden="true"></div>
   <div class="actionbar-end">
@@ -1637,7 +1662,7 @@
       <rect x="2" y="9" width="5" height="5" rx="1" fill="currentColor" opacity=".6"/>
       <rect x="9" y="9" width="5" height="5" rx="1" fill="currentColor"/>
     </svg>
-    Account Planner
+    This account
   </button>
   </div>
   </div>
@@ -1728,7 +1753,7 @@
 </div>
 
 <div id="planner">
-  <div id="ph"><div class="ph-t">Account Planner</div></div>
+  <div id="ph"><div class="ph-t">This account</div></div>
   <div id="planner-scroll">
     <div id="planner-guided">
       <span class="pln-banner-t">New account?</span>
@@ -1800,7 +1825,22 @@
 </div>
 
 <div id="tools" role="toolbar" aria-label="Graph tools"></div>
-<div id="hint">Scroll to zoom · Drag to pan · Click node for details</div>
+<div id="hint">Click a pillar to see the families behind it.</div>
+<div id="first-path" hidden role="dialog" aria-labelledby="fp-title">
+  <button type="button" class="fp-dismiss" data-fp="skip" aria-label="Dismiss start here">×</button>
+  <p class="fp-kicker">Start here</p>
+  <h2 class="fp-title" id="fp-title">Where do you want to go?</h2>
+  <p class="fp-sub">Click a pillar to see the families behind it — or pick a path.</p>
+  <div class="fp-actions">
+    <button type="button" data-fp="pillar">Explore a pillar</button>
+    <button type="button" data-fp="solutions">Find a solution</button>
+    <button type="button" data-fp="plan">Start a plan</button>
+  </div>
+  <div class="fp-links">
+    <button type="button" data-fp="tour">Take the full tour</button>
+    <button type="button" data-fp="skip">Skip for now</button>
+  </div>
+</div>
 <div id="toast"></div>
 
 <script src="assets/cisco-symbols.js"></script>
@@ -4595,12 +4635,7 @@ function syncAllProductsLayersUI(){
     btn.classList.toggle("active", on);
     btn.setAttribute("aria-pressed", on ? "true" : "false");
   });
-  const hint = document.getElementById("hint");
-  if (hint && viewMode === "all-products"){
-    const band = allProductsZoomBand(allProductsZoomK);
-    const zoomLabel = { far: "Families", mid: "Products", close: "Detail" }[band];
-    hint.textContent = `All view · Zoom level: ${zoomLabel} · Toggle layers above · Scroll to zoom in`;
-  }
+  if (viewMode === "all-products") updateCanvasHint();
 }
 function initAllProductsLayersUI(){
   const el = document.getElementById("all-products-layers");
@@ -6639,18 +6674,29 @@ function applyCompositionNodeStyles(){
   updateCompositionLabelVisibility(d3.zoomTransform(svgEl).k);
 }
 
-function updateCompositionHint(){
+function updateCanvasHint(){
   const hint = document.getElementById("hint");
   if (!hint) return;
-  if (viewMode !== "composition" || !viewFocus){
-    hint.textContent = "Scroll to zoom · Drag to pan · Click node for details";
+  if (viewMode === "overview"){
+    hint.textContent = "Click a pillar to see the families behind it.";
     return;
   }
-  const prods = PRODUCTS.filter(p => p.family === viewFocus && productMatchesFilters(p));
-  const cur = prods.filter(p => p.status === "current").length;
-  const leg = prods.filter(p => p.status === "eol").length;
-  hint.textContent = `${cur} current${leg ? ` · ${leg} EoL` : ""} · Drag ring to rotate · Click a product for details · Purple dashed = upgrade path · Esc to go back`;
+  if (viewMode === "composition" && viewFocus){
+    const prods = PRODUCTS.filter(p => p.family === viewFocus && productMatchesFilters(p));
+    const cur = prods.filter(p => p.status === "current").length;
+    const leg = prods.filter(p => p.status === "eol").length;
+    hint.textContent = `${cur} current${leg ? ` · ${leg} EoL` : ""} · Drag ring to rotate · Click a product for details · Purple dashed = upgrade path · Esc to go back`;
+    return;
+  }
+  if (viewMode === "all-products"){
+    const band = allProductsZoomBand(allProductsZoomK);
+    const zoomLabel = { far: "Families", mid: "Products", close: "Detail" }[band];
+    hint.textContent = `Everything · Zoom level: ${zoomLabel} · Toggle layers above · Scroll to zoom in`;
+    return;
+  }
+  hint.textContent = "Scroll to zoom · Drag to pan · Click a family for details";
 }
+function updateCompositionHint(){ updateCanvasHint(); }
 
 function pillarGuidesTheme(){
   if (isLightTheme()){
@@ -9632,9 +9678,11 @@ function updateViewModeUI(){
     const canComp = !!compFocus;
     compBtn.disabled = !canComp && viewMode !== "composition";
     compBtn.title = canComp || viewMode === "composition"
-      ? `Composition — ${nodeById[compFocus]?.name || "current focus"}`
-      : "Composition — pick a family first";
+      ? `Inside this family — ${nodeById[compFocus]?.name || "current focus"}`
+      : "Inside this family — pick a family first";
   }
+  syncFirstPathVisibility();
+  updateCanvasHint();
   // Category pills and filter dropdowns: active in Families + All-Products,
   // muted otherwise (Overview / Composition operate on synthesized data).
   const pills = document.getElementById("cpills");
@@ -9651,6 +9699,60 @@ function updateViewModeUI(){
   syncAllProductsLayersUI();
 }
 
+const FIRST_PATH_KEY = "cpn-first-path-v1";
+function firstPathSeen(){
+  try { return localStorage.getItem(FIRST_PATH_KEY) === "1"; } catch (e) { return true; }
+}
+function markFirstPathSeen(){
+  try { localStorage.setItem(FIRST_PATH_KEY, "1"); } catch (e) {}
+}
+function syncFirstPathVisibility(){
+  const el = document.getElementById("first-path");
+  if (!el) return;
+  const show = !el.dataset.done && !firstPathSeen() && !window.__CPN_ROOM_MODE && viewMode === "overview";
+  el.hidden = !show;
+  document.body.classList.toggle("first-path-open", show);
+}
+function dismissFirstPath(){
+  const el = document.getElementById("first-path");
+  if (el) el.dataset.done = "1";
+  markFirstPathSeen();
+  syncFirstPathVisibility();
+}
+function wireFirstPath(){
+  const el = document.getElementById("first-path");
+  if (!el || el.dataset.wired) return;
+  el.dataset.wired = "1";
+  el.addEventListener("click", ev => {
+    const btn = ev.target.closest("[data-fp]");
+    if (!btn) return;
+    const act = btn.dataset.fp;
+    if (act === "pillar"){
+      dismissFirstPath();
+      return;
+    }
+    if (act === "solutions"){
+      dismissFirstPath();
+      window.__cpnSolutionsUI?.openOverlay?.();
+      return;
+    }
+    if (act === "plan"){
+      dismissFirstPath();
+      if (typeof openGuidedWizard === "function") openGuidedWizard();
+      else window.openGuidedWizard?.();
+      return;
+    }
+    if (act === "tour"){
+      dismissFirstPath();
+      window.startTour?.();
+      return;
+    }
+    if (act === "skip") dismissFirstPath();
+  });
+  syncFirstPathVisibility();
+}
+wireFirstPath();
+
 // ── Breadcrumb chip rendering (used by Phase-3 polish; built in now so
 //    state stays consistent across mode switches).
 function updateBreadcrumb(){
@@ -9661,13 +9763,13 @@ function updateBreadcrumb(){
   if (viewMode === "spatial"){
     if (spatialState.focusFamily){
       const fam = nodeById[spatialState.focusFamily];
-      cb.innerHTML = `<span class="vm-cb-step" data-spatial-back="1">Spatial</span>
+      cb.innerHTML = `<span class="vm-cb-step" data-spatial-back="1">3D map</span>
         <span class="vm-cb-sep">›</span>
         <span class="vm-cb-current">${fam?.name || "Family"}</span>
-        <button class="vm-cb-x" title="Back to spatial map" aria-label="Close family composition">×</button>`;
+        <button class="vm-cb-x" title="Back to 3D map" aria-label="Close family composition">×</button>`;
     } else {
-      cb.innerHTML = `<span class="vm-cb-current">Spatial view</span>
-        <button class="vm-cb-x" title="Back to families" aria-label="Close spatial view">×</button>`;
+      cb.innerHTML = `<span class="vm-cb-current">3D map</span>
+        <button class="vm-cb-x" title="Back to families" aria-label="Close 3D map">×</button>`;
     }
     cb.classList.add("show");
     return;
@@ -10812,14 +10914,14 @@ plannerBtn.addEventListener("click",()=>plannerOpen?closePlanner():openPlanner()
 function openPlanner(){
   plannerOpen=true; plannerEl.classList.add("open");
   plannerBtn.classList.add("active");
-  plannerBtn.innerHTML=`<span style="font-size:14px">&#xd7;</span> Close Planner`;
+  plannerBtn.innerHTML=`<span style="font-size:14px">&#xd7;</span> Close`;
   closePanel(); highlightStack();
   updatePlannerUI();
 }
 function closePlanner(){
   plannerOpen=false; plannerEl.classList.remove("open");
   plannerBtn.classList.remove("active");
-  plannerBtn.innerHTML=`<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" fill="currentColor"/><rect x="9" y="2" width="5" height="5" rx="1" fill="currentColor" opacity=".6"/><rect x="2" y="9" width="5" height="5" rx="1" fill="currentColor" opacity=".6"/><rect x="9" y="9" width="5" height="5" rx="1" fill="currentColor"/></svg> Account Planner`;
+  plannerBtn.innerHTML=`<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" fill="currentColor"/><rect x="9" y="2" width="5" height="5" rx="1" fill="currentColor" opacity=".6"/><rect x="2" y="9" width="5" height="5" rx="1" fill="currentColor" opacity=".6"/><rect x="9" y="9" width="5" height="5" rx="1" fill="currentColor"/></svg> This account`;
   selected=null; resetHL();
   if (viewMode !== "spatial") refitGraphForChrome(true);
 }
@@ -11534,7 +11636,7 @@ document.addEventListener("keydown",ev=>{
              add-ons, and bundle coverage hints.<br><br>
              From detail view, <strong>View on graph</strong> dims everything except the solution families and
              draws direct/adjacent integration lines between them.`,
-      tip: `<strong>Add to plan</strong> pushes the stack into Account Planner in one click.`,
+      tip: `<strong>Add to plan</strong> pushes the stack into This account in one click.`,
       before: () => {
         tourCloseOverlays();
         tourCloseGuidedWizard();
@@ -11548,9 +11650,9 @@ document.addEventListener("keydown",ev=>{
     {
       target: "#vm-seg", place: "bottom",
       title: "Drill to products & upgrade paths",
-      body: `<strong>Composition</strong> pins one family in the center with every SKU orbiting it —
+      body: `<strong>Inside this family</strong> pins one family in the center with every SKU orbiting it —
              including purple <em>replaced by</em> arrows to successor products.<br><br>
-             Same relationships as the 2D map; <strong>Spatial</strong> offers the same drill-down in 3D when you
+             Same relationships as the 2D map; <strong>3D map</strong> offers the same drill-down when you
              want an immersive walkthrough.`,
       before: () => {
         tourCloseOverlays();
@@ -11761,8 +11863,8 @@ document.addEventListener("keydown",ev=>{
     },
     {
       target: "#planner-btn", place: "bottom",
-      title: "Account Planner — stack & analyze",
-      body: `Everything lands in the <strong>Account Planner</strong>: search and add products, use Quick start
+      title: "This account — stack & analyze",
+      body: `Everything lands in <strong>This account</strong>: search and add products, use Quick start
              templates, flag legacy tech, then <strong>Analyze Account</strong> for seven result tabs —
              Suggestions, Upgrades, Hands-on labs, Solution packages, Coverage, Migration plan, and Issues to fix.`,
       ctaText: "Open Planner →",
@@ -11906,6 +12008,7 @@ document.addEventListener("keydown",ev=>{
     backdrop.classList.add("show");
     fab.classList.remove("pulse");
     fab.classList.remove("new-badge");
+    if (typeof dismissFirstPath === "function") dismissFirstPath();
     showStep();
   }
   function end(completed = true) {
@@ -14863,7 +14966,7 @@ function buildGuidedWizard() {
   $("#gw-close").addEventListener("click", () => closeGuidedWizard(false));
   $("#gw-edit").addEventListener("click", () => { wizardState.step = 1; wizardRenderStep(); });
   $("#gw-reset").addEventListener("click", () => {
-    if (!confirm("Start over? Your guided plan answers will be cleared. The current stack in Account Planner stays until you build a new plan.")) return;
+    if (!confirm("Start over? Your guided plan answers will be cleared. The current stack in This account stays until you build a new plan.")) return;
     wizardResetAll();
     wizardRenderStep();
   });
@@ -17648,14 +17751,14 @@ const SHORTCUT_GROUPS = [
     [["Esc"], "Close the open panel or cancel"]
   ]},
   { title: "Open a workspace", items: [
-    [["P"], "Toggle the Account Planner"],
+    [["P"], "Toggle This account"],
     [["G"], "Open the Guided Plan wizard"],
     [["T"], "Toggle the Refresh Timeline"],
     [["A"], "Toggle the Ask AI assistant"],
     [["?"], "Re-launch the guided tour"]
   ]},
   { title: "Graph", items: [
-    [["Double-click"], "Drill a family into Composition view"],
+    [["Double-click"], "Open a family (Inside this family)"],
     [["Right-click"], "Open the node context menu"]
   ]}
 ];
@@ -17718,6 +17821,10 @@ function polishChrome(){
     if (ov && typeof ONE_CISCO !== "undefined") {
       ov.title = `Overview — One Cisco strategy (${ONE_CISCO.pillars.length} pillars + secure connectivity)`;
     }
+    const all = document.querySelector('#vm-seg [data-vm="all-products"]');
+    if (all) all.title = "Everything — every family and product (dense view)";
+    const spatial = document.querySelector('#vm-seg [data-vm="spatial"]');
+    if (spatial) spatial.title = "3D map — immersive view of product families";
   } catch (_) { /* non-fatal cosmetic step */ }
 }
 
@@ -17978,6 +18085,7 @@ function boot(){
   buildAiAssistant();
   buildFooter();
   polishChrome();
+  wireFirstPath();
   wireRefArchToUC();
   wireSearchPulse();
   wireAdaptivePlaceholder();
