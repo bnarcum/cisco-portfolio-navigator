@@ -44,7 +44,7 @@ const UA =
   "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
 
 const SOFT_404 =
-  /page not found|404 error|we couldn't find|no longer available|page you (?:are looking for|requested) (?:cannot|could not) be found|does not exist/i;
+  /that'?s embarrass|well,\s*that'?s embarrass|page not found|404 error|we couldn't find|we can'?t find the page|no longer available|page you (?:are looking for|requested) (?:cannot|could not) be found|does not exist/i;
 
 const SOURCES = [
   "index.html",
@@ -69,9 +69,9 @@ const IGNORE_HOSTS = [
 
 function extractUrls() {
   const map = new Map(); // url -> Set(sourceFile)
-  // Only documentation-style fields: url:, cvdUrl:, datasheet:, docUrl:
+  // Product pages + docs: url, docsUrl, cvdUrl, datasheet, docUrl
   const re =
-    /\b(?:url|cvdUrl|datasheet|docUrl)\s*:\s*["'](https?:\/\/[^"'`]+)["']/g;
+    /\b(?:url|docsUrl|cvdUrl|datasheet|docUrl)\s*:\s*["'](https?:\/\/[^"'`]+)["']/g;
   for (const rel of SOURCES) {
     let text;
     try {
@@ -123,7 +123,7 @@ async function check(url) {
     let soft = false;
     if (status >= 200 && status < 400) {
       const body = await res.text().catch(() => "");
-      soft = SOFT_404.test(body.slice(0, 8000));
+      soft = SOFT_404.test(body.slice(0, 50000));
     }
     let redirected = false;
     try {
