@@ -74,6 +74,7 @@ const MANUAL_PATCHES = {
   },
   "widefield-security": {
     company: "WideField Security Inc.",
+    wikiTitle: "WideField Security Inc.",
     business: "Identity lifecycle security for Agentic SOC",
     families: ["splunk", "identity-intel"],
     featured: true,
@@ -412,14 +413,16 @@ function applyManualPatches(list) {
     const patch = MANUAL_PATCHES[acq.id];
     if (!patch) continue;
     if (patch.company) acq.company = patch.company;
-    else if (patch.completed) {
-      acq.company = acq.company.replace(/\s*\(intent to acquire\)/i, "").trim();
-    }
+    if (patch.wikiTitle) acq.wikiTitle = patch.wikiTitle;
     if (patch.business) acq.business = patch.business;
     if (patch.summary) acq.summary = patch.summary;
     if (patch.families) acq.families = patch.families;
     if (patch.featured != null) acq.featured = patch.featured;
-    if (patch.completed) acq.completed = patch.completed;
+    if (patch.completed) {
+      acq.completed = patch.completed;
+      acq.company = String(acq.company || "").replace(/\s*\(intent to acquire\)/i, "").trim();
+      if (acq.wikiTitle) acq.wikiTitle = String(acq.wikiTitle).replace(/\s*\(intent to acquire\)/i, "").trim();
+    }
   }
 }
 

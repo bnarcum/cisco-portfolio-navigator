@@ -145,6 +145,15 @@ for (const acq of data.acquisitions) {
   }
 }
 
+const widefield = data.acquisitions.find(acq => acq.id === "widefield-security");
+if (widefield?.completed !== "2026-07-31") {
+  errors.push(`widefield: expected completed 2026-07-31, got ${widefield?.completed}`);
+}
+if (/\(intent to acquire\)/i.test(widefield?.company || "") ||
+    /\(intent to acquire\)/i.test(widefield?.wikiTitle || "")) {
+  errors.push("widefield: still titled intent to acquire after close");
+}
+
 const linksys = data.acquisitions.find(acq => acq.id === "linksys");
 if (!linksys || linksys.country !== "United States" || linksys.valueUsd !== 500000000 ||
     !linksys.sources.includes("wikipedia") || !linksys.sources.includes("cisco")) {
