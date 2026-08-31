@@ -129,6 +129,7 @@
 #dcloud-btn,
 #solutions-btn,
 #theme-toggle,
+#present-btn,
 #rst {
   padding: var(--cpn-btn-py) var(--cpn-btn-px);
   border-radius: var(--cpn-radius);
@@ -205,6 +206,7 @@
   font-weight: 600;
 }
 #theme-toggle,
+#present-btn,
 #rst {
   background: transparent;
   border: 1px solid transparent;
@@ -213,6 +215,7 @@
   font-size: var(--cpn-font-md);
 }
 #theme-toggle:hover,
+#present-btn:hover,
 #rst:hover {
   background: rgba(255, 255, 255, 0.04);
   border-color: transparent;

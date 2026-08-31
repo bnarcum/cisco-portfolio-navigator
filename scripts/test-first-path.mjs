@@ -33,11 +33,14 @@ try {
         spatial: document.querySelector('#vm-seg [data-vm="spatial"]')?.textContent.trim(),
         planner: document.getElementById("planner-btn")?.textContent.replace(/\s+/g, " ").trim(),
         plannerHead: document.querySelector("#ph .ph-t")?.textContent.trim()
-      }
+      },
+      compositionHidden: !!document.querySelector('#vm-seg [data-vm="composition"]')?.hidden,
+      filtersHidden: !!document.querySelector(".actionbar-filters")?.hidden,
+      plansLabel: document.getElementById("plans-btn")?.textContent.trim()
     };
   });
 
-  if (first.version !== "3.5.62") errors.push(`expected 3.5.62, got ${first.version}`);
+  if (first.version !== "3.5.63") errors.push(`expected 3.5.63, got ${first.version}`);
   if (first.mode !== "overview") errors.push(`expected overview, got ${first.mode}`);
   if (first.fpHidden) errors.push("first-path should show on a cold Overview visit");
   if (first.fpTitle !== "Where do you want to go?") errors.push(`first-path title: ${first.fpTitle}`);
@@ -50,6 +53,9 @@ try {
   if (first.labels.spatial !== "3D map") errors.push(`spatial label: ${first.labels.spatial}`);
   if (!first.labels.planner.includes("This account")) errors.push(`planner label: ${first.labels.planner}`);
   if (first.labels.plannerHead !== "This account") errors.push(`planner head: ${first.labels.plannerHead}`);
+  if (!first.compositionHidden) errors.push("composition tab should stay hidden on Overview");
+  if (!first.filtersHidden) errors.push("category filters should stay hidden on Overview");
+  if (first.plansLabel !== "This account") errors.push(`plans-btn default: ${first.plansLabel}`);
 
   await page.click('#first-path [data-fp="skip"]');
   const afterSkip = await page.evaluate(() => ({

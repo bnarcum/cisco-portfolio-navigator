@@ -59,6 +59,7 @@
   border-color: rgba(0, 110, 143, 0.35);
 }
 [data-theme="light"] #theme-toggle:hover,
+[data-theme="light"] #present-btn:hover,
 [data-theme="light"] #rst:hover {
   background: rgba(7, 24, 45, 0.05);
   color: var(--text);

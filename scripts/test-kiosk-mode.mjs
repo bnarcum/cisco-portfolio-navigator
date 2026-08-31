@@ -38,7 +38,8 @@ try {
     kioskClass: document.documentElement.classList.contains("cpn-kiosk-mode"),
     homeFab: !!document.getElementById("kiosk-home-fab"),
     guidedHidden: getComputedStyle(document.getElementById("guided-btn")).display === "none",
-    spatialHidden: getComputedStyle(document.querySelector('#vm-seg [data-vm="spatial"]')).display === "none"
+    spatialHidden: getComputedStyle(document.querySelector('#vm-seg [data-vm="spatial"]')).display === "none",
+    presentHidden: getComputedStyle(document.getElementById("present-btn")).display === "none"
   }));
 
   if (!flags.kiosk) errors.push("__CPN_KIOSK_MODE not set");
@@ -47,6 +48,7 @@ try {
   if (!flags.homeFab) errors.push("kiosk home FAB missing");
   if (!flags.guidedHidden) errors.push("guided plan should be hidden in kiosk");
   if (!flags.spatialHidden) errors.push("spatial view should be hidden in kiosk");
+  if (!flags.presentHidden) errors.push("present toggle should be hidden in kiosk");
 
   await appPage.waitForSelector('#vm-seg [data-vm="families"].active', { timeout: 15000 });
 

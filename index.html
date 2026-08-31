@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.62";
+  window.__CPN_BUILD="3.5.63";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     var staleKeys=["cpn-view-mode-v2","cpn-view-focus-v2","cpn-autosave-v2","cpn-current-v2","cpn-all-products-layers-v1"];
@@ -48,6 +48,11 @@
     var q = location.search || "";
     window.__CPN_KIOSK_MODE = /(?:^|[?&])mode=kiosk(?:&|$)/.test(q);
     window.__CPN_ROOM_MODE = /(?:^|[?&])(?:mode=room|lite=1)(?:&|$)/.test(q) || window.__CPN_KIOSK_MODE;
+    var urlPresent = /(?:^|[?&])(?:present=1|mode=present)(?:&|$)/.test(q);
+    var storedPresent = false;
+    try { storedPresent = localStorage.getItem("cpn-present-v1") === "1"; } catch (e) {}
+    window.__CPN_PRESENT_MODE = !window.__CPN_KIOSK_MODE && (urlPresent || storedPresent);
+    if (window.__CPN_PRESENT_MODE) document.documentElement.classList.add("cpn-present-mode");
     if (window.__CPN_ROOM_MODE) {
       document.documentElement.classList.add("cpn-room-mode");
       var rl = document.createElement("link");
@@ -195,6 +200,20 @@
     .pro-filter-end{margin-left:auto;flex:0 0 auto;gap:6px}
     .actionbar-end{display:flex;align-items:center;gap:6px;margin-left:auto;
       flex-wrap:wrap;justify-content:flex-end;flex:1 1 auto;min-width:0}
+    html.cpn-present-mode #rst,
+    html.cpn-present-mode #ai-btn,
+    html.cpn-present-mode #design-studio-btn,
+    html.cpn-present-mode #dcloud-btn,
+    html.cpn-present-mode #vm-seg button[data-vm="all-products"],
+    html.cpn-present-mode #vm-seg button[data-vm="spatial"],
+    html.cpn-present-mode #tools,
+    html.cpn-present-mode #first-path,
+    html.cpn-present-mode .actionbar-filters{
+      display:none!important}
+    html.cpn-present-mode #v2-footer .ft-legal{display:none}
+    body.overview-mode .actionbar-filters,
+    body.composition-mode .actionbar-filters{display:none!important}
+    #present-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(2,200,255,.1)}
     @media (max-width: 900px){
       .actionbar-primary{align-items:flex-start}
       .actionbar-end{margin-left:0;justify-content:flex-start;width:100%}
@@ -297,7 +316,7 @@
       appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238b96a8' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
       background-repeat:no-repeat;background-position:right 8px center}
     .tbs option{background:var(--surface)}
-    #planner-btn,#guided-btn,#ai-btn,#design-studio-btn,#theme-toggle,#rst,#plans-btn,#dcloud-btn,#solutions-btn{
+    #planner-btn,#guided-btn,#ai-btn,#design-studio-btn,#theme-toggle,#present-btn,#rst,#plans-btn,#dcloud-btn,#solutions-btn{
       flex-shrink:0}
 
     /* VIEW-MODE TABS — underline active */
@@ -1612,7 +1631,7 @@
   <div class="vm-seg" id="vm-seg" role="group" aria-label="Visualization level">
     <button type="button" data-vm="overview"     class="active" title="Overview — One Cisco strategy (default)">Overview</button>
     <button type="button" data-vm="families"     title="Families — full product-family graph">Families</button>
-    <button type="button" data-vm="composition"  disabled title="Inside this family — pick a family first">Inside this family</button>
+    <button type="button" data-vm="composition" hidden disabled title="Inside this family — pick a family first">Inside this family</button>
     <button type="button" data-vm="all-products" title="Everything — every family and product (dense view)">Everything</button>
     <button type="button" data-vm="spatial" title="3D map — immersive view of product families">3D map</button>
   </div>
@@ -1620,6 +1639,7 @@
   <div class="actionbar-end">
   <button id="rst">Reset</button>
   <button id="theme-toggle" type="button" title="Toggle light / dark presentation theme" aria-label="Toggle theme">☀ Light</button>
+  <button id="present-btn" type="button" title="Present — hide power tools for a customer conversation" aria-pressed="false">Present</button>
   <button id="design-studio-btn" type="button" title="Design Studio — topology, rooms, BOM, CCW prep">
     <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.3"/>
@@ -9676,26 +9696,29 @@ function updateViewModeUI(){
   if (compBtn){
     const compFocus = viewFocus || spatialState.focusFamily;
     const canComp = !!compFocus;
-    compBtn.disabled = !canComp && viewMode !== "composition";
-    compBtn.title = canComp || viewMode === "composition"
+    const showComp = canComp || viewMode === "composition";
+    compBtn.hidden = !showComp;
+    compBtn.disabled = !showComp;
+    compBtn.title = showComp
       ? `Inside this family — ${nodeById[compFocus]?.name || "current focus"}`
       : "Inside this family — pick a family first";
   }
   syncFirstPathVisibility();
   updateCanvasHint();
-  // Category pills and filter dropdowns: active in Families + All-Products,
-  // muted otherwise (Overview / Composition operate on synthesized data).
+  const filterRow = document.querySelector(".actionbar-filters");
+  const showFilters = viewMode === "families" || viewMode === "all-products" || viewMode === "spatial";
+  if (filterRow) filterRow.hidden = !showFilters;
   const pills = document.getElementById("cpills");
   const ucs = document.getElementById("ucs");
   const inds = document.getElementById("inds");
-  const muted = !(viewMode === "families" || viewMode === "all-products" || viewMode === "spatial");
   [pills, ucs, inds].forEach(el => {
     if (!el) return;
-    el.style.opacity = muted ? 0.45 : 1;
-    el.style.pointerEvents = muted ? "none" : "auto";
+    el.style.opacity = showFilters ? 1 : 0.45;
+    el.style.pointerEvents = showFilters ? "auto" : "none";
   });
   document.body.classList.toggle("families-mode", viewMode === "families");
   document.body.classList.toggle("overview-mode", viewMode === "overview");
+  document.body.classList.toggle("composition-mode", viewMode === "composition");
   syncAllProductsLayersUI();
 }
 
@@ -9709,7 +9732,7 @@ function markFirstPathSeen(){
 function syncFirstPathVisibility(){
   const el = document.getElementById("first-path");
   if (!el) return;
-  const show = !el.dataset.done && !firstPathSeen() && !window.__CPN_ROOM_MODE && viewMode === "overview";
+  const show = !el.dataset.done && !firstPathSeen() && !window.__CPN_ROOM_MODE && !window.__CPN_PRESENT_MODE && viewMode === "overview";
   el.hidden = !show;
   document.body.classList.toggle("first-path-open", show);
 }
@@ -9916,6 +9939,10 @@ window.__cpnSpatialVisibleLabels = () => {
     savedMode  = localStorage.getItem(VIEW_MODE_KEY);
     savedFocus = localStorage.getItem(VIEW_FOCUS_KEY) || null;
   }catch(e){}
+  if (window.__CPN_PRESENT_MODE && (savedMode === "spatial" || savedMode === "all-products")){
+    applyViewLevel("overview", { initial: true });
+    return;
+  }
   // Validate persisted state. If a composition focus is missing or stale,
   // fall back to Families so the user is never stuck on an empty view.
   if (savedMode === "composition"){
@@ -11465,7 +11492,7 @@ document.getElementById("clr-btn").addEventListener("click",()=>{
   updatePlannerUI();
 });
 document.getElementById("acct-name")?.addEventListener("input", () => {
-  refreshPlansBtn?.();
+  if (typeof refreshPlansBtn === "function") refreshPlansBtn();
   updatePlannerUI();
 });
 
@@ -12544,7 +12571,7 @@ STYLE.textContent = `
   #plans-wrap{position:relative;display:flex;align-items:center;gap:6px;flex-shrink:0}
   #plans-btn{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:7px;
     color:var(--muted);font-size:11px;font-weight:600;padding:6px 10px 6px 28px;cursor:pointer;
-    position:relative;transition:all .15s;white-space:nowrap;max-width:200px;overflow:hidden;
+    position:relative;transition:all .15s;white-space:nowrap;max-width:280px;overflow:hidden;
     text-overflow:ellipsis;text-align:left}
   #plans-btn:hover{border-color:var(--accent);color:var(--accent)}
   #plans-btn::before{content:"";position:absolute;left:9px;top:50%;transform:translateY(-50%);
@@ -13298,7 +13325,7 @@ function buildPlansMenu(){
   const wrap = document.createElement("div");
   wrap.id = "plans-wrap";
   wrap.innerHTML = `
-    <button id="plans-btn" title="Switch / save / share plans">Untitled plan</button>
+    <button id="plans-btn" title="Switch / save / share plans">This account</button>
     <div id="plans-menu" role="menu" aria-label="Saved plans"></div>
   `;
   // Insert just before #planner-btn in topbar
@@ -13314,11 +13341,41 @@ function buildPlansMenu(){
     if (!wrap.contains(e.target)) $("#plans-menu").classList.remove("show");
   });
 }
-function refreshPlansBtn(){
-  const plans = listPlans();
+function accountGlassTitle(){
+  const rawAcct = ($("#acct-name")?.value || "").trim();
+  const plans = typeof listPlans === "function" ? listPlans() : [];
   const cur = currentPlanId ? plans.find(p => p.id === currentPlanId) : null;
-  const acctName = $("#acct-name").value;
-  $("#plans-btn").textContent = acctName || cur?.name || "Untitled plan";
+  const planName = (cur?.name || "").trim();
+  const name = (rawAcct && rawAcct !== "Untitled plan")
+    ? rawAcct
+    : (planName && planName !== "Untitled plan" ? planName : "");
+  const profile = typeof lsGet === "function" ? lsGet(STORAGE_KEYS.profile, {}) : {};
+  let vertical = "";
+  if (typeof wizardState !== "undefined" && wizardState.industry){
+    vertical = WIZARD_INDUSTRY_VERTICAL[wizardState.industry] || "";
+    if (!vertical){
+      const t = INDUSTRY_TEMPLATES.find(x => x.id === wizardState.industry);
+      vertical = t ? String(t.name).split(" / ")[0] : "";
+    }
+  }
+  if (!vertical) vertical = (profile.vertical || "").trim();
+  let third = (profile.mode || "").trim();
+  if (!third && typeof wizardState !== "undefined" && wizardState.size){
+    third = (WIZARD_SIZES.find(s => s.id === wizardState.size)?.label) || "";
+  }
+  if (!third){
+    const sizeId = (profile.size || "").trim();
+    third = (typeof WIZARD_SIZES !== "undefined" && WIZARD_SIZES.find(s => s.id === sizeId)?.label) || sizeId;
+  }
+  const parts = [name, vertical, third].filter(Boolean);
+  return parts.length ? parts.join(" · ") : "This account";
+}
+function refreshPlansBtn(){
+  const btn = $("#plans-btn");
+  if (!btn) return;
+  const title = accountGlassTitle();
+  btn.textContent = title;
+  btn.title = title === "This account" ? "Switch / save / share plans" : title;
 }
 function renderPlansMenu(){
   const plans = listPlans();
@@ -14239,6 +14296,7 @@ function buildQuickStartSection(){
       if (profile.vertical){ activeInd = profile.vertical; $("#inds").value = profile.vertical; applyFilters(); }
       scheduleAutoSave();
       if (analyzed) window.runAnalysis();
+      refreshPlansBtn();
     });
   });
   body.querySelectorAll(".tpl-chip").forEach(c => c.addEventListener("click", () => {
@@ -14662,6 +14720,7 @@ function wizardApplyPlan() {
   wizardState.needsReapply = false;
   refreshGuidedBtnLabel();
   wizardSaveSession();
+  refreshPlansBtn();
 }
 
 function wizardNarrative() {
@@ -17996,6 +18055,40 @@ function toggleCpnTheme(){
   try { localStorage.setItem(CPN_THEME_KEY, theme); } catch (e){}
 }
 
+const PRESENT_KEY = "cpn-present-v1";
+function isPresentMode(){
+  return document.documentElement.classList.contains("cpn-present-mode");
+}
+function applyPresentMode(on){
+  if (window.__CPN_KIOSK_MODE) on = false;
+  window.__CPN_PRESENT_MODE = !!on;
+  document.documentElement.classList.toggle("cpn-present-mode", !!on);
+  const btn = document.getElementById("present-btn");
+  if (btn){
+    btn.classList.toggle("active", !!on);
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.textContent = on ? "Seller" : "Present";
+    btn.title = on
+      ? "Seller — show power tools"
+      : "Present — hide power tools for a customer conversation";
+  }
+  if (on && (typeof viewMode !== "undefined") && (viewMode === "spatial" || viewMode === "all-products")){
+    applyViewLevel("overview");
+  }
+  if (typeof syncFirstPathVisibility === "function") syncFirstPathVisibility();
+}
+function wirePresentToggle(){
+  const btn = document.getElementById("present-btn");
+  if (!btn || btn.dataset.wired) return;
+  btn.dataset.wired = "1";
+  applyPresentMode(!!window.__CPN_PRESENT_MODE);
+  btn.addEventListener("click", () => {
+    const next = !isPresentMode();
+    try { localStorage.setItem(PRESENT_KEY, next ? "1" : "0"); } catch (e) {}
+    applyPresentMode(next);
+  });
+}
+
 function wireThemeToggle(){
   const btn = document.getElementById("theme-toggle");
   if (!btn) return;
@@ -18035,6 +18128,7 @@ function wireDesignStudioLazyLoad(){
 function boot(){
   initAmbientBackground();
   wireThemeToggle();
+  wirePresentToggle();
   wireDesignStudioLazyLoad();
   Promise.all([loadDcloudLinks(), loadLearningLinks()]).then(() => {
     refreshDcloudPanelIfOpen();
