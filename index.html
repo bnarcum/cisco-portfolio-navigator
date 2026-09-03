@@ -3981,26 +3981,56 @@ function catalogDeepLink(kind, id){
   if (location.hash !== hash) history.replaceState(null, "", location.pathname + location.search + hash);
 }
 
+function resetCatalogDeepLinkFilters(){
+  activeCats = new Set(Object.keys(CATS));
+  activeUC = "";
+  activeInd = "";
+  if (typeof ucEl !== "undefined" && ucEl) ucEl.value = "";
+  if (typeof indEl !== "undefined" && indEl) indEl.value = "";
+  facetState.status = new Set(["current", "eos", "eol"]);
+  facetState.tier.clear();
+  document.querySelectorAll(".cp").forEach((b) => b.classList.remove("off"));
+}
+
+function openCatalogProduct(id){
+  const p = prodById[id];
+  if (!p) return false;
+  resetCatalogDeepLinkFilters();
+  applyFilters();
+  applyViewLevel("composition", { focusFamily: p.family });
+  const open = () => showProductDetail(id);
+  setTimeout(open, 700);
+  setTimeout(() => {
+    if (!document.getElementById("panel")?.classList.contains("open")) open();
+  }, 1400);
+  return true;
+}
+
+function openCatalogFamily(id){
+  if (!nodeById[id]) return false;
+  resetCatalogDeepLinkFilters();
+  applyFilters();
+  const open = () => openFamilyProductDrawer(id);
+  if (viewMode !== "families" && viewMode !== "composition"){
+    applyViewLevel("families");
+    setTimeout(() => { jumpTo(id, { closePanel: false }); setTimeout(open, 500); }, 500);
+  } else {
+    jumpTo(id, { closePanel: false });
+    setTimeout(open, 500);
+  }
+  setTimeout(() => {
+    if (!document.getElementById("panel")?.classList.contains("open")) open();
+  }, 1500);
+  return true;
+}
+
 function applyCatalogDeepLink(){
   const hash = location.hash || "";
   if (/[#&]s=/.test(hash)) return false;
   const pm = hash.match(/[#&]product=([^&]+)/);
-  if (pm){
-    const id = decodeURIComponent(pm[1]);
-    const p = prodById[id];
-    if (!p) return false;
-    applyViewLevel("composition", { focusFamily: p.family });
-    setTimeout(() => showProductDetail(id), 420);
-    return true;
-  }
+  if (pm) return openCatalogProduct(decodeURIComponent(pm[1]));
   const fm = hash.match(/[#&]family=([^&]+)/);
-  if (fm){
-    const id = decodeURIComponent(fm[1]);
-    if (!nodeById[id]) return false;
-    jumpTo(id, { closePanel: false });
-    setTimeout(() => openFamilyProductDrawer(id), 420);
-    return true;
-  }
+  if (fm) return openCatalogFamily(decodeURIComponent(fm[1]));
   return false;
 }
 // Assign category to products from parent node
@@ -18263,7 +18293,7 @@ function boot(){
   bootRestore();
   setTimeout(() => {
     if (!/[#&]s=/.test(location.hash || "")) applyCatalogDeepLink();
-  }, 650);
+  }, 900);
   repairCanvasView();
   window.addEventListener("pageshow", () => repairCanvasView());
   document.addEventListener("visibilitychange", () => {
