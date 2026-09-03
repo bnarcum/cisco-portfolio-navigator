@@ -788,6 +788,9 @@
       transition:background .12s;font-size:12px;font-weight:600;color:var(--text);font-family:inherit;margin:0 -8px}
     .fam-prod-row:hover{background:rgba(2,200,255,.06)}
     .fam-prod-row-wrap{display:flex;align-items:stretch;gap:6px}
+    .fam-prod-ext{display:flex;align-items:center;justify-content:center;padding:0 10px;border-radius:8px;
+      border:1px solid var(--border);color:var(--accent);text-decoration:none;font-size:12px;font-weight:700;flex-shrink:0}
+    .fam-prod-ext:hover{background:rgba(2,200,255,.08)}
     .fam-prod-matrix{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
     .fam-matrix-btn,.matrix-mini-btn{
       border:1px solid rgba(192,132,252,.45);background:rgba(30,10,55,.45);color:#f3e8ff;
@@ -3965,6 +3968,41 @@ function resolveDocumentationUrl(record, family){
   const fam = family || (record?.family ? nodeById[record.family] : null);
   return rewriteExternalUrl(record?.docsUrl || fam?.docsUrl || record?.url || fam?.url || "");
 }
+
+const WWT_SOLUTION_NAVIGATOR = "https://wwwin-github.cisco.com/pages/bnarcum/wwt-solution-navigator/";
+
+function wwtFamilyUrl(familyId){
+  return `${WWT_SOLUTION_NAVIGATOR}#oem=cisco&product=${encodeURIComponent(familyId)}`;
+}
+
+function catalogDeepLink(kind, id){
+  if (!id || /[#&]s=/.test(location.hash || "")) return;
+  const hash = kind === "product" ? `#product=${encodeURIComponent(id)}` : `#family=${encodeURIComponent(id)}`;
+  if (location.hash !== hash) history.replaceState(null, "", location.pathname + location.search + hash);
+}
+
+function applyCatalogDeepLink(){
+  const hash = location.hash || "";
+  if (/[#&]s=/.test(hash)) return false;
+  const pm = hash.match(/[#&]product=([^&]+)/);
+  if (pm){
+    const id = decodeURIComponent(pm[1]);
+    const p = prodById[id];
+    if (!p) return false;
+    applyViewLevel("composition", { focusFamily: p.family });
+    setTimeout(() => showProductDetail(id), 420);
+    return true;
+  }
+  const fm = hash.match(/[#&]family=([^&]+)/);
+  if (fm){
+    const id = decodeURIComponent(fm[1]);
+    if (!nodeById[id]) return false;
+    jumpTo(id, { closePanel: false });
+    setTimeout(() => openFamilyProductDrawer(id), 420);
+    return true;
+  }
+  return false;
+}
 // Assign category to products from parent node
 PRODUCTS.forEach(p => { p.category = nodeById[p.family]?.category || "networking"; });
 
@@ -5524,8 +5562,13 @@ function renderFamProdRow(p){
         <button type="button" class="fam-matrix-btn" data-matrix-view="aisle" data-matrix-product="${escapeHtml(p.id)}" title="Device Aisle">Aisle</button>
       </span>`
     : "";
+  const page = productPageUrl(p);
+  const ext = page
+    ? `<a class="fam-prod-ext" href="${escapeHtml(page)}" target="_blank" rel="noopener noreferrer" title="Product page on cisco.com" onclick="event.stopPropagation()">↗</a>`
+    : "";
   return `<div class="fam-prod-row-wrap">
     <button type="button" class="fam-prod-row" onclick="showProductDetail('${p.id}')">${escapeHtml(p.name)}</button>
+    ${ext}
     ${matrixBtns}
   </div>`;
 }
@@ -10366,7 +10409,14 @@ function showDetailPanel(d) {
   if (eolProds.length){
     productsHtml += `<button type="button" class="p-eol-toggle" id="p-eol-toggle">End of life products (${eolProds.length})</button>
       <div class="p-eol-body" id="p-eol-body">
-      ${eolProds.map(p=>`<div class="fam-prod-row" onclick="showProductDetail('${p.id}')" style="color:#a8b2bf">${p.name} <span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(239,68,68,.15);color:#ef4444;margin-left:5px">${p.status.toUpperCase()}</span></div>`).join("")}
+      ${eolProds.map(p=>{
+        const page = productPageUrl(p);
+        const ext = page ? `<a class="fam-prod-ext" href="${escapeHtml(page)}" target="_blank" rel="noopener noreferrer" title="Product page / EOL notice" onclick="event.stopPropagation()">↗</a>` : "";
+        return `<div class="fam-prod-row-wrap">
+          <div class="fam-prod-row" onclick="showProductDetail('${p.id}')" style="color:#a8b2bf;cursor:pointer">${p.name} <span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(239,68,68,.15);color:#ef4444;margin-left:5px">${p.status.toUpperCase()}</span></div>
+          ${ext}
+        </div>`;
+      }).join("")}
       </div>`;
   }
 
@@ -10386,6 +10436,11 @@ function showDetailPanel(d) {
   pb.innerHTML = `
     <div class="p-tab-pane${activeTab === "overview" ? " on" : ""}" data-tab="overview" role="tabpanel">
       ${renderOutcomeSlot(d.id)}
+      <div class="p-sec"><div class="p-sec-t">Quick links</div><div class="lb">
+        <a class="la" href="${productPageUrl(d)}" target="_blank" rel="noopener noreferrer">Product page <span>cisco.com ↗</span></a>
+        <a class="la" href="${documentationUrl(d)}" target="_blank" rel="noopener noreferrer">Documentation <span>docs ↗</span></a>
+        <a class="la" href="${wwtFamilyUrl(d.id)}" target="_blank" rel="noopener noreferrer">WWT connection map <span>WWT ↗</span></a>
+      </div></div>
       <div class="p-sec"><div class="p-sec-t">Use cases</div><div class="tr">${(d.useCases||[]).map(u=>`<span class="tg" onclick="filterTagUC('${u}')">${u}</span>`).join("") || `<span class="p-desc" style="margin:0">None listed.</span>`}</div></div>
       <div class="p-sec"><div class="p-sec-t">Industries</div><div class="tr">${(d.industries||[]).map(i=>`<span class="tg" onclick="filterTagInd('${i}')">${i}</span>`).join("") || `<span class="p-desc" style="margin:0">None listed.</span>`}</div></div>
     </div>
@@ -10395,8 +10450,9 @@ function showDetailPanel(d) {
     </div>
     <div class="p-tab-pane${activeTab === "resources" ? " on" : ""}" data-tab="resources" role="tabpanel">
       <div class="p-sec"><div class="p-sec-t">Links</div><div class="lb">
-        <a class="la" href="${productPageUrl(d)}" target="_blank" rel="noopener">Product page <span>cisco.com ↗</span></a>
-        <a class="la" href="${documentationUrl(d)}" target="_blank" rel="noopener">Documentation <span>docs ↗</span></a>
+        <a class="la" href="${productPageUrl(d)}" target="_blank" rel="noopener noreferrer">Product page <span>cisco.com ↗</span></a>
+        <a class="la" href="${documentationUrl(d)}" target="_blank" rel="noopener noreferrer">Documentation <span>docs ↗</span></a>
+        <a class="la" href="${wwtFamilyUrl(d.id)}" target="_blank" rel="noopener noreferrer">WWT connection map <span>WWT ↗</span></a>
       </div></div>
       <div class="p-resources-extra"></div>
     </div>`;
@@ -10432,6 +10488,7 @@ function showDetailPanel(d) {
   }
 
   openPanel();
+  catalogDeepLink("family", d.id);
 }
 
 window.showProductDetail = function(id) {
@@ -10482,8 +10539,9 @@ window.showProductDetail = function(id) {
     </div>
     <div class="p-tab-pane${activeTab === "resources" ? " on" : ""}" data-tab="resources" role="tabpanel">
       <div class="p-sec"><div class="p-sec-t">Product resources</div><div class="lb">
-        <a class="la" href="${productPageUrl(p)}" target="_blank" rel="noopener">Product page / EOL notice <span>cisco.com ↗</span></a>
-        ${node ? `<a class="la" href="${resolveDocumentationUrl(p, node)}" target="_blank" rel="noopener">Documentation <span>docs ↗</span></a>` : ""}
+        <a class="la" href="${productPageUrl(p)}" target="_blank" rel="noopener noreferrer">Product page / EOL notice <span>cisco.com ↗</span></a>
+        ${node ? `<a class="la" href="${resolveDocumentationUrl(p, node)}" target="_blank" rel="noopener noreferrer">Documentation <span>docs ↗</span></a>` : ""}
+        ${node ? `<a class="la" href="${wwtFamilyUrl(node.id)}" target="_blank" rel="noopener noreferrer">WWT connection map <span>WWT ↗</span></a>` : ""}
       </div></div>
       <div class="p-resources-extra"></div>
     </div>`;
@@ -10493,6 +10551,7 @@ window.showProductDetail = function(id) {
   wirePanelHeaderAdd(id, "product", inStk);
   renderPanelFooter(id, "product", inStk);
   openPanel();
+  catalogDeepLink("product", id);
 };
 
 function closePanel() {
@@ -18202,6 +18261,9 @@ function boot(){
 
   // Restore prior state (URL hash > current plan > autosave)
   bootRestore();
+  setTimeout(() => {
+    if (!/[#&]s=/.test(location.hash || "")) applyCatalogDeepLink();
+  }, 650);
   repairCanvasView();
   window.addEventListener("pageshow", () => repairCanvasView());
   document.addEventListener("visibilitychange", () => {
