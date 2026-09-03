@@ -24,7 +24,7 @@ try {
     filtersHidden: !!document.querySelector(".actionbar-filters")?.hidden,
     plans: document.getElementById("plans-btn")?.textContent.trim()
   }));
-  if (cold.version !== "3.5.65") errors.push(`expected 3.5.65, got ${cold.version}`);
+  if (cold.version !== "3.5.66") errors.push(`expected 3.5.66, got ${cold.version}`);
   if (cold.present) errors.push("present should be off by default");
   if (!cold.compositionHidden) errors.push("composition should be hidden on Overview");
   if (!cold.filtersHidden) errors.push("filters should be hidden on Overview");

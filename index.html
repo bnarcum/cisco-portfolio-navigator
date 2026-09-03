@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.65";
+  window.__CPN_BUILD="3.5.66";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     var staleKeys=["cpn-view-mode-v2","cpn-view-focus-v2","cpn-autosave-v2","cpn-current-v2","cpn-all-products-layers-v1"];
@@ -3981,6 +3981,11 @@ function catalogDeepLink(kind, id){
   if (location.hash !== hash) history.replaceState(null, "", location.pathname + location.search + hash);
 }
 
+function hasCatalogDeepLinkHash(){
+  const hash = location.hash || "";
+  return !/[#&]s=/.test(hash) && /[#&](?:product|family)=/.test(hash);
+}
+
 function resetCatalogDeepLinkFilters(){
   activeCats = new Set(Object.keys(CATS));
   activeUC = "";
@@ -3992,21 +3997,28 @@ function resetCatalogDeepLinkFilters(){
   document.querySelectorAll(".cp").forEach((b) => b.classList.remove("off"));
 }
 
+function catalogProductPanelOpen(id){
+  const panel = document.getElementById("panel");
+  const pb = document.getElementById("pbody");
+  return !!(panel?.classList.contains("open") && pb?.dataset?.lastKind === "product" && pb?.dataset?.lastId === id);
+}
+
 function openCatalogProduct(id){
   const p = prodById[id];
   if (!p) return false;
   resetCatalogDeepLinkFilters();
   applyFilters();
-  applyViewLevel("composition", { focusFamily: p.family });
+  applyViewLevel("composition", { focusFamily: p.family, skipFamilyDrawer: true });
   const open = () => showProductDetail(id);
   setTimeout(open, 700);
-  setTimeout(() => {
-    if (!document.getElementById("panel")?.classList.contains("open")) open();
-  }, 1400);
+  setTimeout(() => { if (!catalogProductPanelOpen(id)) open(); }, 1500);
+  setTimeout(() => { if (!catalogProductPanelOpen(id)) open(); }, 2400);
   return true;
 }
 
 function openCatalogFamily(id){
+  const product = prodById[id];
+  if (product) return openCatalogProduct(id);
   if (!nodeById[id]) return false;
   resetCatalogDeepLinkFilters();
   applyFilters();
@@ -9688,7 +9700,7 @@ function applyViewLevel(mode, opts){
       applyCompositionLayout();
     }
   }
-  if (mode === "composition" && viewFocus && !opts.initial){
+  if (mode === "composition" && viewFocus && !opts.initial && !opts.skipFamilyDrawer){
     openFamilyProductDrawer(viewFocus);
   }
 
@@ -9990,6 +10002,10 @@ window.__cpnSpatialVisibleLabels = () => {
 
 // ── Initial mount: read persisted preferences and render the right view.
 (function bootViewLevel(){
+  if (hasCatalogDeepLinkHash()) {
+    applyViewLevel("overview", { initial: true });
+    return;
+  }
   if (window.__CPN_KIOSK_MODE) {
     var pillar = null;
     try {
@@ -10843,7 +10859,13 @@ function showNodeTip(ev,d){
   tipEl.style.display = "block"; moveTip(ev);
 }
 function moveTip(ev){ const {w}=getDims(),x=ev.clientX+14,y=ev.clientY-10; tipEl.style.left=(x+240>w?x-254:x)+"px"; tipEl.style.top=y+"px"; }
-function hideTip(){ tipEl.style.display="none"; tipEl.classList.remove("tip-interactive"); tipEl.style.pointerEvents="none"; }
+function hideTip(){
+  const el = document.getElementById("tip");
+  if (!el) return;
+  el.style.display = "none";
+  el.classList.remove("tip-interactive");
+  el.style.pointerEvents = "none";
+}
 
 // ══════════════════════════════════════
 // SEARCH — nodes + specific products
@@ -18291,9 +18313,11 @@ function boot(){
 
   // Restore prior state (URL hash > current plan > autosave)
   bootRestore();
-  setTimeout(() => {
+  const runCatalogDeepLink = () => {
     if (!/[#&]s=/.test(location.hash || "")) applyCatalogDeepLink();
-  }, 900);
+  };
+  setTimeout(runCatalogDeepLink, 900);
+  window.addEventListener("hashchange", runCatalogDeepLink);
   repairCanvasView();
   window.addEventListener("pageshow", () => repairCanvasView());
   document.addEventListener("visibilitychange", () => {
