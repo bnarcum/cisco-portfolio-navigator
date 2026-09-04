@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.66";
+  window.__CPN_BUILD="3.5.67";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     var staleKeys=["cpn-view-mode-v2","cpn-view-focus-v2","cpn-autosave-v2","cpn-current-v2","cpn-all-products-layers-v1"];
@@ -3969,12 +3969,6 @@ function resolveDocumentationUrl(record, family){
   return rewriteExternalUrl(record?.docsUrl || fam?.docsUrl || record?.url || fam?.url || "");
 }
 
-const WWT_SOLUTION_NAVIGATOR = "https://wwwin-github.cisco.com/pages/bnarcum/wwt-solution-navigator/";
-
-function wwtFamilyUrl(familyId){
-  return `${WWT_SOLUTION_NAVIGATOR}#oem=cisco&product=${encodeURIComponent(familyId)}`;
-}
-
 function catalogDeepLink(kind, id){
   if (!id || /[#&]s=/.test(location.hash || "")) return;
   const hash = kind === "product" ? `#product=${encodeURIComponent(id)}` : `#family=${encodeURIComponent(id)}`;
@@ -3992,7 +3986,7 @@ function resetCatalogDeepLinkFilters(){
   activeInd = "";
   if (typeof ucEl !== "undefined" && ucEl) ucEl.value = "";
   if (typeof indEl !== "undefined" && indEl) indEl.value = "";
-  facetState.status = new Set(["current", "eos", "eol"]);
+  facetState.status = new Set(["current"]);
   facetState.tier.clear();
   document.querySelectorAll(".cp").forEach((b) => b.classList.remove("off"));
 }
@@ -7955,9 +7949,9 @@ function buildAllProductsView(){
 function buildCompositionView(familyId){
   const fam = nodeById[familyId];
   if (!fam) return { nodes:[], links:[] };
-  const products = PRODUCTS.filter(p => p.family === familyId && productMatchesFilters(p));
-  const current = products.filter(p => p.status === "current");
-  const legacy = products.filter(p => p.status === "eol");
+  const products = PRODUCTS.filter(p => p.family === familyId && productMatchesFilters(p) && p.status === "current");
+  const current = products;
+  const legacy = [];
   const matrixKeyCounts = {};
   products.forEach(p => {
     const k = compositionMatrixKey(p);
@@ -10439,9 +10433,8 @@ function showDetailPanel(d) {
   const inStk=stack.has(d.id);
   const activeTab = pb.dataset.activeTab || "overview";
 
-  const famProds=PRODUCTS.filter(p=>p.family===d.id && productMatchesFilters(p));
-  const curProds=famProds.filter(p=>p.status==="current");
-  const eolProds=famProds.filter(p=>p.status==="eol");
+  const famProds=PRODUCTS.filter(p=>p.family===d.id && productMatchesFilters(p) && p.status==="current");
+  const curProds=famProds;
   const directCount = buildConnectionRels(d.id, 1).direct.length;
   const conn = renderConnectionsSectionBody(d);
 
@@ -10452,20 +10445,6 @@ function showDetailPanel(d) {
   } else {
     productsHtml += `<div class="p-sec"><div class="p-sec-t">Current products</div><p class="p-desc" style="margin:0">No current products match filters.</p></div>`;
   }
-  if (eolProds.length){
-    productsHtml += `<button type="button" class="p-eol-toggle" id="p-eol-toggle">End of life products (${eolProds.length})</button>
-      <div class="p-eol-body" id="p-eol-body">
-      ${eolProds.map(p=>{
-        const page = productPageUrl(p);
-        const ext = page ? `<a class="fam-prod-ext" href="${escapeHtml(page)}" target="_blank" rel="noopener noreferrer" title="Product page / EOL notice" onclick="event.stopPropagation()">↗</a>` : "";
-        return `<div class="fam-prod-row-wrap">
-          <div class="fam-prod-row" onclick="showProductDetail('${p.id}')" style="color:#a8b2bf;cursor:pointer">${p.name} <span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(239,68,68,.15);color:#ef4444;margin-left:5px">${p.status.toUpperCase()}</span></div>
-          ${ext}
-        </div>`;
-      }).join("")}
-      </div>`;
-  }
-
   ph.innerHTML = `
     <div class="p-head-badges">
       <div class="p-badge" style="background:${cat.color};color:${d.category==='computing'?'#fff':'#000'}">${cat.label}</div>
@@ -10485,7 +10464,6 @@ function showDetailPanel(d) {
       <div class="p-sec"><div class="p-sec-t">Quick links</div><div class="lb">
         <a class="la" href="${productPageUrl(d)}" target="_blank" rel="noopener noreferrer">Product page <span>cisco.com ↗</span></a>
         <a class="la" href="${documentationUrl(d)}" target="_blank" rel="noopener noreferrer">Documentation <span>docs ↗</span></a>
-        <a class="la" href="${wwtFamilyUrl(d.id)}" target="_blank" rel="noopener noreferrer">WWT connection map <span>WWT ↗</span></a>
       </div></div>
       <div class="p-sec"><div class="p-sec-t">Use cases</div><div class="tr">${(d.useCases||[]).map(u=>`<span class="tg" onclick="filterTagUC('${u}')">${u}</span>`).join("") || `<span class="p-desc" style="margin:0">None listed.</span>`}</div></div>
       <div class="p-sec"><div class="p-sec-t">Industries</div><div class="tr">${(d.industries||[]).map(i=>`<span class="tg" onclick="filterTagInd('${i}')">${i}</span>`).join("") || `<span class="p-desc" style="margin:0">None listed.</span>`}</div></div>
@@ -10498,7 +10476,6 @@ function showDetailPanel(d) {
       <div class="p-sec"><div class="p-sec-t">Links</div><div class="lb">
         <a class="la" href="${productPageUrl(d)}" target="_blank" rel="noopener noreferrer">Product page <span>cisco.com ↗</span></a>
         <a class="la" href="${documentationUrl(d)}" target="_blank" rel="noopener noreferrer">Documentation <span>docs ↗</span></a>
-        <a class="la" href="${wwtFamilyUrl(d.id)}" target="_blank" rel="noopener noreferrer">WWT connection map <span>WWT ↗</span></a>
       </div></div>
       <div class="p-resources-extra"></div>
     </div>`;
@@ -10507,11 +10484,6 @@ function showDetailPanel(d) {
   mountPanelOutcomeBlock(d.id);
   wirePanelHeaderAdd(d.id, "node", inStk);
   renderPanelFooter(d.id, "node", inStk);
-
-  document.getElementById("p-eol-toggle")?.addEventListener("click", function(){
-    this.classList.toggle("open");
-    document.getElementById("p-eol-body")?.classList.toggle("open");
-  });
 
   if (famProds.length > 0){
     const inComp = viewMode === "composition" && viewFocus === d.id;
@@ -10587,7 +10559,6 @@ window.showProductDetail = function(id) {
       <div class="p-sec"><div class="p-sec-t">Product resources</div><div class="lb">
         <a class="la" href="${productPageUrl(p)}" target="_blank" rel="noopener noreferrer">Product page / EOL notice <span>cisco.com ↗</span></a>
         ${node ? `<a class="la" href="${resolveDocumentationUrl(p, node)}" target="_blank" rel="noopener noreferrer">Documentation <span>docs ↗</span></a>` : ""}
-        ${node ? `<a class="la" href="${wwtFamilyUrl(node.id)}" target="_blank" rel="noopener noreferrer">WWT connection map <span>WWT ↗</span></a>` : ""}
       </div></div>
       <div class="p-resources-extra"></div>
     </div>`;

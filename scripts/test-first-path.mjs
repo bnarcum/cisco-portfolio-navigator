@@ -40,7 +40,7 @@ try {
     };
   });
 
-  if (first.version !== "3.5.66") errors.push(`expected 3.5.66, got ${first.version}`);
+  if (first.version !== "3.5.67") errors.push(`expected 3.5.67, got ${first.version}`);
   if (first.mode !== "overview") errors.push(`expected overview, got ${first.mode}`);
   if (first.fpHidden) errors.push("first-path should show on a cold Overview visit");
   if (first.fpTitle !== "Where do you want to go?") errors.push(`first-path title: ${first.fpTitle}`);
