@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.70";
+  window.__CPN_BUILD="3.5.71";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     var staleKeys=["cpn-view-mode-v2","cpn-view-focus-v2","cpn-autosave-v2","cpn-current-v2","cpn-all-products-layers-v1"];
@@ -5599,12 +5599,34 @@ function familyHeroImageUrl(familyId){
   return (window.CPN_FAMILY_HERO_IMAGES || {})[familyId] || null;
 }
 
-/** Optional per-product photo when a series-specific asset exists (else family hero). */
+/** Optional per-product photo override (else series map below). */
 const PRODUCT_PHOTO_OVERRIDES = {};
+
+function productSeriesPhotoKey(id){
+  if (!id) return null;
+  if (PRODUCT_PHOTO_OVERRIDES[id]) return null;
+  if (id === "ftd-1010") return "sf-fp1010";
+  if (/^ftd-11/.test(id)) return "sf-fp1100";
+  if (id === "csf-220") return "sf-csf200";
+  if (/^csf-1210|^csf-1220/.test(id)) return "sf-csf1200-compact";
+  if (/^csf-12(30|40|50)/.test(id) || /^ftd-21/.test(id)) return "sf-csf1200-rack";
+  if (/^ftd-31/.test(id)) return "sf-csf3100";
+  if (/^csf-42/.test(id) || /^ftd-41/.test(id)) return "sf-csf4200";
+  if (/^csf-61/.test(id) || /^ftd-93/.test(id)) return "sf-csf6100";
+  return null;
+}
+
+function productSeriesPhotoUrl(id){
+  const key = productSeriesPhotoKey(id);
+  if (!key) return null;
+  return (window.CPN_PRODUCT_PHOTOS || {})[key] || null;
+}
 
 function productPhotoUrl(id){
   if (!id) return null;
   if (PRODUCT_PHOTO_OVERRIDES[id]) return PRODUCT_PHOTO_OVERRIDES[id];
+  const series = productSeriesPhotoUrl(id);
+  if (series) return series;
   const p = prodById[id];
   const matrix = matrixImageUrl(id);
   if (p && MATRIX_PHOTO_FAMILIES.has(p.family) && matrix) return matrix;
@@ -18483,7 +18505,7 @@ window.__cpnV2 = {
 <script>
 (function(){
   var v=encodeURIComponent(window.__CPN_BUILD);
-  ["assets/family-heroes.js","assets/cpn-problems.js","assets/cpn-solutions.js","assets/cpn-solutions-ui.js","assets/cpn-outcome-card.js",
+  ["assets/family-heroes.js","assets/product-photos.js","assets/cpn-problems.js","assets/cpn-solutions.js","assets/cpn-solutions-ui.js","assets/cpn-outcome-card.js",
    "assets/cpn-cloud-control-ops.js","assets/cpn-lazy-load.js","assets/cpn-kiosk.js","assets/cpn-acquisitions-data.js",
    "assets/cpn-refresh-timeline.js","assets/cpn-acquisitions-timeline.js","assets/cpn-logo-intro.js"].forEach(function(src){
     document.write('<script src="'+src+"?v="+v+'"><\/script>');

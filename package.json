@@ -5,7 +5,8 @@
   "scripts": {
     "build:icons": "node scripts/build-cisco-icons.mjs",
     "build:heroes": "node scripts/build-family-heroes.mjs",
-    "build:assets": "npm run build:icons && npm run build:heroes",
+    "build:firewall-photos": "node scripts/build-firewall-photos.mjs",
+    "build:assets": "npm run build:icons && npm run build:heroes && npm run build:firewall-photos",
     "build:acquisitions": "node scripts/build-acquisitions.mjs --allow-missing-identities && node scripts/fetch-acq-logos.mjs && node scripts/build-acquisitions.mjs",
     "build:matrix-photos": "python3 scripts/refine-matrix-photos.py",
     "test:pillar-layout": "node scripts/test-pillar-layout.mjs",
