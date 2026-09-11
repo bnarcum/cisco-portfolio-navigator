@@ -1,84 +1,113 @@
 #!/usr/bin/env node
-/** Download official Cisco Secure Firewall product photos → assets/product-photos/ */
+/** Download official Cisco Secure Firewall photos and cut them to transparent PNGs. */
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { execSync } from "child_process";
+import { execFileSync, execSync } from "child_process";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const outDir = path.join(root, "assets/product-photos");
-const MAX_EDGE = 1200;
+const workDir = path.join(root, ".tmp-firewall-photos");
+const cutout = path.join(root, "scripts/cutout-product-photo.py");
 
 /**
- * Official Cisco sources (HIG figures + product marketing OG images).
- * @see https://www.cisco.com/c/en/us/support/security/secure-firewall-1200-series/series.html
+ * Official Cisco HIG / datasheet chassis photos (not marketing OG plates).
+ * Cut to transparent PNG so graph nodes and sidebars have no studio backdrop.
  */
 const SOURCES = {
-  "sf-fp1010.jpg": {
+  "sf-fp1010.png": {
     url: "https://www.cisco.com/c/dam/en/us/td/i/400001-500000/430001-440000/435001-436000/435697.jpg",
-    note: "Firepower 1010 HIG overview",
+    note: "Firepower 1010 HIG chassis",
   },
-  "sf-fp1100.jpg": {
+  "sf-fp1100.png": {
     url: "https://www.cisco.com/c/dam/en/us/td/i/400001-500000/430001-440000/435001-436000/435698.jpg",
-    note: "Firepower 1100-class HIG overview",
+    note: "Firepower 1100-class HIG chassis",
   },
-  "sf-csf200.jpg": {
+  "sf-csf200.png": {
     url: "https://www.cisco.com/c/dam/en/us/td/i/400001-500000/480001-490000/489001-490000/489602.jpg",
-    note: "Secure Firewall 200 Series HIG",
+    note: "Secure Firewall 200 HIG chassis",
   },
-  "sf-csf1200-compact.jpg": {
-    url: "https://www.cisco.com/c/dam/en/us/td/i/400001-500000/480001-490000/481001-482000/481516.jpg",
-    note: "CSF 1210/1220 compact front panel (1200 HIG)",
+  "sf-csf1200-compact.png": {
+    url: "https://www.cisco.com/c/dam/en/us/td/i/400001-500000/480001-490000/484001-485000/484853.jpg",
+    note: "CSF 1210/1220 HIG chassis",
   },
-  "sf-csf1200-rack.jpg": {
-    url: "https://www.cisco.com/c/dam/en/us/td/i/400001-500000/480001-490000/485001-486000/485776.jpg",
-    note: "CSF 1230/1240/1250 rack (1200 HIG)",
+  "sf-csf1200-rack.png": {
+    url: "https://www.cisco.com/c/dam/en/us/td/i/400001-500000/480001-490000/485001-486000/485593.jpg",
+    note: "CSF 1230/1240/1250 HIG chassis",
   },
-  "sf-csf3100.jpg": {
-    url: "https://www.cisco.com/content/dam/cisco-cdc/site/us/en/images/security/secure-firewall3100-og-1200x677.jpg",
-    note: "Secure Firewall 3100 Series product page",
+  "sf-csf3100.png": {
+    url: "https://www.cisco.com/c/dam/en/us/td/i/400001-500000/450001-460000/459001-460000/459923.jpg",
+    note: "CSF 3100 HIG chassis",
   },
-  "sf-csf4200.jpg": {
+  "sf-csf4200.png": {
     url: "https://www.cisco.com/content/dam/cisco-cdc/site/images/open-graph/products/security/firepower-4200-series-og-1200x630.jpg",
-    note: "Secure Firewall 4200 Series product page",
+    note: "CSF 4200 product photo (studio cutout)",
   },
-  "sf-csf6100.jpg": {
-    url: "https://www.cisco.com/content/dam/cisco-cdc/site/images/open-graph/products/security/firewalls/secure-firewall-6100-series-og-1200x630.png",
-    note: "Secure Firewall 6100 Series product page",
+  "sf-csf6100.png": {
+    url: "https://www.cisco.com/c/en/us/products/collateral/security/firewalls/secure-firewall-6100-series/secure-firewall-6100-series-ds.pdf",
+    note: "CSF 6100 datasheet 3/4 view",
+    pdfImage: "ds6100-p1-0",
   },
 };
-
-function resizeInPlace(filePath) {
-  try {
-    execSync(`sips -Z ${MAX_EDGE} "${filePath}" --out "${filePath}"`, { stdio: "pipe" });
-  } catch (e) {
-    console.warn(`  resize skipped (${e.message?.slice(0, 80) || "sips failed"})`);
-  }
-}
 
 async function download(url, dest) {
   const res = await fetch(url, { redirect: "follow" });
   if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
-  const buf = Buffer.from(await res.arrayBuffer());
-  fs.writeFileSync(dest, buf);
+  fs.writeFileSync(dest, Buffer.from(await res.arrayBuffer()));
+}
+
+function extractPdfImage(pdfPath, destPng) {
+  const py = `
+import fitz
+doc = fitz.open(${JSON.stringify(pdfPath)})
+pix = fitz.Pixmap(doc, doc[0].get_images(full=True)[0][0])
+if pix.n >= 5:
+    pix = fitz.Pixmap(fitz.csRGB, pix)
+pix.save(${JSON.stringify(destPng)})
+`;
+  execFileSync("python3", ["-c", py], { stdio: "inherit" });
+}
+
+function runCutout(src, dest) {
+  execFileSync("python3", [cutout, src, dest, "--threshold", "38", "--max-edge", "1400"], {
+    stdio: "inherit",
+  });
 }
 
 fs.mkdirSync(outDir, { recursive: true });
+fs.mkdirSync(workDir, { recursive: true });
 
-for (const [name, { url, note }] of Object.entries(SOURCES)) {
+for (const file of fs.readdirSync(outDir)) {
+  if (/\.(jpg|jpeg|png)$/i.test(file)) fs.unlinkSync(path.join(outDir, file));
+}
+
+for (const [name, src] of Object.entries(SOURCES)) {
+  const rawExt = src.pdfImage ? ".pdf" : path.extname(new URL(src.url).pathname) || ".jpg";
+  const raw = path.join(workDir, name.replace(/\.png$/i, rawExt));
+  console.log(`  ${name} ← ${src.note}`);
+  await download(src.url, raw);
+  try {
+    execSync(`sips -Z 2200 "${raw}" --out "${raw}"`, { stdio: "pipe" });
+  } catch (_) { /* sips skips PDFs / unsupported */ }
+  let input = raw;
+  if (src.pdfImage) {
+    const extracted = path.join(workDir, `${src.pdfImage}.png`);
+    extractPdfImage(raw, extracted);
+    input = extracted;
+  }
   const dest = path.join(outDir, name);
-  console.log(`  ${name} ← ${note}`);
-  await download(url, dest);
-  resizeInPlace(dest);
+  runCutout(input, dest);
   const kb = Math.round(fs.statSync(dest).size / 1024);
   console.log(`    ${kb} KB`);
 }
 
+fs.rmSync(workDir, { recursive: true, force: true });
+
 const manifest = Object.fromEntries(
-  Object.keys(SOURCES).map((f) => [f.replace(/\.(jpg|png)$/i, ""), `assets/product-photos/${f}`])
+  Object.keys(SOURCES).map((f) => [f.replace(/\.png$/i, ""), `assets/product-photos/${f}`])
 );
 const js = `/* Generated by scripts/build-firewall-photos.mjs — do not edit */
 window.CPN_PRODUCT_PHOTOS = ${JSON.stringify(manifest, null, 2)};
 `;
 fs.writeFileSync(path.join(root, "assets/product-photos.js"), js);
-console.log(`Built ${Object.keys(SOURCES).length} firewall photos → assets/product-photos/`);
+console.log(`Built ${Object.keys(SOURCES).length} transparent firewall photos → assets/product-photos/`);
