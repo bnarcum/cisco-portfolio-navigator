@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.69";
+  window.__CPN_BUILD="3.5.70";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     var staleKeys=["cpn-view-mode-v2","cpn-view-focus-v2","cpn-autosave-v2","cpn-current-v2","cpn-all-products-layers-v1"];
@@ -5442,6 +5442,12 @@ const MATRIX_SITE = "https://bnarcum.github.io/collaboration-device-matrix/";
 const MATRIX_RELEASE = "20260716k";
 const MATRIX_NODE_FILL = "#ffffff";
 const MATRIX_NODE_RING = "#cbd5e1";
+
+function nodePhotoCircleFill(d){
+  if (!d._hasImage) return d._pillarColor || catColor(d.category);
+  if (d._kind === "product" && productPhotoIsHardware(d.id)) return "transparent";
+  return MATRIX_NODE_FILL;
+}
 const MATRIX_IMG_BASE = MATRIX_SITE + "devices/";
 let MATRIX_BRIDGE = {
   matrixBase: MATRIX_SITE,
@@ -5520,6 +5526,15 @@ function boxBlurAlphaChannel(alpha, w, h, radius){
   return out;
 }
 
+function knockOutSolidWhite(data, tolerance = 24, minSum = 738){
+  for (let i = 0; i < data.length; i += 4){
+    const r = data[i], g = data[i + 1], b = data[i + 2];
+    if (r + g + b >= minSum && r >= 255 - tolerance && g >= 255 - tolerance && b >= 255 - tolerance){
+      data[i + 3] = 0;
+    }
+  }
+}
+
 function defringeMatrixPhotoData(d, alphaCut){
   const bg = 255;
   for (let i = 0; i < d.length; i += 4){
@@ -5553,6 +5568,7 @@ function featherMatrixPhotoCanvas(img, opts){
   let imgData;
   try{ imgData = sctx.getImageData(0, 0, nw, nh); }
   catch(_e){ return null; }
+  if (opts?.knockoutWhite) knockOutSolidWhite(imgData.data, opts.whiteTolerance ?? 24, opts.whiteMinSum ?? 738);
   defringeMatrixPhotoData(imgData.data, opts?.alphaCut ?? 24);
   const alpha = new Float32Array(nw * nh);
   const d = imgData.data;
@@ -5564,8 +5580,11 @@ function featherMatrixPhotoCanvas(img, opts){
   out.width = Math.max(1, Math.round(nw * dpr));
   out.height = Math.max(1, Math.round(nh * dpr));
   const octx = out.getContext("2d");
-  octx.fillStyle = "#ffffff";
-  octx.fillRect(0, 0, out.width, out.height);
+  if (opts?.knockoutWhite) octx.clearRect(0, 0, out.width, out.height);
+  else{
+    octx.fillStyle = "#ffffff";
+    octx.fillRect(0, 0, out.width, out.height);
+  }
   octx.imageSmoothingEnabled = true;
   octx.imageSmoothingQuality = "high";
   octx.drawImage(src, 0, 0, out.width, out.height);
@@ -5593,52 +5612,73 @@ function productPhotoUrl(id){
   return null;
 }
 
+function productPhotoIsHardware(id){
+  const p = prodById[id];
+  if (!p || !productPhotoUrl(id)) return false;
+  return !productAllowsMatrixPhoto(id);
+}
+
 function productPhotoDisplayUrl(id){
-  return productPhotoUrl(id);
+  const raw = productPhotoUrl(id);
+  if (!raw) return null;
+  const key = productPhotoIsHardware(id) ? `${raw}#hw` : raw;
+  return matrixPhotoRefineCache.get(key) || raw;
 }
 
 function productHasPhoto(id){
   return !!productPhotoUrl(id);
 }
 
-function prefetchMatrixPhotoRefined(url, cb){
+function productPhotoRefineOpts(id){
+  return productPhotoIsHardware(id) ? { knockoutWhite: true } : null;
+}
+
+function prefetchMatrixPhotoRefined(url, cb, opts){
   if (!url) return;
-  if (matrixPhotoRefineCache.has(url)){ cb?.(matrixPhotoRefineCache.get(url)); return; }
-  if (matrixPhotoRefinePending.has(url)){
-    matrixPhotoRefinePending.get(url).push(cb);
+  const cacheKey = opts?.knockoutWhite ? `${url}#hw` : url;
+  if (matrixPhotoRefineCache.has(cacheKey)){ cb?.(matrixPhotoRefineCache.get(cacheKey)); return; }
+  if (matrixPhotoRefinePending.has(cacheKey)){
+    matrixPhotoRefinePending.get(cacheKey).push(cb);
     return;
   }
-  matrixPhotoRefinePending.set(url, cb ? [cb] : []);
+  matrixPhotoRefinePending.set(cacheKey, cb ? [cb] : []);
   const img = new Image();
   img.crossOrigin = "anonymous";
   const finish = (refined) => {
-    const waiters = matrixPhotoRefinePending.get(url) || [];
-    matrixPhotoRefinePending.delete(url);
-    if (refined) matrixPhotoRefineCache.set(url, refined);
+    const waiters = matrixPhotoRefinePending.get(cacheKey) || [];
+    matrixPhotoRefinePending.delete(cacheKey);
+    if (refined) matrixPhotoRefineCache.set(cacheKey, refined);
     waiters.forEach(fn => fn?.(refined || url));
     if (typeof syncNodeProductImages === "function") syncNodeProductImages();
   };
   img.onload = () => {
-    const refined = featherMatrixPhotoCanvas(img);
+    const refined = featherMatrixPhotoCanvas(img, opts);
     finish(refined || null);
   };
   img.onerror = () => finish(null);
   img.src = url;
 }
 
-function refineMatrixPhotoEdges(img, cb){
+function prefetchProductPhotoRefined(id, cb){
+  const raw = productPhotoUrl(id);
+  if (!raw){ cb?.(null); return; }
+  prefetchMatrixPhotoRefined(raw, cb, productPhotoRefineOpts(id));
+}
+
+function refineMatrixPhotoEdges(img, cb, opts){
   if (!img || img.dataset.refined){ cb?.(img); return; }
   const src = img.currentSrc || img.src;
-  if (matrixPhotoRefineCache.has(src)){
-    img.src = matrixPhotoRefineCache.get(src);
+  const cacheKey = opts?.knockoutWhite ? `${src}#hw` : src;
+  if (matrixPhotoRefineCache.has(cacheKey)){
+    img.src = matrixPhotoRefineCache.get(cacheKey);
     img.dataset.refined = "1";
     cb?.(img);
     return;
   }
   const run = () => {
-    const refined = featherMatrixPhotoCanvas(img);
+    const refined = featherMatrixPhotoCanvas(img, opts);
     if (refined){
-      matrixPhotoRefineCache.set(src, refined);
+      matrixPhotoRefineCache.set(cacheKey, refined);
       img.src = refined;
       img.dataset.refined = "1";
     } else {
@@ -6071,8 +6111,8 @@ function buildNodeGroup(sel){
     .attr("fill-opacity", 0).attr("filter","url(#glow)");
   inner.append("circle").attr("class","mc")
     .attr("r", d => d._r)
-    .attr("fill", d => d._hasImage ? MATRIX_NODE_FILL : (d._pillarColor || catColor(d.category)))
-    .attr("fill-opacity", d => d._hasImage ? 1 : 0.88)
+    .attr("fill", d => nodePhotoCircleFill(d))
+    .attr("fill-opacity", d => (d._hasImage && productPhotoIsHardware(d.id)) ? 0 : (d._hasImage ? 1 : 0.88))
     .attr("stroke", d => d._hasImage ? MATRIX_NODE_RING : "transparent")
     .attr("stroke-width", d => d._hasImage ? 1.4 : 2.5);
   inner.append("circle").attr("class","gloss")
@@ -6141,6 +6181,15 @@ function syncNodeProductImages(){
         .attr("clip-path", `url(#${cid})`)
         .attr("preserveAspectRatio", "xMidYMid meet")
         .style("pointer-events", "none");
+      inner.select(".mc")
+        .attr("fill", nodePhotoCircleFill(d))
+        .attr("fill-opacity", productPhotoIsHardware(d.id) ? 0 : 1);
+      if (productPhotoIsHardware(d.id)){
+        const key = `${url}#hw`;
+        if (!matrixPhotoRefineCache.has(key) && !matrixPhotoRefinePending.has(key)){
+          prefetchProductPhotoRefined(d.id);
+        }
+      }
     } else if (!pimg.empty()){
       pimg.remove();
     }
@@ -6811,9 +6860,10 @@ function applyCompositionInteractionStyles(selectedNode){
 function applyCompositionNodeStyles(){
   if (viewMode !== "composition" || !ndEl) return;
   ndEl.select(".mc")
-    .attr("fill", d => d._hasImage ? MATRIX_NODE_FILL : catColor(d.category))
+    .attr("fill", d => nodePhotoCircleFill(d))
+    .attr("fill-opacity", d => (d._hasImage && productPhotoIsHardware(d.id)) ? 0 : (d._hasImage ? 1 : 0.88))
     .attr("stroke", d => {
-      if (d._hasImage) return MATRIX_NODE_RING;
+      if (d._hasImage) return productPhotoIsHardware(d.id) ? "rgba(148,163,184,0.45)" : MATRIX_NODE_RING;
       if (d._status === "eol") return "#ef4444";
       if (d._status === "eos") return "#FF9000";
       if (d._kind === "family") return "rgba(255,255,255,0.35)";
@@ -7529,8 +7579,9 @@ function rebindGraph(opts){
           .attr("stroke", accent)
           .attr("stroke-width", boosted ? 2.5 : 2.25).attr("stroke-opacity", 1);
       } else {
-        el.attr("fill", d._hasImage ? MATRIX_NODE_FILL : catColor(d.category))
-          .attr("stroke", d._hasImage ? MATRIX_NODE_RING : "transparent")
+        el.attr("fill", nodePhotoCircleFill(d))
+          .attr("fill-opacity", (d._hasImage && productPhotoIsHardware(d.id)) ? 0 : (d._hasImage ? 1 : 0.88))
+          .attr("stroke", d._hasImage ? (productPhotoIsHardware(d.id) ? "rgba(148,163,184,0.45)" : MATRIX_NODE_RING) : "transparent")
           .attr("stroke-width", d._hasImage ? 1.4 : 2.5).attr("stroke-opacity", 1);
       }
     });
@@ -16695,7 +16746,10 @@ function insertProductHero(id, kind){
             </div>`);
         }
       }, { once: true });
-      if (!hasMatrix3d) img.addEventListener("load", () => refineMatrixPhotoEdges(img), { once: true });
+      if (!hasMatrix3d){
+        const hwOpts = kind === "product" ? productPhotoRefineOpts(id) : { knockoutWhite: !!familyHeroImageUrl(id) };
+        img.addEventListener("load", () => refineMatrixPhotoEdges(img, null, hwOpts), { once: true });
+      }
     }
   } else {
     // Compact glossy banner: icon badge + moved category chips/name folded inline, badge
