@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.72";
+  window.__CPN_BUILD="3.5.73";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     var staleKeys=["cpn-view-mode-v2","cpn-view-focus-v2","cpn-autosave-v2","cpn-current-v2","cpn-all-products-layers-v1"];
@@ -22,7 +22,9 @@
         localStorage.setItem(key,V);
         if(needsBust&&!sessionStorage.getItem(reloadKey)){
           sessionStorage.setItem(reloadKey,"1");
-          location.replace(location.pathname+"?_v="+encodeURIComponent(V)+(location.hash||""));
+          var bustParams=new URLSearchParams(location.search);
+          bustParams.set("_v",V);
+          location.replace(location.pathname+"?"+bustParams.toString()+(location.hash||""));
           return;
         }
         sessionStorage.removeItem(reloadKey);
@@ -18379,6 +18381,29 @@ function wireDesignStudioLazyLoad(){
   });
 }
 
+async function applyDirectToolLink(){
+  const requested = (new URLSearchParams(location.search).get("open") || "").trim().toLowerCase();
+  if (requested === "refresh"){
+    window.CPN_RefreshTimeline?.open?.();
+    return true;
+  }
+  if (requested === "acquisitions"){
+    window.CPN_AcquisitionTimeline?.open?.();
+    return true;
+  }
+  if (requested === "design-studio" && !window.__CPN_ROOM_MODE){
+    try {
+      await window.__cpnLazy?.loadDesignStudio?.();
+      window.DesignStudio?.open?.();
+      return true;
+    } catch (err) {
+      console.error(err);
+      if (typeof showToast === "function") showToast("Could not load Design Studio");
+    }
+  }
+  return false;
+}
+
 function boot(){
   initAmbientBackground();
   wireThemeToggle();
@@ -18457,6 +18482,7 @@ function boot(){
 
   // Restore prior state (URL hash > current plan > autosave)
   bootRestore();
+  applyDirectToolLink();
   const runCatalogDeepLink = () => {
     if (!/[#&]s=/.test(location.hash || "")) applyCatalogDeepLink();
   };
