@@ -50,6 +50,7 @@ const SOURCES = [
   "index.html",
   "design-studio-templates.js",
   "design-studio-intent.js",
+  "assets/cpn-problems.js",
 ];
 
 // Non-documentation hosts that legitimately appear in code (LLM endpoints,
@@ -80,21 +81,26 @@ function extractUrls() {
       continue;
     }
     let m;
-    while ((m = re.exec(text))) {
-      const url = m[1];
-      if (url.includes("${") || url.includes("{{")) continue; // placeholders
-      let host;
-      try {
-        host = new URL(url).hostname;
-      } catch {
-        continue;
-      }
-      if (IGNORE_HOSTS.includes(host) || host.endsWith(".example")) continue;
-      if (!map.has(url)) map.set(url, new Set());
-      map.get(url).add(rel);
+    while ((m = re.exec(text))) addUrl(map, m[1], rel);
+    if (rel.endsWith("cpn-problems.js")) {
+      const quoted = /["'](https?:\/\/[^"'`]+)["']/g;
+      while ((m = quoted.exec(text))) addUrl(map, m[1], rel);
     }
   }
   return map;
+}
+
+function addUrl(map, url, rel) {
+  if (url.includes("${") || url.includes("{{")) return;
+  let host;
+  try {
+    host = new URL(url).hostname;
+  } catch {
+    return;
+  }
+  if (IGNORE_HOSTS.includes(host) || host.endsWith(".example")) return;
+  if (!map.has(url)) map.set(url, new Set());
+  map.get(url).add(rel);
 }
 
 function isQuarantined(url) {

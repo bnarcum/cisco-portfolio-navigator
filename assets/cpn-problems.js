@@ -1022,7 +1022,7 @@
     "tool-sprawl-ops": "https://newsroom.cisco.com/c/r/newsroom/en/us/a/y2026/m06/cisco-unveils-agentic-platform-for-operating-and-defending-critical-it-infrastructure.html",
     "agentic-soc-trust": "https://www.splunk.com/en_us/products/enterprise-security.html",
     "nhi-agent-identity": "https://www.cisco.com/site/us/en/products/security/identity-services-engine/index.html",
-    "ai-stack-deploy": "https://www.cisco.com/site/us/en/products/cloud-systems-management/cloud-control/index.html",
+    "ai-stack-deploy": "https://www.cisco.com/site/us/en/solutions/artificial-intelligence/agentic-ops/cisco-cloud-control/index.html",
     "unknown-assets": "https://www.cisco.com/c/en/us/support/docs/cx/cisco-iq/getting-started-guide/cx225778-cisco-iq-getting-started-guide.html",
     "vulnerability-prioritization": "https://www.cisco.com/c/en/us/products/collateral/security/vulnerability-management/security-risk-score-so.html",
     "app-performance": "https://www.cisco.com/c/en/us/solutions/data-center/appdynamics-application-performance-monitoring.html"

@@ -396,8 +396,12 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 
 await page.goto(`file://${html}`, { waitUntil: "load", timeout: 60000 });
 await page.waitForFunction(() => window.CPN_AcquisitionTimeline?.open);
+const parallaxBefore = await page.evaluate(() => window.CPN_AcquisitionTimeline.testState().parallaxRunning);
+if (parallaxBefore) errors.push("parallax should stay stopped until the timeline opens");
 await page.evaluate(() => window.CPN_AcquisitionTimeline.open());
 await page.waitForSelector("#acq-wrap.show");
+const parallaxOpen = await page.evaluate(() => window.CPN_AcquisitionTimeline.testState().parallaxRunning);
+if (!parallaxOpen) errors.push("parallax should run while the timeline is open");
 
 const initial = await page.evaluate(() => window.CPN_AcquisitionTimeline.testState());
 if (initial.level !== "overview") errors.push(`initial level: ${initial.level}`);

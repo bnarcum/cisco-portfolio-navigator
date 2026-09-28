@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.73";
+  window.__CPN_BUILD="3.5.74";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     var staleKeys=["cpn-view-mode-v2","cpn-view-focus-v2","cpn-autosave-v2","cpn-current-v2","cpn-all-products-layers-v1"];
@@ -1855,11 +1855,11 @@
   <button type="button" class="fp-dismiss" data-fp="skip" aria-label="Dismiss start here">×</button>
   <p class="fp-kicker">Start here</p>
   <h2 class="fp-title" id="fp-title">Where do you want to go?</h2>
-  <p class="fp-sub">Click a pillar to see the families behind it — or pick a path.</p>
+  <p class="fp-sub">Click a pillar, or pick a path. Design Studio is in the top bar. Refresh and Acquisitions timelines are at the lower left.</p>
   <div class="fp-actions">
     <button type="button" data-fp="pillar">Explore a pillar</button>
     <button type="button" data-fp="solutions">Find a solution</button>
-    <button type="button" data-fp="plan">Start a plan</button>
+    <button type="button" data-fp="plan">Guided Plan</button>
   </div>
   <div class="fp-links">
     <button type="button" data-fp="tour">Take the full tour</button>
@@ -2118,19 +2118,19 @@ const NODES = [
    desc:"Cloud-managed SD-WAN and security appliances (MX67–MX450) combining firewall, IPS, content filtering, and SD-WAN in a single dashboard-managed device.",
    useCases:["SD-WAN / SASE","Hybrid Work","Network Automation","Zero Trust Security"],
    industries:["Retail","Healthcare","Education","Financial Services","Manufacturing"],
-   url:"https://meraki.cisco.com/products/appliances/",
+   url:"https://www.cisco.com/site/us/en/products/networking/sdwan-routers/meraki-security-appliances/index.html",
    docsUrl:"https://documentation.meraki.com/MX"},
   {id:"meraki-switches",   name:"Meraki Switches",            category:"networking",
    desc:"Meraki MS series cloud-managed switches (MS120–MS450) providing access, distribution, and aggregation with full Meraki dashboard integration.",
    useCases:["Network Automation","Hybrid Work","IoT / Industrial"],
    industries:["Retail","Healthcare","Education","Financial Services"],
-   url:"https://meraki.cisco.com/products/switches/",
+   url:"https://www.cisco.com/site/us/en/products/networking/switches/meraki-switches/index.html",
    docsUrl:"https://documentation.meraki.com/MS"},
   {id:"meraki-wireless",   name:"Meraki Wireless APs",        category:"networking",
    desc:"Meraki MR series Wi-Fi 6/6E access points (MR36–MR86) with cloud-managed indoor and outdoor coverage and built-in analytics.",
    useCases:["Hybrid Work","Network Automation","IoT / Industrial"],
    industries:["Retail","Healthcare","Education"],
-   url:"https://meraki.cisco.com/products/wi-fi/",
+   url:"https://www.cisco.com/site/us/en/products/networking/wireless/access-points/meraki-access-points/index.html",
    docsUrl:"https://documentation.meraki.com/MR"},
   {id:"sdwan",             name:"Cisco SD-WAN",               category:"networking",
    desc:"Software-defined WAN on ISR/ASR/vEdge platforms: application-aware routing, integrated security, and SASE connectivity for branch, campus, and cloud.",
@@ -2409,8 +2409,8 @@ const NODES = [
    desc:"AgenticOps platform (generally available July 2026) unifying connected Cisco domains, AI Canvas, Stack Automation, and governed AI-assisted cross-domain investigation.",
    useCases:["Hybrid Work","Network Automation","Digital Transformation","AI Networking"],
    industries:["Healthcare","Financial Services","Education","Government","Manufacturing","Retail"],
-   url:"https://cloud.cisco.com",
-   docsUrl:"https://www.cisco.com/c/en/us/support/cloud-systems-management/index.html"},
+   url:"https://www.cisco.com/site/us/en/solutions/artificial-intelligence/agentic-ops/cisco-cloud-control/index.html",
+   docsUrl:"https://www.cisco.com/c/en/us/td/docs/ai/cisco-cloud-control/articles/cisco-cloud-control-getting-started.html"},
   {id:"thousandeyes",      name:"Cisco ThousandEyes",          category:"observability",
    desc:"Network intelligence delivering end-to-end visibility across internet, cloud, enterprise WAN, and SaaS — identifying issues before users are impacted.",
    useCases:["SD-WAN / SASE","Hybrid Work","Cloud Migration","Network Automation","Digital Transformation"],
@@ -2945,16 +2945,16 @@ const PRODUCTS = [
    url:"https://www.cisco.com/site/us/en/products/networking/wireless/access-points/index.html"},
   {id:"mr36",           name:"Meraki MR36",                  family:"meraki-wireless", status:"current",
    desc:"Standard Wi-Fi 6 cloud-managed AP for offices and schools with 4×4 MU-MIMO and integrated Bluetooth/IoT radio.",
-   url:"https://meraki.cisco.com/products/wi-fi/"},
+   url:"https://www.cisco.com/site/us/en/products/networking/wireless/access-points/meraki-access-points/index.html"},
   {id:"mr46",           name:"Meraki MR46",                  family:"meraki-wireless", status:"current",
    desc:"High-density Wi-Fi 6 cloud-managed AP with 8×8 downlink for conference rooms and high-user-count environments.",
-   url:"https://meraki.cisco.com/products/wi-fi/"},
+   url:"https://www.cisco.com/site/us/en/products/networking/wireless/access-points/meraki-access-points/index.html"},
   {id:"mr57",           name:"Meraki MR57",                  family:"meraki-wireless", status:"current",
    desc:"Tri-band Wi-Fi 6E cloud-managed AP with 6 GHz band for ultra-low latency and high-throughput applications.",
-   url:"https://meraki.cisco.com/products/wi-fi/"},
+   url:"https://www.cisco.com/site/us/en/products/networking/wireless/access-points/meraki-access-points/index.html"},
   {id:"mr78",           name:"Meraki MR78",                  family:"meraki-wireless", status:"current",
    desc:"Outdoor Wi-Fi 6 cloud-managed AP with IP67 rating for campus outdoor, retail parking lots, and transportation hubs.",
-   url:"https://meraki.cisco.com/products/wi-fi/"},
+   url:"https://www.cisco.com/site/us/en/products/networking/wireless/access-points/meraki-access-points/index.html"},
 
   // ── WIRELESS APs (EOL)
   {id:"aironet-1815",   name:"Cisco Aironet 1815",           family:"catalyst-wireless", status:"eol",
@@ -2979,48 +2979,48 @@ const PRODUCTS = [
   // ── MERAKI SWITCHES (Current)
   {id:"ms120",          name:"Meraki MS120",                 family:"meraki-switches", status:"current",
    desc:"Cloud-managed access switches (8–48 port PoE) for small offices and branch deployments with full Meraki dashboard visibility.",
-   url:"https://meraki.cisco.com/products/switches/"},
+   url:"https://www.cisco.com/site/us/en/products/networking/switches/meraki-switches/index.html"},
   {id:"ms130",          name:"Meraki MS130",                 family:"meraki-switches", status:"current",
    desc:"Enhanced access switches with multigigabit and PoE++ for modern Wi-Fi 6/7 APs and power-hungry devices.",
-   url:"https://meraki.cisco.com/products/switches/"},
+   url:"https://www.cisco.com/site/us/en/products/networking/switches/meraki-switches/index.html"},
   {id:"ms210",          name:"Meraki MS210",                 family:"meraki-switches", status:"current",
    desc:"Mid-range distribution switches with 24/48 ports, SFP uplinks, and Layer 3 routing for campus distribution.",
-   url:"https://meraki.cisco.com/products/switches/"},
+   url:"https://www.cisco.com/site/us/en/products/networking/switches/meraki-switches/index.html"},
   {id:"ms250",          name:"Meraki MS250",                 family:"meraki-switches", status:"current",
    desc:"Aggregation switches with 10G SFP+ uplinks and advanced Layer 3 for enterprise aggregation layers.",
-   url:"https://meraki.cisco.com/products/switches/"},
+   url:"https://www.cisco.com/site/us/en/products/networking/switches/meraki-switches/index.html"},
   {id:"ms390",          name:"Meraki MS390",                 family:"meraki-switches", status:"current",
    desc:"Enterprise-grade stackable switches with Catalyst SD-Access integration — bringing Meraki simplicity to enterprise campus.",
-   url:"https://meraki.cisco.com/products/switches/"},
+   url:"https://www.cisco.com/site/us/en/products/networking/switches/meraki-switches/index.html"},
   {id:"ms450",          name:"Meraki MS450X",                family:"meraki-switches", status:"current",
    desc:"High-performance aggregation switches with 100G uplinks for demanding enterprise and data center ToR deployments.",
-   url:"https://meraki.cisco.com/products/switches/"},
+   url:"https://www.cisco.com/site/us/en/products/networking/switches/meraki-switches/index.html"},
 
   // ── MERAKI MX (Current)
   {id:"mx67",           name:"Meraki MX67",                  family:"meraki-mx",      status:"current",
    desc:"Small branch security/SD-WAN appliance (up to 25 users) with integrated firewall, IPS, and content filtering.",
-   url:"https://meraki.cisco.com/products/appliances/"},
+   url:"https://www.cisco.com/site/us/en/products/networking/sdwan-routers/meraki-security-appliances/index.html"},
   {id:"mx68",           name:"Meraki MX68",                  family:"meraki-mx",      status:"current",
    desc:"Branch security/SD-WAN appliance (up to 50 users) with dual uplinks and cellular failover option.",
-   url:"https://meraki.cisco.com/products/appliances/"},
+   url:"https://www.cisco.com/site/us/en/products/networking/sdwan-routers/meraki-security-appliances/index.html"},
   {id:"mx75",           name:"Meraki MX75",                  family:"meraki-mx",      status:"current",
    desc:"Mid-size branch SD-WAN/security (up to 200 users) with 1G throughput and integrated DHCP, NAT, and VPN.",
-   url:"https://meraki.cisco.com/products/appliances/"},
+   url:"https://www.cisco.com/site/us/en/products/networking/sdwan-routers/meraki-security-appliances/index.html"},
   {id:"mx85",           name:"Meraki MX85",                  family:"meraki-mx",      status:"current",
    desc:"Enterprise branch SD-WAN appliance (up to 500 users) with multi-WAN and advanced threat protection.",
-   url:"https://meraki.cisco.com/products/appliances/"},
+   url:"https://www.cisco.com/site/us/en/products/networking/sdwan-routers/meraki-security-appliances/index.html"},
   {id:"mx95",           name:"Meraki MX95",                  family:"meraki-mx",      status:"current",
    desc:"Large branch SD-WAN/security (up to 2,000 users) with 2Gbps throughput for enterprise headquarters.",
-   url:"https://meraki.cisco.com/products/appliances/"},
+   url:"https://www.cisco.com/site/us/en/products/networking/sdwan-routers/meraki-security-appliances/index.html"},
   {id:"mx250",          name:"Meraki MX250",                 family:"meraki-mx",      status:"current",
    desc:"Data center SD-WAN/security appliance with 4Gbps throughput and 4 SFP uplinks for campus data center edge.",
-   url:"https://meraki.cisco.com/products/appliances/"},
+   url:"https://www.cisco.com/site/us/en/products/networking/sdwan-routers/meraki-security-appliances/index.html"},
   {id:"mx450",          name:"Meraki MX450",                 family:"meraki-mx",      status:"current",
    desc:"Highest-capacity Meraki security appliance with 10Gbps throughput and 8 SFP uplinks for enterprise HQ and large campuses.",
-   url:"https://meraki.cisco.com/products/appliances/"},
+   url:"https://www.cisco.com/site/us/en/products/networking/sdwan-routers/meraki-security-appliances/index.html"},
   {id:"meraki-mcp",     name:"Meraki MCP Server",            family:"meraki-mx",      status:"current",
    desc:"Model Context Protocol server for Meraki Dashboard — exposes governed network, security, and device context to Cloud Control and third-party AI agents.",
-   url:"https://meraki.cisco.com/"},
+   url:"https://developer.cisco.com/meraki/api-v1/mcp-server/"},
 
   // ── FIREWALLS (Current - Branch: FP1000, CSF200, CSF1200)
   {id:"ftd-1010",       name:"Cisco Secure Firewall 1010",   family:"sf-branch",      status:"current",
@@ -3676,31 +3676,31 @@ const PRODUCTS = [
   // ── MERAKI WIRELESS (additional)
   {id:"mr44",           name:"Meraki MR44",                   family:"meraki-wireless", status:"current",
    desc:"Wi-Fi 6 dual-radio cloud-managed AP — entry-level enterprise indoor coverage.",
-   url:"https://meraki.cisco.com/products/wi-fi/mr44"},
+   url:"https://www.cisco.com/site/us/en/products/networking/wireless/access-points/meraki-access-points/mr44.html"},
   {id:"mr54",           name:"Meraki MR54",                   family:"meraki-wireless", status:"current",
    desc:"Wi-Fi 6 tri-radio cloud-managed AP with dedicated security radio.",
    url:"https://www.cisco.com/site/us/en/products/networking/wireless/access-points/meraki-access-points/index.html"},
   {id:"mr55",           name:"Meraki MR55",                   family:"meraki-wireless", status:"current",
    desc:"High-density Wi-Fi 6 AP with 8 spatial streams and 5G mmWave option.",
-   url:"https://meraki.cisco.com/products/wi-fi/mr55"},
+   url:"https://www.cisco.com/site/us/en/products/networking/wireless/access-points/meraki-access-points/index.html"},
   {id:"mr84",           name:"Meraki MR84",                   family:"meraki-wireless", status:"eos",
    eosDate:"Mar 2024", eolDate:"Mar 2029",
    successor:"cw9166", successorName:"Cisco CW9166I (Wi-Fi 6E)",
    migNote:"CW9166I provides Wi-Fi 6E with multi-gig PoE in the same Meraki dashboard.",
    desc:"Wi-Fi 5 wave-2 outdoor AP — superseded by CW9166I for new Meraki deployments.",
-   url:"https://meraki.cisco.com/products/wi-fi/"},
+   url:"https://www.cisco.com/site/us/en/products/networking/wireless/access-points/meraki-access-points/index.html"},
   {id:"mr86",           name:"Meraki MR86 (Outdoor)",         family:"meraki-wireless", status:"current",
    desc:"Wi-Fi 6 outdoor IP67-rated AP for stadiums, campuses, and harsh outdoor environments.",
-   url:"https://meraki.cisco.com/products/wi-fi/mr86"},
+   url:"https://www.cisco.com/site/us/en/products/networking/wireless/access-points/meraki-access-points/mr86.html"},
   {id:"cw9162",         name:"Cisco CW9162I (Wi-Fi 6E — Meraki dashboard)", family:"meraki-wireless", status:"current",
    desc:"Wi-Fi 6E entry-level cloud-managed indoor AP — Meraki Dashboard or Catalyst Center co-management.",
-   url:"https://meraki.cisco.com/products/wi-fi/"},
+   url:"https://www.cisco.com/site/us/en/products/networking/wireless/access-points/meraki-access-points/index.html"},
   {id:"cw9164",         name:"Cisco CW9164I (Wi-Fi 6E — Meraki dashboard)", family:"meraki-wireless", status:"current",
    desc:"Wi-Fi 6E mid-range cloud-managed indoor AP with multi-gig PoE.",
-   url:"https://meraki.cisco.com/products/wi-fi/"},
+   url:"https://www.cisco.com/site/us/en/products/networking/wireless/access-points/meraki-access-points/index.html"},
   {id:"cw9166",         name:"Cisco CW9166I (Wi-Fi 6E — Meraki dashboard)", family:"meraki-wireless", status:"current",
    desc:"Wi-Fi 6E high-performance cloud-managed indoor AP — flagship 6E Meraki AP with 6-GHz tri-band.",
-   url:"https://meraki.cisco.com/products/wi-fi/"},
+   url:"https://www.cisco.com/site/us/en/products/networking/wireless/access-points/meraki-access-points/index.html"},
 
   // ── INDUSTRIAL (additions)
   {id:"ir1101",         name:"Cisco Catalyst IR1101 Industrial Router", family:"industrial-eth", status:"current",
@@ -3985,7 +3985,7 @@ const PRODUCTS = [
   {id:"iq-assistant",    name:"Cisco IQ AI Assistant",       family:"cisco-iq", status:"current",
    desc:"Contextual AI copilot across your Cisco estate — synthesizes telemetry, contracts, and support history into actionable guidance with session state per asset.",
    url:"https://iq.cisco.com",
-   docsUrl:"https://www.cisco.com/c/en/us/support/docs/cx/cisco-iq/release-notes/cx225767-cisco-iq-release-notes-april-2026.html"},
+   docsUrl:"https://iq.cisco.com/docs/saas/release-notes/april-2026.html"},
   {id:"iq-troubleshoot", name:"AI-Powered Troubleshooting",  family:"cisco-iq", status:"current",
    desc:"Certified troubleshooting assistant leveraging Cisco TAC knowledge — guided remediation to resolve issues faster and reduce case volume.",
    url:"https://iq.cisco.com",
@@ -3997,7 +3997,7 @@ const PRODUCTS = [
   {id:"iq-link",         name:"Cisco IQ Link",               family:"cisco-iq", status:"current",
    desc:"On-premises Cisco IQ modality — tethered or air-gapped deployment for environments that require local data residency while retaining CX intelligence.",
    url:"https://www.cisco.com/c/en/us/support/cx/cisco-iq.html",
-   docsUrl:"https://www.cisco.com/c/en/us/support/docs/cx/cisco-iq/faq/cx225779-cisco-iq-frequently-asked-questions.html"}
+   docsUrl:"https://iq.cisco.com/docs/faq.html"}
 ];
 
 // Build lookup maps
@@ -4011,7 +4011,7 @@ const EXTERNAL_URL_REWRITES = {
   "https://www.webex.com/connect.html": "https://www.webex.com/us/en/products/customer-experience/cpaas/webex-connect.html",
   "https://www.webex.com/engage.html": "https://www.webex.com/contact-center.html",
   "https://www.webex.com/contact-center/pricing.html": "https://www.webex.com/contact-center.html",
-  "https://www.cisco.com/site/us/en/products/cloud-systems-management/cloud-control/index.html": "https://www.cisco.com/c/en/us/support/cloud-systems-management/index.html"
+  "https://www.cisco.com/site/us/en/products/cloud-systems-management/cloud-control/index.html": "https://www.cisco.com/site/us/en/solutions/artificial-intelligence/agentic-ops/cisco-cloud-control/index.html"
 };
 
 function rewriteExternalUrl(url){
@@ -6937,14 +6937,14 @@ function updateCanvasHint(){
   const hint = document.getElementById("hint");
   if (!hint) return;
   if (viewMode === "overview"){
-    hint.textContent = "Click a pillar to see the families behind it.";
+    hint.textContent = "Click a pillar to see the families behind it. Timelines are at the lower left.";
     return;
   }
   if (viewMode === "composition" && viewFocus){
     const prods = PRODUCTS.filter(p => p.family === viewFocus && productMatchesFilters(p));
     const cur = prods.filter(p => p.status === "current").length;
     const leg = prods.filter(p => p.status === "eol").length;
-    hint.textContent = `${cur} current${leg ? ` · ${leg} EoL` : ""} · Drag ring to rotate · Click a product for details · Purple dashed = upgrade path · Esc to go back`;
+    hint.textContent = `${cur} current${leg ? ` · ${leg} end of life` : ""} · Click a product · Purple dashed line = upgrade path · Esc to go back`;
     return;
   }
   if (viewMode === "all-products"){
@@ -12485,7 +12485,7 @@ document.addEventListener("keydown",ev=>{
 (function v2(){
 
 const APP_VERSION   = window.__CPN_BUILD || "2.89.1";
-const DATA_UPDATED  = "2026-08-28";
+const DATA_UPDATED  = "2026-09-28";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
   current:  "cpn-current-v2",
@@ -18237,15 +18237,25 @@ function initAmbientBackground(){
     }
   }
 
+  function canvasCovered(){
+    const classes = document.body.classList;
+    return classes.contains("spatial-open") || classes.contains("tl-open")
+      || classes.contains("acq-open") || classes.contains("design-studio-open");
+  }
+
   function tick(now){
+    if (document.hidden || reducedMotion || canvasCovered()){
+      rafId = null;
+      return;
+    }
     drawMesh(now ?? performance.now());
-    if (!reducedMotion) rafId = requestAnimationFrame(tick);
+    rafId = requestAnimationFrame(tick);
   }
 
   function start(){
+    if (document.hidden || reducedMotion || canvasCovered()) return;
     lastTs = 0;
-    tick(performance.now());
-    if (!reducedMotion && rafId == null) rafId = requestAnimationFrame(tick);
+    if (rafId == null) rafId = requestAnimationFrame(tick);
   }
 
   function stop(){
@@ -18261,6 +18271,10 @@ function initAmbientBackground(){
     if (document.hidden) stop();
     else start();
   });
+  new MutationObserver(() => {
+    if (canvasCovered()) stop();
+    else start();
+  }).observe(document.body, { attributes: true, attributeFilter: ["class"] });
 }
 
 /* ════════════════════════════════════════════════════════════════════════

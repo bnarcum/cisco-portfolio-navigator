@@ -16,6 +16,7 @@
     pxPerYear: 72,
     cardW: 88,
     raf: 0,
+    parallaxRaf: 0,
     level: "overview",
     anchorYear: null,
     expandedYear: null,
@@ -972,6 +973,25 @@
     restoreCardFocus(id);
   }
 
+  function stopParallax() {
+    if (ACQ.parallaxRaf) cancelAnimationFrame(ACQ.parallaxRaf);
+    ACQ.parallaxRaf = 0;
+  }
+
+  function startParallax() {
+    updateParallax();
+    if (ACQ.parallaxRaf || prefersReducedMotion()) return;
+    const loop = () => {
+      if (!$("#acq-wrap")?.classList.contains("show")) {
+        ACQ.parallaxRaf = 0;
+        return;
+      }
+      updateParallax();
+      ACQ.parallaxRaf = requestAnimationFrame(loop);
+    };
+    ACQ.parallaxRaf = requestAnimationFrame(loop);
+  }
+
   function updateParallax() {
     const canvas = $("#acq-canvas");
     const inner = $("#acq-inner");
@@ -1464,6 +1484,7 @@
       anchorYear: ACQ.anchorYear,
       expandedYear: ACQ.expandedYear,
       focusedId: ACQ.focusedId,
+      parallaxRunning: ACQ.parallaxRaf !== 0,
       reducedMotion: prefersReducedMotion(),
       scrollLeft: document.querySelector("#acq-canvas")?.scrollLeft || 0,
     };
@@ -1484,7 +1505,7 @@
       </div>
       <div id="acq-head">
         <div class="acq-heading">
-          <div class="acq-title">Acquisition History</div>
+          <div class="acq-title">Acquisitions Timeline</div>
           <div class="acq-sub">${buildSourcesSub(window.CPN_ACQUISITIONS.acquisitions.length)}</div>
           <div id="acq-current-period" aria-live="polite"></div>
           <div id="acq-spend-ticker" aria-live="polite"></div>
@@ -1723,11 +1744,6 @@
     updateZoomUi();
     renderAcquisitionTimeline();
 
-    function animLoop() {
-      if ($("#acq-wrap")?.classList.contains("show")) updateParallax();
-      requestAnimationFrame(animLoop);
-    }
-    requestAnimationFrame(animLoop);
   }
 
   function openAcquisitionTimeline() {
@@ -1739,6 +1755,7 @@
     window.__cpnV2?.phases?.closeTimelineView?.();
     renderAcquisitionTimeline();
     fitAcqZoom();
+    startParallax();
     $("#acq-search")?.focus({ preventScroll: true });
   }
 
@@ -1746,6 +1763,7 @@
     const opener = ACQ.opener;
     stopTour();
     $("#acq-wrap")?.classList.remove("show");
+    stopParallax();
     document.body.classList.remove("acq-open");
     $("#tools-acquisitions")?.classList.remove("active");
     ACQ.focusedId = null;
