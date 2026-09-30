@@ -145,6 +145,13 @@ for (const acq of data.acquisitions) {
   }
 }
 
+const galileo = data.acquisitions.find(acq => acq.id === "galileo");
+if (galileo?.company !== "Galileo" || galileo?.completed !== "2026-05-22" ||
+    galileo?.families?.join(",") !== "splunk" ||
+    !/Splunk Agent Observability/.test(galileo?.summary || "")) {
+  errors.push(`galileo record out of date: ${galileo?.company} ${galileo?.completed} ${(galileo?.families || []).join(",")}`);
+}
+
 const widefield = data.acquisitions.find(acq => acq.id === "widefield-security");
 if (widefield?.completed !== "2026-07-31") {
   errors.push(`widefield: expected completed 2026-07-31, got ${widefield?.completed}`);

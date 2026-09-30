@@ -993,6 +993,41 @@
       families: ["appdynamics", "fso", "splunk", "thousandeyes"],
       signals: { has: ["splunk"], missing: ["appdynamics"] },
       maturityNext: "observability-blindspots"
+    },
+    {
+      id: "agent-trust-gap",
+      pillar: "resilience",
+      symptom: "AI agents reach production without a way to score quality, cost, or unsafe actions before customers see them.",
+      outcome: "Splunk Agent Observability evaluates agent behavior, traces each workflow, tracks token cost, and applies runtime guardrails.",
+      proof: {
+        metric: "Production agent quality and safety coverage",
+        before: "Sampled reviews after an agent has already answered a customer",
+        after: "Evaluation, cost, and guardrails on production agent traffic",
+        source: "Splunk Agent Observability, from the Galileo acquisition"
+      },
+      personas: {
+        netops: {
+          line: "Trace an agent failure to the model, tool call, or infrastructure underneath it.",
+          symptom: "When an agent is slow or wrong, the app trace and the GPU view live in different tools.",
+          proof: { metric: "Time to agent root cause", before: "Separate logs for prompts, models, and infrastructure", after: "One timeline from the request to the GPU" }
+        },
+        cio: {
+          line: "See what agents cost and whether their answers are good enough to stay in production.",
+          symptom: "Agent projects launch before leadership can see quality or token spend.",
+          proof: { metric: "Agent cost and quality visibility", before: "Spend and answer quality show up after the invoice or the complaint", after: "Token cost and evaluation scores are visible by agent and workflow" }
+        },
+        ciso: {
+          line: "Block prompt injection, tool misuse, and sensitive-data leakage before the agent acts.",
+          symptom: "Security finds agent mistakes after the response has already gone out.",
+          proof: { metric: "Unsafe agent actions stopped in production", before: "Guardrails are a review step after the fact", after: "Runtime guardrails block risky actions before execution" }
+        }
+      },
+      useCases: ["AI Networking", "Digital Transformation"],
+      bundles: [],
+      families: ["splunk"],
+      signals: { has: [], missing: ["splunk"] },
+      dcloudPath: "ai-networking",
+      maturityNext: "agentic-soc-trust"
     }
   ];
 
@@ -1025,7 +1060,8 @@
     "ai-stack-deploy": "https://www.cisco.com/site/us/en/solutions/artificial-intelligence/agentic-ops/cisco-cloud-control/index.html",
     "unknown-assets": "https://www.cisco.com/c/en/us/support/docs/cx/cisco-iq/getting-started-guide/cx225778-cisco-iq-getting-started-guide.html",
     "vulnerability-prioritization": "https://www.cisco.com/c/en/us/products/collateral/security/vulnerability-management/security-risk-score-so.html",
-    "app-performance": "https://www.cisco.com/c/en/us/solutions/data-center/appdynamics-application-performance-monitoring.html"
+    "app-performance": "https://www.cisco.com/c/en/us/solutions/data-center/appdynamics-application-performance-monitoring.html",
+    "agent-trust-gap": "https://www.splunk.com/en_us/products/agent-observability.html"
   };
   PROBLEMS.forEach(p => {
     if (p.proof) p.proof.sourceUrl = OFFICIAL_SOURCE_URLS[p.id] || "";
@@ -1033,7 +1069,7 @@
 
   // Prefer observability-first narratives for families that span security and ops.
   const FAMILY_PROBLEM_ORDER = {
-    splunk: ["agentic-soc-trust", "observability-blindspots", "app-performance"]
+    splunk: ["agentic-soc-trust", "agent-trust-gap", "observability-blindspots", "app-performance"]
   };
 
   // Fast lookups

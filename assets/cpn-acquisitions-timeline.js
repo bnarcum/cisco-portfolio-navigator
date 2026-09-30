@@ -32,6 +32,7 @@
   const LANDMARK_IDS = [
     "stratacom", "cerent", "webex", "scientific-atlanta", "tandberg", "meraki",
     "sourcefire", "opendns", "duo-security", "appdynamics", "thousandeyes", "splunk",
+    "galileo",
   ];
 
   const $ = (s, r = document) => r.querySelector(s);
@@ -932,7 +933,9 @@
     const headline = $("#acq-focus-headline");
     if (headline) headline.textContent = summaryHeadline(a);
     $("#acq-focus-meta").textContent = [
-      formatAnnouncedDate(a.announced),
+      a.completed
+        ? `Announced ${formatAnnouncedDate(a.announced)} · Closed ${formatAnnouncedDate(a.completed)}`
+        : formatAnnouncedDate(a.announced),
       a.valueUsd ? formatValue(a.valueUsd) : null,
       a.business || null,
       a.country || null,

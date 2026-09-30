@@ -51,8 +51,8 @@ const FAMILY_MAP = {
   isovalent: ["hypershield"],
   widefield: ["splunk"],
   widefieldsecurity: ["splunk"],
-  galileo: ["splunk", "appdynamics"],
-  galileotechnologies: ["splunk", "appdynamics"],
+  galileo: ["splunk"],
+  galileotechnologies: ["splunk"],
   astrix: ["identity-intel", "ai-defense"],
   astrixsecurity: ["identity-intel", "ai-defense"],
   auraassetintelligence: ["splunk", "xdr"],
@@ -63,9 +63,13 @@ const FAMILY_MAP = {
 /** Post-merge overrides — completion dates, family links, summaries omitted upstream. */
 const MANUAL_PATCHES = {
   galileo: {
-    business: "AI agent observability",
-    families: ["splunk", "appdynamics"],
+    company: "Galileo",
+    business: "Splunk Agent Observability",
+    summary:
+      "Cisco completed the acquisition of Galileo Technologies, Inc. on May 22, 2026. Galileo's agent evaluation, workflow tracing, token-cost tracking, and runtime guardrails are now Splunk Agent Observability in the Splunk portfolio.",
+    families: ["splunk"],
     featured: true,
+    completed: "2026-05-22",
   },
   "astrix-security": {
     business: "Non-human identity (NHI) security",
