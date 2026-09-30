@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.76";
+  window.__CPN_BUILD="3.5.77";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     var staleKeys=["cpn-view-mode-v2","cpn-view-focus-v2","cpn-autosave-v2","cpn-current-v2","cpn-all-products-layers-v1"];
@@ -2367,7 +2367,7 @@ const NODES = [
    url:"https://www.cisco.com/site/us/en/solutions/small-business/collaboration/devices/index.html",
    docsUrl:"https://www.cisco.com/c/en/us/support/collaboration-endpoints/index.html"},
   {id:"conf-phones",       name:"Cisco Conference Phones",     category:"collaboration",
-   desc:"IP Conference Phone 7832 and 8832 — wireless and wired conference room speakerphones with 360° audio pickup for small to large meeting rooms.",
+   desc:"Cisco IP Conference Phone 8832 is the current conference speakerphone, with full-duplex wideband audio and 360° coverage. Conference Phone 7832 is end of sale.",
    useCases:["Hybrid Work","Digital Transformation"],
    industries:["Healthcare","Financial Services","Education","Government"],
    url:"https://www.cisco.com/c/en/us/products/collaboration-endpoints/index.html",
@@ -2406,7 +2406,7 @@ const NODES = [
 
   // OBSERVABILITY
   {id:"cloud-control",     name:"Cisco Cloud Control",         category:"observability",
-   desc:"AgenticOps platform (generally available July 2026) unifying connected Cisco domains, AI Canvas, Stack Automation, and governed AI-assisted cross-domain investigation.",
+   desc:"AgenticOps platform, generally available August 25, 2026 for U.S. infrastructure, unifying connected Cisco domains, AI Canvas, Stack Automation, and governed AI-assisted cross-domain investigation.",
    useCases:["Hybrid Work","Network Automation","Digital Transformation","AI Networking"],
    industries:["Healthcare","Financial Services","Education","Government","Manufacturing","Retail"],
    url:"https://www.cisco.com/site/us/en/solutions/artificial-intelligence/agentic-ops/cisco-cloud-control/index.html",
@@ -2420,7 +2420,7 @@ const NODES = [
    desc:"Application performance monitoring and full-stack observability correlating business KPIs with application behavior and infrastructure performance.",
    useCases:["Digital Transformation","Cloud Migration","AI Networking"],
    industries:["Financial Services","Retail","Healthcare","Manufacturing","Education"],
-   url:"https://www.appdynamics.com", docsUrl:"https://docs.appdynamics.com"},
+   url:"https://www.splunk.com/en_us/products/splunk-appdynamics.html", docsUrl:"https://help.splunk.com/en/appdynamics-saas"},
   {id:"splunk",            name:"Splunk",                      category:"observability",
    desc:"Data platform for security and IT operations — SIEM, SOAR, Agent Observability, Cisco Data Fabric, Agentic SOC, Instant Attack Verification, and AI-driven analytics across all data sources.",
    useCases:["Threat Detection & Response","Network Automation","Digital Transformation","AI Networking"],
@@ -2430,8 +2430,8 @@ const NODES = [
    desc:"Integrated observability connecting business context to performance across apps, infrastructure, networks, and security — built on OpenTelemetry.",
    useCases:["Digital Transformation","Cloud Migration","AI Networking","Network Automation"],
    industries:["Financial Services","Healthcare","Retail","Manufacturing","Education"],
-   url:"https://www.cisco.com/c/en/us/solutions/full-stack-observability/index.html",
-   docsUrl:"https://www.cisco.com/c/en/us/solutions/full-stack-observability/index.html"},
+   url:"https://www.splunk.com/en_us/products/splunk-appdynamics.html",
+   docsUrl:"https://help.splunk.com/en/appdynamics-saas"},
   {id:"cisco-iq",          name:"Cisco IQ",                    category:"observability",
    desc:"AI-powered CX front door — unified asset inventory, vulnerability prioritization, contextual troubleshooting, and support intelligence across your Cisco estate. Included with Cisco Support and Professional Services.",
    useCases:["Digital Transformation","Network Automation","Threat Detection & Response"],
@@ -3907,16 +3907,16 @@ const PRODUCTS = [
   // ── APPDYNAMICS (Current)
   {id:"appd-infra",     name:"AppDynamics Infrastructure Monitoring", family:"appdynamics", status:"current",
    desc:"Host, container, network, and database monitoring with auto-discovery — replaces traditional infra APM agents.",
-   url:"https://www.appdynamics.com/product/infrastructure-monitoring"},
+   url:"https://help.splunk.com/en/appdynamics-saas/infrastructure-visibility"},
   {id:"appd-premium",   name:"AppDynamics Premium",           family:"appdynamics", status:"current",
    desc:"Premium APM: business transaction monitoring, code-level diagnostics, and synthetic monitoring.",
-   url:"https://www.appdynamics.com/pricing"},
+   url:"https://www.splunk.com/en_us/products/pricing.html#observability"},
   {id:"appd-enterprise", name:"AppDynamics Enterprise",       family:"appdynamics", status:"current",
    desc:"Enterprise APM with Business iQ — correlate KPIs to application performance and customer journeys.",
-   url:"https://www.appdynamics.com/pricing"},
+   url:"https://www.splunk.com/en_us/products/pricing.html#observability"},
   {id:"appd-sap",       name:"AppDynamics Enterprise for SAP", family:"appdynamics", status:"current",
    desc:"SAP-specific APM with ABAP code-level diagnostics, S/4HANA, and Fiori transaction insights.",
-   url:"https://www.appdynamics.com/solutions/sap-monitoring"},
+   url:"https://help.splunk.com/en/appdynamics-sap-agent/sap-monitoring/sap-monitoring-using-cisco-appdynamics"},
   {id:"cisco-cloud-obs", name:"Cisco Cloud Observability",    family:"appdynamics", status:"current",
    desc:"Cloud-native observability platform on Cisco FSO — OTel-based; correlates AppD, ThousandEyes, and infra telemetry.",
    url:"https://www.cisco.com/site/us/en/products/observability/index.html"},
@@ -4646,7 +4646,7 @@ const BUNDLES = [
    desc:"Cloud-native omnichannel contact center with AI-powered routing, digital channels, and secure agent access."},
   {name:"Cloud Control Platform",
    products:["cloud-control","webex-app","webex-calling","thousandeyes","catalyst-center"],
-   desc:"Generally available AgenticOps architecture for connected Cisco domains, AI Canvas, Stack Automation, and cross-domain investigation; integrations depend on enrolled release."},
+   desc:"Generally available August 25, 2026 for U.S. infrastructure. AgenticOps architecture for connected Cisco domains, AI Canvas, Stack Automation, and cross-domain investigation; integrations depend on enrolled release."},
   {name:"Agentic SOC",
    products:["splunk","xdr","identity-intel","talos"],
    desc:"Agentic security operations — Splunk Agentic SOC, Instant Attack Verification, XDR correlation, and identity context for faster, trusted response."},
@@ -12021,7 +12021,7 @@ document.addEventListener("keydown",ev=>{
       target: "#tools-acquisitions", place: "top",
       title: "Acquisitions Timeline — Cisco's build story",
       body: `<strong>Acquisitions Timeline</strong> is an interactive logo history — 258 deals from Webex and Meraki
-             through Splunk, Isovalent, and recent intent-to-acquire announcements.<br><br>
+             through Splunk, Isovalent, WideField, and Galileo.<br><br>
              Scroll the year rail, search by company, filter by portfolio family, and open a deal card to see
              summary, price, and links to Cisco + Wikipedia sources.`,
       tip: `Press <code>M</code> to toggle · inner <strong>Tour</strong> button plays landmark highlights.`,

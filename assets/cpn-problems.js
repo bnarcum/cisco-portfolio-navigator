@@ -760,7 +760,7 @@
         metric: "Consoles per investigation",
         before: "Swivel-chair across many disconnected tools",
         after: "A shared AI-assisted workspace preserves evidence and investigation context",
-        source: "Cisco Cloud Control and AI Canvas positioning — generally available July 2026"
+        source: "Cisco Cloud Control release notes — generally available August 25, 2026 for U.S. infrastructure"
       },
       personas: {
         netops: {
@@ -1060,7 +1060,7 @@
     "ai-stack-deploy": "https://www.cisco.com/site/us/en/solutions/artificial-intelligence/agentic-ops/cisco-cloud-control/index.html",
     "unknown-assets": "https://www.cisco.com/c/en/us/support/docs/cx/cisco-iq/getting-started-guide/cx225778-cisco-iq-getting-started-guide.html",
     "vulnerability-prioritization": "https://www.cisco.com/c/en/us/products/collateral/security/vulnerability-management/security-risk-score-so.html",
-    "app-performance": "https://www.cisco.com/c/en/us/solutions/data-center/appdynamics-application-performance-monitoring.html",
+    "app-performance": "https://www.splunk.com/en_us/products/splunk-appdynamics.html",
     "agent-trust-gap": "https://www.splunk.com/en_us/products/agent-observability.html"
   };
   PROBLEMS.forEach(p => {

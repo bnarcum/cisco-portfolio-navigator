@@ -42,7 +42,7 @@ try {
   };
 
   let s = await check("ai-dc", 3);
-  if (s.version !== "3.5.76") errors.push(`expected 3.5.76, got ${s.version}`);
+  if (s.version !== "3.5.77") errors.push(`expected 3.5.77, got ${s.version}`);
   if (!s.pillarFocus) errors.push("expected pillar-focus body class");
   if (!s.strip) errors.push("missing promise strip");
   if (!s.ribbon) errors.push("missing value-prop ribbon");

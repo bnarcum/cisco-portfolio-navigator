@@ -64,7 +64,6 @@ const IGNORE_HOSTS = [
   "openrouter.ai",
   "ollama.com",
   "lmstudio.ai",
-  "docs.appdynamics.com",
   "docs.kennasecurity.com",
 ];
 
