@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.74";
+  window.__CPN_BUILD="3.5.75";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     var staleKeys=["cpn-view-mode-v2","cpn-view-focus-v2","cpn-autosave-v2","cpn-current-v2","cpn-all-products-layers-v1"];
@@ -3943,6 +3943,10 @@ const PRODUCTS = [
   {id:"splunk-o11y",    name:"Splunk Observability Cloud",    family:"splunk", status:"current",
    desc:"OpenTelemetry-native APM, infra monitoring, RUM, synthetics, and log observer — Splunk's o11y stack.",
    url:"https://www.splunk.com/en_us/products/observability.html"},
+  {id:"splunk-agent-o11y", name:"Splunk Agent Observability", family:"splunk", status:"current",
+   desc:"Galileo's agent evaluation and guardrails, now in Splunk. Scores quality and safety across production traffic, traces agent workflows to the GPU, tracks token cost, and blocks risky actions before they run.",
+   url:"https://www.splunk.com/en_us/products/agent-observability.html",
+   docsUrl:"https://help.splunk.com/en/splunk-agent-observability"},
   {id:"splunk-mission-control", name:"Splunk Mission Control", family:"splunk", status:"current",
    desc:"Unified SOC workbench bringing ES + SOAR + Intelligence Management + Attack Analyzer into a single analyst pane.",
    url:"https://www.splunk.com/en_us/products/mission-control.html"},
@@ -12485,7 +12489,7 @@ document.addEventListener("keydown",ev=>{
 (function v2(){
 
 const APP_VERSION   = window.__CPN_BUILD || "2.89.1";
-const DATA_UPDATED  = "2026-09-28";
+const DATA_UPDATED  = "2026-09-30";
 const STORAGE_KEYS  = {
   plans:    "cpn-plans-v2",
   current:  "cpn-current-v2",
