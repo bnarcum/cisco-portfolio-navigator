@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.77";
+  window.__CPN_BUILD="3.5.78";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     var staleKeys=["cpn-view-mode-v2","cpn-view-focus-v2","cpn-autosave-v2","cpn-current-v2","cpn-all-products-layers-v1"];
@@ -38,7 +38,7 @@
   })();
   (function(){
     var v=encodeURIComponent(window.__CPN_BUILD);
-    ["cpn-ui.css","cpn-light.css","cpn-iq-theme.css","cpn-logo-intro.css",
+    ["magnetic.css","cpn-ui.css","cpn-light.css","cpn-iq-theme.css","cpn-logo-intro.css",
      "cpn-acquisitions-timeline.css","cpn-refresh-timeline.css","cpn-solutions.css"].forEach(function(f){
       var l=document.createElement("link");
       l.rel="stylesheet";
@@ -1582,14 +1582,90 @@
     .tp-btn.prim:hover{background:var(--cisco-blue-light);color:#fff}
     .tp-btn.skip{padding:7px 10px;color:var(--subtle);border:none}
     .tp-btn.skip:hover{color:var(--text);background:transparent}
+
+    /* Magnetic chrome — header, search, view switch, chips, panels.
+       Graph, family colors, and CiscoSans are unchanged. */
+    #app-chrome.mg-header{
+      background:rgba(27,35,45,.92);
+      backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);
+      border-bottom:1px solid var(--mg-border);box-shadow:none}
+    #app-chrome.mg-header #topbar,
+    #app-chrome.mg-header #actionbar,
+    #app-chrome.mg-header .actionbar-primary{
+      background:transparent;box-shadow:none;border-bottom-color:var(--mg-border)}
+    #app-chrome.mg-header #topbar::before{display:none}
+    #app-chrome.mg-header .actionbar-filters{
+      background:rgba(35,40,46,.6);border-top:1px solid var(--mg-border)}
+    #topbar .sw.mg-search{max-width:none;min-height:36px;color:var(--mg-text-3)}
+    #topbar .mg-search #search{
+      border:0;background:transparent;box-shadow:none;border-radius:0;
+      padding:8px 8px 8px 28px;min-height:32px}
+    #topbar .mg-search #search:focus{border:0;box-shadow:none;background:transparent}
+    #sr.mg-panel{background:var(--mg-surface-solid);border:1px solid var(--mg-border);border-radius:8px}
+    #vm-seg.mg-segmented{gap:2px;padding:2px;border:1px solid var(--mg-border-strong);
+      border-radius:8px;background:rgba(0,0,0,.18)}
+    #vm-seg.mg-segmented button{min-height:26px;padding:0 12px;border:1px solid transparent;
+      border-radius:6px;background:transparent;color:var(--mg-text-2);font-size:13px}
+    #vm-seg.mg-segmented button:hover:not(:disabled):not(.active){background:rgba(255,255,255,.06);color:var(--mg-text)}
+    #vm-seg.mg-segmented button.active{background:var(--mg-accent);border-color:var(--mg-accent);color:#fff}
+    #vm-seg.mg-segmented button.active::after{display:none}
+    #app-chrome #planner-btn,
+    #app-chrome #guided-btn,
+    #app-chrome #design-studio-btn,
+    #app-chrome #solutions-btn,
+    #app-chrome #present-btn,
+    #app-chrome #resources-btn,
+    #app-chrome #plans-btn{
+      min-height:32px;border-radius:6px;border:1px solid var(--mg-border-strong);
+      background:rgba(255,255,255,.06);color:var(--mg-text);font-weight:700}
+    #app-chrome #planner-btn{
+      background:var(--mg-accent);border-color:var(--mg-accent);color:#fff}
+    #app-chrome #planner-btn:hover{background:var(--mg-accent-hover);border-color:var(--mg-accent-hover);filter:none}
+    #app-chrome #guided-btn:hover,
+    #app-chrome #design-studio-btn:hover,
+    #app-chrome #solutions-btn:hover,
+    #app-chrome #present-btn:hover,
+    #app-chrome #resources-btn:hover,
+    #app-chrome #plans-btn:hover{
+      background:rgba(100,158,245,.18);border-color:var(--mg-accent);color:var(--mg-text)}
+    #app-chrome #present-btn.active,
+    #app-chrome #solutions-btn.active,
+    #app-chrome #planner-btn.active{
+      background:rgba(39,116,217,.22);border-color:var(--mg-accent);color:var(--mg-text);box-shadow:none}
+    #app-chrome .tbs{min-height:32px;border-radius:6px;border-color:var(--mg-border-strong);
+      background-color:rgba(0,0,0,.2);color:var(--mg-text-2)}
+    #resources-wrap{position:relative;flex-shrink:0}
+    #resources-menu{top:calc(100% + 6px);right:0;min-width:220px}
+    #resources-menu .mg-menu-item{width:100%;border:0;background:transparent;font:inherit;
+      text-align:left;cursor:pointer;color:var(--mg-text)}
+    #resources-menu .mg-menu-item svg{flex-shrink:0}
+    #resources-menu #rst,
+    #resources-menu #theme-toggle,
+    #resources-menu #dcloud-btn,
+    #resources-menu #ai-btn{
+      width:100%;min-height:0;justify-content:flex-start;border:0;border-radius:6px;
+      background:transparent;box-shadow:none;color:var(--mg-text);font-weight:600;padding:8px 10px}
+    #resources-menu #rst:hover,
+    #resources-menu #theme-toggle:hover,
+    #resources-menu #dcloud-btn:hover,
+    #resources-menu #ai-btn:hover,
+    #resources-menu #ai-btn.active,
+    #resources-menu #dcloud-btn.active{
+      background:rgba(100,158,245,.14);border:0;color:var(--mg-text);filter:none}
+    #panel.mg-panel,#outcome-card.mg-panel,#link-why-card.mg-panel{
+      background:var(--mg-surface-solid);border-color:var(--mg-border);border-radius:8px}
+    #panel.mg-panel::before{display:none}
+    #planner.mg-panel{background:var(--mg-surface-solid);border-left-color:var(--mg-border)}
+    #planner.mg-panel::before{display:none}
+    #plans-menu.mg-menu{background:var(--mg-surface-solid);border:1px solid var(--mg-border);border-radius:8px}
   </style>
 </head>
 <body>
 
 <div id="preview-banner" role="status">Preview sandbox — changes here are not production. Live site: <a href="https://bnarcum.github.io/cisco-portfolio-navigator/" style="color:#1a1200;text-decoration:underline">Portfolio Navigator</a></div>
 <script>if(/cisco-portfolio-navigator-preview/i.test(location.pathname))document.getElementById("preview-banner").classList.add("visible");</script>
-<div id="app-chrome">
-<div id="topbar">
+<div id="app-chrome" class="mg-header">
+<div id="topbar" class="mg-header-row">
   <button type="button" class="logo" id="logo-trigger" aria-label="Play Cisco Portfolio Navigator intro">
     <img class="logo-mark" src="assets/cpn-logo.svg" alt="" width="48" height="48" decoding="async"/>
     <span class="logo-text">
@@ -1599,13 +1675,13 @@
     </span>
   </button>
   <div class="dv"></div>
-  <div class="sw">
+  <div class="sw mg-search">
     <svg class="si" viewBox="0 0 16 16" fill="none">
       <circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.5"/>
       <path d="M10.5 10.5L13.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
     </svg>
     <input id="search" type="text" placeholder="Search products, models, use cases…" autocomplete="off" spellcheck="false"/>
-    <div id="sr"></div>
+    <div id="sr" class="mg-panel"></div>
   </div>
 </div>
 
@@ -1633,8 +1709,8 @@
 
 <div id="actionbar">
   <div class="actionbar-primary">
-  <div class="vm-seg" id="vm-seg" role="group" aria-label="Visualization level">
-    <button type="button" data-vm="overview"     class="active" title="Overview — One Cisco strategy (default)">Overview</button>
+  <div class="vm-seg mg-segmented" id="vm-seg" role="group" aria-label="Visualization level">
+    <button type="button" data-vm="overview" class="active" aria-pressed="true" title="Overview — One Cisco strategy (default)">Overview</button>
     <button type="button" data-vm="families"     title="Families — full product-family graph">Families</button>
     <button type="button" data-vm="composition" hidden disabled title="Inside this family — pick a family first">Inside this family</button>
     <button type="button" data-vm="all-products" title="Everything — every family and product (dense view)">Everything</button>
@@ -1642,9 +1718,6 @@
   </div>
   <div class="actionbar-sep" aria-hidden="true"></div>
   <div class="actionbar-end">
-  <button id="rst">Reset</button>
-  <button id="theme-toggle" type="button" title="Toggle light / dark presentation theme" aria-label="Toggle theme">☀ Light</button>
-  <button id="present-btn" type="button" title="Present — hide power tools for a customer conversation" aria-pressed="false">Present</button>
   <button id="design-studio-btn" type="button" title="Design Studio — topology, rooms, BOM, CCW prep">
     <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.3"/>
@@ -1653,12 +1726,6 @@
       <path d="M4 4h8M8 4v8" stroke="currentColor" stroke-width="1.2" opacity=".5"/>
     </svg>
     <span>Design Studio</span>
-  </button>
-  <button id="dcloud-btn" type="button" title="Browse and launch Cisco dCloud hands-on labs">
-    <svg width="13" height="13" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-      <path d="M24.5 17.5c1.2 0 2.2-1 2.2-2.3 0-1.1-.7-2-1.7-2.3.3-2.4-2-4.4-4.7-4.4-1.8 0-3.4.8-4.5 2.1-1-1.2-2.5-1.9-4.1-1.9-3.1 0-5.7 2.2-5.7 5.1 0 .3 0 .6.1.9C2.8 16.6 1.5 18.2 1.5 20.2c0 2.4 2 4.3 4.4 4.3h16.6c2.7 0 4.8-2.1 4.8-4.7 0-2.6-2.1-4.8-4.8-4.8-.3 0-.6 0-.9.1-.4-1.2-1.5-2.1-2.8-2.1z" fill="currentColor"/>
-    </svg>
-    <span>dCloud Labs</span>
   </button>
   <button id="solutions-btn" type="button" title="Business outcomes — see which families compose each solution">
     <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -1673,13 +1740,6 @@
       <path d="M8 4.5V8l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
     </svg><span id="guided-btn-label">Guided Plan</span>
   </button>
-  <button id="ai-btn" type="button" title="Ask AI — generate stacks, justify recs (BYOK)">
-    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path d="M8 1.2l.85 2.95 2.95.85-2.95.85L8 8.8l-.85-2.95-2.95-.85 2.95-.85L8 1.2z" fill="currentColor"/>
-      <path d="M13.2 9.1l.55 1.85 1.85.55-1.85.55-.55 1.85-.55-1.85-1.85-.55 1.85-.55.55-1.85z" fill="currentColor" opacity=".8"/>
-    </svg>
-    <span>Ask AI</span>
-  </button>
   <button id="planner-btn">
     <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
       <rect x="2" y="2" width="5" height="5" rx="1" fill="currentColor"/>
@@ -1689,6 +1749,27 @@
     </svg>
     This account
   </button>
+  <button id="present-btn" type="button" title="Present — hide power tools for a customer conversation" aria-pressed="false">Present</button>
+  <div id="resources-wrap">
+    <button type="button" id="resources-btn" aria-expanded="false" aria-controls="resources-menu">Resources</button>
+    <div id="resources-menu" class="mg-menu" hidden role="menu" aria-label="Resources">
+      <button id="rst" class="mg-menu-item" type="button" role="menuitem">Reset</button>
+      <button id="theme-toggle" class="mg-menu-item" type="button" role="menuitem" title="Toggle light / dark presentation theme" aria-label="Toggle theme">Light theme</button>
+      <button id="dcloud-btn" class="mg-menu-item" type="button" role="menuitem" title="Browse and launch Cisco dCloud hands-on labs">
+        <svg width="16" height="16" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M24.5 17.5c1.2 0 2.2-1 2.2-2.3 0-1.1-.7-2-1.7-2.3.3-2.4-2-4.4-4.7-4.4-1.8 0-3.4.8-4.5 2.1-1-1.2-2.5-1.9-4.1-1.9-3.1 0-5.7 2.2-5.7 5.1 0 .3 0 .6.1.9C2.8 16.6 1.5 18.2 1.5 20.2c0 2.4 2 4.3 4.4 4.3h16.6c2.7 0 4.8-2.1 4.8-4.7 0-2.6-2.1-4.8-4.8-4.8-.3 0-.6 0-.9.1-.4-1.2-1.5-2.1-2.8-2.1z" fill="currentColor"/>
+        </svg>
+        dCloud Labs
+      </button>
+      <button id="ai-btn" class="mg-menu-item" type="button" role="menuitem" title="Ask AI — generate stacks, justify recs (BYOK)">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M8 1.2l.85 2.95 2.95.85-2.95.85L8 8.8l-.85-2.95-2.95-.85 2.95-.85L8 1.2z" fill="currentColor"/>
+          <path d="M13.2 9.1l.55 1.85 1.85.55-1.85.55-.55 1.85-.55-1.85-1.85-.55 1.85-.55.55-1.85z" fill="currentColor" opacity=".8"/>
+        </svg>
+        Ask AI
+      </button>
+    </div>
+  </div>
   </div>
   </div>
   <div class="actionbar-filters">
@@ -1724,13 +1805,13 @@
   <svg id="gs"></svg>
 </div>
 <div id="tip"><div class="tip-body"><div id="tn"></div><div id="tc"></div></div></div>
-<div id="link-why-card" aria-hidden="true">
+<div id="link-why-card" class="mg-panel" aria-hidden="true">
   <div class="lwc-head"><span class="lwc-type"></span><span class="lwc-label"></span></div>
   <div class="lwc-nodes"></div>
   <div class="lwc-why"></div>
   <div class="lwc-overlap"></div>
 </div>
-<div id="outcome-card" aria-hidden="true"></div>
+<div id="outcome-card" class="mg-panel" aria-hidden="true"></div>
 
 <div id="panel-backdrop" aria-hidden="true"></div>
 
@@ -1770,14 +1851,14 @@
   <button type="button" id="sl-add" class="sl-primary">Add to plan</button>
   <button type="button" id="sl-clear">Clear lens</button>
 </div>
-<div id="panel">
+<div id="panel" class="mg-panel">
   <button id="pcl">&#xd7;</button>
   <div id="phead"></div>
   <div id="pbody"></div>
   <div id="pfooter"></div>
 </div>
 
-<div id="planner">
+<div id="planner" class="mg-panel">
   <div id="ph"><div class="ph-t">This account</div></div>
   <div id="planner-scroll">
     <div id="planner-guided">
@@ -4716,11 +4797,13 @@ const pillIcon = {
 };
 Object.entries(CATS).forEach(([key, cat]) => {
   const btn = document.createElement("button");
-  btn.className = `cp ${pillMap[key]}`; btn.dataset.cat = key;
+  btn.className = `cp mg-chip ${pillMap[key]}`; btn.dataset.cat = key;
+  btn.setAttribute("aria-pressed", "true");
   btn.innerHTML = `<span class="cp-ic"><svg viewBox="0 0 24 24">${pillIcon[key] || ""}</svg></span>${escapeHtml(cat.label)}`;
   btn.addEventListener("click", () => {
     if (activeCats.has(key)) activeCats.delete(key); else activeCats.add(key);
     btn.classList.toggle("off", !activeCats.has(key));
+    btn.setAttribute("aria-pressed", activeCats.has(key) ? "true" : "false");
     applyFilters();
   });
   pillsEl.appendChild(btn);
@@ -9933,6 +10016,7 @@ function updateViewModeUI(){
   const seg = document.getElementById("vm-seg");
   if (seg) seg.querySelectorAll("button[data-vm]").forEach(b => {
     b.classList.toggle("active", b.dataset.vm === viewMode);
+    b.setAttribute("aria-pressed", b.dataset.vm === viewMode ? "true" : "false");
   });
   // Composition button enabled only when we have a valid focus to drill into.
   const compBtn = seg && seg.querySelector('button[data-vm="composition"]');
@@ -12158,6 +12242,8 @@ document.addEventListener("keydown",ev=>{
       tip: `Configure once in the dialog; keys stay in <code>localStorage</code> on this device only.`,
       before: () => {
         tourCloseGuidedWizard();
+        document.getElementById("resources-menu")?.removeAttribute("hidden");
+        document.getElementById("resources-btn")?.setAttribute("aria-expanded", "true");
         const pn = document.getElementById("planner");
         if (pn?.classList.contains("open")) document.getElementById("planner-btn")?.click();
       }
@@ -13574,7 +13660,7 @@ function buildPlansMenu(){
   wrap.id = "plans-wrap";
   wrap.innerHTML = `
     <button id="plans-btn" title="Switch / save / share plans">This account</button>
-    <div id="plans-menu" role="menu" aria-label="Saved plans"></div>
+    <div id="plans-menu" class="mg-menu" role="menu" aria-label="Saved plans"></div>
   `;
   // Insert just before #planner-btn in topbar
   const pBtn = $("#planner-btn");
@@ -18351,6 +18437,28 @@ function applyPresentMode(on){
   }
   if (typeof syncFirstPathVisibility === "function") syncFirstPathVisibility();
 }
+function wireResourcesMenu(){
+  const wrap = document.getElementById("resources-wrap");
+  const btn = document.getElementById("resources-btn");
+  const menu = document.getElementById("resources-menu");
+  if (!wrap || !btn || !menu || btn.dataset.wired) return;
+  btn.dataset.wired = "1";
+  const setOpen = (open) => {
+    menu.toggleAttribute("hidden", !open);
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+  };
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setOpen(menu.hasAttribute("hidden"));
+  });
+  menu.addEventListener("click", (e) => {
+    if (e.target.closest(".mg-menu-item")) setOpen(false);
+  });
+  document.addEventListener("click", (e) => {
+    if (!wrap.contains(e.target)) setOpen(false);
+  });
+}
+
 function wirePresentToggle(){
   const btn = document.getElementById("present-btn");
   if (!btn || btn.dataset.wired) return;
@@ -18426,6 +18534,7 @@ function boot(){
   initAmbientBackground();
   wireThemeToggle();
   wirePresentToggle();
+  wireResourcesMenu();
   wireDesignStudioLazyLoad();
   Promise.all([loadDcloudLinks(), loadLearningLinks()]).then(() => {
     refreshDcloudPanelIfOpen();

@@ -1,0 +1,375 @@
+/* Cisco Magnetic — blue-dark. Drop-in tokens + component classes.
+   Load before the site's own CSS. Values from the Magnetic reference app
+   (blue-dark) computed styles. */
+
+:root {
+  --mg-page: #1b232d;
+  --mg-surface-solid: #23282e;
+  --mg-surface: rgba(35, 40, 46, 0.94);
+  --mg-control: rgba(255, 255, 255, 0.06);
+  --mg-control-hover: rgba(100, 158, 245, 0.18);
+  --mg-accent: #2774d9;
+  --mg-accent-hover: #0d5cbd;
+  --mg-focus: #3e84e5;
+  --mg-accent-on-dark: #649ef5;
+  --mg-link: #7d8aff;
+  --mg-on-accent: #ffffff;
+  --mg-text: #f7f7f7;
+  --mg-text-2: #c8d1dc;
+  --mg-text-3: #9da7b4;
+  --mg-border: #3f4a57;
+  --mg-border-strong: #656c75;
+  --mg-glow-blue: #233a64;
+  --mg-glow-magenta: #4d3246;
+
+  --mg-radius-control: 6px;
+  --mg-radius-panel: 8px;
+  --mg-radius-tag: 4px;
+  --mg-radius-search: 18px;
+  --mg-control-h: 32px;
+  --mg-ease: cubic-bezier(0.2, 0, 0, 1);
+  --mg-focus-ring: 0 0 0 2px var(--mg-page), 0 0 0 4px var(--mg-focus);
+  --mg-header-blur: 40px;
+  --mg-font: 'Inter Variable', Inter, 'CiscoSansTT', 'Cisco Sans', -apple-system,
+    BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  color-scheme: dark;
+}
+
+[data-theme='magnetic-blue-dark'],
+body {
+  font-family: var(--mg-font);
+  font-size: 14px;
+  color: var(--mg-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: var(--mg-page);
+}
+
+a {
+  color: var(--mg-link);
+}
+
+/* Optional ambient page glow — add <div class="mg-ambient" aria-hidden="true"> */
+.mg-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 58% 48% at 22% 32%, rgba(35, 58, 100, 0.95) 0%, transparent 68%),
+    radial-gradient(ellipse 52% 44% at 78% 68%, rgba(77, 50, 70, 0.9) 0%, transparent 65%),
+    var(--mg-page);
+}
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+.mg-btn {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--mg-text);
+  min-height: var(--mg-control-h);
+  padding: 0 12px;
+  border: 1px solid var(--mg-border-strong);
+  border-radius: var(--mg-radius-control);
+  background: var(--mg-control);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 160ms var(--mg-ease),
+    border-color 160ms var(--mg-ease),
+    color 160ms var(--mg-ease),
+    box-shadow 160ms var(--mg-ease);
+}
+
+.mg-btn:hover {
+  background: var(--mg-control-hover);
+  border-color: var(--mg-accent);
+}
+
+.mg-btn--primary {
+  background: var(--mg-accent);
+  border-color: var(--mg-accent);
+  color: var(--mg-on-accent);
+}
+
+.mg-btn--primary:hover {
+  background: var(--mg-accent-hover);
+  border-color: var(--mg-accent-hover);
+}
+
+.mg-btn--ghost {
+  background: transparent;
+}
+
+.mg-btn:focus-visible,
+.mg-segmented > button:focus-visible,
+.mg-chip:focus-visible,
+.mg-switch:focus-visible,
+.mg-menu-item:focus-visible {
+  outline: none;
+  box-shadow: var(--mg-focus-ring);
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+.mg-header {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--mg-border);
+  background: rgba(27, 35, 45, 0.82);
+  backdrop-filter: blur(var(--mg-header-blur));
+}
+
+.mg-header-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 56px;
+  padding: 0 1rem;
+}
+
+.mg-header-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+  min-height: 48px;
+  padding: 0.5rem 1rem;
+  border-top: 1px solid var(--mg-border);
+  background: rgba(35, 40, 46, 0.6);
+}
+
+.mg-title {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.mg-subtitle,
+.mg-label {
+  font-size: 12px;
+  color: var(--mg-text-3);
+}
+
+.mg-label {
+  font-weight: 600;
+}
+
+/* ── Segmented control ───────────────────────────────────────── */
+.mg-segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--mg-border-strong);
+  border-radius: var(--mg-radius-panel);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.mg-segmented > button {
+  font: inherit;
+  min-height: 26px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: var(--mg-radius-control);
+  background: transparent;
+  color: var(--mg-text-2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mg-segmented > button:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--mg-text);
+}
+
+/* Keep after the reset/hover rules above — same specificity. */
+.mg-segmented > button[data-active='true'],
+.mg-segmented > button[aria-pressed='true'],
+.mg-segmented > button[aria-selected='true'] {
+  background: var(--mg-accent);
+  border-color: var(--mg-accent);
+  color: var(--mg-on-accent);
+}
+
+/* ── Chips (multi-select filters) ────────────────────────────── */
+.mg-chip {
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--mg-border-strong);
+  background: transparent;
+  color: var(--mg-text-2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mg-chip img,
+.mg-chip svg {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+.mg-chip:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--mg-text-3);
+  color: var(--mg-text);
+}
+
+.mg-chip[data-active='true'],
+.mg-chip[aria-pressed='true'] {
+  background: rgba(39, 116, 217, 0.22);
+  border-color: var(--mg-accent);
+  color: var(--mg-text);
+}
+
+/* ── Toggle switch: <input type="checkbox" role="switch" class="mg-switch"> */
+.mg-switch {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  width: 32px;
+  height: 18px;
+  margin: 0;
+  border-radius: 999px;
+  border: 1px solid var(--mg-border-strong);
+  background: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 160ms var(--mg-ease), border-color 160ms var(--mg-ease);
+}
+
+.mg-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--mg-text-3);
+  transition: transform 160ms var(--mg-ease), background-color 160ms var(--mg-ease);
+}
+
+.mg-switch:checked {
+  background: var(--mg-accent);
+  border-color: var(--mg-accent);
+}
+
+.mg-switch:checked::after {
+  transform: translateX(14px);
+  background: #fff;
+}
+
+/* ── Search ──────────────────────────────────────────────────── */
+.mg-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 440px;
+  min-height: 36px;
+  padding: 0 0.75rem;
+  border-radius: var(--mg-radius-search);
+  border: 1px solid var(--mg-border-strong);
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--mg-text-3);
+}
+
+.mg-search:focus-within {
+  border-color: var(--mg-focus);
+  box-shadow: 0 0 0 1px var(--mg-focus);
+}
+
+.mg-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--mg-text);
+  font: inherit;
+}
+
+.mg-search input::placeholder {
+  color: var(--mg-text-3);
+}
+
+/* ── Panels, menus, tags ─────────────────────────────────────── */
+.mg-panel {
+  background: var(--mg-surface-solid);
+  border: 1px solid var(--mg-border);
+  border-radius: var(--mg-radius-panel);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+.mg-menu {
+  position: absolute;
+  z-index: 40;
+  min-width: 280px;
+  padding: 4px;
+  background: var(--mg-surface-solid);
+  border: 1px solid var(--mg-border);
+  border-radius: var(--mg-radius-panel);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+.mg-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--mg-radius-control);
+  color: var(--mg-text);
+  text-decoration: none;
+}
+
+.mg-menu-item:hover {
+  background: rgba(100, 158, 245, 0.14);
+  text-decoration: none;
+}
+
+.mg-menu-item small {
+  display: block;
+  font-size: 12px;
+  color: var(--mg-text-3);
+}
+
+.mg-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--mg-radius-tag);
+  border: 1px solid var(--mg-border);
+  background: rgba(35, 40, 46, 0.92);
+  color: var(--mg-text-2);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.mg-tag--accent {
+  background: var(--mg-accent);
+  border-color: var(--mg-accent);
+  color: var(--mg-on-accent);
+}
+
+/* Portfolio Navigator uses these classes on chrome only.
+   Page background, CiscoSans, graph accents, and links stay with the app. */
+body {
+  background: unset;
+  font-family: unset;
+  font-size: unset;
+  color: unset;
+}
+a {
+  color: unset;
+}
