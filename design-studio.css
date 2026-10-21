@@ -1308,3 +1308,67 @@ body.design-studio-open #gw,
 body.design-studio-open #panel,
 body.design-studio-open #planner,
 body.design-studio-open #top-chips{visibility:hidden;pointer-events:none}
+
+/* Magnetic chrome for Design Studio. The topology canvas keeps its own colors. */
+#design-studio{
+  background:var(--mg-page,#1b232d);
+  --ds-panel:rgba(35,40,46,.94);
+  --ds-panel-deep:#1b232d;
+  --ds-overlay:rgba(27,35,45,.94);
+  --ds-overlay-soft:rgba(35,40,46,.94);
+  --ds-input-bg:rgba(0,0,0,.2);
+  --ds-input-border:#656c75;
+  --ds-explore-card:#23282e;
+  --ds-explore-border:#3f4a57;
+  --ds-room-guide:#23282e;
+  --ds-cmdk-bg:#23282e;
+  --ds-tour-bg:#23282e;
+  --ds-sep:#3f4a57;
+  --ds-explore-accent:#649ef5;
+  --ds-explore-head:#c8d1dc;
+  --ds-explore-launch-bg:#2774d9;
+  --ds-explore-launch-text:#fff;
+  --ds-on-accent:#fff}
+#ds-header{
+  min-height:56px;background:rgba(27,35,45,.92);border-bottom-color:var(--mg-border)}
+#ds-header .ds-logo{color:var(--mg-text)}
+.ds-version{border-color:var(--mg-border);color:var(--mg-text-3);border-radius:4px}
+#ds-tabs{gap:2px;padding:2px;border:1px solid var(--mg-border-strong);border-radius:8px;background:rgba(0,0,0,.18)}
+#ds-tabs button{min-height:26px;border:1px solid transparent;border-radius:6px;color:var(--mg-text-2)}
+#ds-tabs button.active{background:var(--mg-accent);border-color:var(--mg-accent);color:#fff}
+#ds-header button.ds-btn{
+  border-radius:6px;border-color:var(--mg-border-strong);background:rgba(255,255,255,.06);color:var(--mg-text)}
+#ds-header button.ds-btn:hover,
+#ds-header button.ds-btn.active{
+  background:rgba(100,158,245,.18);border-color:var(--mg-accent);color:var(--mg-text)}
+#ds-sidebar{background:var(--mg-surface-solid);border-left-color:var(--mg-border)}
+.ds-sidebar-modes{border-bottom-color:var(--mg-border)}
+.ds-sidebar-modes button{border-color:var(--mg-border);background:transparent;color:var(--mg-text-2);border-radius:6px}
+.ds-sidebar-modes button.active,
+.ds-sidebar-modes button:hover{background:var(--mg-accent);border-color:var(--mg-accent);color:#fff}
+#ds-palette-search,#ds-inspector input,#ds-inspector select{
+  border-radius:18px;border-color:var(--mg-border-strong);background:rgba(0,0,0,.2);color:var(--mg-text)}
+#ds-inspector select,#ds-inspector input{border-radius:6px;min-height:32px}
+.ds-stencil{background:rgba(0,0,0,.18);border-color:var(--mg-border);border-radius:8px}
+.ds-stencil:hover{border-color:var(--mg-accent);color:var(--mg-text);background:rgba(100,158,245,.14)}
+.ds-stencil .ds-st-icon-svg{color:var(--mg-accent-on-dark)}
+#ds-toolbar{
+  background:var(--mg-surface-solid);border-color:var(--mg-border);border-radius:8px;box-shadow:0 12px 32px rgba(0,0,0,.35)}
+#ds-toolbar select,#ds-toolbar button{border-color:var(--mg-border-strong);background:rgba(255,255,255,.06);border-radius:6px;color:var(--mg-text)}
+#ds-toolbar button.active{background:var(--mg-accent);border-color:var(--mg-accent);color:#fff}
+#ds-panel-tabs{border-bottom-color:var(--mg-border)}
+#ds-panel-tabs button.active,#ds-panel-tabs button.ds-panel-tab--folded{color:var(--mg-accent-on-dark);border-bottom-color:var(--mg-accent)}
+#ds-status{background:rgba(35,40,46,.6);border-top-color:var(--mg-border);color:var(--mg-text-3)}
+#ds-room-guide{border-color:var(--mg-border);box-shadow:0 12px 32px rgba(0,0,0,.45)}
+.ds-room-badge{color:var(--mg-accent-on-dark);background:rgba(39,116,217,.18);border-color:var(--mg-accent)}
+#ds-canvas-view-toggle{
+  border-color:var(--mg-border);background:var(--mg-surface-solid);box-shadow:0 12px 32px rgba(0,0,0,.45);border-radius:8px}
+.ds-canvas-view-toggle .ds-view-btn,
+.ds-canvas-view-toggle .ds-view-btn-walk{
+  border-color:var(--mg-border-strong);background:rgba(255,255,255,.06);color:var(--mg-text-2);border-radius:6px}
+.ds-canvas-view-toggle .ds-view-btn:hover,
+.ds-canvas-view-toggle .ds-view-btn-walk:hover{border-color:var(--mg-accent);color:#fff;background:rgba(100,158,245,.18)}
+.ds-canvas-view-toggle .ds-view-btn.active,
+.ds-canvas-view-toggle .ds-view-btn-walk.active{
+  background:var(--mg-accent);border-color:var(--mg-accent);color:#fff;box-shadow:none}
+
