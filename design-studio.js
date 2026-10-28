@@ -663,6 +663,7 @@
                 <div id="ds-room-mix-editor" class="ds-brief-rooms" hidden></div>
                 <div class="ds-brief-actions">
                   <button type="button" class="ds-btn primary" id="ds-generate">Generate Draft <kbd class="ds-kbd">⌘↵</kbd></button>
+                  <button type="button" class="ds-btn" id="ds-walk-offer" hidden>Walk a sample workplace</button>
                   <span id="ds-stale-hint" class="ds-brief-status" hidden aria-live="polite"></span>
                 </div>
                 <div id="ds-intent-rationale" hidden></div>
@@ -870,6 +871,11 @@
         if (this.sidebarMode !== "learn") this.exploreFoldOpen = e.currentTarget.open;
       });
       $("ds-generate").onclick = () => this.runGenerate();
+      $("ds-walk-offer").onclick = () => {
+        const mode = $("ds-walk-offer").dataset.walkMode;
+        if (mode === "sample") this.walkSample();
+        else if (mode === "design") this.walkThisDesign();
+      };
       let intentPreviewTimer;
       $("ds-intent-text")?.addEventListener("input", () => {
         clearTimeout(intentPreviewTimer);
@@ -1451,6 +1457,7 @@
     }
 
     previewIntent() {
+      this.syncWalkOffer();
       const INT = window.__DS_INTENT;
       const chips = document.getElementById("ds-intent-chips");
       if (!INT || !chips) return;
@@ -1519,33 +1526,75 @@
       if (!cta) return;
       const btns = [];
       if (hasNet) btns.push(`<button type="button" class="ds-btn${roomTotal > 0 ? "" : " primary"}" data-goto="network">View network diagram${roomTotal > 0 ? "" : " →"}</button>`);
-      if (roomTotal > 0) btns.push(`<button type="button" class="ds-btn primary" data-goto="room">View the ${roomTotal} room${roomTotal === 1 ? "" : "s"} →</button>`);
-      if (!btns.length) { cta.hidden = true; cta.innerHTML = ""; return; }
+      if (roomTotal > 0) btns.push(`<button type="button" class="ds-btn" data-goto="room">View the ${roomTotal} room${roomTotal === 1 ? "" : "s"}</button>`);
+      if (roomTotal > 0) btns.push(`<button type="button" class="ds-btn primary" data-goto="walk">Walk this design</button>`);
+      if (!btns.length) { cta.hidden = true; cta.innerHTML = ""; this.syncWalkOffer(); return; }
       cta.innerHTML = `<span class="ds-rationale-cta-label">Your draft is ready on the canvas</span><div class="ds-rationale-cta-btns">${btns.join("")}</div>`;
       cta.hidden = false;
       cta.querySelectorAll("[data-goto]").forEach(b => {
         b.onclick = () => {
+          if (b.dataset.goto === "walk") { this.walkThisDesign(); return; }
           if (b.dataset.goto === "room") this.activeRoomId = this.design.activeRoomId || this.activeRoomId;
           this.setTab(b.dataset.goto);
           this.fitView();
         };
       });
+      this.syncWalkOffer();
     }
 
-    // "Wow in 10 seconds": generate a sample workspace, then drop straight into
-    // the guided walkthrough with the Cisco Spaces outcome overlay already playing.
-    quickstart() {
-      const ta = document.getElementById("ds-intent-text");
-      if (ta && !ta.value.trim())
-        ta.value = "Hybrid workplace: 1 boardroom, 2 medium video rooms and 4 huddle spaces, campus Wi-Fi, plus Cisco Spaces for live occupancy and wayfinding.";
-      document.querySelector("#ds-one-cisco-deck [data-pillar='workplaces']")?.click();
-      this.runGenerate();
-      const board = this.design.rooms.find(r => /board/i.test(r.template || r.name || "")) || this.design.rooms[0];
-      if (board) { this.activeRoomId = board.id; this.design.activeRoomId = board.id; this.setTab("room"); this.fitView(); }
-      if (!this.design.rooms.length) { this.toast("Quickstart needs at least one room"); return; }
-      window.__cpnAutoOutcomes = true;
-      this.toast("Stepping into your space — Spaces outcomes live");
+    // Sample walk only when there is nothing to replace. Saved rooms use walkThisDesign.
+    syncWalkOffer() {
+      const btn = document.getElementById("ds-walk-offer");
+      if (!btn) return;
+      const cta = document.getElementById("ds-rationale-cta");
+      const ctaOpen = !!(cta && !cta.hidden);
+      const emptyCanvas = !this.design.nodes.length && !(this.design.rooms || []).length;
+      const emptyBrief = !document.getElementById("ds-intent-text")?.value.trim();
+      const hasRooms = (this.design.rooms || []).length > 0;
+      if (emptyCanvas && emptyBrief) {
+        btn.hidden = false;
+        btn.textContent = "Walk a sample workplace";
+        btn.dataset.walkMode = "sample";
+        return;
+      }
+      if (hasRooms && !ctaOpen) {
+        btn.hidden = false;
+        btn.textContent = "Walk this design";
+        btn.dataset.walkMode = "design";
+        return;
+      }
+      btn.hidden = true;
+      btn.dataset.walkMode = "";
+    }
+
+    walkThisDesign() {
+      const rooms = this.design.rooms || [];
+      if (!rooms.length) return;
+      const room = rooms.find(r => r.id === this.activeRoomId) || rooms[0];
+      this.activeRoomId = room.id;
+      this.design.activeRoomId = room.id;
+      this.setTab("room");
+      this.fitView();
       setTimeout(() => this.openWalk?.(), 350);
+    }
+
+    walkSample() {
+      if (this.design.nodes.length || (this.design.rooms || []).length) return;
+      const ta = document.getElementById("ds-intent-text");
+      if (ta?.value.trim()) return;
+      if (ta) ta.value = "Hybrid workplace: 1 boardroom, 2 medium video rooms and 4 huddle spaces, campus Wi-Fi, plus Cisco Spaces for live occupancy and wayfinding.";
+      this.runGenerate();
+      if (!this.design.rooms.length) {
+        this.toast("Sample workplace needs at least one room");
+        return;
+      }
+      window.__cpnAutoOutcomes = true;
+      this.walkThisDesign();
+      this.toast("Stepping into your space — Spaces outcomes live");
+    }
+
+    quickstart() {
+      this.walkSample();
     }
 
     importStack() {
@@ -1605,6 +1654,9 @@ Account: ${this.design.account}`;
       if (ta) ta.value = "";
       const rat = document.getElementById("ds-intent-rationale");
       if (rat) { rat.hidden = true; rat.innerHTML = ""; }
+      const cta = document.getElementById("ds-rationale-cta");
+      if (cta) { cta.hidden = true; cta.innerHTML = ""; }
+      this.syncWalkOffer();
       const chips = document.getElementById("ds-intent-chips");
       if (chips) chips.innerHTML = window.__DS_INTENT?.renderChipsHtml([]) || "";
       this.pushHistory();

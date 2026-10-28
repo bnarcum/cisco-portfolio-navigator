@@ -33,6 +33,7 @@
     "test:walk-spacing": "node scripts/test-walk-layout-spacing.mjs",
     "test:walk-environments": "node scripts/test-walk-environments.mjs",
     "test:walk-modes": "node scripts/test-design-studio-walk-modes.mjs",
+    "test:walk-offer": "node scripts/test-walk-offer.mjs",
     "test:all-products": "node scripts/test-all-products-view.mjs",
     "test:learning-bom": "node scripts/test-learning-bom.mjs",
     "test:learning-links": "node scripts/test-learning-links.mjs",

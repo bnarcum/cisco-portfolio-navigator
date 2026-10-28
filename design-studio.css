@@ -469,6 +469,8 @@
 .ds-brief-actions{display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap}
 .ds-brief-actions .ds-btn.primary{padding:11px 24px;font-size:14px;border-radius:10px;font-weight:700;
   display:inline-flex;align-items:center;gap:8px}
+.ds-brief-actions #ds-walk-offer{padding:11px 18px;font-size:14px;border-radius:10px;font-weight:700}
+.ds-brief-actions #ds-walk-offer[hidden]{display:none}
 .ds-kbd{font:inherit;font-size:10px;font-weight:600;padding:1px 6px;border-radius:5px;line-height:1.4;
   background:rgba(255,255,255,.16);color:inherit;opacity:.85}
 .ds-brief-status{margin-left:auto;font-size:11px;font-weight:600;color:var(--accent)}
