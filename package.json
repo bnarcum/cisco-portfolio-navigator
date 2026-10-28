@@ -14,6 +14,7 @@
     "test:pillar-open": "node scripts/test-pillar-open.mjs",
     "test:link-why-hover": "node scripts/test-link-why-hover.mjs",
     "test:pillar-title-hit": "node scripts/test-pillar-title-hit.mjs",
+    "test:canvas-back": "node scripts/test-canvas-back.mjs",
     "test:acquisitions-data": "node scripts/test-acquisitions-data.mjs",
     "test:acquisitions-timeline": "node scripts/test-acquisitions-timeline.mjs",
     "test:refresh-timeline": "node scripts/test-refresh-timeline.mjs",
