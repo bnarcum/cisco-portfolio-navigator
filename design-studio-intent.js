@@ -81,9 +81,10 @@
     if (/ai-?ready|gpu|nexus|spine|leaf|data center|datacenter|ucs|hyperflex|\baci\b|ml fabric|ndfc/i.test(t)) scores["ai-dc"] += 3;
     if (/webex|room kit|board pro|collab|hybrid|campus|wireless|catalyst center|workplace/i.test(t)) scores.workplaces += 3;
     if (/sd-?wan|zero trust|sase|firewall|ise|umbrella|resilien|thousandeyes|secure|cisco\s*iq|troubleshoot|support case/i.test(t)) scores.resilience += 3;
-    if (/future-?proofed workplace/i.test(t)) scores.workplaces += 5;
-    if (/digital resilience/i.test(t)) scores.resilience += 5;
-    if (/ai-?ready data center/i.test(t)) scores["ai-dc"] += 5;
+    if (/future-?proofed workplace|agentic workforce|human and agent/i.test(t)) scores.workplaces += 5;
+    if (/digital resilience|post-mythos|machine speed|agentic soc|beyond human scale/i.test(t)) scores.resilience += 5;
+    if (/ai-?ready data center|tokenomics|token cost|east-west traffic|scale ai/i.test(t)) scores["ai-dc"] += 5;
+    if (/agenticops|cloud control/i.test(t)) scores.resilience += 2;
     const best = Object.entries(scores).sort((a, b) => b[1] - a[1])[0];
     return best[1] > 0 ? best[0] : null;
   }

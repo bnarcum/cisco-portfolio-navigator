@@ -1028,6 +1028,76 @@
       signals: { has: [], missing: ["splunk"] },
       dcloudPath: "ai-networking",
       maturityNext: "agentic-soc-trust"
+    },
+    {
+      id: "ai-run-cost",
+      pillar: "ai-dc",
+      symptom: "AI projects look affordable until the power, GPU, and token bill arrives.",
+      outcome: "A view of what it costs to run AI workloads — power, fabric, and tokens — before they reach production.",
+      proof: {
+        metric: "Cost visibility before an AI workload reaches production",
+        before: "Token, power, and GPU cost shows up on the invoice",
+        after: "Infrastructure and token economics are visible while the workload is still being designed",
+        source: "Cisco AI-ready data center positioning — scale AI securely and economically"
+      },
+      personas: {
+        netops: {
+          line: "Size fabric, power, and GPU capacity before the cluster is the bottleneck.",
+          symptom: "The fabric and the power budget get designed after the GPUs are ordered.",
+          proof: { metric: "Infrastructure sizing before go-live", before: "Capacity gaps show up when the cluster is already installed", after: "Fabric, power, and GPU needs are planned with the workload" }
+        },
+        cio: {
+          line: "See infrastructure and token cost while an AI workload is still a design, not a surprise invoice.",
+          symptom: "Leadership approves an AI project and learns the run cost after it is in production.",
+          proof: { metric: "Run-cost visibility", before: "Cost shows up on the invoice", after: "Power, fabric, and token economics are part of the design review" }
+        },
+        ciso: {
+          line: "Pair cost and scale decisions with a security boundary around the AI workload.",
+          symptom: "Teams rush capacity and leave east-west protection for a later phase.",
+          proof: { metric: "Security included in the AI scale plan", before: "Protection is added after the fabric is built", after: "East-west controls are part of the same design as capacity" }
+        }
+      },
+      useCases: ["AI Networking", "Data Center Modernization"],
+      bundles: ["AI-Ready Data Center Network"],
+      families: ["nexus", "silicon-one", "ucs", "intersight", "splunk"],
+      signals: { has: ["ucs"], missing: ["silicon-one"] },
+      dcloudPath: "ai-networking",
+      maturityNext: "ai-fabric-bottleneck"
+    },
+    {
+      id: "agent-traffic-scale",
+      pillar: "connectivity",
+      symptom: "The same action by an agent moves far more traffic than when a person does it, and the WAN was sized for people.",
+      outcome: "A network that can route agent traffic — and decide where it should go — without becoming the bottleneck.",
+      proof: {
+        metric: "Capacity planned for agent-driven traffic",
+        before: "Paths are sized for human sessions",
+        after: "Routing and capacity planning account for agent-driven traffic",
+        source: "Cisco One Cisco narrative, August 2026 — agent actions generate far more network traffic than the same action by a person"
+      },
+      personas: {
+        netops: {
+          line: "Treat each agent action as a routing decision, not just another user session.",
+          symptom: "Agent workflows saturate links that were fine for people.",
+          proof: { metric: "WAN headroom for agent traffic", before: "Links are sized for human sessions", after: "Path selection and capacity include agent-driven flows" }
+        },
+        cio: {
+          line: "Avoid a bandwidth constraint becoming the reason an agentic workflow cannot scale.",
+          symptom: "AI adoption plans assume today's WAN can carry tomorrow's agent traffic.",
+          proof: { metric: "Bandwidth readiness for agent workflows", before: "Capacity planning ignores agent traffic", after: "The WAN plan includes the extra traffic agents generate" }
+        },
+        ciso: {
+          line: "An agent action is also a trust decision — routing it is not the same as allowing it.",
+          symptom: "More agent traffic means more actions that need a trust check, not only more bandwidth.",
+          proof: { metric: "Trust checked on agent-driven flows", before: "Agent traffic is treated as ordinary user traffic", after: "Routing and policy both apply to agent-driven flows" }
+        }
+      },
+      useCases: ["SD-WAN / SASE", "AI Networking"],
+      bundles: ["Cloud Branch (SASE)"],
+      families: ["sdwan", "silicon-one", "nexus", "catalyst-center"],
+      signals: { has: ["sdwan"], missing: ["silicon-one"] },
+      dcloudPath: "sdwan-sase",
+      maturityNext: "branch-app-experience"
     }
   ];
 
@@ -1061,7 +1131,9 @@
     "unknown-assets": "https://www.cisco.com/c/en/us/support/docs/cx/cisco-iq/getting-started-guide/cx225778-cisco-iq-getting-started-guide.html",
     "vulnerability-prioritization": "https://www.cisco.com/c/en/us/products/collateral/security/vulnerability-management/security-risk-score-so.html",
     "app-performance": "https://www.splunk.com/en_us/products/splunk-appdynamics.html",
-    "agent-trust-gap": "https://www.splunk.com/en_us/products/agent-observability.html"
+    "agent-trust-gap": "https://www.splunk.com/en_us/products/agent-observability.html",
+    "ai-run-cost": "https://www.cisco.com/c/en/us/products/collateral/switches/data-center-switches/data-center-networking-ai-ml-so.html",
+    "agent-traffic-scale": "https://www.cisco.com/site/us/en/solutions/artificial-intelligence/index.html"
   };
   PROBLEMS.forEach(p => {
     if (p.proof) p.proof.sourceUrl = OFFICIAL_SOURCE_URLS[p.id] || "";

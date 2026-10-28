@@ -50,10 +50,10 @@
 
   /** One Cisco strategy — Design Studio Intent hero (self-contained; mirrors main app deck) */
   const ONE_CISCO_STORY = {
-    eyebrow: "One Cisco",
+    eyebrow: "One Cisco · August 2026",
     headline: "Design validated solutions across all three pillars",
     subhead:
-      "Cisco powers how people and technology work together across the physical and digital worlds — pick a pillar to prefill your brief, or describe your own opportunity below.",
+      "Critical infrastructure for the AI era — scale AI securely, secure a human and agentic workforce, and manage risks beyond human scale.",
     connectivityLabel: "Secure global connectivity",
     aiLabel: "Accelerated by Cisco AI",
     pillars: [
@@ -61,7 +61,7 @@
         id: "ai-dc",
         label: "AI-Ready Data Centers",
         shortLabel: "AI-Ready DC",
-        promise: "Transform data centers to power AI workloads anywhere",
+        promise: "Power every workload securely, anywhere they run",
         color: "#0A60FF",
         icon: "chip",
         intent:
@@ -71,21 +71,21 @@
         id: "workplaces",
         label: "Future-Proofed Workplaces",
         shortLabel: "Workplaces",
-        promise: "Modernize everywhere people and technology work",
+        promise: "Empower and secure every worker, anywhere work happens",
         color: "#2dce5c",
         icon: "telepresence",
         intent:
-          "Future-proofed hybrid campus and collaboration: Catalyst 9300/9500 access and distribution, Catalyst wireless, Catalyst Center automation, 18 Webex rooms — Board Pro 75 and Room Kit EQ in conference rooms, Room Bar in huddles, ceiling mics, Room Navigator. Umbrella DNS security for remote workers."
+          "Future-proofed hybrid campus and collaboration: Catalyst 9300/9500 access and distribution, Catalyst wireless, Catalyst Center automation, 18 Webex rooms — Board Pro 75 and Room Kit EQ in conference rooms, Room Bar in huddles, ceiling mics, Room Navigator. Umbrella DNS security for remote workers. Secure both the human and agentic workforce."
       },
       {
         id: "resilience",
         label: "Digital Resilience",
         shortLabel: "Resilience",
-        promise: "Securely up and running through any disruption",
+        promise: "Stay securely up and running when facing escalating disruptions",
         color: "#FF9000",
         icon: "shield-network",
         intent:
-          "Digital resilience and zero trust: Catalyst SD-WAN with dual uplinks and application-aware routing, Secure Firewall HA at HQ and branches, ISE policy for wired and wireless, Duo MFA, Umbrella SIG, encrypted site-to-site VPN fallback. Catalyst Center visibility and ThousandEyes monitoring."
+          "Digital resilience and zero trust: Catalyst SD-WAN with dual uplinks and application-aware routing, Secure Firewall HA at HQ and branches, ISE policy for wired and wireless, Duo MFA, Umbrella SIG, encrypted site-to-site VPN fallback. Catalyst Center visibility, ThousandEyes monitoring, and agentic SOC response at machine speed."
       }
     ]
   };
@@ -220,7 +220,8 @@
     const S = ONE_CISCO_STORY;
     return `
       <section class="ds-one-cisco ds-one-cisco--compact" aria-labelledby="ds-oc-title">
-        <h2 class="ds-oc-lead" id="ds-oc-title">Pick a starting point, or describe your opportunity below.</h2>
+        <p class="ds-oc-kicker">${escapeHtml(S.eyebrow)}</p>
+        <h2 class="ds-oc-lead" id="ds-oc-title">${escapeHtml(S.subhead)}</h2>
         <div class="ds-oc-deck ds-oc-deck--pillars" id="ds-one-cisco-deck">
           ${S.pillars.map(p => oneCiscoPillarCard(p)).join("")}
         </div>
