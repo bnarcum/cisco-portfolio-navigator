@@ -17,7 +17,7 @@ try {
   await page.evaluate(() => localStorage.removeItem("cpn-design-studio-v4"));
   await page.waitForFunction(() => window.__cpnV2?.APP_VERSION, { timeout: 60000 });
   const version = await page.evaluate(() => window.__cpnV2.APP_VERSION);
-  if (version !== "3.5.89") errors.push(`expected 3.5.89, got ${version}`);
+  if (version !== "3.5.90") errors.push(`expected 3.5.90, got ${version}`);
 
   await page.click("#design-studio-btn");
   await page.waitForSelector("#design-studio.open", { timeout: 30000 });
