@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.87";
+  window.__CPN_BUILD="3.5.88";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     var staleKeys=["cpn-view-mode-v2","cpn-view-focus-v2","cpn-autosave-v2","cpn-current-v2","cpn-all-products-layers-v1"];
@@ -12226,7 +12226,7 @@ document.addEventListener("keydown",ev=>{
              <ul style="margin:6px 0 0 16px;padding:0;line-height:1.5">
                <li><b>Learn &amp; Try on dCloud</b> — one recommended starter lab + browse all</li>
                <li><b>Build skills</b> — Cisco U or Webex Academy overview course</li>
-               <li><b>Partner enablement</b> — Black Belt track when relevant</li>
+               <li><b>Partner enablement</b> — eligible Black Belt course when it counts toward Partner Value Index</li>
              </ul>`,
       tip: `Pick a product from the family list below the description to go SKU-specific.`,
       before: () => {
@@ -16038,7 +16038,7 @@ const PANEL_LEARNING_TIER = {
   family: {
     dcloudLimit: 1,
     skillsLimit: 1,
-    partnerLimit: 1,
+    partnerLimit: 2,
     starter: true,
     dcloudHint: "Recommended starting point for this family — open a product below for SKU-specific labs.",
     skillsHint: "Foundational course for this portfolio area.",
@@ -16047,7 +16047,7 @@ const PANEL_LEARNING_TIER = {
   product: {
     dcloudLimit: 4,
     skillsLimit: 2,
-    partnerLimit: 1,
+    partnerLimit: 2,
     starter: false,
     dcloudHint: null,
     skillsHint: null,
@@ -16079,14 +16079,14 @@ const LEARNING_DEFAULTS = {
   skillsTitle: "Build skills",
   skillsHint: "Self-paced courses and learning paths — understand the solution before you lab.",
   partnerTitle: "Partner enablement",
-  partnerHint: "Black Belt tracks for Cisco partners (CCO ID required).",
+  partnerHint: "Eligible Black Belt courses for the Partner Value Index (CCO ID required).",
   skillsNote: "Cisco ID login may be required",
-  partnerNote: "Partner-only · CCO ID required via SalesConnect"
+  partnerNote: "Partner-only · Stage 1 = 1, Stage 2 = 1.5, Stage 3 = 2 · completed in the last 36 months"
 };
 const LEARNING_SOURCES = {
   "cisco-u": { label: "Cisco U", cta: "Open course ↗" },
   "webex-academy": { label: "Webex Academy", cta: "Open course ↗" },
-  blackbelt: { label: "Black Belt", cta: "View track ↗" }
+  blackbelt: { label: "Black Belt", cta: "Open course ↗" }
 };
 const COLLAB_LEARNING_FAMILIES = new Set([
   "webex-app", "webex-meetings", "webex-calling", "unified-cm", "webex-cc", "room-systems",
