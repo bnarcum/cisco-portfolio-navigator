@@ -18,23 +18,14 @@ try {
 
   await page.evaluate(() => document.querySelector('#first-path [data-fp="skip"]')?.click());
   await page.waitForTimeout(500);
-  const story = await page.evaluate(() => {
-    const root = document.getElementById("oc-story");
-    return {
-      version: window.__cpnV2?.APP_VERSION,
-      visible: !!root && !root.hidden && getComputedStyle(root).display !== "none",
-      challenges: document.querySelectorAll(".oc-ch").length,
-      loop: document.querySelector(".oc-loop")?.textContent || "",
-      enablers: document.querySelectorAll(".oc-en").length,
-      aiPromise: document.querySelector(".oc-ch[data-oc-pillar='ai-dc'] .oc-ch-label")?.textContent || ""
-    };
-  });
-  if (story.version !== "3.5.80") errors.push(`expected 3.5.80, got ${story.version}`);
-  if (!story.visible) errors.push("overview story should be visible after dismissing start-here");
-  if (story.challenges !== 3) errors.push(`expected 3 challenges, got ${story.challenges}`);
-  if (!/Correlates signal/.test(story.loop)) errors.push("platform loop missing correlate step");
-  if (story.enablers < 4) errors.push(`expected move-faster enablers, got ${story.enablers}`);
-  if (!/Scale AI securely/.test(story.aiPromise)) errors.push(`ai challenge label: ${story.aiPromise}`);
+  const story = await page.evaluate(() => ({
+    version: window.__cpnV2?.APP_VERSION,
+    story: !!document.getElementById("oc-story"),
+    capital: document.body.innerText.includes("Cisco Capital")
+  }));
+  if (story.version !== "3.5.81") errors.push(`expected 3.5.81, got ${story.version}`);
+  if (story.story) errors.push("overview story banner should be gone");
+  if (story.capital) errors.push("Cisco Capital should not appear");
 
   const check = async (pillar, minProps) => {
     await page.evaluate((p) => {
@@ -62,7 +53,7 @@ try {
   };
 
   let s = await check("ai-dc", 3);
-  if (s.version !== "3.5.80") errors.push(`expected 3.5.80, got ${s.version}`);
+  if (s.version !== "3.5.81") errors.push(`expected 3.5.81, got ${s.version}`);
   if (!s.pillarFocus) errors.push("expected pillar-focus body class");
   if (!s.strip) errors.push("missing promise strip");
   if (!s.ribbon) errors.push("missing value-prop ribbon");

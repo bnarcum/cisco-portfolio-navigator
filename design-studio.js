@@ -50,10 +50,10 @@
 
   /** One Cisco strategy — Design Studio Intent hero (self-contained; mirrors main app deck) */
   const ONE_CISCO_STORY = {
-    eyebrow: "One Cisco · August 2026",
+    eyebrow: "One Cisco",
     headline: "Design validated solutions across all three pillars",
     subhead:
-      "Critical infrastructure for the AI era — scale AI securely, secure a human and agentic workforce, and manage risks beyond human scale.",
+      "Cisco powers how people and technology work together across the physical and digital worlds — pick a pillar to prefill your brief, or describe your own opportunity below.",
     connectivityLabel: "Secure global connectivity",
     aiLabel: "Accelerated by Cisco AI",
     pillars: [
@@ -75,7 +75,7 @@
         color: "#2dce5c",
         icon: "telepresence",
         intent:
-          "Future-proofed hybrid campus and collaboration: Catalyst 9300/9500 access and distribution, Catalyst wireless, Catalyst Center automation, 18 Webex rooms — Board Pro 75 and Room Kit EQ in conference rooms, Room Bar in huddles, ceiling mics, Room Navigator. Umbrella DNS security for remote workers. Secure both the human and agentic workforce."
+          "Future-proofed hybrid campus and collaboration: Catalyst 9300/9500 access and distribution, Catalyst wireless, Catalyst Center automation, 18 Webex rooms — Board Pro 75 and Room Kit EQ in conference rooms, Room Bar in huddles, ceiling mics, Room Navigator. Umbrella DNS security for remote workers."
       },
       {
         id: "resilience",
@@ -85,7 +85,7 @@
         color: "#FF9000",
         icon: "shield-network",
         intent:
-          "Digital resilience and zero trust: Catalyst SD-WAN with dual uplinks and application-aware routing, Secure Firewall HA at HQ and branches, ISE policy for wired and wireless, Duo MFA, Umbrella SIG, encrypted site-to-site VPN fallback. Catalyst Center visibility, ThousandEyes monitoring, and agentic SOC response at machine speed."
+          "Digital resilience and zero trust: Catalyst SD-WAN with dual uplinks and application-aware routing, Secure Firewall HA at HQ and branches, ISE policy for wired and wireless, Duo MFA, Umbrella SIG, encrypted site-to-site VPN fallback. Catalyst Center visibility and ThousandEyes monitoring."
       }
     ]
   };
@@ -220,8 +220,7 @@
     const S = ONE_CISCO_STORY;
     return `
       <section class="ds-one-cisco ds-one-cisco--compact" aria-labelledby="ds-oc-title">
-        <p class="ds-oc-kicker">${escapeHtml(S.eyebrow)}</p>
-        <h2 class="ds-oc-lead" id="ds-oc-title">${escapeHtml(S.subhead)}</h2>
+        <h2 class="ds-oc-lead" id="ds-oc-title">Pick a starting point, or describe your opportunity below.</h2>
         <div class="ds-oc-deck ds-oc-deck--pillars" id="ds-one-cisco-deck">
           ${S.pillars.map(p => oneCiscoPillarCard(p)).join("")}
         </div>
