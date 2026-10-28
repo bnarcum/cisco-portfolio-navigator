@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.88";
+  window.__CPN_BUILD="3.5.89";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     var staleKeys=["cpn-view-mode-v2","cpn-view-focus-v2","cpn-autosave-v2","cpn-current-v2","cpn-all-products-layers-v1"];
@@ -528,7 +528,9 @@
       opacity:0;pointer-events:none;transition:opacity .22s ease}
     #panel-backdrop.open{opacity:1;pointer-events:auto}
     body.tl-open #panel-backdrop.open{pointer-events:none;opacity:0;background:transparent}
-    #panel{position:fixed;top:calc(var(--topbar-h) + 16px);right:16px;width:400px;max-width:calc(100vw - 32px);
+    #panel{position:fixed;top:calc(var(--topbar-h) + 16px);right:16px;
+      width:min(1040px, calc(100vw - 280px));max-width:calc(100vw - 32px);
+      container-type:inline-size;
       max-height:calc(100vh - var(--topbar-h) - 32px);
       background:var(--glass-bg);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
       border:1px solid var(--glass-edge);border-radius:12px;
@@ -540,7 +542,10 @@
       border-radius:12px 0 0 12px;
       background:linear-gradient(180deg, var(--accent), rgba(10,96,255,.35));opacity:.65;pointer-events:none}
     #panel.open{transform:translateX(0)}
-    #phead{flex-shrink:0;padding:18px 18px 0;background:inherit;border-bottom:1px solid rgba(255,255,255,.06)}
+    @media (max-width:980px){
+      #panel{width:calc(100vw - 24px);right:12px}
+    }
+    #phead{flex-shrink:0;padding:14px 18px 0;background:inherit;border-bottom:1px solid rgba(255,255,255,.06)}
     #pbody{flex:1 1 auto;min-height:0;overflow-y:auto;padding:16px 18px}
     #pfooter{flex-shrink:0;padding:12px 18px;border-top:1px solid var(--border);
       background:rgba(10,34,64,.55);display:flex;gap:8px;align-items:center}
@@ -550,7 +555,28 @@
     #pfooter .p-footer-icon:hover{border-color:var(--accent);color:var(--text)}
     #pfooter .p-extra{display:flex;gap:6px;flex:1;margin:0}
     #pfooter .p-extra .rc-btn{flex:1;height:40px;font-size:11px}
-    .p-head-badges{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:8px;padding-right:36px}
+    #phead{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:12px;row-gap:8px;padding-right:48px}
+    #phead > .p-bc,#phead > .p-tabs,#phead > .cc-teaser,#phead > .p-hero:not(.p-hero--compact){grid-column:1 / -1}
+    #phead > .p-hero--compact{grid-column:1;min-width:0;margin-bottom:0}
+    #phead > .p-head-actions{grid-column:2;grid-row:2;align-self:center}
+    #phead > .p-name{margin:0;font-size:18px}
+    .p-head-badges{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:0}
+    .p-stat-line{font-size:12px;color:#a8b2bf;margin:-4px 0 14px}
+    .p-stat-line b{color:#e8eef4;font-weight:700}
+    .p-overview-split{display:grid;grid-template-columns:1fr 1fr;gap:4px 24px;align-items:start}
+    .p-resources-extra{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+    .p-resources-extra > .p-sec{margin-bottom:0}
+    .p-resources-extra > .p-dcloud,.p-resources-extra > .p-learn:only-of-type{grid-column:1 / -1}
+    .p-tab-pane[data-tab="resources"] > .p-sec .lb{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .p-tab-pane[data-tab="resources"] > .p-sec .la{border:1px solid rgba(255,255,255,.08);border-radius:8px}
+    .p-tab-pane[data-tab="connections"] .rl{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+    .fam-prod-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px}
+    .fam-prod-row-wrap{border:1px solid rgba(255,255,255,.08);border-radius:8px;background:rgba(255,255,255,.03)}
+    @container (max-width:720px){
+      .p-overview-split,.p-resources-extra,.p-tab-pane[data-tab="connections"] .rl,
+      .p-tab-pane[data-tab="resources"] > .p-sec .lb{grid-template-columns:1fr}
+      .p-resources-extra > .p-dcloud,.p-resources-extra > .p-learn:only-of-type{grid-column:auto}
+    }
     .p-stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 0;margin-bottom:8px;
       border-top:1px solid rgba(255,255,255,.06)}
     .p-stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:9px;
@@ -561,8 +587,8 @@
     .p-stat-card.c3::before{background:var(--obs)}
     .p-stat-card .n{font-size:19px;font-weight:800;color:var(--text);line-height:1.1}
     .p-stat-card .l{font-size:9.5px;color:#8a95a3;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:3px}
-    .p-head-actions{display:flex;gap:8px;margin-bottom:12px}
-    .p-head-actions .explore-btn,.p-head-actions .p-head-add{flex:1;margin:0;height:36px;font-size:12px}
+    .p-head-actions{display:flex;gap:8px;margin-bottom:0;flex-shrink:0;align-items:center}
+    .p-head-actions .explore-btn,.p-head-actions .p-head-add{flex:none;width:auto;margin:0;height:32px;padding:0 12px;font-size:12px;white-space:nowrap}
     .p-head-add{padding:9px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;
       background:linear-gradient(90deg,#0a60ff,var(--accent));color:#001a24;font-family:inherit}
     .p-head-add:hover{filter:brightness(1.06)}
@@ -792,7 +818,7 @@
     .explore-btn:hover{background:var(--accent);color:#000}
     .explore-btn-secondary{border-color:var(--border);color:var(--muted);background:transparent;margin-top:8px}
     .explore-btn-secondary:hover{border-color:var(--accent);color:var(--accent);background:rgba(2,200,255,.08)}
-    .fam-prod-list{display:flex;flex-direction:column;gap:0;max-height:none;overflow:visible;padding-right:0;margin-top:0}
+    .fam-prod-list{max-height:none;overflow:visible;padding-right:0;margin-top:0}
     .fam-prod-row{display:block;flex:1;text-align:left;padding:10px 8px;background:transparent;
       border:none;border-bottom:1px solid rgba(255,255,255,.06);border-radius:0;cursor:pointer;
       transition:background .12s;font-size:12px;font-weight:600;color:var(--text);font-family:inherit;margin:0 -8px}
@@ -1116,6 +1142,17 @@
     .p-learn-chip--wh{background:rgba(34,197,94,.12);color:#86efac;border-color:rgba(134,239,172,.35)}
     .p-learn-chip--bb{background:rgba(251,191,36,.12);color:#fde68a;border-color:rgba(251,191,36,.35)}
     .p-learn-entry-hint{font-size:11px;color:#c4e8f8;margin:0 0 6px;line-height:1.45}
+    .p-learn-row{display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:8px 10px;border-radius:8px;text-decoration:none;margin:0 0 6px;
+      background:rgba(124,58,237,.1);border:1px solid rgba(167,139,250,.25)}
+    .p-learn-row:last-child{margin-bottom:0}
+    .p-learn-partner .p-learn-row{background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.25)}
+    .p-learn-row:hover{border-color:#a78bfa;background:rgba(124,58,237,.2)}
+    .p-learn-partner .p-learn-row:hover{border-color:#fbbf24;background:rgba(251,191,36,.16)}
+    .p-learn-row-body{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px}
+    .p-learn-row-title{font-size:12.5px;font-weight:700;color:#fff;line-height:1.3}
+    .p-learn-row-meta{font-size:10px;font-weight:600;color:#c4b5fd;letter-spacing:.02em}
+    .p-learn-partner .p-learn-row-meta{color:#fde68a}
     .la-learn{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:7px;
       text-decoration:none;background:rgba(124,58,237,.1);border:1px solid rgba(167,139,250,.25);transition:all .15s}
     .la-learn:hover{border-color:#a78bfa;background:rgba(124,58,237,.2)}
@@ -8247,6 +8284,7 @@ function syncDetailPanelEnhance(d){
 function openPanel(){
   document.getElementById("panel")?.classList.add("open");
   document.getElementById("panel-backdrop")?.classList.add("open");
+  if (typeof queueGraphChromeRefit === "function") queueGraphChromeRefit();
 }
 
 function switchPanelTab(tab){
@@ -8285,12 +8323,8 @@ function mountPanelOutcomeBlock(familyId){
   if (slot && familyId) window.__cpnOutcomeCard?.mountPanel?.(slot, familyId);
 }
 
-function renderPanelStats(prodCount, useCaseCount, linkCount){
-  return `<div class="p-stats-row">
-    <div class="p-stat-card c1"><div class="n">${prodCount}</div><div class="l">Products</div></div>
-    <div class="p-stat-card c2"><div class="n">${useCaseCount}</div><div class="l">Use cases</div></div>
-    <div class="p-stat-card c3"><div class="n">${linkCount}</div><div class="l">Direct links</div></div>
-  </div>`;
+function renderPanelStatLine(prodCount, useCaseCount, linkCount){
+  return `<div class="p-stat-line"><b>${prodCount}</b> products · <b>${useCaseCount}</b> use cases · <b>${linkCount}</b> direct links</div>`;
 }
 
 function renderPanelFooter(id, kind, inStk){
@@ -10896,8 +10930,6 @@ function showDetailPanel(d) {
       ${pm ? `<div class="p-pillar" style="--pc:${pm.color}">${pm.shortLabel || pm.label}</div>` : ""}
     </div>
     <div class="p-name">${d.name}</div>
-    <p class="p-desc">${d.desc}</p>
-    ${renderPanelStats(curProds.length, (d.useCases||[]).length, directCount)}
     <div class="p-head-actions">
       <button type="button" class="p-head-add${inStk ? " added" : ""}">${inStk ? "✓ In plan" : "+ Add to plan"}</button>
     </div>
@@ -10905,13 +10937,19 @@ function showDetailPanel(d) {
 
   pb.innerHTML = `
     <div class="p-tab-pane${activeTab === "overview" ? " on" : ""}" data-tab="overview" role="tabpanel">
+      <p class="p-desc">${d.desc}</p>
+      ${renderPanelStatLine(curProds.length, (d.useCases||[]).length, directCount)}
       ${renderOutcomeSlot(d.id)}
-      <div class="p-sec"><div class="p-sec-t">Quick links</div><div class="lb">
-        <a class="la" href="${productPageUrl(d)}" target="_blank" rel="noopener noreferrer">Product page <span>cisco.com ↗</span></a>
-        <a class="la" href="${documentationUrl(d)}" target="_blank" rel="noopener noreferrer">Documentation <span>docs ↗</span></a>
-      </div></div>
-      <div class="p-sec"><div class="p-sec-t">Use cases</div><div class="tr">${(d.useCases||[]).map(u=>`<span class="tg" onclick="filterTagUC('${u}')">${u}</span>`).join("") || `<span class="p-desc" style="margin:0">None listed.</span>`}</div></div>
-      <div class="p-sec"><div class="p-sec-t">Industries</div><div class="tr">${(d.industries||[]).map(i=>`<span class="tg" onclick="filterTagInd('${i}')">${i}</span>`).join("") || `<span class="p-desc" style="margin:0">None listed.</span>`}</div></div>
+      <div class="p-overview-split">
+        <div class="p-sec"><div class="p-sec-t">Quick links</div><div class="lb">
+          <a class="la" href="${productPageUrl(d)}" target="_blank" rel="noopener noreferrer">Product page <span>cisco.com ↗</span></a>
+          <a class="la" href="${documentationUrl(d)}" target="_blank" rel="noopener noreferrer">Documentation <span>docs ↗</span></a>
+        </div></div>
+        <div>
+          <div class="p-sec"><div class="p-sec-t">Use cases</div><div class="tr">${(d.useCases||[]).map(u=>`<span class="tg" onclick="filterTagUC('${u}')">${u}</span>`).join("") || `<span class="p-desc" style="margin:0">None listed.</span>`}</div></div>
+          <div class="p-sec"><div class="p-sec-t">Industries</div><div class="tr">${(d.industries||[]).map(i=>`<span class="tg" onclick="filterTagInd('${i}')">${i}</span>`).join("") || `<span class="p-desc" style="margin:0">None listed.</span>`}</div></div>
+        </div>
+      </div>
     </div>
     <div class="p-tab-pane${activeTab === "products" ? " on" : ""}" data-tab="products" role="tabpanel">${productsHtml}</div>
     <div class="p-tab-pane${activeTab === "connections" ? " on" : ""}" data-tab="connections" role="tabpanel">
@@ -10983,9 +11021,7 @@ window.showProductDetail = function(id) {
       <div class="p-badge" style="background:${cat.color};color:${p.category==='computing'?'#fff':'#000'}">${cat.label}</div>
       <div style="padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:${statusColor}22;color:${statusColor}">${statusLabel}</div>
     </div>
-    ${eolBanner}
     <div class="p-name">${p.name}</div>
-    <p class="p-desc">${p.desc}</p>
     <div class="p-head-actions">
       <button type="button" class="p-head-add${inStk ? " added" : ""}">${inStk ? "✓ In plan" : "+ Add to plan"}</button>
     </div>
@@ -10993,6 +11029,8 @@ window.showProductDetail = function(id) {
 
   pb.innerHTML = `
     <div class="p-tab-pane${activeTab === "overview" ? " on" : ""}" data-tab="overview" role="tabpanel">
+      ${eolBanner}
+      <p class="p-desc">${p.desc}</p>
       ${node ? renderOutcomeSlot(node.id) : ""}
       ${node?`<div class="p-sec"><div class="p-sec-t">Portfolio family</div>
         <div class="ri" onclick="jumpTo('${node.id}', {connectionDepth: 2}); closePanel()">
@@ -16219,12 +16257,16 @@ function learningEntryActionsHtml(e){
 }
 
 function renderLearningEntry(e){
-  return `<div class="p-learn-entry" data-learning-id="${escapeHtml(e.id)}">
-    <div class="p-learn-entry-head">${escapeHtml(e.linkLabel || e.name)}</div>
-    ${learningEntryMetaHtml(e)}
-    ${e.hint ? `<div class="p-learn-entry-hint">${escapeHtml(e.hint)}</div>` : ""}
-    ${learningEntryActionsHtml(e)}
-  </div>`;
+  const src = learningSourceMeta(e.source);
+  const meta = [e.level, e.duration].filter(Boolean).map(x => escapeHtml(x)).join(" · ");
+  const title = escapeHtml(e.linkLabel || e.name);
+  return `<a class="p-learn-row" href="${escapeHtml(e.url)}" target="_blank" rel="noopener" data-learning-id="${escapeHtml(e.id)}"${e.hint ? ` title="${escapeHtml(e.hint)}"` : ""}>
+    <span class="p-learn-row-body">
+      <span class="p-learn-row-title">${title}</span>
+      ${meta ? `<span class="p-learn-row-meta">${meta}</span>` : ""}
+    </span>
+    <span class="la-learn-meta">${escapeHtml(src.cta)}</span>
+  </a>`;
 }
 
 function renderLearningSectionBody(entries, opts = {}){
@@ -16261,7 +16303,7 @@ function insertLearningSections(id, kind){
     host.querySelector(".p-sec") || host;
 
   const insertAfter = (el, node) => {
-    if (el) el.insertAdjacentElement("afterend", node);
+    if (el && el !== host && host.contains(el)) el.insertAdjacentElement("afterend", node);
     else host.appendChild(node);
   };
 
