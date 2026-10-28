@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.84";
+  window.__CPN_BUILD="3.5.85";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     var staleKeys=["cpn-view-mode-v2","cpn-view-focus-v2","cpn-autosave-v2","cpn-current-v2","cpn-all-products-layers-v1"];
@@ -420,7 +420,7 @@
       border:1px solid color-mix(in srgb, var(--tip-accent, var(--accent)) 38%, transparent)}
 
     /* LINK "WHY CONNECTED" CARD */
-    #link-why-card{position:fixed;display:none;z-index:410;pointer-events:none;
+    #link-why-card{position:fixed;display:none;z-index:410;pointer-events:auto;
       max-width:min(300px,92vw);padding:11px 13px;border-radius:10px;
       background:var(--surface);border:1px solid var(--glass-edge);
       box-shadow:0 12px 40px rgba(0,0,0,.55)}
@@ -7634,9 +7634,8 @@ function rebindGraph(opts){
           else moveTip(ev);
         })
         .on("mouseout", () => {
-          if (!hoverCardsEnabled() || selectedLinkKey) return;
-          hoveredLinkKey = null;
-          hideLinkWhyCard();
+          if (!hoverCardsEnabled()) return;
+          scheduleHideLinkWhy();
           hideTip();
         })
         .on("click", (ev, l) => {
@@ -7943,9 +7942,32 @@ function positionLinkWhyCard(ev){
 }
 function hoverCardsEnabled(){ return viewMode !== "composition"; }
 
+let linkWhyHideTimer = 0;
+function cancelHideLinkWhy(){ clearTimeout(linkWhyHideTimer); }
+function scheduleHideLinkWhy(){
+  cancelHideLinkWhy();
+  linkWhyHideTimer = setTimeout(() => {
+    selectedLinkKey = null;
+    hoveredLinkKey = null;
+    hideLinkWhyCard();
+  }, 90);
+}
+function wireLinkWhyCardHover(){
+  const card = document.getElementById("link-why-card");
+  if (!card || card.dataset.hoverWired) return;
+  card.dataset.hoverWired = "1";
+  card.addEventListener("mouseenter", cancelHideLinkWhy);
+  card.addEventListener("mouseleave", () => {
+    selectedLinkKey = null;
+    hoveredLinkKey = null;
+    hideLinkWhyCard();
+  });
+}
 function showLinkWhyCard(ev, link){
   const card = document.getElementById("link-why-card");
   if (!card || !link || !hoverCardsEnabled()) return;
+  wireLinkWhyCardHover();
+  cancelHideLinkWhy();
   hideTip();
   const sn = linkNodeName(sid(link)), tn = linkNodeName(tid(link));
   const overlap = linkUseCaseOverlap(link);
@@ -7969,7 +7991,6 @@ function showLinkWhyCard(ev, link){
   positionLinkWhyCard(ev);
 }
 function hideLinkWhyCard(){
-  if (selectedLinkKey) return;
   hoveredLinkKey = null;
   const card = document.getElementById("link-why-card");
   if (card){ card.style.display = "none"; card.setAttribute("aria-hidden", "true"); }
