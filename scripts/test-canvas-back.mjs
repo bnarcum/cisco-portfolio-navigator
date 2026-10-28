@@ -15,7 +15,7 @@ try {
   await page.addInitScript(() => localStorage.setItem("cpn-first-path-v1", "1"));
   await page.goto(`file://${html}`, { waitUntil: "load", timeout: 60000 });
   await page.waitForFunction(() => window.__cpnV2 && window.__cpnV2.APP_VERSION, null, { timeout: 60000 });
-  if (await page.evaluate(() => window.__cpnV2.APP_VERSION) !== "3.5.90") errors.push("version");
+  if (await page.evaluate(() => window.__cpnV2.APP_VERSION) !== "3.5.89") errors.push("version");
 
   async function blankPoint() {
     return page.evaluate(() => {

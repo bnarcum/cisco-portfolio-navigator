@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.90";
+  window.__CPN_BUILD="3.5.89";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     var staleKeys=["cpn-view-mode-v2","cpn-view-focus-v2","cpn-autosave-v2","cpn-current-v2","cpn-all-products-layers-v1"];
@@ -529,8 +529,7 @@
     #panel-backdrop.open{opacity:1;pointer-events:auto}
     body.tl-open #panel-backdrop.open{pointer-events:none;opacity:0;background:transparent}
     #panel{position:fixed;top:calc(var(--topbar-h) + 16px);right:16px;
-      width:min(720px, calc(100vw - 280px));max-width:calc(100vw - 32px);
-      height:auto;
+      width:min(1040px, calc(100vw - 280px));max-width:calc(100vw - 32px);
       container-type:inline-size;
       max-height:calc(100vh - var(--topbar-h) - 32px);
       background:var(--glass-bg);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
@@ -5773,41 +5772,9 @@ function featherMatrixPhotoCanvas(img, opts){
   const smooth = boxBlurAlphaChannel(alpha, nw, nh, featherRadius);
   for (let i = 0, p = 0; i < d.length; i += 4, p++) d[i + 3] = Math.round(smooth[p] * 255);
   sctx.putImageData(imgData, 0, 0);
-  // Family photos are often a short device strip inside a tall transparent frame.
-  // Crop to that strip so the banner isn't a wide empty field.
-  let crop = null;
-  if (opts?.knockoutWhite){
-    let minX = nw, minY = nh, maxX = 0, maxY = 0, found = false;
-    for (let y = 0; y < nh; y += 2){
-      const row = y * nw;
-      for (let x = 0; x < nw; x += 2){
-        if (smooth[row + x] > 0.05){
-          found = true;
-          if (x < minX) minX = x;
-          if (y < minY) minY = y;
-          if (x > maxX) maxX = x;
-          if (y > maxY) maxY = y;
-        }
-      }
-    }
-    if (found){
-      const cw0 = maxX - minX + 1, ch0 = maxY - minY + 1;
-      if (cw0 * ch0 < nw * nh * 0.62){
-        const padX = Math.max(12, Math.round(cw0 * 0.02));
-        const padY = Math.max(8, Math.round(ch0 * 0.08));
-        minX = Math.max(0, minX - padX);
-        minY = Math.max(0, minY - padY);
-        maxX = Math.min(nw - 1, maxX + padX + 2);
-        maxY = Math.min(nh - 1, maxY + padY + 2);
-        crop = { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 };
-      }
-    }
-  }
-  const srcW = crop ? crop.w : nw;
-  const srcH = crop ? crop.h : nh;
   const out = document.createElement("canvas");
-  out.width = Math.max(1, Math.round(srcW * dpr));
-  out.height = Math.max(1, Math.round(srcH * dpr));
+  out.width = Math.max(1, Math.round(nw * dpr));
+  out.height = Math.max(1, Math.round(nh * dpr));
   const octx = out.getContext("2d");
   if (opts?.knockoutWhite) octx.clearRect(0, 0, out.width, out.height);
   else{
@@ -5816,8 +5783,7 @@ function featherMatrixPhotoCanvas(img, opts){
   }
   octx.imageSmoothingEnabled = true;
   octx.imageSmoothingQuality = "high";
-  if (crop) octx.drawImage(src, crop.x, crop.y, crop.w, crop.h, 0, 0, out.width, out.height);
-  else octx.drawImage(src, 0, 0, out.width, out.height);
+  octx.drawImage(src, 0, 0, out.width, out.height);
   return out.toDataURL("image/png");
 }
 
@@ -5922,7 +5888,6 @@ function refineMatrixPhotoEdges(img, cb, opts){
   const src = img.currentSrc || img.src;
   const cacheKey = opts?.knockoutWhite ? `${src}#hw` : src;
   if (matrixPhotoRefineCache.has(cacheKey)){
-    img.addEventListener("load", () => { if (typeof fitDetailPanel === "function") fitDetailPanel(); }, { once: true });
     img.src = matrixPhotoRefineCache.get(cacheKey);
     img.dataset.refined = "1";
     cb?.(img);
@@ -5932,7 +5897,6 @@ function refineMatrixPhotoEdges(img, cb, opts){
     const refined = featherMatrixPhotoCanvas(img, opts);
     if (refined){
       matrixPhotoRefineCache.set(cacheKey, refined);
-      img.addEventListener("load", () => { if (typeof fitDetailPanel === "function") fitDetailPanel(); }, { once: true });
       img.src = refined;
       img.dataset.refined = "1";
     } else {
@@ -8320,80 +8284,7 @@ function syncDetailPanelEnhance(d){
 function openPanel(){
   document.getElementById("panel")?.classList.add("open");
   document.getElementById("panel-backdrop")?.classList.add("open");
-  requestAnimationFrame(() => fitDetailPanel());
-}
-
-function detailPanelLimits(){
-  const topbar = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--topbar-h")) || 64;
-  const maxH = Math.max(320, window.innerHeight - topbar - 32);
-  const maxW = Math.min(1040, Math.max(360, window.innerWidth - 280));
-  const minW = Math.min(640, maxW);
-  return { maxH, maxW, minW };
-}
-
-function panelBodyNaturalHeight(body){
-  const prevFlex = body.style.flex;
-  const prevOverflow = body.style.overflow;
-  body.style.flex = "0 0 auto";
-  body.style.overflow = "visible";
-  const h = body.scrollHeight;
-  body.style.flex = prevFlex;
-  body.style.overflow = prevOverflow;
-  return h;
-}
-
-/** Narrowest width that fits the active tab, then hug the sheet to that content. */
-function fitDetailPanel(){
-  const panel = document.getElementById("panel");
-  const body = document.getElementById("pbody");
-  if (!panel?.classList.contains("open") || !body || panel.dataset.fitting === "1") return;
-  if (window.innerWidth <= 980){
-    if (panel.style.width || panel.style.height){
-      panel.style.width = "";
-      panel.style.height = "";
-      if (typeof queueGraphChromeRefit === "function") queueGraphChromeRefit();
-    }
-    return;
-  }
-  panel.dataset.fitting = "1";
-  const { maxH, maxW, minW } = detailPanelLimits();
-  const head = document.getElementById("phead");
-  const foot = document.getElementById("pfooter");
-  const chrome = () => (head?.offsetHeight || 0) + (foot?.offsetHeight || 0);
-  const fits = (w) => {
-    panel.style.width = Math.round(w) + "px";
-    return panelBodyNaturalHeight(body) <= (maxH - chrome()) + 2;
-  };
-  let chosen = maxW;
-  if (fits(minW)) chosen = minW;
-  else {
-    let lo = minW, hi = maxW;
-    while (hi - lo > 16){
-      const mid = (lo + hi) / 2;
-      if (fits(mid)){ chosen = mid; hi = mid; }
-      else lo = mid;
-    }
-    if (!fits(chosen)) chosen = maxW;
-    panel.style.width = Math.round(chosen) + "px";
-  }
-  const contentH = Math.min(maxH, chrome() + panelBodyNaturalHeight(body) + 2);
-  const nextW = Math.round(chosen) + "px";
-  const nextH = Math.round(contentH) + "px";
-  const changed = panel.style.width !== nextW || panel.style.height !== nextH;
-  panel.style.width = nextW;
-  panel.style.height = nextH;
-  panel.dataset.fitting = "";
-  if (changed && typeof queueGraphChromeRefit === "function") queueGraphChromeRefit();
-}
-
-function wireDetailPanelFit(){
-  if (window.__cpnPanelFitWired) return;
-  window.__cpnPanelFitWired = true;
-  let raf = 0;
-  window.addEventListener("resize", () => {
-    if (raf || document.getElementById("panel")?.dataset.fitting === "1") return;
-    raf = requestAnimationFrame(() => { raf = 0; fitDetailPanel(); });
-  });
+  if (typeof queueGraphChromeRefit === "function") queueGraphChromeRefit();
 }
 
 function switchPanelTab(tab){
@@ -8407,7 +8298,6 @@ function switchPanelTab(tab){
   });
   const pb = document.getElementById("pbody");
   if (pb) pb.dataset.activeTab = tab;
-  fitDetailPanel();
 }
 
 function bindPanelTabs(){
@@ -11165,9 +11055,7 @@ window.showProductDetail = function(id) {
 };
 
 function closePanel() {
-  const panel = document.getElementById("panel");
-  panel?.classList.remove("open");
-  if (panel){ panel.style.width = ""; panel.style.height = ""; }
+  document.getElementById("panel")?.classList.remove("open");
   document.getElementById("panel-backdrop")?.classList.remove("open");
   window.__cpnOutcomeCard?.hide?.();
   if (window.__ccTeaserTimer){ clearInterval(window.__ccTeaserTimer); window.__ccTeaserTimer = null; }
@@ -13565,12 +13453,8 @@ STYLE.textContent = `
   .p-hero-action-btn--primary{background:linear-gradient(135deg,#7c3aed,#c084fc);color:#fff}
   .p-hero--matrix .p-hero-scrim{background:linear-gradient(180deg, transparent 72%, rgba(15,23,42,0.08) 100%)}
   .p-hero--icon-only .p-hero-scrim{background:linear-gradient(180deg, transparent 70%, rgba(15,23,42,0.06) 100%)}
-  .p-hero--hardware{
-    height:auto;width:max-content;max-width:100%;justify-self:center;
-    background:#0e141c;border-color:rgba(255,255,255,.08)}
-  .p-hero--hardware .p-hero-matrix-img{
-    width:auto;max-width:100%;height:auto;max-height:128px;object-fit:contain;object-position:center;
-    padding:6px 8px;display:block;filter:none}
+  .p-hero--hardware{height:148px}
+  .p-hero--hardware .p-hero-matrix-img{padding:12px 14px 14px}
   .p-hero-scrim{position:absolute;inset:0;background:linear-gradient(180deg, transparent 58%, rgba(15,23,42,0.1) 100%);
     pointer-events:none;z-index:2}
   .p-hero-meta{position:absolute;left:10px;right:10px;bottom:8px;display:flex;justify-content:space-between;
@@ -16958,8 +16842,8 @@ function insertCloudControlOps(id, kind){
     </div>`;
   sec.querySelector("[data-cc-open]")?.addEventListener("click", () => openCloudControlBriefing(familyId));
 
-  const split = overview.querySelector(".p-overview-split");
-  if (split) split.insertAdjacentElement("afterend", sec);
+  const industries = overview.querySelector(".p-sec:last-of-type");
+  if (industries) industries.insertAdjacentElement("afterend", sec);
   else overview.appendChild(sec);
 }
 window.insertCloudControlOps = insertCloudControlOps;
@@ -17074,7 +16958,6 @@ function enhanceNodePanel(id){
     insertDcloudLinks(id, "node");
     insertCloudControlOps(id, "node");
     insertPinAndCompareBtns(id, "node");
-    fitDetailPanel();
   }, 0);
 }
 function enhanceProductPanel(id){
@@ -17090,7 +16973,6 @@ function enhanceProductPanel(id){
     if (p) insertTierBadge(p.family);
     insertFieldNotice(id);
     insertPinAndCompareBtns(id, "product");
-    fitDetailPanel();
   }, 0);
 }
 function productMatrixHeroUrl(id){
@@ -18949,7 +18831,6 @@ function boot(){
   wireSearchPulse();
   wireAdaptivePlaceholder();
   wireTopbarHeightSync();
-  wireDetailPanelFit();
   wireCanvasResizeRefit();
   wireKeyboardA11y();
   watchStackForAutoSave();

@@ -16,7 +16,7 @@ try {
   await page.goto(`file://${html}`, { waitUntil: "load", timeout: 60000 });
   await page.waitForFunction(() => window.__cpnV2?.APP_VERSION, { timeout: 60000 });
   const version = await page.evaluate(() => window.__cpnV2.APP_VERSION);
-  if (version !== "3.5.90") errors.push(`expected 3.5.90, got ${version}`);
+  if (version !== "3.5.89") errors.push(`expected 3.5.89, got ${version}`);
 
   await page.waitForSelector("g.overview-deck g.ov-card", { timeout: 30000 });
   const cards = await page.locator("g.overview-deck g.ov-card").count();
