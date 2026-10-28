@@ -11,6 +11,7 @@
     "build:matrix-photos": "python3 scripts/refine-matrix-photos.py",
     "test:pillar-layout": "node scripts/test-pillar-layout.mjs",
     "test:pillar-context": "node scripts/test-pillar-context.mjs",
+    "test:pillar-open": "node scripts/test-pillar-open.mjs",
     "test:acquisitions-data": "node scripts/test-acquisitions-data.mjs",
     "test:acquisitions-timeline": "node scripts/test-acquisitions-timeline.mjs",
     "test:refresh-timeline": "node scripts/test-refresh-timeline.mjs",

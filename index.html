@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.83";
+  window.__CPN_BUILD="3.5.84";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     var staleKeys=["cpn-view-mode-v2","cpn-view-focus-v2","cpn-autosave-v2","cpn-current-v2","cpn-all-products-layers-v1"];
@@ -1433,6 +1433,25 @@
       background:var(--surface);border:1px solid var(--border);border-radius:20px;
       padding:5px 14px;font-size:11px;color:var(--subtle);z-index:50;
       white-space:nowrap;pointer-events:none}
+
+    .pillar-open-overlay{position:fixed;z-index:40;pointer-events:auto;box-sizing:border-box;
+      display:flex;align-items:center;justify-content:center;
+      border-radius:14px;border:2px solid var(--pc,#2dce5c);
+      background:color-mix(in srgb, var(--pc,#2dce5c) 16%, rgba(4,16,28,.94));
+      color:#f4fbff;font-weight:800;font-size:18px;letter-spacing:-.01em;
+      box-shadow:0 18px 50px rgba(0,0,0,.35);
+      transition:left .72s cubic-bezier(.4,0,.2,1), top .72s cubic-bezier(.4,0,.2,1),
+        width .72s cubic-bezier(.4,0,.2,1), height .72s cubic-bezier(.4,0,.2,1),
+        border-radius .72s ease, opacity .32s ease, padding .72s ease}
+    .pillar-open-overlay.grow{justify-content:flex-start;padding-top:26px;border-radius:18px;font-size:22px}
+    .pillar-open-overlay.done{opacity:0}
+    .pillar-open-overlay .po-title{display:flex;align-items:center;gap:12px;padding:0 18px}
+    .pillar-open-overlay img{width:36px;height:36px;flex-shrink:0}
+    html[data-theme="light"] .pillar-open-overlay{color:#07182d;
+      background:color-mix(in srgb, var(--pc,#2dce5c) 12%, rgba(255,255,255,.94))}
+    @media (prefers-reduced-motion: reduce){
+      .pillar-open-overlay{transition:none}
+    }
 
     #first-path{position:fixed;left:50%;top:calc(var(--topbar-h) + 14px);
       transform:translateX(-50%);z-index:58;width:min(520px, calc(100vw - 28px));
@@ -7501,19 +7520,18 @@ function updateOverviewDeck(){
       textEl.attr("x", contentX + iconSize + gap);
     }
     const p = PILLAR_BY_ID[pillarId];
-    card.on("click", ev => {
+    const openThis = ev => {
       ev.stopPropagation();
-      applyViewLevel("families");
-    });
-    card.on("dblclick", ev => {
-      ev.stopPropagation();
-      applyViewLevel("families", { focusPillar: pillarId });
-    });
+      hideTip();
+      openPillarFromCard(pillarId, card.node(), label);
+    };
+    card.on("click", openThis);
+    card.on("dblclick", openThis);
     card.on("mouseover", ev => {
       card.attr("transform", `translate(${tx},${ty - 3})`).attr("filter", "url(#ov-card-glow)");
       border.attr("stroke-opacity", 1);
       document.getElementById("tn").textContent = label;
-      document.getElementById("tc").textContent = `${p.promise} · ${familiesInPillar(pillarId)} families · Click for all pillars · Double-click to focus`;
+      document.getElementById("tc").textContent = `${p.promise} · ${familiesInPillar(pillarId)} families · Click to open`;
       tipEl.style.display = "block";
       moveTip(ev);
     });
@@ -7550,6 +7568,54 @@ function updateOverviewDeck(){
     .style("font-size", "15px")
     .style("font-weight", "600")
     .text(ONE_CISCO.aiLabel);
+}
+
+// The clicked overview card grows to fill the canvas, then the focused pillar is revealed inside it.
+let pillarOpenUntil = 0;
+function openPillarFromCard(pillarId, cardEl, label){
+  const now = Date.now();
+  if (now < pillarOpenUntil) return;
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const rect = cardEl?.querySelector("rect")?.getBoundingClientRect();
+  const well = document.getElementById("gw")?.getBoundingClientRect();
+  if (reduce || !rect || !well || rect.width < 8 || well.width < 8){
+    applyViewLevel("families", { focusPillar: pillarId });
+    return;
+  }
+  pillarOpenUntil = now + 1200;
+  const pillar = PILLAR_BY_ID[pillarId];
+  const overlay = document.createElement("div");
+  overlay.className = "pillar-open-overlay";
+  overlay.style.setProperty("--pc", pillar?.color || "#02C8FF");
+  overlay.style.left = rect.left + "px";
+  overlay.style.top = rect.top + "px";
+  overlay.style.width = rect.width + "px";
+  overlay.style.height = rect.height + "px";
+  const title = document.createElement("div");
+  title.className = "po-title";
+  if (DECK_ICON_URI[pillarId]){
+    const img = document.createElement("img");
+    img.src = DECK_ICON_URI[pillarId];
+    img.alt = "";
+    title.appendChild(img);
+  }
+  const span = document.createElement("span");
+  span.textContent = label;
+  title.appendChild(span);
+  overlay.appendChild(title);
+  document.body.appendChild(overlay);
+  cardEl.style.opacity = "0";
+  requestAnimationFrame(() => {
+    const pad = 28;
+    overlay.classList.add("grow");
+    overlay.style.left = (well.left + pad) + "px";
+    overlay.style.top = (well.top + pad) + "px";
+    overlay.style.width = Math.max(240, well.width - pad * 2) + "px";
+    overlay.style.height = Math.max(180, well.height - pad * 2) + "px";
+  });
+  setTimeout(() => applyViewLevel("families", { focusPillar: pillarId }), 460);
+  setTimeout(() => overlay.classList.add("done"), 980);
+  setTimeout(() => overlay.remove(), 1320);
 }
 
 // ── Rebind selections to current viewNodes / viewLinks and restart simulation.
