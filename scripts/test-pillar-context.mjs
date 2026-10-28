@@ -23,7 +23,7 @@ try {
     story: !!document.getElementById("oc-story"),
     capital: document.body.innerText.includes("Cisco Capital")
   }));
-  if (story.version !== "3.5.81") errors.push(`expected 3.5.81, got ${story.version}`);
+  if (story.version !== "3.5.82") errors.push(`expected 3.5.82, got ${story.version}`);
   if (story.story) errors.push("overview story banner should be gone");
   if (story.capital) errors.push("Cisco Capital should not appear");
 
@@ -53,7 +53,7 @@ try {
   };
 
   let s = await check("ai-dc", 3);
-  if (s.version !== "3.5.81") errors.push(`expected 3.5.81, got ${s.version}`);
+  if (s.version !== "3.5.82") errors.push(`expected 3.5.82, got ${s.version}`);
   if (!s.pillarFocus) errors.push("expected pillar-focus body class");
   if (!s.strip) errors.push("missing promise strip");
   if (!s.ribbon) errors.push("missing value-prop ribbon");
@@ -70,11 +70,17 @@ try {
 
   s = await check("workplaces", 3);
   if (s.cards !== 3) errors.push(`workplaces: expected 3 value props, got ${s.cards}`);
-  const wp = await page.evaluate(() => document.querySelector(".pillar-promise-strip .pps-text")?.textContent || "");
-  if (!/Empower and secure every worker/.test(wp)) errors.push(`workplaces promise: ${wp}`);
+  const wp = await page.evaluate(() => ({
+    promise: document.querySelector(".pillar-promise-strip .pps-text")?.textContent || "",
+    cards: [...document.querySelectorAll(".pvp-card")].map(c => c.textContent || "").join(" ")
+  }));
+  if (!/Empower and secure every worker/.test(wp.promise)) errors.push(`workplaces promise: ${wp.promise}`);
+  if (!/feeding data and intelligence/.test(wp.cards)) errors.push(`workplaces highlight: ${wp.cards}`);
 
   s = await check("resilience", 3);
   if (s.cards !== 3) errors.push(`resilience: expected 3 value props, got ${s.cards}`);
+  const res = await page.evaluate(() => document.querySelector(".pvp-card h4")?.textContent || "");
+  if (!/Turn machine data into agentic action/.test(res)) errors.push(`resilience highlight: ${res}`);
 
   if (errors.length) {
     console.error("FAIL:", errors.join("; "));
