@@ -23,7 +23,7 @@ try {
     story: !!document.getElementById("oc-story"),
     capital: document.body.innerText.includes("Cisco Capital")
   }));
-  if (story.version !== "3.5.85") errors.push(`expected 3.5.85, got ${story.version}`);
+  if (story.version !== "3.5.86") errors.push(`expected 3.5.86, got ${story.version}`);
   if (story.story) errors.push("overview story banner should be gone");
   if (story.capital) errors.push("Cisco Capital should not appear");
 
@@ -53,7 +53,7 @@ try {
   };
 
   let s = await check("ai-dc", 3);
-  if (s.version !== "3.5.85") errors.push(`expected 3.5.85, got ${s.version}`);
+  if (s.version !== "3.5.86") errors.push(`expected 3.5.86, got ${s.version}`);
   if (!s.pillarFocus) errors.push("expected pillar-focus body class");
   if (!s.strip) errors.push("missing promise strip");
   if (!s.ribbon) errors.push("missing value-prop ribbon");

@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <script>
-  window.__CPN_BUILD="3.5.85";
+  window.__CPN_BUILD="3.5.86";
   (function(){
     var V=window.__CPN_BUILD, key="cpn-app-version", reloadKey="cpn-version-reload";
     var staleKeys=["cpn-view-mode-v2","cpn-view-focus-v2","cpn-autosave-v2","cpn-current-v2","cpn-all-products-layers-v1"];
@@ -109,7 +109,8 @@
     [data-theme="light"] .bg-glow-floor{opacity:.35}
     [data-theme="light"] .bg-grid{opacity:.55;stroke:rgba(7,24,45,.08)}
     [data-theme="light"] #gs,#spatial-wrap{filter:none}
-    [data-theme="light"] .pillar-guides .zone-title{fill:#006e8f}
+    [data-theme="light"] .pillar-guides .zone-title,
+    [data-theme="light"] .zone-headers .zone-title{fill:#006e8f}
     [data-theme="light"] .pillar-guides .zone-hot .zone-tint{fill-opacity:.06}
     [data-theme="light"] .pillar-guides .zone-dim .zone-tint{fill-opacity:.02}
     [data-theme="light"] .pillar-guides .zone-spine-label{fill:#475569}
@@ -648,12 +649,18 @@
       font-size:10px;font-weight:700;letter-spacing:.02em;margin-left:6px;border:1px solid var(--pc, var(--border));
       background:color-mix(in srgb, var(--pc, #888) 18%, transparent);color:var(--text)}
     .pillar-guides .zone-rect{stroke-width:2.25}
-    .pillar-guides .zone-header image{pointer-events:none}
-    .pillar-guides .zone-title{font-size:16px;font-weight:700;fill:#7eeaff;letter-spacing:.02em}
+    .pillar-guides .zone-header image,
+    .zone-headers .zone-header image{pointer-events:none}
+    .pillar-guides .zone-title,
+    .zone-headers .zone-title{font-size:16px;font-weight:700;fill:#7eeaff;letter-spacing:.02em}
+    .zone-headers .zone-header.is-dim{opacity:.35}
     .pillar-guides .zone-dim .zone-header{opacity:.35}
     .pillar-guides .zone-count{font-size:10px;font-weight:600;fill:#cbd5e1;text-anchor:middle}
     .pillar-guides .zone-spine{stroke-dasharray:6 5;opacity:.72}
     .pillar-guides .zone-hit{cursor:pointer}
+    .zone-headers .zone-header-hit{cursor:pointer}
+    .zone-headers .zone-header.is-hover .zone-title{fill:#fff}
+    [data-theme="light"] .zone-headers .zone-header.is-hover .zone-title{fill:#004e68}
     .pillar-guides .zone-dim .zone-fill{fill-opacity:.35}
     .pillar-guides .zone-dim .zone-tint{fill-opacity:.015}
     .pillar-guides .zone-dim .zone-border{stroke-opacity:.12}
@@ -676,7 +683,8 @@
     body.pillar-focus .pillar-guides .zone-hot .zone-fill{fill-opacity:.94}
     body.pillar-focus .pillar-guides .zone-hot .zone-tint{fill-opacity:.18}
     body.pillar-focus .pillar-guides .zone-hot .zone-border{stroke-width:2.75}
-    body.pillar-focus .pillar-guides .zone-title{font-size:18px;fill:#7eeaff}
+    body.pillar-focus .pillar-guides .zone-title,
+    body.pillar-focus .zone-headers .zone-title{font-size:18px;fill:#7eeaff}
     body.pillar-focus .pillar-guides .zone-focus-backdrop{filter:url(#pillar-zone-glow)}
     .pillar-context-fo{overflow:visible;pointer-events:none}
     .pillar-context-fo.interactive{pointer-events:all}
@@ -7212,6 +7220,7 @@ function appendPillarZoneHeader(zg, z, x, y, w, opacity){
 function updatePillarGuides(){
   const show = usePillarLayout();
   lyr.select("g.pillar-guides").remove();
+  lyr.select("g.zone-headers").remove();
   updatePillarLegend(show);
   if (!show) return;
   ensurePillarZoneDefs();
@@ -7252,6 +7261,7 @@ function updatePillarGuides(){
         .style("pointer-events", "none");
     }
   }
+  const headerLayers = [];
   const hasAi = (buckets["ai-dc"]?.length || 0) > 0;
   const hasWp = (buckets.workplaces?.length || 0) > 0;
   const hasRes = (buckets.resilience?.length || 0) > 0;
@@ -7322,12 +7332,48 @@ function updatePillarGuides(){
       .attr("stroke-opacity", 1)
       .style("pointer-events", "none");
     appendPillarZoneHeader(zg, z, x, y, lz.w, headerOp);
+    const headerNode = zg.select("g.zone-header").node();
+    if (headerNode) headerLayers.push({ id: z.id, node: headerNode, x, y, w: lz.w, h: lz.h, hot, color: z.color });
     if (singlePillarFocused() && hot && !dim) appendPillarContextChrome(zg, z, x, y, lz, headerOp);
     zg.append("rect").attr("class", "zone-hit")
       .attr("x", x).attr("y", y).attr("width", lz.w).attr("height", lz.h)
       .attr("rx", z.gradient ? 8 : 6)
       .attr("fill", "transparent")
       .on("click", ev => { ev.stopPropagation(); togglePillarFilter(z.id); });
+  });
+  if (!headerLayers.length) return;
+  const top = lyr.append("g").attr("class", "zone-headers");
+  const maskFill = isLightTheme() ? "rgba(255,255,255,0.98)" : "#071422";
+  headerLayers.forEach(h => {
+    const bb = h.node.getBBox();
+    const padX = 16, padY = 8;
+    const hasBox = bb.width > 8 && bb.height > 8;
+    const px = (hasBox ? bb.x : h.x + h.w / 2 - 90) - padX;
+    const py = (hasBox ? bb.y : h.y + 14) - padY;
+    const pw = (hasBox ? bb.width : 180) + padX * 2;
+    const ph = (hasBox ? bb.height : 34) + padY * 2;
+    const ins = zoneContentInset({ id: h.id });
+    let hitBottom = Math.max(py + ph + 4, h.y + 48);
+    if (singlePillarFocused() && h.hot) hitBottom = Math.min(hitBottom, h.y + 50);
+    hitBottom = Math.min(hitBottom, h.y + h.h * ins.top);
+    const hitH = Math.max(40, hitBottom - h.y);
+    top.append("rect").attr("class", "zone-header-mask")
+      .attr("x", px).attr("y", py).attr("width", pw).attr("height", ph).attr("rx", 10)
+      .attr("fill", maskFill)
+      .style("pointer-events", "none");
+    top.append("rect").attr("class", "zone-header-mask-tint")
+      .attr("x", px).attr("y", py).attr("width", pw).attr("height", ph).attr("rx", 10)
+      .attr("fill", h.color).attr("fill-opacity", isLightTheme() ? 0.08 : 0.18)
+      .style("pointer-events", "none");
+    d3.select(h.node).classed("is-dim", activePillars.size > 0 && !h.hot);
+    top.node().appendChild(h.node);
+    top.append("rect").attr("class", "zone-header-hit")
+      .attr("data-pillar", h.id)
+      .attr("x", h.x).attr("y", h.y).attr("width", h.w).attr("height", hitH)
+      .attr("fill", "transparent")
+      .on("mouseenter", () => d3.select(h.node).classed("is-hover", true))
+      .on("mouseleave", () => d3.select(h.node).classed("is-hover", false))
+      .on("click", ev => { ev.stopPropagation(); togglePillarFilter(h.id); });
   });
 }
 
